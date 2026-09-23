@@ -33,8 +33,8 @@ python3 -m http.server 4173
 
 ## 部署
 
-本分支只保存网站代码，不包含 SmartDesktopMimi 产品源码。推送到 `gh-pages` 分支后，GitHub Actions 会自动校验并发布到 GitHub Pages：
+`website` 分支只保存网站源代码，不包含 SmartDesktopMimi 产品源码。每次推送后，GitHub Actions 会自动校验并生成 `_site`，再将纯静态产物发布到 `gh-pages` 分支：
 
 <https://dshanpi.github.io/SmartDesktopMimi/>
 
-首次发布前，需要在仓库 **Settings → Pages → Build and deployment** 中将 Source 设置为 **GitHub Actions**。上线前仍需确认域名、备案信息、隐私政策和商标信息。
+首次发布前，需要在仓库 **Settings → Pages → Build and deployment** 中选择 **Deploy from a branch**，分支选择 **gh-pages / (root)**。上线前仍需确认域名、备案信息、隐私政策和商标信息。
