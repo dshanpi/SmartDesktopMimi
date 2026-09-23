@@ -33,4 +33,8 @@ python3 -m http.server 4173
 
 ## 部署
 
-推送到站点仓库的 `main` 分支后，可通过 GitHub Actions 发布到 GitHub Pages。上线前仍需确认最终仓库地址、域名、备案信息、隐私政策和商标信息。
+本分支只保存网站代码，不包含 SmartDesktopMimi 产品源码。推送到 `gh-pages` 分支后，GitHub Actions 会自动校验并发布到 GitHub Pages：
+
+<https://dshanpi.github.io/SmartDesktopMimi/>
+
+首次发布前，需要在仓库 **Settings → Pages → Build and deployment** 中将 Source 设置为 **GitHub Actions**。上线前仍需确认域名、备案信息、隐私政策和商标信息。
