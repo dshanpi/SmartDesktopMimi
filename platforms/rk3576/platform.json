@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "rk3576",
+  "soc": "rockchip-rk3576",
+  "arch": "aarch64",
+  "support": "skeleton",
+  "hardware": {"board": "not selected; adapter skeleton"},
+  "sdk": {"environment": "AITVBOX_RK3576_SDK", "default_root": "", "markers": ["build.sh", "device/rockchip"]},
+  "toolchain": "platforms/rk3576/toolchain.cmake",
+  "capabilities": [],
+  "components": [],
+  "packaging": {"kind": "unimplemented"},
+  "flash": {"kind": "rkdeveloptool", "automatic": false},
+  "validation": "platforms/rk3576/validation.json"
+}

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "component": "LVGL",
+  "source": "AI-DeskTop-Box-LVGL-v9.5",
+  "revision": "685aa79c2894b038c212ef7c26834bfd5b9120aa",
+  "license": "MIT"
+}

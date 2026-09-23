@@ -1,0 +1,300 @@
+#!/bin/sh
+set -eu
+
+keyboard="${AITVBOX_HID_KEYBOARD:-/dev/hidg0}"
+if [ -n "${AITVBOX_HID_MOUSE:-}" ]; then
+    mouse="${AITVBOX_HID_MOUSE}"
+elif [ -c /dev/hidg1 ]; then
+    mouse=/dev/hidg1
+else
+    mouse=/dev/hidg0
+fi
+lock="${AITVBOX_HID_LOCK:-/var/run/aitvbox/hid.lock}"
+locked=0
+keyboard_pressed=0
+composite=0
+[ "${keyboard}" != "${mouse}" ] || composite=1
+mouse_mode="${AITVBOX_HID_MOUSE_MODE:-}"
+if [ -z "${mouse_mode}" ]; then
+    if [ "${composite}" = 0 ] &&
+       [ "$(cat /sys/kernel/config/usb_gadget/g1/functions/hid.mouse/report_length 2>/dev/null || true)" = 6 ]; then
+        mouse_mode=absolute
+    else
+        mouse_mode=relative
+    fi
+fi
+absolute_state="${AITVBOX_HID_MOUSE_STATE:-/var/run/aitvbox/hid-absolute-position}"
+
+usage() {
+    echo "usage: aitvbox-hidctl status" >&2
+    echo "       aitvbox-hidctl key <hid-code> [modifier]" >&2
+    echo "       aitvbox-hidctl mouse <dx> <dy> [buttons] [wheel]" >&2
+    echo "       aitvbox-hidctl move <x:0..32767> <y:0..32767> [buttons]" >&2
+    echo "       aitvbox-hidctl click [button:1..3]" >&2
+}
+
+byte_escape() {
+    value="$1"
+    [ "${value}" -ge 0 ] 2>/dev/null && [ "${value}" -le 255 ] 2>/dev/null ||
+        { echo "byte out of range: ${value}" >&2; exit 2; }
+    printf '\\%03o' "${value}"
+}
+
+signed_byte_escape() {
+    value="$1"
+    [ "${value}" -ge -127 ] 2>/dev/null && [ "${value}" -le 127 ] 2>/dev/null ||
+        { echo "signed byte out of range: ${value}" >&2; exit 2; }
+    [ "${value}" -lt 0 ] && value=$((256 + value))
+    byte_escape "${value}"
+}
+
+append_byte() {
+    report="${report}$(byte_escape "$1")"
+}
+
+append_signed_byte() {
+    report="${report}$(signed_byte_escape "$1")"
+}
+
+append_uint16_le() {
+    value="$1"
+    [ "${value}" -ge 0 ] 2>/dev/null && [ "${value}" -le 32767 ] 2>/dev/null ||
+        { echo "absolute coordinate out of range: ${value}" >&2; exit 2; }
+    append_byte $((value % 256))
+    append_byte $((value / 256))
+}
+
+load_absolute_position() {
+    absolute_x=16384
+    absolute_y=16384
+    if [ -r "${absolute_state}" ]; then
+        read_x=
+        read_y=
+        read read_x read_y < "${absolute_state}" || true
+        if [ "${read_x}" -ge 0 ] 2>/dev/null &&
+           [ "${read_x}" -le 32767 ] 2>/dev/null &&
+           [ "${read_y}" -ge 0 ] 2>/dev/null &&
+           [ "${read_y}" -le 32767 ] 2>/dev/null; then
+            absolute_x="${read_x}"
+            absolute_y="${read_y}"
+        fi
+    fi
+}
+
+save_absolute_position() {
+    case "${absolute_state}" in */*) mkdir -p "${absolute_state%/*}" ;; esac
+    printf '%s %s\n' "${absolute_x}" "${absolute_y}" > "${absolute_state}"
+}
+
+append_absolute_report() {
+    report=
+    append_byte 1
+    append_byte "$1"
+    append_uint16_le "${absolute_x}"
+    append_uint16_le "${absolute_y}"
+}
+
+hid_link_ready() {
+    found=0
+    for state_path in /sys/class/udc/*/state; do
+        [ -f "${state_path}" ] || continue
+        found=1
+        [ "$(cat "${state_path}" 2>/dev/null || true)" != "configured" ] ||
+            return 0
+    done
+    # Preserve regular-file test support on hosts without a USB device
+    # controller. On the board, never enter a blocking hidg write while the
+    # USB cable is detached.
+    [ "${found}" = 0 ] && return 0
+    echo "USB HID host is not connected" >&2
+    return 1
+}
+
+write_report() {
+    target="$1"
+    data="$2"
+    hid_link_ready || return 1
+    printf '%b' "${data}" > "${target}"
+}
+
+release_lock() {
+    if [ "${keyboard_pressed}" = 1 ]; then
+        if [ "${composite}" = 1 ]; then
+            write_report "${keyboard}" \
+                '\002\000\000\000\000\000\000\000\000' 2>/dev/null || true
+        else
+            write_report "${keyboard}" \
+                '\000\000\000\000\000\000\000\000' 2>/dev/null || true
+        fi
+    fi
+    [ "${locked}" = 0 ] || rm -rf "${lock}" 2>/dev/null || true
+}
+
+acquire_lock() {
+    case "${lock}" in */*) mkdir -p "${lock%/*}" ;; esac
+    attempts=0
+    while ! mkdir "${lock}" 2>/dev/null; do
+        if [ -d "${lock}" ] && [ ! -L "${lock}" ]; then
+            owner=
+            [ ! -f "${lock}/pid" ] || owner="$(cat "${lock}/pid")"
+            case "${owner}" in
+                ""|*[!0-9]*)
+                    # A competing process may have created the directory but
+                    # not written its PID yet. Give that atomicity gap one
+                    # second before considering the lock abandoned.
+                    [ "${attempts}" -lt 10 ] || rm -rf "${lock}"
+                    ;;
+                *)
+                    state=
+                    [ ! -r "/proc/${owner}/stat" ] ||
+                        state="$(awk '{print $3}' "/proc/${owner}/stat" 2>/dev/null || true)"
+                    if ! kill -0 "${owner}" 2>/dev/null ||
+                       [ "${state}" = "Z" ]; then
+                        rm -rf "${lock}"
+                    fi
+                    ;;
+            esac
+        fi
+        attempts=$((attempts + 1))
+        [ "${attempts}" -lt 10 ] ||
+            { echo "USB HID controller is busy" >&2; exit 1; }
+        # Target BusyBox sleep accepts whole seconds only.
+        sleep 1
+    done
+    locked=1
+    printf '%s\n' "$$" >"${lock}/pid"
+    trap release_lock EXIT INT TERM
+}
+
+case "${1:-}" in
+    status)
+        [ -c "${keyboard}" ] && k=ready || k=missing
+        [ -c "${mouse}" ] && m=ready || m=missing
+        echo "keyboard=${keyboard}:${k}"
+        echo "mouse=${mouse}:${m}"
+        echo "mouse_mode=${mouse_mode}"
+        [ "${k}" = ready ] && [ "${m}" = ready ]
+        ;;
+    key)
+        [ "$#" -ge 2 ] || { usage; exit 2; }
+        code="$2"
+        modifier="${3:-0}"
+        [ "${code}" -ge 0 ] 2>/dev/null && [ "${code}" -le 101 ] 2>/dev/null ||
+            { echo "HID keycode out of range: ${code}" >&2; exit 2; }
+        acquire_lock
+        report=
+        [ "${composite}" = 0 ] || append_byte 2
+        append_byte "${modifier}"
+        append_byte 0
+        append_byte "${code}"
+        append_byte 0
+        append_byte 0
+        append_byte 0
+        append_byte 0
+        append_byte 0
+        # One write(2) is one HID report.  Emitting fields with separate
+        # printf calls makes the gadget send invalid one-byte reports.
+        write_report "${keyboard}" "${report}"
+        keyboard_pressed=1
+        if [ "${composite}" = 1 ]; then
+            write_report "${keyboard}" \
+                '\002\000\000\000\000\000\000\000\000'
+        else
+            write_report "${keyboard}" \
+                '\000\000\000\000\000\000\000\000'
+        fi
+        keyboard_pressed=0
+        ;;
+    mouse)
+        [ "$#" -ge 3 ] || { usage; exit 2; }
+        acquire_lock
+        if [ "${mouse_mode}" = absolute ]; then
+            dx="$2"
+            dy="$3"
+            [ "${dx}" -ge -127 ] 2>/dev/null && [ "${dx}" -le 127 ] 2>/dev/null ||
+                { echo "relative X out of range: ${dx}" >&2; exit 2; }
+            [ "${dy}" -ge -127 ] 2>/dev/null && [ "${dy}" -le 127 ] 2>/dev/null ||
+                { echo "relative Y out of range: ${dy}" >&2; exit 2; }
+            load_absolute_position
+            absolute_x=$((absolute_x + dx * 32))
+            absolute_y=$((absolute_y + dy * 32))
+            [ "${absolute_x}" -ge 0 ] || absolute_x=0
+            [ "${absolute_x}" -le 32767 ] || absolute_x=32767
+            [ "${absolute_y}" -ge 0 ] || absolute_y=0
+            [ "${absolute_y}" -le 32767 ] || absolute_y=32767
+            save_absolute_position
+            append_absolute_report "${4:-0}"
+            write_report "${mouse}" "${report}"
+            if [ "${5:-0}" -ne 0 ] 2>/dev/null; then
+                report=
+                append_byte 2
+                append_signed_byte "$5"
+                write_report "${mouse}" "${report}"
+            fi
+        else
+            report=
+            [ "${composite}" = 0 ] || append_byte 1
+            append_byte "${4:-0}"
+            append_signed_byte "$2"
+            append_signed_byte "$3"
+            append_signed_byte "${5:-0}"
+            write_report "${mouse}" "${report}"
+        fi
+        ;;
+    move)
+        [ "$#" -ge 3 ] || { usage; exit 2; }
+        [ "${mouse_mode}" = absolute ] ||
+            { echo "absolute move requires the production absolute mouse" >&2; exit 2; }
+        absolute_x="$2"
+        absolute_y="$3"
+        buttons="${4:-0}"
+        [ "${absolute_x}" -ge 0 ] 2>/dev/null && [ "${absolute_x}" -le 32767 ] 2>/dev/null ||
+            { echo "absolute X out of range: ${absolute_x}" >&2; exit 2; }
+        [ "${absolute_y}" -ge 0 ] 2>/dev/null && [ "${absolute_y}" -le 32767 ] 2>/dev/null ||
+            { echo "absolute Y out of range: ${absolute_y}" >&2; exit 2; }
+        [ "${buttons}" -ge 0 ] 2>/dev/null && [ "${buttons}" -le 7 ] 2>/dev/null ||
+            { echo "mouse buttons out of range: ${buttons}" >&2; exit 2; }
+        acquire_lock
+        save_absolute_position
+        append_absolute_report "${buttons}"
+        write_report "${mouse}" "${report}"
+        ;;
+    click)
+        button="${2:-1}"
+        [ "${button}" -ge 1 ] 2>/dev/null &&
+            [ "${button}" -le 3 ] 2>/dev/null ||
+            { echo "mouse button out of range: ${button}" >&2; exit 2; }
+        acquire_lock
+        case "${button}" in
+            1) mask=1 ;;
+            2) mask=2 ;;
+            3) mask=4 ;;
+        esac
+        if [ "${mouse_mode}" = absolute ]; then
+            load_absolute_position
+            append_absolute_report "${mask}"
+            write_report "${mouse}" "${report}"
+            append_absolute_report 0
+            write_report "${mouse}" "${report}"
+        else
+            report=
+            [ "${composite}" = 0 ] || append_byte 1
+            append_byte "${mask}"
+            append_signed_byte 1
+            append_signed_byte 0
+            append_signed_byte 0
+            write_report "${mouse}" "${report}"
+            report=
+            [ "${composite}" = 0 ] || append_byte 1
+            append_byte 0
+            append_signed_byte -1
+            append_signed_byte 0
+            append_signed_byte 0
+            write_report "${mouse}" "${report}"
+        fi
+        ;;
+    *)
+        usage
+        exit 2
+        ;;
+esac

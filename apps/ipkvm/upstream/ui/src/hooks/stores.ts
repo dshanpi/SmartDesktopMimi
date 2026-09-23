@@ -1,0 +1,989 @@
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+ 
+
+// Define the JsonRpc types for better type checking
+interface JsonRpcResponse {
+  jsonrpc: string;
+  result?: unknown;
+  error?: {
+    code: number;
+    message: string;
+    data?: unknown;
+  };
+  id: number | string | null;
+}
+
+// Utility function to append stats to a Map
+const appendStatToMap = <T extends { timestamp: number }>(
+  stat: T,
+  prevMap: Map<number, T>,
+  maxEntries = 130,
+): Map<number, T> => {
+  if (prevMap.size > maxEntries) {
+    const firstKey = prevMap.keys().next().value;
+    if (firstKey !== undefined) {
+      prevMap.delete(firstKey);
+    }
+  }
+
+  const date = Math.floor(stat.timestamp / 1000);
+  const newStat = { ...prevMap.get(date), ...stat };
+  return new Map(prevMap).set(date, newStat);
+};
+
+// Constants and types
+export type AvailableSidebarViews ="ConsoleLogViewer"|"Fullscreen"|"TerminalTabsMobile"|"SettingsModal"|"AgentWorkspace"|"ApplicationsWorkspace"|"ClipboardMobile"|"KeyboardPanel"|"MousePanel"
+  |"Clipboard"|"PowerControl"|"VirtualMedia"|"SharedFolders"|null;
+export type AvailableTerminalTypes = "kvm" | "serial" | "none";
+
+export interface User {
+  sub: string;
+  email?: string;
+  picture?: string;
+}
+
+interface UserState {
+  user: User | null;
+  setUser: (user: User | null) => void;
+}
+
+interface UIState {
+  sidebarView: AvailableSidebarViews | null;
+  setSidebarView: (view: AvailableSidebarViews | null) => void;
+
+  topBarView: AvailableSidebarViews | null;
+  setTopBarView: (view: AvailableSidebarViews | null) => void;
+  isAnimationComplete: boolean;
+  setIsAnimationComplete: (enabled: boolean) => void;
+
+  disableVideoFocusTrap: boolean;
+  setDisableVideoFocusTrap: (enabled: boolean) => void;
+
+  isWakeOnLanModalVisible: boolean;
+  setWakeOnLanModalVisibility: (enabled: boolean) => void;
+
+  toggleSidebarView: (view: AvailableSidebarViews) => void;
+  toggleTopBarView: (view: AvailableSidebarViews) => void;
+
+  isAttachedVirtualKeyboardVisible: boolean;
+  setAttachedVirtualKeyboardVisibility: (enabled: boolean) => void;
+
+  terminalType: AvailableTerminalTypes;
+  setTerminalType: (enabled: UIState["terminalType"]) => void;
+  otherSession:boolean;
+  setOtherSession: (enabled: boolean) => void;
+}
+
+export const useUiStore = create<UIState>(set => ({
+  terminalType: "none",
+  setTerminalType: type => set({ terminalType: type }),
+
+  sidebarView: null,
+  setSidebarView: view => set({ sidebarView: view }),
+  topBarView: null,
+  setTopBarView: view => set({ topBarView: view }),
+
+  disableVideoFocusTrap: false,
+  setDisableVideoFocusTrap: enabled => set({ disableVideoFocusTrap: enabled }),
+  isAnimationComplete: false,
+  setIsAnimationComplete: enabled => set({ isAnimationComplete: enabled }),
+
+  isWakeOnLanModalVisible: false,
+  setWakeOnLanModalVisibility: enabled => set({ isWakeOnLanModalVisible: enabled }),
+
+  toggleSidebarView: view =>
+    set(state => {
+      if (state.sidebarView === view) {
+        return { sidebarView: null , topBarView: null };
+      } else {
+        return { sidebarView: view , topBarView: null };
+      }
+    }),
+  toggleTopBarView: view =>
+    set(state => {
+
+      if (state.topBarView === view) {
+        return { topBarView: null,sidebarView: null };
+      } else {
+        return { topBarView: view ,sidebarView: null };
+      }
+    }),
+    otherSession:false,
+    setOtherSession: enabled => set({ otherSession: enabled }),
+
+  isAttachedVirtualKeyboardVisible: true,
+  setAttachedVirtualKeyboardVisibility: enabled =>
+    set({ isAttachedVirtualKeyboardVisible: enabled }),
+}),
+
+
+);
+
+interface RTCState {
+  peerConnection: RTCPeerConnection | null;
+  setPeerConnection: (pc: RTCState["peerConnection"]) => void;
+
+  setRpcDataChannel: (channel: RTCDataChannel) => void;
+  rpcDataChannel: RTCDataChannel | null;
+
+  rpcHidChannel: RTCDataChannel | null;
+  setRpcHidChannel: (channel: RTCDataChannel) => void;
+
+  rpcHidUnreliableChannel: RTCDataChannel | null;
+  setRpcHidUnreliableChannel: (channel: RTCDataChannel) => void;
+
+  rpcHidUnreliableNonOrderedChannel: RTCDataChannel | null;
+  setRpcHidUnreliableNonOrderedChannel: (channel: RTCDataChannel) => void;
+
+  rpcHidProtocolVersion: number | null;
+  setRpcHidProtocolVersion: (version: number | null) => void;
+
+  diskChannel: RTCDataChannel | null;
+  setDiskChannel: (channel: RTCDataChannel) => void;
+
+  peerConnectionState: RTCPeerConnectionState | null;
+  setPeerConnectionState: (state: RTCPeerConnectionState) => void;
+
+  transceiver: RTCRtpTransceiver | null;
+  setTransceiver: (transceiver: RTCRtpTransceiver) => void;
+
+  audioTransceiver: RTCRtpTransceiver | null;
+  setAudioTransceiver: (transceiver: RTCRtpTransceiver) => void;
+
+  mediaStream: MediaStream | null;
+  setMediaStream: (stream: MediaStream) => void;
+
+  videoStreamStats: RTCInboundRtpStreamStats | null;
+  appendVideoStreamStats: (state: RTCInboundRtpStreamStats) => void;
+  videoStreamStatsHistory: Map<number, RTCInboundRtpStreamStats>;
+
+  audioStreamStats: RTCInboundRtpStreamStats | null;
+  appendAudioStreamStats: (state: RTCInboundRtpStreamStats) => void;
+  audioStreamStatsHistory: Map<number, RTCInboundRtpStreamStats>;
+
+  isTurnServerInUse: boolean;
+  setTurnServerInUse: (inUse: boolean) => void;
+
+  terminalChannel: RTCDataChannel | null;
+  setTerminalChannel: (channel: RTCDataChannel | null) => void;
+
+  kvmTerminal: RTCDataChannel | null;
+  setKvmTerminal: (channel: RTCDataChannel | null) => void;
+
+  serialConsole: RTCDataChannel | null;
+  setSerialConsole: (channel: RTCDataChannel | null) => void;
+}
+
+export const useRTCStore = create<RTCState>(set => ({
+  peerConnection: null,
+  setPeerConnection: pc => set({ peerConnection: pc }),
+
+  rpcDataChannel: null,
+  setRpcDataChannel: channel => set({ rpcDataChannel: channel }),
+
+  rpcHidChannel: null,
+  setRpcHidChannel: channel => set({ rpcHidChannel: channel }),
+
+  rpcHidUnreliableChannel: null,
+  setRpcHidUnreliableChannel: channel => set({ rpcHidUnreliableChannel: channel }),
+
+  rpcHidUnreliableNonOrderedChannel: null,
+  setRpcHidUnreliableNonOrderedChannel: channel => set({ rpcHidUnreliableNonOrderedChannel: channel }),
+
+  rpcHidProtocolVersion: null,
+  setRpcHidProtocolVersion: version => set({ rpcHidProtocolVersion: version }),
+
+  transceiver: null,
+  setTransceiver: transceiver => set({ transceiver }),
+
+  audioTransceiver: null,
+  setAudioTransceiver: audioTransceiver => set({ audioTransceiver }),
+  
+  peerConnectionState: null,
+  setPeerConnectionState: state => set({ peerConnectionState: state }),
+
+  diskChannel: null,
+  setDiskChannel: channel => set({ diskChannel: channel }),
+
+  mediaStream: null,
+  setMediaStream: stream => set({ mediaStream: stream }),
+
+  videoStreamStats: null,
+  appendVideoStreamStats: stats => set({ videoStreamStats: stats }),
+  videoStreamStatsHistory: new Map(),
+
+  audioStreamStats: null,
+  appendAudioStreamStats: stats => set({ audioStreamStats: stats }),
+  audioStreamStatsHistory: new Map(),
+  
+  isTurnServerInUse: false,
+  setTurnServerInUse: inUse => set({ isTurnServerInUse: inUse }),
+
+  // Add these new properties to the store implementation
+  terminalChannel: null,
+  setTerminalChannel: channel => set({ terminalChannel: channel }),
+  kvmTerminal: null,
+  setKvmTerminal: channel => set({ kvmTerminal: channel }),
+
+ serialConsole: null,
+  setSerialConsole: channel => set({ serialConsole: channel }),
+}));
+
+interface AgentControlState {
+  active: boolean;
+  setActive: (active: boolean) => void;
+}
+
+// The local computer agent and the browser video cannot own HDMI capture at
+// the same time.  This deliberately remains session-local (not persisted) so
+// reopening the page always starts from the normal live IPKVM view.
+export const useAgentControlStore = create<AgentControlState>(set => ({
+  active: false,
+  setActive: active => set({ active }),
+}));
+
+interface MouseMove {
+  x: number;
+  y: number;
+  buttons: number;
+}
+interface MouseState {
+  mouseX: number;
+  mouseY: number;
+  mouseMove?: MouseMove;
+  setMouseMove: (move?: MouseMove) => void;
+  setMousePosition: (x: number, y: number) => void;
+}
+
+export const useMouseStore = create<MouseState>(set => ({
+  mouseX: 0,
+  mouseY: 0,
+  setMouseMove: (move?: MouseMove) => set({ mouseMove: move }),
+  setMousePosition: (x, y) => set({ mouseX: x, mouseY: y }),
+}));
+
+export interface VideoState {
+  width: number;
+  height: number;
+  clientWidth: number;
+  clientHeight: number;
+  renderFps: number;
+  renderFrames: number;
+  setClientSize: (width: number, height: number) => void;
+  setSize: (width: number, height: number) => void;
+  setRenderFps: (fps: number) => void;
+  setRenderFrames: (frames: number) => void;
+  hdmiState: "ready" | "no_signal" | "no_lock" | "out_of_range" | "connecting";
+  setHdmiState: (state: {
+    ready: boolean;
+    error?: Extract<VideoState["hdmiState"], "no_signal" | "no_lock" | "out_of_range">;
+    width?: number;
+    height?: number;
+  }) => void;
+}
+
+export interface BacklightSettings {
+  max_brightness: number;
+  dim_after: number;
+  off_after: number;
+}
+
+export const useVideoStore = create<VideoState>(set => ({
+  width: 0,
+  height: 0,
+
+  clientWidth: 0,
+  clientHeight: 0,
+
+  renderFps: 0,
+  renderFrames: 0,
+
+  // The video element's client size
+  setClientSize: (clientWidth, clientHeight) => set({ clientWidth, clientHeight }),
+
+  // Resolution
+  setSize: (width, height) => set({ width, height }),
+
+  setRenderFps: renderFps => set({ renderFps }),
+  setRenderFrames: renderFrames => set({ renderFrames }),
+
+  hdmiState: "connecting",
+  setHdmiState: state => {
+    if (!state) return;
+    const { ready, error, width, height } = state;
+
+    // 保存后端发送的分辨率信息
+    if (width && height) {
+      set({ width, height });
+    }
+
+    if (ready) {
+      return set({ hdmiState: "ready" });
+    } else if (error) {
+      return set({ hdmiState: error });
+    } else {
+      return set({ hdmiState: "connecting" });
+    }
+  },
+}));
+
+export type KeyboardLedSync = "auto" | "browser" | "host";
+
+export interface SettingsState {
+  language: string;
+  setLanguage: (language: string) => void;
+
+  isCursorHidden: boolean;
+  setCursorVisibility: (enabled: boolean) => void;
+
+  mouseMode: string;
+  setMouseMode: (mode: string) => void;
+
+  debugMode: boolean;
+  setDebugMode: (enabled: boolean) => void;
+
+  // Add new developer mode state
+  developerMode: boolean;
+  setDeveloperMode: (enabled: boolean) => void;
+
+  displayRotation: string;
+  setDisplayRotation: (rotation: string) => void;
+
+  backlightSettings: BacklightSettings;
+  setBacklightSettings: (settings: BacklightSettings) => void;
+  
+  timeZone: string;
+  setTimeZone: (timezone: string) => void;
+
+  ledGreenMode: string;
+  setLedGreenMode: (mode: string) => void;
+
+  ledYellowMode: string;
+  setLedYellowMode: (mode: string) => void;
+
+  keyboardLayout: string;
+  setKeyboardLayout: (layout: string) => void;
+
+  actionBarCtrlAltDel: boolean;
+  setActionBarCtrlAltDel: (enabled: boolean) => void;
+
+  keyboardLedSync: KeyboardLedSync;
+  setKeyboardLedSync: (sync: KeyboardLedSync) => void;
+
+  scrollThrottling: number;
+  setScrollThrottling: (value: number) => void;
+
+  showPressedKeys: boolean;
+  setShowPressedKeys: (show: boolean) => void;
+
+  overrideCtrlV: boolean;
+  setOverrideCtrlV: (enabled: boolean) => void;
+
+  // Video enhancement settings
+  videoSaturation: number;
+  setVideoSaturation: (value: number) => void;
+  videoBrightness: number;
+  setVideoBrightness: (value: number) => void;
+  videoContrast: number;
+  setVideoContrast: (value: number) => void;
+
+  forceHttp: boolean;
+  setForceHttp: (enabled: boolean) => void;
+}
+
+export const useSettingsStore = create(
+  persist<SettingsState>(
+    set => ({
+      language: "en",
+      setLanguage: language => set({ language }),
+
+      isCursorHidden: false,
+      setCursorVisibility: enabled => set({ isCursorHidden: enabled }),
+
+      mouseMode: "relative",
+      setMouseMode: mode => set({ mouseMode: mode }),
+
+      debugMode: import.meta.env.DEV,
+      setDebugMode: enabled => set({ debugMode: enabled }),
+
+      // Add developer mode with default value
+      developerMode: false,
+      setDeveloperMode: enabled => set({ developerMode: enabled }),
+
+      displayRotation: "180",
+      setDisplayRotation: (rotation: string) => set({ displayRotation: rotation }),
+
+      backlightSettings: {
+        max_brightness: 100,
+        dim_after: 10000,
+        off_after: 50000,
+      },
+      setBacklightSettings: (settings: BacklightSettings) =>
+        set({ backlightSettings: settings }),
+
+      timeZone: "CST-8",
+      setTimeZone: (timezone: string) => set({ timeZone: timezone }),
+
+      ledGreenMode: "network-rx",
+      setLedGreenMode: (mode: string) => set({ ledGreenMode: mode }),
+
+      ledYellowMode: "activity",
+      setLedYellowMode: (mode: string) => set({ ledYellowMode: mode }),
+
+      keyboardLayout: "en-US",
+      setKeyboardLayout: layout => set({ keyboardLayout: layout }),
+
+      actionBarCtrlAltDel: false,
+      setActionBarCtrlAltDel: enabled => set({ actionBarCtrlAltDel: enabled }),
+
+      keyboardLedSync: "auto",
+      setKeyboardLedSync: sync => set({ keyboardLedSync: sync }),
+
+      scrollThrottling: 0,
+      setScrollThrottling: value => set({ scrollThrottling: value }),
+
+      showPressedKeys: true,
+      setShowPressedKeys: show => set({ showPressedKeys: show }),
+
+      overrideCtrlV: false,
+      setOverrideCtrlV: enabled => set({ overrideCtrlV: enabled }),
+
+      // Video enhancement settings with default values (1.0 = normal)
+      videoSaturation: 1.0,
+      setVideoSaturation: value => set({ videoSaturation: value }),
+      videoBrightness: 1.0,
+      setVideoBrightness: value => set({ videoBrightness: value }),
+      videoContrast: 1.0,
+      setVideoContrast: value => set({ videoContrast: value }),
+
+      forceHttp: false,
+      setForceHttp: enabled => set({ forceHttp: enabled }),
+    }),
+    {
+      name: "settings",
+      storage: createJSONStorage(() => localStorage),
+      version: 4,
+      migrate: persistedState => ({
+        ...(persistedState as SettingsState),
+        // Absolute USB coordinates are restricted to the Windows primary
+        // monitor. Production uses relative reports so extended desktops can
+        // be controlled regardless of which output is captured over HDMI.
+        mouseMode: "relative",
+      }),
+    },
+  ),
+);
+
+export interface RemoteVirtualMediaState {
+  source: "WebRTC" | "HTTP" | "Storage" | null;
+  mode: "CDROM" | "Disk" | null;
+  filename: string | null;
+  url: string | null;
+  path: string | null;
+  size: number | null;
+}
+
+export interface MountMediaState {
+  localFile: File | null;
+  setLocalFile: (file: MountMediaState["localFile"]) => void;
+
+  remoteVirtualMediaState: RemoteVirtualMediaState | null;
+  setRemoteVirtualMediaState: (state: MountMediaState["remoteVirtualMediaState"]) => void;
+
+  modalView: "mode" | "browser" | "url" | "device" | "sd" | "upload" | "upload_sd" | "error" | "mtp_device" | "mtp_sd" |  null;
+  setModalView: (view: MountMediaState["modalView"]) => void;
+
+  isMountMediaDialogOpen: boolean;
+  setIsMountMediaDialogOpen: (isOpen: MountMediaState["isMountMediaDialogOpen"]) => void;
+
+  uploadedFiles: { name: string; size: string; uploadedAt: string }[];
+  addUploadedFile: (file: { name: string; size: string; uploadedAt: string }) => void;
+
+  errorMessage: string | null;
+  setErrorMessage: (message: string | null) => void;
+}
+
+export const useMountMediaStore = create<MountMediaState>(set => ({
+  localFile: null,
+  setLocalFile: file => set({ localFile: file }),
+
+  remoteVirtualMediaState: null,
+  setRemoteVirtualMediaState: state => set({ remoteVirtualMediaState: state }),
+
+  modalView: "mode",
+  setModalView: view => set({ modalView: view }),
+
+  isMountMediaDialogOpen: false,
+  setIsMountMediaDialogOpen: isOpen => set({ isMountMediaDialogOpen: isOpen }),
+
+  uploadedFiles: [],
+  addUploadedFile: file =>
+    set(state => ({ uploadedFiles: [...state.uploadedFiles, file] })),
+
+  errorMessage: null,
+  setErrorMessage: message => set({ errorMessage: message }),
+}));
+
+export interface KeyboardLedState {
+  num_lock: boolean;
+  caps_lock: boolean;
+  scroll_lock: boolean;
+  compose: boolean;
+  kana: boolean;
+};
+
+export interface KeysDownState {
+  modifier: number;
+  keys: number[];
+}
+
+export const hidKeyBufferSize = 6;
+const defaultKeyboardLedState: KeyboardLedState = {
+  num_lock: false,
+  caps_lock: false,
+  scroll_lock: false,
+  compose: false,
+  kana: false,
+};
+
+export interface HidState {
+  activeKeys: number[];
+  activeModifiers: number[];
+
+  updateActiveKeysAndModifiers: (keysAndModifiers: {
+    keys: number[];
+    modifiers: number[];
+  }) => void;
+
+  altGrArmed: boolean;
+  setAltGrArmed: (armed: boolean) => void;
+
+  altGrTimer: number | null; // _altGrCtrlTime
+  setAltGrTimer: (timeout: number | null) => void;
+
+  altGrCtrlTime: number; // _altGrCtrlTime
+  setAltGrCtrlTime: (time: number) => void;
+
+  keyboardLedState?: KeyboardLedState;
+  setKeyboardLedState: (state: KeyboardLedState) => void;
+  setIsNumLockActive: (active: boolean) => void;
+  setIsCapsLockActive: (active: boolean) => void;
+  setIsScrollLockActive: (active: boolean) => void;
+
+  keyboardLedStateSyncAvailable: boolean;
+  setKeyboardLedStateSyncAvailable: (available: boolean) => void;
+
+  isVirtualKeyboardEnabled: boolean;
+  setVirtualKeyboardEnabled: (enabled: boolean) => void;
+
+  isPasteModeEnabled: boolean;
+  setPasteModeEnabled: (enabled: boolean) => void;
+
+  usbState: "configured" | "attached" | "not attached" | "suspended" | "addressed" | "default";
+  setUsbState: (state: HidState["usbState"]) => void;
+  
+  isReinitializingGadget: boolean;
+  setIsReinitializingGadget: (reinitializing: boolean) => void;
+}
+
+export interface SerialState {
+  isConnected: boolean;
+  setIsConnected: (connected: boolean) => void;
+}
+
+export const useSerialStore = create<SerialState>(set => ({
+  isConnected: false,
+  setIsConnected: connected => set({ isConnected: connected }),
+}));
+
+export const useHidStore = create<HidState>((set, get) => ({
+  activeKeys: [],
+  activeModifiers: [],
+  updateActiveKeysAndModifiers: ({ keys, modifiers }) => {
+    return set({ activeKeys: keys, activeModifiers: modifiers });
+  },
+
+  altGrArmed: false,
+  setAltGrArmed: armed => set({ altGrArmed: armed }),
+
+  altGrTimer: 0,
+  setAltGrTimer: timeout => set({ altGrTimer: timeout }),
+
+  altGrCtrlTime: 0,
+  setAltGrCtrlTime: time => set({ altGrCtrlTime: time }),
+
+  setKeyboardLedState: ledState => set({ keyboardLedState: ledState }),
+  setIsNumLockActive: active => {
+    const keyboardLedState = { ...(get().keyboardLedState || defaultKeyboardLedState) };
+    keyboardLedState.num_lock = active;
+    set({ keyboardLedState });
+  },
+  setIsCapsLockActive: active => {
+    const keyboardLedState = { ...(get().keyboardLedState || defaultKeyboardLedState) };
+    keyboardLedState.caps_lock = active;
+    set({ keyboardLedState });
+  },
+  setIsScrollLockActive: active => {
+    const keyboardLedState = { ...(get().keyboardLedState || defaultKeyboardLedState) };
+    keyboardLedState.scroll_lock = active;
+    set({ keyboardLedState });
+  },
+
+  keyboardLedStateSyncAvailable: false,
+  setKeyboardLedStateSyncAvailable: available => set({ keyboardLedStateSyncAvailable: available }),
+
+  isVirtualKeyboardEnabled: false,
+  setVirtualKeyboardEnabled: enabled => set({ isVirtualKeyboardEnabled: enabled }),
+
+  isPasteModeEnabled: false,
+  setPasteModeEnabled: enabled => set({ isPasteModeEnabled: enabled }),
+
+  // Add these new properties for USB state
+  usbState: "not attached",
+  setUsbState: state => set({ usbState: state }),
+  
+  isReinitializingGadget: false,
+  setIsReinitializingGadget: reinitializing => set({ isReinitializingGadget: reinitializing }),
+}));
+
+
+export interface UsbEpModeStore {
+  usbEpMode: string;
+  setUsbEpMode: (mode: string) => void;
+}
+
+export const useUsbEpModeStore = create<UsbEpModeStore>(set => ({
+  usbEpMode: "disabled",
+  setUsbEpMode: (mode: string) => set({ usbEpMode: mode }),
+}));
+
+export interface AudioModeStore {
+  audioMode: string;
+  setAudioMode: (mode: string) => void;
+}
+export const useAudioModeStore = create<AudioModeStore>(set => ({
+  audioMode: "disabled",
+  setAudioMode: (mode: string) => set({ audioMode: mode }),
+}));
+
+export const useUserStore = create<UserState>(set => ({
+  user: null,
+  setUser: user => set({ user }),
+}));
+
+export interface UpdateState {
+  isUpdatePending: boolean;
+  setIsUpdatePending: (isPending: boolean) => void;
+  updateDialogHasBeenMinimized: boolean;
+  otaState: {
+    updating: boolean;
+    error: string | null;
+
+    metadataFetchedAt: string | null;
+
+    // App update
+    appUpdatePending: boolean;
+
+    appDownloadProgress: number;
+    appDownloadFinishedAt: string | null;
+
+    appVerificationProgress: number;
+    appVerifiedAt: string | null;
+
+    appUpdateProgress: number;
+    appUpdatedAt: string | null;
+
+    // System update
+    systemUpdatePending: boolean;
+
+    systemDownloadProgress: number;
+    systemDownloadFinishedAt: string | null;
+
+    systemVerificationProgress: number;
+    systemVerifiedAt: string | null;
+
+    systemUpdateProgress: number;
+    systemUpdatedAt: string | null;
+  };
+  setOtaState: (state: UpdateState["otaState"]) => void;
+  setUpdateDialogHasBeenMinimized: (hasBeenMinimized: boolean) => void;
+  modalView:
+    | "loading"
+    | "updating"
+    | "upToDate"
+    | "updateAvailable"
+    | "updateCompleted"
+    | "error";
+  setModalView: (view: UpdateState["modalView"]) => void;
+  setUpdateErrorMessage: (errorMessage: string) => void;
+  updateErrorMessage: string | null;
+}
+
+export const useUpdateStore = create<UpdateState>(set => ({
+  isUpdatePending: false,
+  setIsUpdatePending: isPending => set({ isUpdatePending: isPending }),
+
+  setOtaState: state =>
+    set(current => {
+      const definedEntries = Object.entries(state).filter(([, value]) => value !== undefined);
+      const merged = {
+        ...current.otaState,
+        ...Object.fromEntries(definedEntries),
+      } as UpdateState["otaState"];
+      return { otaState: merged };
+    }),
+  otaState: {
+    updating: false,
+    error: null,
+    metadataFetchedAt: null,
+    appUpdatePending: false,
+    systemUpdatePending: false,
+    appDownloadProgress: 0,
+    appDownloadFinishedAt: null,
+    appVerificationProgress: 0,
+    appVerifiedAt: null,
+    systemDownloadProgress: 0,
+    systemDownloadFinishedAt: null,
+    systemVerificationProgress: 0,
+    systemVerifiedAt: null,
+    appUpdateProgress: 0,
+    appUpdatedAt: null,
+    systemUpdateProgress: 0,
+    systemUpdatedAt: null,
+  },
+
+  updateDialogHasBeenMinimized: false,
+  setUpdateDialogHasBeenMinimized: hasBeenMinimized =>
+    set({ updateDialogHasBeenMinimized: hasBeenMinimized }),
+  modalView: "loading",
+  setModalView: view => set({ modalView: view }),
+  updateErrorMessage: null,
+  setUpdateErrorMessage: errorMessage => set({ updateErrorMessage: errorMessage }),
+}));
+
+interface UsbConfigModalState {
+  modalView: "updateUsbConfig" | "updateUsbConfigSuccess";
+  errorMessage: string | null;
+  setModalView: (view: UsbConfigModalState["modalView"]) => void;
+  setErrorMessage: (message: string | null) => void;
+}
+
+export interface UsbConfigState {
+  vendor_id: string;
+  product_id: string;
+  serial_number: string;
+  manufacturer: string;
+  product: string;
+}
+
+export const useUsbConfigModalStore = create<UsbConfigModalState>(set => ({
+  modalView: "updateUsbConfig",
+  errorMessage: null,
+  setModalView: view => set({ modalView: view }),
+  setErrorMessage: message => set({ errorMessage: message }),
+}));
+
+export interface LocalAuthModalState {
+  modalView:
+    | "createPassword"
+    | "deletePassword"
+    | "updatePassword"
+    | "creationSuccess"
+    | "deleteSuccess"
+    | "updateSuccess";
+  setModalView: (view: LocalAuthModalState["modalView"]) => void;
+}
+
+export const useLocalAuthModalStore = create<LocalAuthModalState>(set => ({
+  modalView: "createPassword",
+  setModalView: view => set({ modalView: view }),
+}));
+
+export interface DeviceState {
+  appVersion: string | null;
+  systemVersion: string | null;
+
+  setAppVersion: (version: string) => void;
+  setSystemVersion: (version: string) => void;
+}
+
+export const useDeviceStore = create<DeviceState>(set => ({
+  appVersion: null,
+  systemVersion: null,
+
+  setAppVersion: version => set({ appVersion: version }),
+  setSystemVersion: version => set({ systemVersion: version }),
+}));
+
+export interface DhcpLease {
+  ip?: string;
+  netmask?: string;
+  broadcast?: string;
+  ttl?: string;
+  mtu?: string;
+  hostname?: string;
+  domain?: string;
+  bootp_next_server?: string;
+  bootp_server_name?: string;
+  bootp_file?: string;
+  timezone?: string;
+  routers?: string[];
+  dns?: string[];
+  ntp_servers?: string[];
+  lpr_servers?: string[];
+  _time_servers?: string[];
+  _name_servers?: string[];
+  _log_servers?: string[];
+  _cookie_servers?: string[];
+  _wins_servers?: string[];
+  _swap_server?: string;
+  boot_size?: string;
+  root_path?: string;
+  lease?: string;
+  lease_expiry?: Date;
+  dhcp_type?: string;
+  server_id?: string;
+  message?: string;
+  tftp?: string;
+  bootfile?: string;
+}
+
+export interface IPv6Address {
+  address: string;
+  prefix: string;
+  valid_lifetime: string;
+  preferred_lifetime: string;
+  scope: string;
+}
+
+export interface NetworkState {
+  interface_name?: string;
+  mac_address?: string;
+  ipv4?: string;
+  ipv4_addresses?: string[];
+  ipv6?: string;
+  ipv6_addresses?: IPv6Address[];
+  ipv6_link_local?: string;
+  dhcp_lease?: DhcpLease;
+
+  setNetworkState: (state: NetworkState) => void;
+  setDhcpLease: (lease: NetworkState["dhcp_lease"]) => void;
+  setDhcpLeaseExpiry: (expiry: Date) => void;
+}
+
+export type IPv6Mode =
+  | "disabled"
+  | "slaac"
+  | "dhcpv6"
+  | "slaac_and_dhcpv6"
+  | "static"
+  | "link_local"
+  | "unknown";
+export type IPv4Mode = "disabled" | "static" | "dhcp" | "unknown";
+export type LLDPMode = "disabled" | "basic" | "all" | "unknown";
+export type mDNSMode = "disabled" | "auto" | "ipv4_only" | "ipv6_only" | "unknown";
+export type TimeSyncMode =
+  | "ntp_only"
+  | "ntp_and_http"
+  | "http_only"
+  | "custom"
+  | "unknown";
+
+export interface IPv4StaticConfig {
+  address?: string;
+  netmask?: string;
+  gateway?: string;
+  dns?: string[];
+}
+
+export interface NetworkSettings {
+  hostname: string;
+  domain: string;
+  ipv4_mode: IPv4Mode;
+  ipv4_request_address?: string;
+  ipv4_static?: IPv4StaticConfig;
+  ipv6_mode: IPv6Mode;
+  lldp_mode: LLDPMode;
+  lldp_tx_tlvs: string[];
+  mdns_mode: mDNSMode;
+  time_sync_mode: TimeSyncMode;
+  pending_reboot?: boolean;
+}
+
+export const useNetworkStateStore = create<NetworkState>((set, get) => ({
+  setNetworkState: (state: NetworkState) => set(state),
+  setDhcpLease: (lease: NetworkState["dhcp_lease"]) => set({ dhcp_lease: lease }),
+  setDhcpLeaseExpiry: (expiry: Date) => {
+    const lease = get().dhcp_lease;
+    if (!lease) {
+      console.warn("No lease found");
+      return;
+    }
+
+    lease.lease_expiry = expiry;
+    set({ dhcp_lease: lease });
+  },
+}));
+
+export interface KeySequenceStep {
+  keys: string[];
+  modifiers: string[];
+  delay: number;
+}
+
+export interface KeySequence {
+  id: string;
+  name: string;
+  steps: KeySequenceStep[];
+  sortOrder?: number;
+}
+
+export interface VpnState {
+  tailScaleConnectionState: "connecting" | "connected" | "disconnected" | "closed" | "logined";
+  setTailScaleConnectionState: (state: VpnState["tailScaleConnectionState"]) => void;
+  
+  tailScaleLoginUrl: string | null;
+  setTailScaleLoginUrl: (url: string) => void;
+  
+  tailScaleXEdge: boolean;
+  setTailScaleXEdge: (xEdge: boolean) => void;
+
+  tailScaleIP: string | null;
+  setTailScaleIP: (ip: string) => void;
+  
+  zeroTierConnectionState: "connecting" | "connected" | "disconnected" | "closed" | "logined";
+  setZeroTierConnectionState: (state: VpnState["zeroTierConnectionState"]) => void;
+ 
+  zeroTierNetworkID: string | null;
+  setZeroTierNetworkID: (networkID: string) => void;
+  
+  zeroTierIP: string | null;
+  setZeroTierIP: (ip: string) => void;
+};
+
+export const useVpnStore = create<VpnState>(set => ({
+  tailScaleConnectionState: "disconnected",
+  setTailScaleConnectionState: state => set({ tailScaleConnectionState: state }),
+  tailScaleLoginUrl: null,
+  setTailScaleLoginUrl: url => set({ tailScaleLoginUrl: url }),
+  tailScaleXEdge: false,
+  setTailScaleXEdge: xEdge => set({ tailScaleXEdge: xEdge }),
+  tailScaleIP: null,
+  setTailScaleIP: url => set({ tailScaleIP: url }),
+  
+  zeroTierConnectionState: "disconnected",
+  setZeroTierConnectionState: state => set({ zeroTierConnectionState: state }),
+  zeroTierNetworkID: null,
+  setZeroTierNetworkID: networkID => set({ zeroTierNetworkID: networkID }),
+  zeroTierIP: null,
+  setZeroTierIP: networkID => set({ zeroTierIP: networkID }),
+}));
+
+export interface LogEntry {
+  timestamp: string;
+  level: 'log' | 'error' | 'warn' | 'info';
+  message: string;
+  originalArgs: any[];
+}

@@ -1,0 +1,62 @@
+flowchart TB
+    pc["被控电脑<br/>HDMI OUT + USB Host"]:::external
+
+    subgraph videoPath["视频采集与 WebRTC 数据面"]
+        direction LR
+        vin["LT6911 / VIN<br/>1920×1080 NV12"]:::hardware
+        capture["aitvbox-kvm-video<br/>唯一 /dev/video0 所有者"]:::boundary
+        repair["copy_repaired_nv12()<br/>1072→1080 Y<br/>536→540 UV"]:::function
+        consumers["同一修复帧<br/>Display · Snapshot · Encoder"]:::output
+        h264["A133 H.264<br/>硬件编码"]:::process
+        stream["/tmp/kvm_video_stream.sock<br/>Annex-B H.264"]:::socket
+        go["aitvbox-ipkvmd<br/>enqueueVideoSample()"]:::process
+        browser["浏览器 WebRTC<br/>Video + HID DataChannel"]:::ui
+
+        vin --> capture --> repair --> consumers --> h264 --> stream --> go --> browser
+    end
+
+    subgraph inputPath["浏览器 USB HID 输入链"]
+        direction LR
+        hidHandler["getOnHidMessageHandler()<br/>HID RPC 队列"]:::function
+        guard["Agent lock + HID lock<br/>动作与范围校验"]:::boundary
+        keyboard["/dev/hidg0<br/>无 Report ID 键盘"]:::hardware
+        mouse["/dev/hidg1<br/>相对鼠标"]:::hardware
+
+        hidHandler --> guard --> keyboard & mouse
+    end
+
+    subgraph agentPath["自主 Agent 观察—动作闭环"]
+        direction LR
+        control["callAgentControl()<br/>control.sock"]:::function
+        controld["aitvbox-controld<br/>启动/停止 Agent"]:::process
+        agent["aitvbox-agentd<br/>观察 → 决策 → 动作"]:::process
+        mcpd["aitvbox-mcpd<br/>截图/HID 能力"]:::process
+        snapshot["capture.sock · SNAPSHOT<br/>screen.jpg"]:::output
+        model["HTTPS 模型 Provider<br/>受限 JSON 动作"]:::external
+
+        control --> controld --> agent --> mcpd --> snapshot
+        snapshot --> agent
+        agent <--> model
+    end
+
+    controller["lv_backend<br/>service_hdmi_preview_*()"]:::process
+    controller -->|"capture.sock · DISPLAY / STATUS"| capture
+    consumers --> snapshot
+    go -->|"HID DataChannel"| hidHandler
+    browser -. "启动电脑助手" .-> control
+    mcpd --> guard
+    pc --> vin
+    keyboard & mouse --> pc
+
+    note["每一步后重新截图验证；相同无效动作最多两次；<br/>退出、超时、崩溃均释放按键和鼠标按钮"]:::note
+    agent -.-> note
+
+    classDef external fill:#F5F7FA,stroke:#94A3B8,color:#263445,stroke-dasharray:6 4;
+    classDef hardware fill:#FFF8DC,stroke:#C79A1B,color:#3D3420,stroke-width:2px;
+    classDef boundary fill:#FFF1F0,stroke:#C2413B,color:#4A1D1A,stroke-width:3px;
+    classDef function fill:#EAF9F5,stroke:#278878,color:#153D36,stroke-width:2px;
+    classDef process fill:#EEF4FF,stroke:#315A9B,color:#172033,stroke-width:2px;
+    classDef output fill:#F2F0FF,stroke:#7567B5,color:#262044;
+    classDef socket fill:#FFF8DC,stroke:#C79A1B,color:#3D3420;
+    classDef ui fill:#FFF0F3,stroke:#D66B87,color:#3D2430,stroke-width:2px;
+    classDef note fill:#FFF8DC,stroke:#C79A1B,color:#3D3420,stroke-dasharray:5 3;

@@ -1,0 +1,56 @@
+flowchart TB
+    entry["产品入口与交互"]:::heading
+
+    subgraph apps["apps/ · 可执行产品进程"]
+        direction LR
+        lv["lv_port_linux<br/>lvglsim + lv_backend"]:::module
+        capture["hdmi_preview<br/>Capture / Display / Snapshot"]:::module
+        ipkvm["ipkvm<br/>Go WebRTC + A133 H.264"]:::module
+        services["platform_services<br/>appd · mcpd · controld · agentd"]:::module
+    end
+
+    subgraph core["稳定产品契约"]
+        direction LR
+        contracts["core/contracts/v2<br/>JSON IPC 信封"]:::contract
+        ports["core/ports<br/>Capture · Input · Audio · Network · Update"]:::contract
+    end
+
+    subgraph adapters["平台与第三方适配"]
+        direction LR
+        platform["platform/<soc><br/>Provider · capability manifest"]:::platform
+        integrations["integrations/<br/>TuyaOpen · SWUpdate · USB HID"]:::integration
+        thirdparty["third_party/<br/>LVGL · TuyaOpen 可再分发源码"]:::external
+        vendor["vendor/（内部输入）<br/>受限库/模型，不进入公开快照"]:::security
+    end
+
+    subgraph delivery["构建、交付与质量门"]
+        direction LR
+        packaging["packaging/<br/>四个 OpenWrt 薄包"]:::delivery
+        scripts["scripts/ + tools/<br/>构建 · 审计 · 导出 · 工厂工具"]:::delivery
+        tests["tests/<br/>架构门禁 · 主机集成 · 公共 CI"]:::delivery
+        docs["docs/<br/>架构 · 运维 · 方案 · 调试证据"]:::delivery
+    end
+
+    entry --> apps
+    lv --> contracts
+    services --> contracts
+    apps --> ports
+    ports --> platform
+    apps --> integrations
+    integrations --> thirdparty
+    integrations -. "内部构建时注入" .-> vendor
+    apps --> packaging
+    platform --> packaging
+    integrations --> packaging
+    scripts --> packaging
+    tests -. "验证依赖方向与行为" .-> apps
+    docs -. "描述与追踪" .-> apps
+
+    classDef heading fill:#172033,stroke:#172033,color:#FFFFFF,stroke-width:2px;
+    classDef module fill:#FFF0F3,stroke:#D66B87,color:#3D2430,stroke-width:2px;
+    classDef contract fill:#EEF4FF,stroke:#315A9B,color:#172033,stroke-width:2px;
+    classDef platform fill:#EAF9F5,stroke:#278878,color:#153D36,stroke-width:2px;
+    classDef integration fill:#F2F0FF,stroke:#7567B5,color:#262044,stroke-width:2px;
+    classDef delivery fill:#FFF8DC,stroke:#C79A1B,color:#3D3420,stroke-width:2px;
+    classDef external fill:#F5F7FA,stroke:#94A3B8,color:#263445,stroke-dasharray:6 4;
+    classDef security fill:#FFF1F0,stroke:#C2413B,color:#4A1D1A,stroke-width:3px;

@@ -1,0 +1,174 @@
+#!/bin/sh /etc/rc.common
+#
+# aitvbox-data — 用户数据持久化（跨 A/B OTA 保留）。
+#
+# 背景：本固件 / 是裸 ext4（rootfsA/B，可写），overlayfs 未接管 /。
+# 因此 /etc（含蓝牙配对、WiFi 密码）落在活动 rootfs 槽上，OTA 从 A 切到 B
+# 时这些用户数据会丢失。rootfs_data 是单份、A/B 共享的分区，启动时由
+# busybox-init preinit 挂载到 /overlay（远早于任何 procd Sxx 服务）。
+#
+# 本脚本在蓝牙(S96)/WiFi(S96)/涂鸦(S99) 启动前，把会跨 OTA 丢失的用户数据
+# 重定向到 /overlay（rootfs_data）：
+#   - 蓝牙 adapter MAC（AIC aic_bt.conf）：  bind mount /etc/bluetooth → /overlay/bluetooth
+#   - 蓝牙配对（A2DP Sink 手机配对 key）：bind mount /etc/lib/bluetooth → /overlay/lib/bluetooth
+#   - WiFi 密码（wpa_supplicant.conf）：bind mount 整个目录 → /overlay/wifi/wpa_supplicant
+#   - 涂鸦 KV 目录：                       确保 /overlay/tuyadb 存在（配合 0002 patch）
+#   - 涂鸦一机一密：                       bind mount /factory/tuya → /overlay/factory/tuya
+# LVGL 偏好直接写 /overlay/lv_port_linux_settings.bin，无需此处处理。
+#
+# 用 bind mount 而非符号链接：蓝牙配对目录是运行时按 adapter-MAC 动态创建的，
+# 无法预先建链接；bind mount 是内核级、断电安全（重启重做，数据持久在 /overlay）。
+# 全程幂等、容错：任一步失败只记日志，不阻塞启动。
+
+START=95
+STOP=99
+
+OVERLAY=/overlay
+
+# 把 $1（rootfs 内的源路径）bind 到 $2（/overlay 下的持久路径）。
+# 首次：持久路径不存在 → 从源迁移（目录递归、文件直接拷）→ 再 bind。
+# 之后：直接 bind。源路径必须已存在（rootfs 自带）；持久路径由本函数创建。
+bind_to_overlay() {
+	local src="$1" dst="$2"
+	[ -e "$src" ] || { echo "[aitvbox-data] SKIP: src not exist: $src"; return 0; }
+
+	# 首次：持久目标不存在，从源迁移
+	if [ ! -e "$dst" ]; then
+		mkdir -p "$(dirname "$dst")"
+		if [ -d "$src" ]; then
+			# 目录：整体拷贝（含 bluez 的 mesh 子目录等）
+			cp -a "$src" "$dst" 2>/dev/null || { echo "[aitvbox-data] WARN: migrate dir failed: $src"; return 0; }
+		else
+			# 文件：直接拷
+			cp -a "$src" "$dst" 2>/dev/null || { echo "[aitvbox-data] WARN: migrate file failed: $src"; return 0; }
+		fi
+	fi
+
+	# bind mount（源覆盖到持久层；之后程序写 src 实际落 dst）
+	mount -o bind "$dst" "$src" 2>/dev/null \
+		|| echo "[aitvbox-data] WARN: bind failed: $src -> $dst"
+}
+
+# 老版本可能已经在 rootfs_data 留下空的 wpa_supplicant 模板。目录虽存在，
+# bind_to_overlay 会按“已有用户数据”保留它；随后 wpa_supplicant 虽能临时连接，
+# 但因缺少 update_config=1 而拒绝 SAVE_CONFIG。仅为空或缺失的模板补种 rootfs
+# 默认值，绝不覆盖已经保存了 network={} 的有效用户配置。
+seed_wifi_template() {
+	local name="$1"
+	local src="/etc/wifi/wpa_supplicant/$name"
+	local dst="$OVERLAY/wifi/wpa_supplicant/$name"
+	local tmp="$dst.aitvbox-new"
+
+	[ -s "$src" ] || return 0
+	[ -s "$dst" ] && return 0
+	mkdir -p "$(dirname "$dst")"
+	if cp -p "$src" "$tmp" 2>/dev/null && mv -f "$tmp" "$dst"; then
+		echo "[aitvbox-data] repaired empty WiFi template: $name"
+	else
+		rm -f "$tmp"
+		echo "[aitvbox-data] WARN: failed to repair WiFi template: $name"
+	fi
+}
+
+# /etc/bluetooth is persistent so the AIC adapter address and BlueZ pairing
+# keys survive an A/B update.  Some older images populated that directory with
+# zero-byte package placeholders; once migrated, those files mask every newer
+# rootfs and make btmanager fail while reading its A2DP configuration.  Repair
+# only missing/empty product-owned files from immutable copies.  Never replace
+# a non-empty local file, aic_bt.conf, or any pairing key.
+seed_bluetooth_template() {
+	local name="$1" mode="$2"
+	local src="/usr/share/aitvbox/bluetooth/$name"
+	local dst="$OVERLAY/bluetooth/$name"
+	local tmp="$dst.aitvbox-new"
+
+	[ -s "$src" ] || {
+		echo "[aitvbox-data] WARN: Bluetooth recovery template missing: $name"
+		return 0
+	}
+	[ -s "$dst" ] && return 0
+	mkdir -p "$(dirname "$dst")"
+	if cp -p "$src" "$tmp" 2>/dev/null && chmod "$mode" "$tmp" && mv -f "$tmp" "$dst"; then
+		echo "[aitvbox-data] repaired empty Bluetooth template: $name"
+	else
+		rm -f "$tmp"
+		echo "[aitvbox-data] WARN: failed to repair Bluetooth template: $name"
+	fi
+}
+
+boot() {
+	# Some vendor boots finish mounting rootfs_data after the S95 service starts.
+	# Run immediately before WiFi (S96) and tolerate a short delayed mount so
+	# credentials are never hidden behind an unbound, empty rootfs directory.
+	local wait_count=0
+	while ! grep -q " $OVERLAY " /proc/mounts && [ "$wait_count" -lt 10 ]; do
+		sleep 1
+		wait_count=$((wait_count + 1))
+	done
+
+	# /overlay must be mounted before persistent paths can be bound.  A missing
+	# data partition remains non-fatal, but is now explicit in the boot log.
+	if ! grep -q " $OVERLAY " /proc/mounts; then
+		echo "[aitvbox-data] /overlay not mounted, skip persistence"
+		return 0
+	fi
+
+	# 蓝牙 adapter MAC（AIC 芯片无烧录地址）：bluetooth_init 会先校验/修复
+	# /etc/bluetooth/aic_bt.conf，再交给 hciattach aic 读取。该文件在活动 rootfs 槽，
+	# OTA 切槽即丢 → 下次启动 MAC 变 → bluez 按新 MAC 建新配对目录 → 旧配对对不上
+	# → 必须重新配对。bind 整个 /etc/bluetooth（aic_bt.conf + bluez 配置）到 /overlay，
+	# 让 MAC 跨 OTA 稳定。必须早于 bluetooth_init(S96)：本脚本 S95 先 bind，S96
+	# 修复/读取的就是持久 MAC。首次 aic_bt.conf 不存在或内容非法时，S96 会生成一次
+	# 并写回 bind 层，之后稳定。
+	bind_to_overlay /etc/bluetooth "$OVERLAY/bluetooth"
+	seed_bluetooth_template bluetooth.json 0644
+	seed_bluetooth_template bt_init.sh 0755
+
+	# 蓝牙配对：bluez STORAGEDIR=/etc/lib/bluetooth，配对 key 写
+	# /etc/lib/bluetooth/<adapter>/info。adapter 目录名即 MAC，上面 aic_bt.conf
+	# 已持久化 MAC，故此处的配对目录名也跨 OTA 稳定，旧配对可复用。
+	# 首次迁移会带上 bluez 包预置的空 mesh 目录（A2DP Sink 不用 mesh，无害）。
+	bind_to_overlay /etc/lib/bluetooth "$OVERLAY/lib/bluetooth"
+
+	# WiFi 凭据：wifimanager 的 `wifi -c` 通过 SAVE_CONFIG 把 SSID/密码写到
+	# wpa_supplicant.conf。目录里还有 sockets/（unix domain socket）和其他模式
+	# 的出厂模板，因此 bind 整个目录，既保留凭据也避免 OTA 切槽后模板退回。
+	# 在 bind 前修复历史版本遗留的空模板；有效的非空用户配置始终原样保留。
+	if [ -d "$OVERLAY/wifi/wpa_supplicant" ]; then
+		seed_wifi_template wpa_supplicant.conf
+		seed_wifi_template wpa_supplicant_overlay.conf
+		seed_wifi_template wpa_supplicant_p2p.conf
+		seed_wifi_template wpa_supplicant_src.conf
+	fi
+	bind_to_overlay /etc/wifi/wpa_supplicant "$OVERLAY/wifi/wpa_supplicant"
+
+	# 涂鸦一机一密：通用固件不携带 UUID/AuthKey，产线逐台写入
+	# /factory/tuya/license.env。持久副本位于 rootfs_data，OTA 和用户恢复出厂
+	# 均不得删除；文件权限由产线脚本固定为 0600。
+	bind_to_overlay /factory/tuya "$OVERLAY/factory/tuya"
+	chmod 700 /factory/tuya "$OVERLAY/factory/tuya" 2>/dev/null || true
+
+	# 涂鸦 KV：tkl_flash.c（0002 patch）写 /overlay/tuyadb/tuyadb。
+	# 确保目录存在，首次激活时 __flash_file_init 会创建文件。
+	mkdir -p "$OVERLAY/tuyadb"
+
+	# 用户 APP、模型密钥和平台服务状态不属于固件槽，始终保存在共享数据分区。
+	mkdir -p "$OVERLAY/aitvbox/apps" "$OVERLAY/aitvbox/secrets" \
+		"$OVERLAY/aitvbox/trusted-app-keys" "$OVERLAY/aitvbox/config"
+	chmod 700 "$OVERLAY/aitvbox/secrets" \
+		"$OVERLAY/aitvbox/trusted-app-keys" \
+		"$OVERLAY/aitvbox/config" 2>/dev/null || true
+
+	# 100ask Cloud：device_sig（出厂签名，每台不同）+ secret（provision 注册下发缓存）
+	# + cloud.conf（服务器配置）。OTA 刷 rootfs 整分区覆盖 /etc/100ask → 这些会丢，
+	# 导致每次 OTA 后设备要重新 provision/重烧 device_sig。bind 到 /overlay 跨 OTA 保留。
+	# 必须早于 aitvbox(S99，含 lv_backend)：S95 先 bind，S99 lv_backend 启动时读到的
+	# 就是持久层的数据。首次 /etc/100ask 为空目录（薄包建的），bind 后 lv_backend
+	# 写 device_sig/secret 实际落 /overlay/100ask，后续 OTA 不丢。
+	mkdir -p /etc/100ask
+	bind_to_overlay /etc/100ask "$OVERLAY/100ask"
+
+	echo "[aitvbox-data] user-data persistence ready (bluetooth/wifi/tuya-license/tuya-kv/100ask on /overlay)"
+}
+
+start() { boot; }

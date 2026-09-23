@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://09make.inc/schemas/aitvbox/ipc/v2/envelope.schema.json",
+  "title": "AITVBox IPC v2 envelope",
+  "type": "object",
+  "required": ["schemaVersion", "messageType", "topic", "payload"],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "messageType": {"enum": ["request", "response", "event"]},
+    "topic": {"type": "string", "minLength": 1, "maxLength": 128},
+    "requestId": {"type": "string", "minLength": 1, "maxLength": 128},
+    "sequence": {"type": "integer", "minimum": 0},
+    "payload": {"type": "object"},
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": {"type": "string", "minLength": 1, "maxLength": 64},
+        "message": {"type": "string", "maxLength": 1024},
+        "retryable": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"messageType": {"enum": ["request", "response"]}}},
+      "then": {"required": ["requestId"]}
+    },
+    {
+      "if": {"properties": {"messageType": {"const": "event"}}},
+      "then": {"required": ["sequence"]}
+    }
+  ],
+  "additionalProperties": true
+}

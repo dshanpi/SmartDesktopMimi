@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+case "${1:-}" in
+	status)
+		pidof aitvbox-ipkvmd >/dev/null 2>&1 && web=running || web=stopped
+		pidof aitvbox-captured aitvbox-kvm-video >/dev/null 2>&1 && video=running || video=stopped
+		[ -S /var/run/kvm_ctrl.sock ] && control=ready || control=missing
+		[ -S /tmp/kvm_video_stream.sock ] && stream=ready || stream=missing
+		capture_json=$(/usr/bin/hdmi_preview --capture-status 2>/dev/null || true)
+		capture=$(printf '%s' "$capture_json" |
+			sed -n 's/.*"state":"\([^"]*\)".*/\1/p')
+		display=$(printf '%s' "$capture_json" |
+			sed -n 's/.*"display":\(true\|false\).*/\1/p')
+		[ -n "$capture" ] || capture=unavailable
+		[ -n "$display" ] || display=unknown
+		echo "web=$web video=$video control=$control stream=$stream capture=$capture display=$display"
+		[ "$web" = running ] && [ "$video" = running ] &&
+			[ "$control" = ready ] && [ "$stream" = ready ] &&
+			[ "$capture" != unavailable ]
+		;;
+	start|stop|restart)
+		/etc/init.d/aitvbox-ipkvm "$1"
+		;;
+	log)
+		logread | tail -n 100
+		;;
+	*)
+		echo "usage: aitvbox-ipkvmctl {status|start|stop|restart|log}" >&2
+		exit 2
+		;;
+esac

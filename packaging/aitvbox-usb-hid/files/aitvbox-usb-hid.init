@@ -1,0 +1,292 @@
+#!/bin/sh /etc/rc.common
+
+START=81
+STOP=19
+USE_PROCD=1
+# Tina runs boot services concurrently.  Wait until the generic S80 adbd job
+# has completed its product-firmware no-op before replacing the USB gadget.
+DEPEND=adbd
+
+GADGET=/sys/kernel/config/usb_gadget/g1
+CONFIG="${GADGET}/configs/c.1"
+COMPOSITE="${GADGET}/functions/hid.composite"
+LEGACY_KEYBOARD="${GADGET}/functions/hid.keyboard"
+LEGACY_MOUSE="${GADGET}/functions/hid.mouse"
+PROG=/bin/adbd
+MODE_FILE=/overlay/aitvbox/config/adb-mode
+ADB_KEYS=/overlay/aitvbox/adb_keys
+
+adb_mode() {
+    # Production uses the browser application manager and needs only HID.
+    # ADB remains an explicit service-mode opt-in through MODE_FILE.
+    mode=disabled
+    [ ! -s "${MODE_FILE}" ] || mode="$(cat "${MODE_FILE}")"
+    case "${mode}" in
+        authorized|disabled|development) echo "${mode}" ;;
+        *)
+            logger -t aitvbox-usb-hid "invalid ADB mode; using disabled"
+            echo disabled
+            ;;
+    esac
+}
+
+wait_for_base_gadget() {
+    count=0
+    while [ "$count" -lt 5 ]; do
+        [ -d "${CONFIG}" ] && return 0
+        count=$((count + 1))
+        sleep 1
+    done
+    return 1
+}
+
+ensure_base_gadget() {
+    mode="$1"
+    [ -d /sys/kernel/config/usb_gadget ] ||
+        mount -t configfs none /sys/kernel/config
+    mkdir -p "${GADGET}/strings/0x409" "${CONFIG}/strings/0x409"
+    if [ "${mode}" = disabled ]; then
+        # Production exposes standard boot keyboard and mouse interfaces.
+        # Keep a dedicated identity so Windows cannot reuse descriptors from
+        # the older report-ID composite experiments.
+        echo 0x18d1 > "${GADGET}/idVendor"
+        echo 0xD015 > "${GADGET}/idProduct"
+        echo 0x0428 > "${GADGET}/bcdDevice"
+    else
+        # Service mode uses the same report-ID HID interface alongside ADB.
+        echo 0x18d1 > "${GADGET}/idVendor"
+        echo 0xD00A > "${GADGET}/idProduct"
+        echo 0x0417 > "${GADGET}/bcdDevice"
+    fi
+    echo Allwinner > "${GADGET}/strings/0x409/manufacturer"
+    echo AITVBox > "${GADGET}/strings/0x409/product"
+    serial="$(sed -n 's/.*androidboot.serialno=\([^ ]*\).*/\1/p' /proc/cmdline)"
+    [ -n "${serial}" ] || serial=20080411
+    echo "${serial}" > "${GADGET}/strings/0x409/serialnumber"
+    echo 0xc0 > "${CONFIG}/bmAttributes"
+    echo 500 > "${CONFIG}/MaxPower"
+}
+
+prepare_adb_function() {
+    mkdir -p "${GADGET}/functions/ffs.adb" /dev/usb-ffs/adb
+    [ -e "${CONFIG}/ffs.adb" ] ||
+        ln -s "${GADGET}/functions/ffs.adb" "${CONFIG}/ffs.adb"
+    grep -q " /dev/usb-ffs/adb " /proc/mounts ||
+        mount -o uid=2000,gid=2000 -t functionfs adb /dev/usb-ffs/adb
+}
+
+remove_adb_function() {
+    rm -f "${CONFIG}/ffs.adb"
+    umount /dev/usb-ffs/adb 2>/dev/null || true
+    rmdir "${GADGET}/functions/ffs.adb" 2>/dev/null || true
+}
+
+start_adbd() {
+    mode="$1"
+    procd_open_instance adbd
+    procd_set_param oom_score_adj -17
+    if [ "${mode}" = authorized ]; then
+        mkdir -p "${ADB_KEYS%/*}"
+        touch "${ADB_KEYS}"
+        chmod 0600 "${ADB_KEYS}"
+        procd_set_param env ADB_AUTH_ENABLE=1
+        procd_append_param env "ADB_AUTH_EXTERNAL_KEY_PATH=${ADB_KEYS}"
+    else
+        logger -t aitvbox-usb-hid \
+            "WARNING: unauthenticated development ADB enabled"
+    fi
+    procd_set_param command "${PROG}" -D
+    procd_close_instance
+}
+
+wait_for_adbd_descriptors() {
+    # procd starts adbd asynchronously.  Binding before FunctionFS has
+    # received its descriptors fails with ENODEV on the sunxi UDC even
+    # though the same ADB + HID composition is supported.
+    count=0
+    while [ "$count" -lt 15 ]; do
+        [ -e /dev/usb-ffs/adb/ep1 ] &&
+            [ -e /dev/usb-ffs/adb/ep2 ] &&
+            return 0
+        count=$((count + 1))
+        # BusyBox sleep on the target accepts whole seconds only.
+        sleep 1
+    done
+    return 1
+}
+
+unbind_gadget() {
+    UDC_NAME=""
+    if [ -r "${GADGET}/UDC" ]; then
+        UDC_NAME="$(cat "${GADGET}/UDC")"
+        [ -n "${UDC_NAME}" ] && echo "" > "${GADGET}/UDC"
+    fi
+}
+
+bind_gadget() {
+    [ -n "${UDC_NAME}" ] || UDC_NAME="$(ls /sys/class/udc 2>/dev/null | head -n 1)"
+    [ -n "${UDC_NAME}" ] || return 1
+    echo "${UDC_NAME}" > "${GADGET}/UDC" 2>/dev/null
+}
+
+create_composite_hid() {
+    # sunxi_usb_udc exposes only enough IN endpoints for FunctionFS ADB plus
+    # one HID interface. Service mode therefore shares a report-ID based HID
+    # function: ID 1 keyboard and ID 2 relative mouse.
+    rm -f "${CONFIG}/hid.keyboard" "${CONFIG}/hid.mouse" \
+        "${CONFIG}/hid.composite"
+    rmdir "${LEGACY_KEYBOARD}" "${LEGACY_MOUSE}" 2>/dev/null || true
+    mkdir -p "${COMPOSITE}"
+    echo 0 > "${COMPOSITE}/protocol"
+    echo 0 > "${COMPOSITE}/subclass"
+    echo 9 > "${COMPOSITE}/report_length"
+    # configfs binary attributes replace their value on each write(2), even
+    # when a shell brace group shares one open fd. Emit both report
+    # collections in one write. Mouse uses report ID 1 and keyboard ID 2:
+    # this host consumes ID 1 consistently while discarding otherwise valid
+    # ID 2 mouse input.
+    printf '\005\001\011\006\241\001\205\002\005\007\031\340\051\347\025\000\045\001\165\001\225\010\201\002\225\001\165\010\201\001\225\005\165\001\005\010\031\001\051\005\221\002\225\001\165\003\221\001\225\006\165\010\025\000\045\145\005\007\031\000\051\145\201\000\300\005\001\011\002\241\001\205\001\011\001\241\000\005\011\031\001\051\003\025\000\045\001\225\003\165\001\201\002\225\001\165\005\201\001\005\001\011\060\011\061\011\070\025\201\045\177\165\010\225\003\201\006\300\300' > "${COMPOSITE}/report_desc"
+    ln -s "${COMPOSITE}" "${CONFIG}/hid.composite"
+}
+
+create_production_composite_hid() {
+    rm -f "${CONFIG}/hid.keyboard" "${CONFIG}/hid.mouse" \
+        "${CONFIG}/hid.composite"
+    rmdir "${LEGACY_KEYBOARD}" "${LEGACY_MOUSE}" "${COMPOSITE}" 2>/dev/null ||
+        true
+    mkdir -p "${COMPOSITE}"
+    echo 2 > "${COMPOSITE}/protocol"
+    echo 1 > "${COMPOSITE}/subclass"
+    echo 4 > "${COMPOSITE}/report_length"
+    printf '\005\001\011\002\241\001\011\001\241\000\005\011\031\001\051\003\025\000\045\001\225\003\165\001\201\002\225\001\165\005\201\001\005\001\011\060\011\061\011\070\025\201\045\177\165\010\225\003\201\006\300\300' > "${COMPOSITE}/report_desc"
+    ln -s "${COMPOSITE}" "${CONFIG}/hid.composite"
+}
+
+create_separate_hid() {
+    rm -f "${CONFIG}/hid.keyboard" "${CONFIG}/hid.mouse" \
+        "${CONFIG}/hid.composite"
+    rmdir "${COMPOSITE}" "${LEGACY_KEYBOARD}" "${LEGACY_MOUSE}" 2>/dev/null ||
+        true
+    mkdir -p "${LEGACY_KEYBOARD}" "${LEGACY_MOUSE}"
+
+    echo 1 > "${LEGACY_KEYBOARD}/protocol"
+    echo 1 > "${LEGACY_KEYBOARD}/subclass"
+    echo 8 > "${LEGACY_KEYBOARD}/report_length"
+    printf '\005\001\011\006\241\001\005\007\031\340\051\347\025\000\045\001\165\001\225\010\201\002\225\001\165\010\201\001\225\005\165\001\005\010\031\001\051\005\221\002\225\001\165\003\221\001\225\006\165\010\025\000\045\145\005\007\031\000\051\145\201\000\300' > "${LEGACY_KEYBOARD}/report_desc"
+
+    echo 2 > "${LEGACY_MOUSE}/protocol"
+    echo 1 > "${LEGACY_MOUSE}/subclass"
+    echo 4 > "${LEGACY_MOUSE}/report_length"
+    printf '\005\001\011\002\241\001\011\001\241\000\005\011\031\001\051\003\025\000\045\001\225\003\165\001\201\002\225\001\165\005\201\001\005\001\011\060\011\061\011\070\025\201\045\177\165\010\225\003\201\006\300\300' > "${LEGACY_MOUSE}/report_desc"
+
+    ln -s "${LEGACY_KEYBOARD}" "${CONFIG}/hid.keyboard"
+    ln -s "${LEGACY_MOUSE}" "${CONFIG}/hid.mouse"
+}
+
+ensure_function_node() {
+    function_path="$1"
+    node="$2"
+    if [ -c "${node}" ]; then
+        chmod 0660 "${node}" 2>/dev/null || true
+        return 0
+    fi
+    count=0
+    while [ "$count" -lt 5 ]; do
+        if [ -r "${function_path}/dev" ]; then
+            device="$(cat "${function_path}/dev")"
+            major="${device%:*}"
+            minor="${device#*:}"
+            case "${major}:${minor}" in
+                *[!0-9:]*|:) ;;
+                *)
+                    mknod "${node}" c "${major}" "${minor}" 2>/dev/null || true
+                    chmod 0660 "${node}" 2>/dev/null || true
+                    [ -c "${node}" ] && return 0
+                    ;;
+            esac
+        fi
+        count=$((count + 1))
+        sleep 1
+    done
+    return 1
+}
+
+ensure_hid_nodes() {
+    mode="$1"
+    if [ "${mode}" = disabled ]; then
+        ensure_function_node "${LEGACY_KEYBOARD}" /dev/hidg0 &&
+            ensure_function_node "${LEGACY_MOUSE}" /dev/hidg1
+    else
+        ensure_function_node "${COMPOSITE}" /dev/hidg0
+    fi
+}
+
+start_service() {
+    mode="$(adb_mode)"
+    /etc/init.d/adbd stop >/dev/null 2>&1 || true
+    # Vendor adbd may have created the gadget already, but its identity
+    # strings are not reliable. Always unbind before normalizing descriptors
+    # and product strings so hosts see a stable AITVBox device.
+    wait_for_base_gadget || true
+    unbind_gadget
+    rm -f /dev/hidg0 /dev/hidg1
+    ensure_base_gadget "${mode}"
+    if [ "${mode}" = disabled ]; then
+        remove_adb_function
+        create_separate_hid
+    else
+        prepare_adb_function
+        start_adbd "${mode}"
+        create_composite_hid
+    fi
+}
+
+service_started() {
+    mode="$(adb_mode)"
+    if [ "${mode}" != disabled ] &&
+        ! wait_for_adbd_descriptors; then
+        logger -t aitvbox-usb-hid \
+            "ADB FunctionFS descriptors were not ready after 15 seconds"
+    fi
+    bind_gadget || {
+        # Some sunxi gadget revisions briefly retain the previous endpoint
+        # allocation after FunctionFS publishes new descriptors.  A clean
+        # unbind and one delayed retry succeeds without dropping ADB.
+        logger -t aitvbox-usb-hid \
+            "initial ADB + HID bind failed; retrying composition once"
+        unbind_gadget
+        sleep 1
+        bind_gadget
+    } || {
+        # Keep local keyboard/mouse control available even if FunctionFS ADB
+        # is not ready or a future controller cannot satisfy the composite.
+        logger -t aitvbox-usb-hid \
+            "ADB + HID bind failed; retrying HID-only fallback"
+        unbind_gadget
+        rm -f "${CONFIG}/ffs.adb"
+        bind_gadget || {
+            logger -t aitvbox-usb-hid "failed to bind HID-only USB gadget"
+            return 1
+        }
+    }
+    ensure_hid_nodes "${mode}" || {
+        logger -t aitvbox-usb-hid "keyboard or mouse HID device node is missing"
+        return 1
+    }
+    if [ -e "${CONFIG}/ffs.adb" ]; then
+        logger -t aitvbox-usb-hid \
+            "ADB + composite keyboard/mouse gadget enabled"
+    else
+        logger -t aitvbox-usb-hid \
+            "separate keyboard + relative-mouse gadget enabled"
+    fi
+}
+
+stop_service() {
+    [ -d "${GADGET}" ] || return 0
+    unbind_gadget
+    rm -f "${CONFIG}/hid.composite" "${CONFIG}/hid.keyboard" \
+        "${CONFIG}/hid.mouse"
+    rmdir "${COMPOSITE}" "${LEGACY_KEYBOARD}" "${LEGACY_MOUSE}" 2>/dev/null
+    remove_adb_function
+}

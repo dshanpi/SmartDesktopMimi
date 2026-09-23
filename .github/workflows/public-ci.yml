@@ -1,0 +1,49 @@
+name: Public source validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  public-gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out the history-free public tree
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.11"
+
+      - name: Install Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        with:
+          go-version-file: apps/ipkvm/upstream/go.mod
+          cache-dependency-path: apps/ipkvm/upstream/go.sum
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22.21.1"
+          cache: npm
+          cache-dependency-path: apps/ipkvm/upstream/ui/package-lock.json
+
+      - name: Install host build prerequisites
+        run: sudo apt-get update && sudo apt-get install --yes libjson-c-dev
+
+      - name: Run the public release gate
+        run: python3 tools/aitvbox.py test --platform a133 --scope public
+
+      - name: Reject generated source-tree changes
+        run: git diff --exit-code
+
+      - name: Verify candidate repository boundary
+        run: |
+          test ! -e .gitmodules
+          python3 tools/public_release_audit.py --candidate

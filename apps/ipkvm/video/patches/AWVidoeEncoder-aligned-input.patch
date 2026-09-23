@@ -1,0 +1,103 @@
+--- AWVidoeEncoder.cpp.orig
++++ AWVidoeEncoder.cpp
+@@ -282,9 +282,15 @@
+     baseConfig.nDstWidth = mEncodeParam->dstW;
+     baseConfig.nDstHeight = mEncodeParam->dstH;
+ 
+-    bufferParam.nSizeY = baseConfig.nInputWidth * baseConfig.nInputHeight;
+-    bufferParam.nSizeC = baseConfig.nInputWidth * baseConfig.nInputHeight / 2;
+-    bufferParam.nBufferNum = 1;
++    // Match Allwinner's encodertest reference allocation. The VE accesses
++    // macroblock-aligned rows even when the visible height is 1080; the
++    // former tight allocation overran its Y/C input buffers and could hang
++    // the first virtual-address encode.
++    bufferParam.nSizeY = ALIGN_XXB(16, baseConfig.nInputWidth) *
++                         ALIGN_XXB(16, baseConfig.nInputHeight) + 1024;
++    bufferParam.nSizeC = ALIGN_XXB(16, baseConfig.nInputWidth) *
++                         ALIGN_XXB(16, baseConfig.nInputHeight) / 2 + 1024;
++    bufferParam.nBufferNum = 4;
+ 
+ #ifdef USE_AFBC_INPUT
+     afbcHeaderSize = ((baseConfig.nInputWidth + 127) >> 7) * ((baseConfig.nInputHeight + 31) >> 5) * 96;
+@@ -599,8 +605,13 @@
+ 
+ void AWVideoEncoderImpl::initVideoSignal(VencH264VideoSignal* sVideoSignal)
+ {
++    // HDMI capture at 1080p is limited-range BT.709. Populate every VUI
++    // field explicitly; the SDK previously left several bytes undefined.
+     sVideoSignal->video_format = (VENC_VIDEO_FORMAT)5;
+-    sVideoSignal->src_colour_primaries = (VENC_COLOR_SPACE)0;
++    sVideoSignal->full_range_flag = 0;
++    sVideoSignal->transfer_characteristics = 1;
++    sVideoSignal->matrix_coefficients = 1;
++    sVideoSignal->src_colour_primaries = (VENC_COLOR_SPACE)1;
+     sVideoSignal->dst_colour_primaries = (VENC_COLOR_SPACE)1;
+ }
+ 
+@@ -849,6 +860,9 @@
+     h264Func->h264Param.nFramerate = encodeParam->frameRate;
+     h264Func->h264Param.nCodingMode = VENC_FRAME_CODING;
+     h264Func->h264Param.nMaxKeyInterval = encodeParam->maxKeyFrame;
+-    h264Func->h264Param.sProfileLevel.nProfile = VENC_H264ProfileHigh;
+-    h264Func->h264Param.sProfileLevel.nLevel = VENC_H264Level51;
++    // Keep the elementary stream profile-level identical to the WebRTC SDP.
++    // Advertising constrained Baseline 3.1 while emitting High 5.1 makes
++    // Chromium configure the wrong decoder and display green/corrupt frames.
++    h264Func->h264Param.sProfileLevel.nProfile = VENC_H264ProfileBaseline;
++    h264Func->h264Param.sProfileLevel.nLevel = VENC_H264Level31;
+ #if ENABLE_RC_VBR
+@@ -1056,6 +1070,8 @@
+ #endif
+         unsigned int vbv_size = 12 * 1024 * 1024;
+         VideoEncSetParameter(pVideoEnc, VENC_IndexParamH264Param, &h264Func.h264Param);
++        VideoEncSetParameter(pVideoEnc, VENC_IndexParamH264VideoSignal,
++                             &h264Func.sVideoSignal);
+         VideoEncSetParameter(pVideoEnc, VENC_IndexParamSetVbvSize, &vbv_size);
+         //VideoEncSetParameter(pVideoEnc, VENC_IndexParamH264FixQP, &h264Func.fixQP);
+ 
+@@ -1316,6 +1332,7 @@
+ 
+     memset(&inputBuffer, 0, sizeof(VencInputBuffer));
+     memset(&outputBuffer, 0, sizeof(VencOutputBuffer));
++    bool usingAllocatedInput = false;
+     if ((NULL != inPacket->pAddrPhy0) && (NULL != inPacket->pAddrPhy1)) {
+         ALOGD("use phy addr.");
+         inputBuffer.pAddrPhyY = inPacket->pAddrPhy0;
+@@ -1330,7 +1347,13 @@
+             return -1;
+         }
+ 
+-        GetOneAllocInputBuffer(pVideoEnc, &inputBuffer);
++        usingAllocatedInput = true;
++        result = GetOneAllocInputBuffer(pVideoEnc, &inputBuffer);
++        if (result != 0) {
++            ALOGE("GetOneAllocInputBuffer failed.");
++            pthread_mutex_unlock(&mEncodeMutex);
++            return result;
++        }
+ 
+         if (inPacket->dataLen0 == baseConfig.nInputWidth * baseConfig.nInputHeight) {
+             memcpy(inputBuffer.pAddrVirY, inPacket->pAddrVir0, baseConfig.nInputWidth * baseConfig.nInputHeight);
+@@ -1350,7 +1373,12 @@
+         FlushCacheAllocInputBuffer(pVideoEnc, &inputBuffer);
+     }
+ 
+-    inputBuffer.nID = inPacket->id;
++    // AllocInputBuffer uses nID as its private pool index. Overwriting it
++    // with a monotonically increasing frame ID prevents the buffer from
++    // being returned after the first few frames and exhausts the pool.
++    if (!usingAllocatedInput) {
++        inputBuffer.nID = inPacket->id;
++    }
+     inputBuffer.nPts = inPacket->pts;
+ 
+     if (inputBuffer.nFlag = inPacket->isKeyframe) {
+@@ -1368,7 +1396,7 @@
+     }
+     AlreadyUsedInputBuffer(pVideoEnc, &inputBuffer);
+ 
+-    if ((NULL == inPacket->pAddrPhy0) && (NULL != inPacket->pAddrVir0)) {
++    if (usingAllocatedInput) {
+         ALOGD("ret vir addr.");
+         ReturnOneAllocInputBuffer(pVideoEnc, &inputBuffer);
+     }

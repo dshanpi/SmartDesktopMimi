@@ -1,0 +1,33 @@
+sequenceDiagram
+    autonumber
+    participant Cloud as 100ask Cloud
+    participant Service as service_cloud
+    participant UI as LVGL 顶栏 / 安装模态框
+    participant OTA as service_ota
+    participant FS as /tmp 下载区
+    participant SWU as SWUpdate
+    participant Boot as U-Boot A/B 状态
+    participant New as 新系统槽
+
+    Service->>Cloud: 设备签名注册 / MQTT TLS 连接
+    Cloud-->>Service: OTA 元数据（版本、URL、SHA-256）
+    Service-->>UI: 云状态蓝点 + 下载进度
+    Service->>OTA: 启动静默下载
+    OTA->>FS: HTTPS 下载 .swu（不占 overlay）
+    OTA->>OTA: 版本检查 + 下载文件 SHA-256 早筛
+    OTA-->>UI: 下载完成，橙点闪烁 + 安装确认
+    UI->>OTA: 用户确认 APPLY
+    OTA->>SWU: 写入非活动 kernel + rootfs 槽
+    SWU->>SWU: 使用 /etc/swupdate_public.pem 验签
+    SWU->>Boot: 设置 upgrade_available、目标槽、bootcount
+    OTA-->>UI: APPLY 状态并请求重启
+    Boot->>New: 从新槽启动
+    alt 新系统健康并提交
+        New->>Boot: COMMIT，清除 upgrade_available/bootcount
+        New-->>Cloud: 上报新版本与在线状态
+    else 启动失败或未提交
+        Boot->>Boot: altbootcmd 达到阈值
+        Boot->>New: 回滚到上一已知良好槽
+        New-->>Cloud: 上报失败/旧版本
+    end
+    Note over Service,New: 私钥与设备身份位于持久化受保护路径，不进入公开源码和通用固件

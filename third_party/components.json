@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "components": [
+    {
+      "name": "LVGL",
+      "path": "apps/lv_port_linux/lvgl",
+      "source": "https://github.com/100askTeam/AI-DeskTop-Box-LVGL-v9.5",
+      "revision": "685aa79c2894b038c212ef7c26834bfd5b9120aa",
+      "license": "MIT",
+      "license_file": "apps/lv_port_linux/lvgl/LICENCE.txt",
+      "distribution": "source-pruned-a133"
+    },
+    {
+      "name": "IPKVM upstream",
+      "path": "apps/ipkvm/upstream",
+      "source": "https://github.com/jetkvm/kvm",
+      "revision": "product-vendored-fork",
+      "license": "GPL-2.0-only",
+      "license_file": "apps/ipkvm/upstream/LICENSE",
+      "distribution": "separate-process-source"
+    },
+    {
+      "name": "TuyaOpen",
+      "path": "third_party/TuyaOpen",
+      "source": "https://github.com/tuya/TuyaOpen",
+      "revision": "e5f03d0d9655caeb9e71c1bfdcf12dd624b4133a+aitvbox",
+      "license": "Apache-2.0 AND LicenseRef-ComponentLicenses",
+      "license_file": "third_party/TuyaOpen/LICENSE",
+      "distribution": "source-pruned-a133"
+    },
+    {
+      "name": "A133 vendor media and KWS libraries",
+      "path": "vendor/tuyaopen-a133-b6-libs",
+      "source": "NOASSERTION",
+      "revision": "content-addressed-private-input",
+      "license": "LicenseRef-VendorRestricted",
+      "license_file": "vendor/README.md",
+      "distribution": "external-restricted"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+[submodule "lvgl"]
+	path = lvgl
+	url = git@github.com:100askTeam/AI-DeskTop-Box-LVGL-v9.5.git
+	branch = master

@@ -1,0 +1,11 @@
+# 工位运行数据与密钥勿进库
+keys/*.pem
+keys/*.der
+keys/*.pub
+!keys/README.txt
+data/*
+!data/.gitkeep
+imports/*
+logs/*
+*.sqlite
+*.sqlite-*

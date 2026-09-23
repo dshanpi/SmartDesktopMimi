@@ -1,0 +1,35 @@
+sequenceDiagram
+    autonumber
+    participant User as 用户 / 麦克风
+    participant UI as lvglsim AI 页面
+    participant Router as backend_command_router
+    participant AI as service_ai_runtime
+    participant LED as service_led
+    participant BT as service_bt
+    participant Tuya as Tuya chatbot 进程
+    participant Model as 离线 MNN 唤醒/KWS
+    participant Cloud as 涂鸦 AI / MQTT
+    participant Audio as ALSA 扬声器
+
+    Note over AI,Tuya: service_ai_init() 读取运行时 License；凭据不进入通用固件
+    AI->>Tuya: fork + execl(your_chat_bot_QIO_1.0.1.bin)
+    Tuya->>Model: 加载“你好涂鸦”唤醒模型
+    UI->>Router: TOPIC_AI_COMMAND / AI_CMD_ENTER_FREE_CHAT
+    Router->>AI: service_ai_enter_free_chat()
+    AI->>AI: service_ai_start_listen()
+    AI->>BT: 暂停/抑制蓝牙播放冲突
+    AI->>LED: request 聆听场景
+    User->>Tuya: PCM 语音输入
+    Tuya->>Tuya: 唤醒 + AEC + VAD
+    Tuya->>Cloud: 加密连接、ASR/对话请求
+    Cloud-->>Tuya: 流式文本 + TTS 音频
+    Tuya-->>AI: 状态/文本事件
+    AI-->>UI: TOPIC_AI_STATUS + TOPIC_AI_TEXT
+    AI->>LED: 思考 / 说话场景（25 Hz 上限、重复帧抑制）
+    Tuya->>Audio: 播放 TTS
+    Note over User,Tuya: 真人说话可打断；扬声器泄漏不得触发错误 barge-in
+    UI->>Router: AI_CMD_EXIT_FREE_CHAT
+    Router->>AI: service_ai_exit_free_chat()
+    AI->>AI: service_ai_stop_listen()
+    AI->>BT: 延迟恢复先前播放状态
+    AI->>LED: release AI 场景

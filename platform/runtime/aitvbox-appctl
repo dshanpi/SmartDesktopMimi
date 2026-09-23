@@ -1,0 +1,388 @@
+#!/bin/sh
+set -eu
+
+APP_ROOT=${AITVBOX_APP_ROOT:-/overlay/aitvbox/apps}
+TRUST_ROOT=${AITVBOX_TRUST_ROOT:-/overlay/aitvbox/trusted-app-keys}
+POLICY=${AITVBOX_APP_POLICY:-/usr/bin/aitvbox-app-policy}
+MAX_BYTES=$((32 * 1024 * 1024))
+MAX_FILE_BYTES=$((8 * 1024 * 1024))
+MAX_EXTRACTED_BYTES=$((64 * 1024 * 1024))
+MAX_DATA_KIB=$((64 * 1024))
+PUBLISHER_MARKER=.aitvbox-publisher-key.sha256
+
+die() {
+	echo "aitvbox-appctl: $*" >&2
+	exit 1
+}
+
+remove_tree() {
+	[ -e "$1" ] || return 0
+	chmod -R u+rwX "$1" 2>/dev/null || :
+	rm -rf "$1"
+}
+
+validate_app_id() {
+	case "$1" in
+		""|*[!a-z0-9.-]*|[!a-z]*|.*|*..*|*.) return 1 ;;
+		*.*) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+publisher_fingerprint() {
+	openssl pkey -pubin -in "$1" -outform DER 2>/dev/null |
+		sha256sum | cut -d ' ' -f 1
+}
+
+validate_archive() {
+	pkg=$1
+	meta=$2
+	tar -tzf "$pkg" >"$meta/names" || return 1
+	[ "$(grep -c '^' "$meta/names")" -le 256 ] || return 1
+	[ "$(grep -xc 'manifest.json' "$meta/names")" = 1 ] || return 1
+	[ "$(grep -xc 'SHA256SUMS' "$meta/names")" = 1 ] || return 1
+	[ "$(grep -xc 'SIGNATURE' "$meta/names")" = 1 ] || return 1
+	[ -z "$(LC_ALL=C sort "$meta/names" | uniq -d)" ] || return 1
+	while IFS= read -r name; do
+		[ "${#name}" -le 240 ] || return 1
+		case "$name" in
+			""|/*|./*|../*|*/../*|*/..|*/./*|*/.|*//*|\
+			*[!A-Za-z0-9._/-]*) return 1 ;;
+			data|data/*) return 1 ;;
+		esac
+	done <"$meta/names" || return 1
+	tar -tvzf "$pkg" >"$meta/listing" || return 1
+	LC_ALL=C awk -v maximum="$MAX_EXTRACTED_BYTES" '
+		NF < 6 || $3 !~ /^[0-9]+$/ { exit 2 }
+		{ total += $3 }
+		total > maximum { exit 1 }
+		END { if (total > maximum) exit 1 }
+	' "$meta/listing" || return 1
+	while IFS= read -r line; do
+		case "$line" in
+			-*|d*) ;;
+			*) return 1 ;;
+		esac
+	done <"$meta/listing"
+}
+
+recover_updates() {
+	for stage in "$APP_ROOT"/.install.*; do
+		[ -e "$stage" ] || [ -L "$stage" ] || continue
+		[ -d "$stage" ] && [ ! -L "$stage" ] ||
+			die "unsafe interrupted application install path"
+		remove_tree "$stage"
+	done
+	for old in "$APP_ROOT"/.old.*.*; do
+		[ -d "$old" ] || continue
+		rest=${old##*/.old.}
+		app_id=${rest%.*}
+		pid=${rest##*.}
+		validate_app_id "$app_id" || continue
+		case "$pid" in ""|*[!0-9]*) continue ;; esac
+		target="$APP_ROOT/$app_id"
+		if [ -e "$target" ]; then
+			remove_tree "$old"
+		else
+			mv "$old" "$target" ||
+				die "cannot recover interrupted update for $app_id"
+		fi
+	done
+	for removed in "$APP_ROOT"/.remove.*.*; do
+		[ -e "$removed" ] || continue
+		rest=${removed##*/.remove.}
+		app_id=${rest%.*}
+		pid=${rest##*.}
+		validate_app_id "$app_id" || continue
+		case "$pid" in ""|*[!0-9]*) continue ;; esac
+		remove_tree "$removed"
+	done
+}
+
+acquire_app_lock() {
+	lock="$APP_ROOT/.appctl.lock"
+	if mkdir "$lock" 2>/dev/null; then
+		printf '%s\n' "$$" >"$lock/pid"
+		return 0
+	fi
+	[ -d "$lock" ] && [ ! -L "$lock" ] ||
+		die "application operation lock is unsafe"
+	owner=
+	[ ! -f "$lock/pid" ] || owner=$(cat "$lock/pid")
+	case "$owner" in
+		""|*[!0-9]*)
+			now=$(date +%s)
+			created=$(stat -c %Y "$lock" 2>/dev/null || echo "$now")
+			case "$created" in ""|*[!0-9]*) created=$now ;; esac
+			[ $((now - created)) -ge 5 ] ||
+				die "another application operation is initializing"
+			;;
+		*)
+			if kill -0 "$owner" 2>/dev/null &&
+				tr '\000' ' ' <"/proc/$owner/cmdline" 2>/dev/null |
+					grep -q 'aitvbox-appctl'; then
+				die "another application operation is active"
+			fi
+			;;
+	esac
+	rm -rf "$lock"
+	mkdir "$lock" 2>/dev/null ||
+		die "cannot recover stale application operation lock"
+	printf '%s\n' "$$" >"$lock/pid"
+}
+
+install_app() {
+	pkg=$1
+	mode=$2
+	[ -f "$pkg" ] || die "package not found"
+	[ "$(wc -c <"$pkg")" -le "$MAX_BYTES" ] || die "package exceeds 32 MiB"
+	[ -x "$POLICY" ] || die "device app policy validator is unavailable"
+	command -v openssl >/dev/null 2>&1 ||
+		die "OpenSSL utility is unavailable"
+	command -v od >/dev/null 2>&1 ||
+		die "od utility is unavailable"
+	case "$APP_ROOT" in ""|/) die "unsafe application root" ;; esac
+
+	mkdir -p "$APP_ROOT"
+	[ -d "$APP_ROOT" ] && [ ! -L "$APP_ROOT" ] ||
+		die "application root is unsafe"
+	chmod 0755 "$APP_ROOT"
+	acquire_app_lock
+	recover_updates
+
+	meta=$(mktemp -d /tmp/aitapp-meta.XXXXXX)
+	stage=
+	trap 'rm -rf "$meta" "${stage:-}" "$lock"' \
+		EXIT INT TERM
+	validate_archive "$pkg" "$meta" ||
+		die "unsafe archive path, type, count, or reserved data path"
+	tar -xOzf "$pkg" SHA256SUMS >"$meta/SHA256SUMS" ||
+		die "cannot read checksum metadata"
+	tar -xOzf "$pkg" SIGNATURE >"$meta/SIGNATURE" ||
+		die "cannot read signature metadata"
+	[ "$(wc -c <"$meta/SHA256SUMS")" -le 65536 ] ||
+		die "checksum metadata is too large"
+	[ "$(wc -c <"$meta/SIGNATURE")" -le 16384 ] ||
+		die "signature metadata is too large"
+
+	trusted=0
+	signer_fingerprint=
+	for key in "$TRUST_ROOT"/*.pem; do
+		[ -f "$key" ] && [ ! -L "$key" ] || continue
+		if openssl dgst -sha256 -verify "$key" -signature "$meta/SIGNATURE" \
+			"$meta/SHA256SUMS" >/dev/null 2>&1; then
+			trusted=1
+			signer_fingerprint=$(publisher_fingerprint "$key")
+			break
+		fi
+	done
+	[ "$trusted" = 1 ] || die "publisher key is not trusted"
+	case "$signer_fingerprint" in
+		????????????????????????????????????????????????????????????????) ;;
+		*) die "cannot fingerprint publisher key" ;;
+	esac
+
+	stage=$(mktemp -d "$APP_ROOT/.install.XXXXXX")
+	(ulimit -f $((MAX_FILE_BYTES / 512)); tar -xzf "$pkg" -C "$stage") ||
+		die "cannot extract package within resource limits"
+	# Resolve the real installer identity from the system utility path.  The
+	# caller's PATH may contain wrappers (including the host integration test),
+	# and must not influence ownership of activated application files.
+	owner_uid=$(command -p id -u)
+	owner_gid=$(command -p id -g)
+	chown -R "$owner_uid:$owner_gid" "$stage" ||
+		die "cannot normalize application ownership"
+	[ -f "$stage/manifest.json" ] && [ -f "$stage/SHA256SUMS" ] &&
+		[ -f "$stage/SIGNATURE" ] || die "incomplete package"
+	if find "$stage" -type l | grep -q .; then
+		die "symlinks are prohibited"
+	fi
+	"$POLICY" validate "$stage" >/dev/null ||
+		die "manifest, runtime, or declarative UI violates device policy"
+	app_id=$(jsonfilter -i "$stage/manifest.json" -e '@.id')
+	version=$(jsonfilter -i "$stage/manifest.json" -e '@.version')
+	schema=$(jsonfilter -i "$stage/manifest.json" -e '@.schema')
+	presentation=$(jsonfilter -i "$stage/manifest.json" -e '@.ui.presentation')
+	ui_entry=$(jsonfilter -i "$stage/manifest.json" -e '@.ui.entry')
+	runtime_entry=
+	if [ "$schema" = 2 ]; then
+		runtime_type=$(jsonfilter -i "$stage/manifest.json" -e '@.runtime.type')
+		runtime_entry=$(jsonfilter -i "$stage/manifest.json" -e '@.runtime.entry')
+		runtime_api=$(jsonfilter -i "$stage/manifest.json" -e '@.runtime.api')
+		[ "$runtime_type" = native-rpc ] && [ "$runtime_api" = 1 ] ||
+			die "unsupported application runtime"
+		case "$runtime_entry" in bin/*) ;; *) die "invalid runtime entry" ;; esac
+		case "$runtime_entry" in */*/*|*../*|*/../*) die "invalid runtime entry" ;; esac
+		[ -x "$stage/$runtime_entry" ] ||
+			die "native runtime entry is missing or not executable"
+	fi
+	find "$stage" -type f | while IFS= read -r file; do
+		[ "$(wc -c <"$file")" -le "$MAX_FILE_BYTES" ] || exit 1
+		relative=${file#"$stage/"}
+		if [ "$schema" = 2 ] && [ "$relative" = "$runtime_entry" ]; then
+			[ -x "$file" ] || exit 1
+		else
+			[ ! -x "$file" ] || exit 1
+			case "$file" in
+				*/SIGNATURE|*/SHA256SUMS|*.json|*.png|*.jpg|*.jpeg|*.ttf|*.otf) ;;
+				*) exit 1 ;;
+			esac
+			magic=$(dd if="$file" bs=4 count=1 2>/dev/null |
+				od -An -tx1 | tr -d ' \n')
+			case "$magic" in
+				7f454c46|2321*) exit 1 ;;
+			esac
+		fi
+	done || die "executable or unsupported payload"
+
+	validate_app_id "$app_id" || die "invalid app id"
+	case "$ui_entry" in ui/*.json) ;; *) die "invalid UI entry" ;; esac
+	case "$ui_entry" in *../*|*/../*) die "invalid UI entry" ;; esac
+	[ -f "$stage/$ui_entry" ] || die "UI entry is missing"
+	case "$schema" in 1|2) ;; *) die "unsupported manifest schema" ;; esac
+	[ "$presentation" = embedded ] || die "full-screen/external apps are prohibited"
+	for permission in $(jsonfilter -i "$stage/manifest.json" -e '@.permissions[*]'); do
+		case "$permission" in
+			capture.snapshot|input.keyboard|input.pointer|hardware.gpio.read|\
+			hardware.gpio.write|hardware.i2c|hardware.spi|hardware.uart|\
+			hardware.usb|network.https|storage.app) ;;
+			*) die "unsupported permission: $permission" ;;
+		esac
+	done
+
+	(
+		cd "$stage"
+		find . -type f ! -name SIGNATURE ! -name SHA256SUMS -print |
+			sed 's#^\./##' | LC_ALL=C sort |
+			while IFS= read -r file; do sha256sum "$file"; done
+	) >"$meta/calculated"
+	cmp -s "$meta/calculated" "$stage/SHA256SUMS" ||
+		die "payload checksum list does not match"
+
+	rm -f "$stage/SIGNATURE" "$stage/SHA256SUMS"
+	printf '%s\n' "$signer_fingerprint" >"$stage/$PUBLISHER_MARKER"
+	mkdir "$stage/data"
+	chmod 0700 "$stage/data"
+	target="$APP_ROOT/$app_id"
+	old="$APP_ROOT/.old.$app_id.$$"
+	remove_tree "$old"
+	if [ -e "$target" ]; then
+		[ -d "$target" ] && [ ! -L "$target" ] ||
+			die "installed application path is unsafe"
+		"$POLICY" validate "$target" >/dev/null ||
+			die "installed application metadata is invalid"
+		[ -f "$target/$PUBLISHER_MARKER" ] &&
+			[ ! -L "$target/$PUBLISHER_MARKER" ] ||
+			die "installed application ownership metadata is missing"
+		old_fingerprint=$(cat "$target/$PUBLISHER_MARKER")
+		[ "$old_fingerprint" = "$signer_fingerprint" ] ||
+			die "application id belongs to a different publisher key"
+		old_version=$(jsonfilter -i "$target/manifest.json" -e '@.version') ||
+			die "installed application version is unreadable"
+		comparison=$("$POLICY" compare-version "$version" "$old_version") ||
+			die "cannot compare application versions"
+		case "$comparison:$mode" in
+			1:*) ;;
+			0:replace|0:downgrade) ;;
+			0:*) die "same-version reinstall requires --replace" ;;
+			-1:downgrade) ;;
+			-1:*) die "version downgrade requires --allow-downgrade" ;;
+			*) die "invalid application version comparison" ;;
+			esac
+			mv "$target" "$old" || die "cannot stage previous application"
+		if [ -d "$old/data" ]; then
+			if find "$old/data" ! -type d ! -type f | grep -q .; then
+				mv "$old" "$target"
+				die "application data contains an unsafe file type"
+			fi
+			[ "$(du -sk "$old/data" | awk '{print $1}')" -le "$MAX_DATA_KIB" ] || {
+				mv "$old" "$target"
+				die "application data exceeds 64 MiB update limit"
+			}
+			remove_tree "$stage/data"
+				cp -a "$old/data" "$stage/data" || {
+					mv "$old" "$target"
+					die "cannot preserve application data"
+				}
+			fi
+		fi
+		find "$stage" -path "$stage/data" -prune -o -type f -exec chmod 0444 {} +
+		find "$stage" -path "$stage/data" -prune -o -type d -exec chmod 0555 {} +
+		if [ "$schema" = 2 ]; then
+			chmod 0555 "$stage/$runtime_entry"
+		fi
+		# The two directory renames are recoverable by recover_updates().
+		# Flush the staged payload before activation and directory metadata after
+		# activation so a power loss cannot acknowledge an unpersisted install.
+		sync
+		if ! mv "$stage" "$target"; then
+			[ ! -e "$old" ] || mv "$old" "$target"
+			die "cannot activate application"
+		fi
+		stage=
+		sync
+	remove_tree "$old"
+	rm -rf "$meta"
+	rm -rf "$lock"
+	trap - EXIT INT TERM
+	echo "OK $app_id $version"
+}
+
+begin_app_operation() {
+	case "$APP_ROOT" in ""|/) die "unsafe application root" ;; esac
+	mkdir -p "$APP_ROOT"
+	[ -d "$APP_ROOT" ] && [ ! -L "$APP_ROOT" ] ||
+		die "application root is unsafe"
+	chmod 0755 "$APP_ROOT"
+	acquire_app_lock
+	trap 'rm -rf "$lock"' EXIT INT TERM
+	recover_updates
+}
+
+end_app_operation() {
+	rm -rf "$lock"
+	trap - EXIT INT TERM
+}
+
+case "${1:-}" in
+	install)
+		case "${2:-}" in
+			--replace)
+				[ "$#" = 3 ] ||
+					die "usage: $0 install [--replace|--allow-downgrade] PACKAGE"
+				install_app "$3" replace
+				;;
+			--allow-downgrade)
+				[ "$#" = 3 ] ||
+					die "usage: $0 install [--replace|--allow-downgrade] PACKAGE"
+				install_app "$3" downgrade
+				;;
+			*)
+				[ "$#" = 2 ] ||
+					die "usage: $0 install [--replace|--allow-downgrade] PACKAGE"
+				install_app "$2" upgrade
+				;;
+		esac
+		;;
+	list)
+		begin_app_operation
+		for manifest in "$APP_ROOT"/*/manifest.json; do
+			[ -f "$manifest" ] || continue
+			jsonfilter -i "$manifest" -e '@.id' -e '@.version'
+		done
+		end_app_operation
+		;;
+	remove)
+		[ "$#" = 2 ] || die "usage: $0 remove APP_ID"
+		validate_app_id "$2" || die "invalid app id"
+		begin_app_operation
+		target="$APP_ROOT/$2"
+		removed="$APP_ROOT/.remove.$2.$$"
+		if [ -e "$target" ]; then
+			mv "$target" "$removed" || die "cannot stage application removal"
+			remove_tree "$removed"
+		fi
+		end_app_operation
+		;;
+	*) die "usage: $0 {install [--replace|--allow-downgrade] PACKAGE|list|remove APP_ID}" ;;
+esac

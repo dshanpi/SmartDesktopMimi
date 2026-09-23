@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "rv1106",
+  "soc": "rockchip-rv1106",
+  "arch": "armv7",
+  "support": "skeleton",
+  "hardware": {"board": "not selected; adapter skeleton"},
+  "sdk": {"environment": "AITVBOX_RV1106_SDK", "default_root": "", "markers": ["build.sh", "sysdrv"]},
+  "toolchain": "platforms/rv1106/toolchain.cmake",
+  "capabilities": [],
+  "components": [],
+  "packaging": {"kind": "unimplemented"},
+  "flash": {"kind": "upgrade_tool", "automatic": false},
+  "validation": "platforms/rv1106/validation.json"
+}

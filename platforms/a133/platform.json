@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "a133",
+  "soc": "allwinner-a133-b6",
+  "arch": "aarch64",
+  "support": "reference",
+  "hardware": {
+    "board": "B6",
+    "firmware_variant": "UART0",
+    "local_display": "1024x768 LVGL touch UI",
+    "hdmi_capture": "HDMI IN; 1920x1080 browser path validated",
+    "usb_device": "HID keyboard and pointer gadget",
+    "connectivity": "Wi-Fi and Bluetooth audio",
+    "peripherals": "environment sensor and WS2812 addressable LED",
+    "update_layout": "A/B system update"
+  },
+  "sdk": {
+    "environment": "AITVBOX_A133_SDK",
+    "default_root": "/home/ubuntu/A133-Tina5.0-v0.9",
+    "markers": [".repo", "build/envsetup.sh", "openwrt/target/a133/a133-b6"]
+  },
+  "toolchain": "apps/lv_port_linux/toolchain.cmake",
+  "capabilities": ["local_display", "hdmi_capture", "hdmi_audio", "hardware_h264", "usb_hid_gadget", "wifi", "bluetooth_audio", "environment_sensor", "addressable_led", "ab_update", "secure_identity"],
+  "components": ["lvgl", "hdmi_preview", "platform_services", "ipkvm", "tuyaopen"],
+  "packaging": {"kind": "tina-openwrt", "entrypoint": "scripts/build_release.sh", "image_glob": "out/a133/b6/openwrt/a133_linux_b6_uart0.img"},
+  "flash": {"kind": "phoenixsuit", "gate": "scripts/a133-bootchain-gate.sh", "automatic": false},
+  "validation": "platforms/a133/validation.json"
+}

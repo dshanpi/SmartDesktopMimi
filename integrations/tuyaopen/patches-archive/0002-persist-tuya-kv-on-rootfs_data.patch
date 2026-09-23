@@ -1,0 +1,15 @@
+diff --git a/tuyaos_adapter/src/tkl_flash.c b/tuyaos_adapter/src/tkl_flash.c
+index 3104d33..4feb315 100755
+--- a/tuyaos_adapter/src/tkl_flash.c
++++ b/tuyaos_adapter/src/tkl_flash.c
+@@ -20,7 +20,9 @@
+ #define FLASH_FILE_PATH "./tuyadb"
+ #endif
+ #define FLASH_FILE_NAME ""FLASH_FILE_PATH"/tuyadb"
+-#define FLASH_FILE_SIZE (256 * 1024 * 1024)
++#ifndef FLASH_FILE_SIZE
++#define FLASH_FILE_SIZE (1 * 1024 * 1024)
++#endif
+ #define FLASH_BASE_ADDR 0X00 //
+
+ #define PARTITION_SIZE (1 << 12) /* 4KB */

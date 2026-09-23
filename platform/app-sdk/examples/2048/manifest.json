@@ -1,0 +1,19 @@
+{
+  "schema": 2,
+  "id": "com.100ask.game2048",
+  "name": "2048",
+  "version": "1.0.0",
+  "publisher": "100ask-dev",
+  "ui": {
+    "entry": "ui/main.json",
+    "presentation": "embedded"
+  },
+  "permissions": [
+    "storage.app"
+  ],
+  "runtime": {
+    "type": "native-rpc",
+    "entry": "bin/app",
+    "api": 1
+  }
+}

@@ -1,0 +1,21 @@
+交接清单（产品发出前自己勾一下）
+================================
+
+[x] 01-规格/factory-assistant-v1-credentials-spec.md
+[x] 02-密钥/100ask_ecdsa.pem + .pub + .der
+[x] 05-参考脚本（provision / tuya license / sign / lib）
+[x] 06-设备文档 cloud.md tuyaopen.md ota.md
+[x] 04-固件版本与镜像 sha256（镜像本体在仓库 build/）
+[x] 环境说明.txt / README.md
+
+[ ] 03-涂鸦/ 放入真实 xlsx（产品从涂鸦下载后拷贝）
+[ ] 联调 Wi-Fi SSID/密码写进环境说明或口头告知
+[ ] 确认工位 TUYA_PID 与当前固件 /etc/aitvbox-tuya-pid 一致
+[ ] 是否需要把 build/a133_linux_b6_uart0.img 单独网盘发给对方（体积大）
+[ ] 拍板：流水线是否「自动硬件先测再消耗 License」（规格推荐是）
+[ ] 拍板：V1 是否录入外壳 SN
+
+发出方式建议：
+  - 整个 handover/factory-assistant-v1 打 zip
+  - 或网盘共享该文件夹
+  - 私钥目录权限仅内部

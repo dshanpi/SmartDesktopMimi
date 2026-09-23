@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "target": "a133",
+  "excluded_paths": [
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/wifi.png",
+      "reason": "Validation capture contains site-specific Wi-Fi SSIDs and is retained only in the internal development evidence set."
+    },
+    {
+      "path": "apps/ipkvm/upstream/resource/netboot.xyz-multiarch.iso",
+      "reason": "Downloaded netboot payload; the UI keeps the upstream download URL instead of redistributing the image."
+    },
+    {
+      "path": "apps/ipkvm/upstream/resource/jetkvm_native",
+      "reason": "Legacy prebuilt ARM executable is not referenced by the A133 Go service and has no source-level provenance."
+    },
+    {
+      "path": "apps/ipkvm/upstream/resource/jetkvm_native.sha256",
+      "reason": "Checksum belongs to the excluded legacy prebuilt ARM executable."
+    },
+    {
+      "path": "apps/ipkvm/upstream/ui/public/fonts",
+      "reason": "CircularXX webfonts have no redistribution grant in the vendored upstream tree; the public UI uses system fonts."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/demos",
+      "reason": "Upstream LVGL demos are not enabled by the A133 product configuration."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/docs",
+      "reason": "Upstream LVGL documentation is available from the pinned source repository."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/examples",
+      "reason": "Upstream LVGL examples are not part of the A133 product build."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/tests",
+      "reason": "Upstream LVGL test corpora are not part of the product validation suite."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/env_support/cmsis-pack",
+      "reason": "Generated CMSIS pack is unrelated to the Linux A133 build."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/libs/nema_gfx",
+      "reason": "Prebuilt Cortex-M NemaGFX libraries are unrelated to the Linux A133 build."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/scripts/built_in_font",
+      "reason": "Upstream font-generation inputs are not used by the product build."
+    },
+    {
+      "path": "apps/lv_port_linux/lvgl/src/libs/freetype/LiberationSans-Regular.ttf",
+      "reason": "LVGL sample font is unused; the product uses the separately classified Sarasa fonts."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/games",
+      "reason": "Optional Tuya game applications are unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/micropython",
+      "reason": "Optional Tuya MicroPython application is unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/mimiclaw",
+      "reason": "Optional Tuya application is unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya_cloud",
+      "reason": "Optional Tuya cloud samples are unrelated to the selected chatbot application."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya_t5_pixel",
+      "reason": "T5-specific application is unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya_t5_pocket",
+      "reason": "T5-specific application and fonts are unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya.ai/duo_eye_mood",
+      "reason": "Optional display application is not selected by the headless A133 chatbot configuration."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya.ai/your_desk_emoji",
+      "reason": "Optional display application is not selected by the A133 chatbot configuration."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya.ai/your_otto_robot",
+      "reason": "Optional robot application is unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya.ai/your_robot_dog",
+      "reason": "Optional robot application and binary emotion filesystem are not redistributed."
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya.ai/your_serial_chat_bot",
+      "reason": "Optional serial-only application is not selected by the A133 build."
+    },
+    {
+      "path": "third_party/TuyaOpen/docs",
+      "reason": "General upstream Tuya documentation is linked from its source repository."
+    },
+    {
+      "path": "third_party/TuyaOpen/examples",
+      "reason": "Upstream Tuya examples are unrelated to the A133 reference product."
+    },
+    {
+      "path": "third_party/TuyaOpen/platform/LINUX/tuyaos_adapter/src/tkl_audio/libs",
+      "reason": "Upstream prebuilt Raspberry Pi and DshanPi libraries are not A133 inputs and lack file-level redistribution records."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/ai_components/ai_ui/assets",
+      "reason": "Display assets are disabled by the A133 chatbot configuration."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/ai_components/ai_ui/font",
+      "reason": "Generated display fonts are disabled by the A133 chatbot configuration."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/ai_components/ai_ui/icon",
+      "reason": "Display icons are disabled by the A133 chatbot configuration."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/liblvgl/v8",
+      "reason": "The Tuya display component is disabled on A133; the product LVGL fork is shipped separately."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/liblvgl/v9",
+      "reason": "The Tuya display component is disabled on A133; the product LVGL fork is shipped separately."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/libtls/mbedtls-3.1.0/tests",
+      "reason": "Upstream TLS test vectors are not used by the A133 product build."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/libu8g2/u8g2",
+      "reason": "The optional U8g2 display engine and its third-party font corpus are disabled on A133."
+    },
+    {
+      "path": "third_party/TuyaOpen/src/tal_kv/FlashDB/demos",
+      "reason": "FlashDB MCU demos and their prebuilt CMSIS libraries are unrelated to Linux A133."
+    }
+  ],
+  "redistributable_files": [
+    {
+      "path": "apps/lv_port_linux/src/ui/font/SarasaUiSC-Regular.ttf",
+      "component": "Sarasa Gothic",
+      "source": "https://github.com/be5invis/Sarasa-Gothic",
+      "license": "OFL-1.1",
+      "license_file": "apps/lv_port_linux/src/ui/font/LICENSE-Sarasa.txt",
+      "sha256": "9baf5d6c3d321a6438b9bad97dc5ca4e83cf1737d2efc989e2f8bdf2c662d357"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ui/font/SarasaUiSC-SemiBold.ttf",
+      "component": "Sarasa Gothic",
+      "source": "https://github.com/be5invis/Sarasa-Gothic",
+      "license": "OFL-1.1",
+      "license_file": "apps/lv_port_linux/src/ui/font/LICENSE-Sarasa.txt",
+      "sha256": "6b71f90265dac573303e27728f4fd60f2740ea7ccf037e339d61b2ded7ec06b1"
+    }
+  ]
+}

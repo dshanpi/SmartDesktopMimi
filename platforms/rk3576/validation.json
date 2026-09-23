@@ -1,0 +1,1 @@
+{"schema_version":1,"required":["boot","services","capture","input","network","update_rollback"]}

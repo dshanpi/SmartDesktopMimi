@@ -1,0 +1,79 @@
+AITVBox 出厂助手 · 凭据模块 · 环境说明
+========================================
+
+【产品】
+  AITVBox / A133
+  100ask 产品标识：AITVBOX
+
+【云端策略 — 已冻结】
+  - 不改 100ask 业务云，不新增 prepare/confirm 工厂 API
+  - 设备继续：provision → secret → MQTT → 云端 OTA（已验证）
+  - 出厂助手本地：签名 + 涂鸦库存 + ADB 写机 + 验收 + 台账
+
+【100ask 签名】
+  - 私钥：02-密钥/100ask_ecdsa.pem
+  - 公钥：02-密钥/100ask_ecdsa.pub
+  - 状态：已与现网 provision 公钥配对（产品已确认）
+  - 签名原文：100ask:<cpuid小写32位hex>
+  - 算法：ECDSA P-256 + SHA-256，输出 DER 小写 hex
+  - 设备路径：/etc/100ask/device_sig ，权限 0600
+  - 禁止助手自行 genkey 换钥（除非云端同步换公钥）
+
+【涂鸦】
+  - 交付：xlsx（样本文件名类似 cto703cud3ffkxja-…-20260611101900.xlsx）
+  - 请将真实 xlsx 放入 03-涂鸦/
+  - 当前可先 1 条 License 联调；批量后表头可能变，按列名映射
+  - 设备落盘固定格式（与 xlsx 无关）：
+      /factory/tuya/license.env
+      TUYA_OPENSDK_UUID=<20字符>
+      TUYA_OPENSDK_AUTHKEY=<32字符>
+  - 固件内 PID 文件：/etc/aitvbox-tuya-pid （格式 TUYA_PID=xxxxxxxx）
+  - 工位配置 TUYA_PID 必须与设备 PID 一致（以实机 cat 为准；规格文档曾记录 alon7qgyjj8yus74，若固件已换 PID 以设备为准）
+  - 产测不要求用户 App 扫码绑定
+  - 新机有 bind_url / 涂鸦 runtime ready 即可认为 License 有效
+
+【设备文件（均在 overlay，跨 OTA 保留）】
+  /etc/100ask/device_sig     ← 助手写
+  /etc/100ask/secret         ← 设备 provision 自写（助手只查存在，不读内容到 UI）
+  /factory/tuya/license.env  ← 助手写
+
+【写前必须确认挂载】
+  /etc/100ask  与  /factory/tuya  已出现在 /proc/self/mountinfo
+  否则禁止写入
+
+【固件】
+  版本见 04-固件/aitvbox-version.txt（打包时若有）
+  完整镜像路径（仓库，未放入本包以免体积过大）：
+    build/a133_linux_b6_uart0.img
+  SHA256 见 04-固件/a133_linux_b6_uart0.img.sha256（若已生成）
+  烧录：全志 PhoenixSuit / LiveSuit，统一镜像，不按机改包
+
+【网络】
+  凭据验收阶段设备需要能访问：
+    - 100ask provision / MQTT
+    - 涂鸦云
+  工厂/联调 Wi-Fi：由工艺准备（SSID/密码请产品另行告知开发）
+  PASS 后建议清除工厂 Wi-Fi，避免带厂内密码出货
+
+【助手范围】
+  做：读 CPUID、签名、License 库存、写机校验、等就绪、硬件测、本地台账、PASS
+  不做：用户扫码绑定、助手内执行 OTA 刷写、改云端接口
+
+【验收（最小）】
+  1. 导入 1 条涂鸦 License
+  2. 干净机烧统一固件
+  3. 助手一条龙 → PASS
+  4. 设备上 secret 出现；涂鸦 runtime ready
+  5. 同机再跑不消耗第二组 License
+  6. 库存空时换机应 FAIL_LICENSE_EMPTY
+
+【参考脚本（Linux）】
+  在仓库根目录、设备 adb 已连接时：
+    ./scripts/provision_device.sh
+    ./scripts/provision_tuya_license.sh /path/to/license.env
+  本包 05-参考脚本/ 为拷贝，逻辑金标准；Windows 正式版用 Rust 实现同等行为
+
+【联系】
+  设备/固件问题 → 产品固件负责人
+  涂鸦采购/xlsx → 产品
+  助手实现 → 出厂助手开发

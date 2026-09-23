@@ -1,0 +1,163 @@
+#!/bin/sh
+set -eu
+
+CONFIG_DIR=${AITVBOX_CONFIG_DIR:-/overlay/aitvbox/config}
+ADB_MODE_FILE=$CONFIG_DIR/adb-mode
+ADB_KEYS_FILE=${AITVBOX_ADB_KEYS_FILE:-/overlay/aitvbox/adb_keys}
+APP_TRUST_ROOT=${AITVBOX_TRUST_ROOT:-/overlay/aitvbox/trusted-app-keys}
+APP_ROOT=${AITVBOX_APP_ROOT:-/overlay/aitvbox/apps}
+NO_RESTART=${AITVBOX_NO_RESTART:-0}
+
+die() {
+	echo "aitvbox-adminctl: $*" >&2
+	exit 1
+}
+
+require_root() {
+	[ "$(id -u)" = 0 ] || die "administrator privileges are required"
+}
+
+schedule_usb_restart() {
+	[ "$NO_RESTART" = 1 ] && return 0
+	(
+		sleep 1
+		/etc/init.d/aitvbox-usb-hid stop || true
+		/etc/init.d/adbd restart || true
+		/etc/init.d/aitvbox-usb-hid start || true
+	) >/dev/null 2>&1 &
+}
+
+set_adb_mode() {
+	case "$1" in
+		authorized|disabled|development) ;;
+		*) die "ADB mode must be authorized, disabled, or development" ;;
+	esac
+	require_root
+	umask 077
+	mkdir -p "$CONFIG_DIR"
+	printf '%s\n' "$1" >"$ADB_MODE_FILE.tmp"
+	mv "$ADB_MODE_FILE.tmp" "$ADB_MODE_FILE"
+	[ "$1" != development ] ||
+		echo "WARNING: development mode allows unauthenticated ADB access" >&2
+	echo "OK adb-mode=$1; USB will reconnect"
+	schedule_usb_restart
+}
+
+authorize_adb_key() {
+	source=$1
+	[ -f "$source" ] && [ ! -L "$source" ] ||
+		die "ADB public key must be a regular file"
+	[ "$(wc -c <"$source")" -le 4096 ] || die "ADB public key is too large"
+	[ "$(awk 'END { print NR }' "$source")" -eq 1 ] ||
+		die "ADB public key must contain one line"
+	key=$(awk '{print $1}' "$source")
+	case "$key" in ""|*[!A-Za-z0-9+/=]*) die "invalid ADB public key encoding" ;; esac
+	meta=$(mktemp -d /tmp/aitvbox-adb-key.XXXXXX)
+	trap 'rm -rf "$meta"' EXIT INT TERM
+	printf '%s' "$key" | openssl base64 -d -A >"$meta/key.bin" 2>/dev/null ||
+		die "ADB public key is not valid base64"
+	[ "$(wc -c <"$meta/key.bin")" -eq 524 ] ||
+		die "ADB public key has an invalid Android RSA structure length"
+
+	require_root
+	umask 077
+	mkdir -p "${ADB_KEYS_FILE%/*}"
+	touch "$ADB_KEYS_FILE"
+	chmod 0600 "$ADB_KEYS_FILE"
+	if awk -v key="$key" '$1 == key { found=1 } END { exit !found }' \
+		"$ADB_KEYS_FILE"; then
+		die "ADB public key is already authorized"
+	fi
+	{
+		cat "$ADB_KEYS_FILE"
+		printf '%s\n' "$(cat "$source")"
+	} >"$ADB_KEYS_FILE.tmp"
+	chmod 0600 "$ADB_KEYS_FILE.tmp"
+	mv "$ADB_KEYS_FILE.tmp" "$ADB_KEYS_FILE"
+	rm -rf "$meta"
+	trap - EXIT INT TERM
+	echo "OK adb-key=$(printf '%s' "$key" | sha256sum | cut -d ' ' -f 1); USB will reconnect"
+	schedule_usb_restart
+}
+
+validate_key_name() {
+	case "$1" in ""|*[!A-Za-z0-9._-]*) return 1 ;; esac
+	[ "${#1}" -le 64 ]
+}
+
+app_key_fingerprint() {
+	openssl pkey -pubin -in "$1" -outform DER 2>/dev/null |
+		sha256sum | cut -d ' ' -f 1
+}
+
+add_app_key() {
+	name=$1
+	source=$2
+	validate_key_name "$name" || die "invalid APP publisher key name"
+	[ -f "$source" ] && [ ! -L "$source" ] ||
+		die "APP publisher key must be a regular file"
+	[ "$(wc -c <"$source")" -le 16384 ] ||
+		die "APP publisher key is too large"
+	openssl pkey -pubin -in "$source" -noout >/dev/null 2>&1 ||
+		die "APP publisher key is not a valid public key"
+	require_root
+	umask 077
+	mkdir -p "$APP_TRUST_ROOT"
+	[ ! -e "$APP_TRUST_ROOT/$name.pem" ] ||
+		die "APP publisher key name already exists"
+	cp "$source" "$APP_TRUST_ROOT/$name.pem.tmp"
+	chmod 0644 "$APP_TRUST_ROOT/$name.pem.tmp"
+	mv "$APP_TRUST_ROOT/$name.pem.tmp" "$APP_TRUST_ROOT/$name.pem"
+	echo "OK app-key=$name fingerprint=$(app_key_fingerprint "$APP_TRUST_ROOT/$name.pem")"
+}
+
+case "${1:-}" in
+	status)
+		mode=disabled
+		[ ! -s "$ADB_MODE_FILE" ] || mode=$(cat "$ADB_MODE_FILE")
+		adb_keys=0
+		[ ! -f "$ADB_KEYS_FILE" ] ||
+			adb_keys=$(grep -c '[^[:space:]]' "$ADB_KEYS_FILE" || true)
+		app_keys=0
+		for key in "$APP_TRUST_ROOT"/*.pem; do
+			[ -f "$key" ] || continue
+			app_keys=$((app_keys + 1))
+		done
+		echo "adb-mode=$mode adb-keys=$adb_keys app-keys=$app_keys"
+		;;
+	set-adb-mode)
+		[ "$#" = 2 ] || die "usage: $0 set-adb-mode MODE"
+		set_adb_mode "$2"
+		;;
+	authorize-adb-key)
+		[ "$#" = 2 ] || die "usage: $0 authorize-adb-key ADBKEY.PUB"
+		authorize_adb_key "$2"
+		;;
+	list-app-keys)
+		for key in "$APP_TRUST_ROOT"/*.pem; do
+			[ -f "$key" ] || continue
+			printf '%s %s\n' "${key##*/}" "$(app_key_fingerprint "$key")"
+		done
+		;;
+	add-app-key)
+		[ "$#" = 3 ] || die "usage: $0 add-app-key NAME PUBLIC_KEY.pem"
+		add_app_key "$2" "$3"
+		;;
+	remove-app-key)
+		[ "$#" = 2 ] || die "usage: $0 remove-app-key NAME"
+		validate_key_name "$2" || die "invalid APP publisher key name"
+		require_root
+		[ -f "$APP_TRUST_ROOT/$2.pem" ] || die "APP publisher key not found"
+		fingerprint=$(app_key_fingerprint "$APP_TRUST_ROOT/$2.pem")
+		for marker in "$APP_ROOT"/*/.aitvbox-publisher-key.sha256; do
+			[ -f "$marker" ] || continue
+			[ "$(cat "$marker")" != "$fingerprint" ] ||
+				die "APP publisher key is still used by installed application ${marker%/.aitvbox-publisher-key.sha256}"
+		done
+		rm -f "$APP_TRUST_ROOT/$2.pem"
+		echo "OK"
+		;;
+	*)
+		die "usage: $0 {status|set-adb-mode MODE|authorize-adb-key FILE|list-app-keys|add-app-key NAME FILE|remove-app-key NAME}"
+		;;
+esac

@@ -1,0 +1,142 @@
+#!/bin/sh /etc/rc.common
+
+START=98
+STOP=11
+USE_PROCD=1
+EXTRA_COMMANDS="video_worker"
+EXTRA_HELP="\tvideo_worker\tLoad HDMI capture modules and run video worker"
+
+RUNTIME_DIR=/var/run/aitvbox
+CONFIG_DIR=/overlay/aitvbox/ipkvm
+CONFIG_FILE=$CONFIG_DIR/config.json
+TLS_CERT=$CONFIG_DIR/tls.crt
+TLS_KEY=$CONFIG_DIR/tls.key
+WEBRTC_PUBLIC_IP_FILE=$CONFIG_DIR/webrtc-public-ip
+
+video_worker() {
+	# rc.common serializes service operations with fd 1000.  This worker is
+	# long-lived, so carrying that descriptor through the final exec keeps the
+	# procd lock held forever and makes every later stop/restart deadlock.
+	exec 1000>&-
+
+	# Loading the complete VIN chain in S10 makes its large module reads overlap
+	# with LT6911/VIN rail and clock enable while rootfs_data is still busy.
+	# The R818 board can then lose eMMC.  Let the UI/storage boot transient end,
+	# then load one module at a time before opening /dev/video0.
+	sleep 8
+	for module in videobuf2-core videobuf2-memops videobuf2-dma-contig \
+		videobuf2-v4l2 vin_io lt6911c_mipi vin_v4l2; do
+		modprobe "$module" || {
+			logger -t aitvbox-ipkvm "failed to load HDMI module: $module"
+			return 1
+		}
+		sleep 1
+	done
+	exec /usr/bin/aitvbox-captured
+}
+
+start_service() {
+	# aitvbox-ipkvmd owns the FRPC process and starts it only after the user
+	# supplies a valid configuration.  Disable the feed package's unconditional
+	# S99 service before rcS reaches it; otherwise its empty generated config
+	# exits immediately and procd enters a pointless crash loop.
+	if [ -x /etc/init.d/frpc ]; then
+		/etc/init.d/frpc disable >/dev/null 2>&1 || true
+		/etc/init.d/frpc stop >/dev/null 2>&1 || true
+	fi
+
+	mkdir -p "$RUNTIME_DIR" "$CONFIG_DIR"
+	chmod 700 "$CONFIG_DIR"
+
+	listen=:80
+	if [ -e "$TLS_CERT" ] || [ -e "$TLS_KEY" ]; then
+		if [ ! -s "$TLS_CERT" ] || [ ! -s "$TLS_KEY" ]; then
+			logger -t aitvbox-ipkvm "TLS configuration incomplete; both tls.crt and tls.key are required"
+			return 1
+		fi
+		chmod 600 "$TLS_CERT" "$TLS_KEY"
+		listen=:443
+	fi
+
+	procd_open_instance web
+	procd_set_param env AITVBOX_PLATFORM_MODE=1
+	procd_append_param env AITVBOX_IPKVM_CONFIG="$CONFIG_FILE"
+	procd_append_param env AITVBOX_IPKVM_SD_CONFIG=/dev/null
+	procd_append_param env AITVBOX_IPKVM_LISTEN="$listen"
+	if [ "$listen" = :443 ]; then
+		procd_append_param env AITVBOX_IPKVM_TLS_CERT="$TLS_CERT"
+		procd_append_param env AITVBOX_IPKVM_TLS_KEY="$TLS_KEY"
+	fi
+	# Production exposes separate boot-keyboard and relative-mouse functions.
+	# Service mode shares one report-ID function with ADB because the A133 has
+	# too few interrupt-IN endpoints for all three separate functions.
+	if [ -c /dev/hidg1 ]; then
+		hid_mouse=/dev/hidg1
+	else
+		hid_mouse=/dev/hidg0
+	fi
+	hid_mouse_mode=relative
+	procd_append_param env AITVBOX_HID_KEYBOARD=/dev/hidg0
+	procd_append_param env AITVBOX_HID_MOUSE="$hid_mouse"
+	procd_append_param env AITVBOX_HID_MOUSE_MODE="$hid_mouse_mode"
+	procd_append_param env AITVBOX_HID_LOCK="$RUNTIME_DIR/hid.lock"
+	procd_append_param env AITVBOX_AGENT_LOCK="$RUNTIME_DIR/agent.lock"
+	procd_append_param env AITVBOX_HDMI_OWNER_FILE="$RUNTIME_DIR/hdmi-ipkvm.lock"
+	procd_append_param env AITVBOX_SHARED_CAPTURE=1
+	procd_append_param env AITVBOX_WEBRTC_UDP_PORT=40000
+	if [ -s "$WEBRTC_PUBLIC_IP_FILE" ]; then
+		read -r webrtc_public_ip < "$WEBRTC_PUBLIC_IP_FILE"
+		procd_append_param env AITVBOX_WEBRTC_PUBLIC_IP="$webrtc_public_ip"
+	fi
+	procd_append_param env AITVBOX_FRPC_CONFIG="$CONFIG_DIR/frpc.ini"
+	procd_append_param env AITVBOX_FRPC_LOG="$RUNTIME_DIR/frpc.log"
+	procd_set_param command /usr/bin/aitvbox-ipkvmd
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param respawn 5 10 3
+	procd_close_instance
+
+	procd_open_instance video
+	procd_set_param command /etc/init.d/aitvbox-ipkvm video_worker
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param respawn 5 10 3
+	procd_close_instance
+}
+
+stop_service() {
+	# Let the web process send stop_video and let the capture thread complete
+	# VIDIOC_STREAMOFF/unmap/close before procd terminates the video process.
+	# Killing aitvbox-captured while LT6911/VIN is streaming can wedge the
+	# A133 camera stack and take both networking and the serial console down.
+	procd_send_signal aitvbox-ipkvm web TERM 2>/dev/null || true
+
+	count=0
+	while pidof aitvbox-ipkvmd >/dev/null 2>&1 &&
+	      [ "${count}" -lt 8 ]; do
+		sleep 1
+		count=$((count + 1))
+	done
+
+	# The Go process sends stop_video before it exits. Wait separately for
+	# the native capture worker to close /dev/video0; procd_kill runs after
+	# this callback and remains the final process supervisor.
+	count=0
+	while [ "${count}" -lt 8 ]; do
+		capture_open=0
+		for pid in $(pidof aitvbox-captured aitvbox-kvm-video 2>/dev/null); do
+			for fd in /proc/"${pid}"/fd/*; do
+				[ "$(readlink "${fd}" 2>/dev/null)" != "/dev/video0" ] ||
+					capture_open=1
+			done
+		done
+		[ "${capture_open}" -ne 0 ] || break
+		sleep 1
+		count=$((count + 1))
+	done
+}
+
+service_stopped() {
+	rm -f "$RUNTIME_DIR/hdmi-ipkvm.lock"
+	rm -f /var/run/kvm_ctrl.sock /tmp/kvm_video_stream.sock
+}

@@ -1,0 +1,66 @@
+#!/bin/sh
+set -eu
+
+GADGET=/sys/kernel/config/usb_gadget/g1
+MODE_FILE=/overlay/aitvbox/config/adb-mode
+failed=0
+
+check() {
+    if eval "$2"; then
+        echo "PASS $1"
+    else
+        echo "FAIL $1"
+        failed=1
+    fi
+}
+
+check "gadget exists" "[ -d '${GADGET}' ]"
+mode=disabled
+[ ! -s "${MODE_FILE}" ] || mode="$(cat "${MODE_FILE}")"
+case "${mode}" in
+disabled)
+    check "production HID product identity" \
+        "[ \"\$(cat '${GADGET}/idProduct' 2>/dev/null)\" = '0xd015' ]"
+    check "production HID descriptor revision" \
+        "[ \"\$(cat '${GADGET}/bcdDevice' 2>/dev/null)\" = '0x0428' ]"
+    check "ADB function disabled" "[ ! -e '${GADGET}/configs/c.1/ffs.adb' ]"
+    check "separate keyboard linked" \
+        "[ -L '${GADGET}/configs/c.1/hid.keyboard' ]"
+    check "separate mouse linked" \
+        "[ -L '${GADGET}/configs/c.1/hid.mouse' ]"
+    check "composite HID unlinked" \
+        "[ ! -e '${GADGET}/configs/c.1/hid.composite' ]"
+    check "keyboard HID node" "[ -c /dev/hidg0 ]"
+    check "mouse HID node" "[ -c /dev/hidg1 ]"
+    check "relative mouse report length" \
+        "[ \"\$(cat '${GADGET}/functions/hid.mouse/report_length' 2>/dev/null)\" = '4' ]"
+    ;;
+authorized|development)
+    check "service HID product identity" \
+        "[ \"\$(cat '${GADGET}/idProduct' 2>/dev/null)\" = '0xd00a' ]"
+    check "service HID descriptor revision" \
+        "[ \"\$(cat '${GADGET}/bcdDevice' 2>/dev/null)\" = '0x0417' ]"
+    check "ADB function linked" "[ -L '${GADGET}/configs/c.1/ffs.adb' ]"
+    check "composite keyboard/mouse linked" \
+        "[ -L '${GADGET}/configs/c.1/hid.composite' ]"
+    check "separate keyboard unlinked" \
+        "[ ! -e '${GADGET}/configs/c.1/hid.keyboard' ]"
+    check "separate mouse unlinked" \
+        "[ ! -e '${GADGET}/configs/c.1/hid.mouse' ]"
+    check "composite HID node" "[ -c /dev/hidg0 ]"
+    check "split mouse node absent" "[ ! -e /dev/hidg1 ]"
+    ;;
+*)
+    echo "FAIL valid ADB mode"
+    failed=1
+    ;;
+esac
+check "gadget bound" "[ -n \"\$(cat '${GADGET}/UDC' 2>/dev/null)\" ]"
+
+if [ "${1:-}" = "--send-test" ] && [ "${failed}" -eq 0 ]; then
+    /usr/bin/aitvbox-hidctl key 4
+    /usr/bin/aitvbox-hidctl mouse 5 0
+    echo "PASS reports sent"
+fi
+
+exit "${failed}"

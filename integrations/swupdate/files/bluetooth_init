@@ -1,0 +1,374 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+#
+# AITVBox 修复版蓝牙启动脚本（覆盖 aidesktop overlay 自带版本）。
+#
+# 原版 bug：RFKILL_STATE 硬编码 /sys/class/rfkill/rfkill3/state。但真机上
+# AIC 蓝牙的 rfkill 由 aic8800_btlpm 注册，name 是 bluetooth、device 路径含 aic；
+# rfkill3 常常是 hci0 起来后蓝牙核心层注册的附属 rfkill（是结果不是原因）。
+# 频繁 A/B 切槽重启时，若 hciattach 握手失败导致 hci0 未建，rfkill3 根本不存在
+# → reset_bt_state 的 if 跳过 → 从不给 AIC 断电-上电复位 → 两次 hciattach 都超时
+# → "bring up hci0 failed"。
+# 冷启动能恢复（AIC 彻底断电干净复位），软重启不行。
+#
+# 修法：动态查找 name=bluetooth 且 device 路径含 aic 的 AIC rfkill（不依赖编号），
+# 用它做断电-上电复位。aic8800_btlpm/rfkill.c 的 bluetooth_set_power 调
+# aicbsp_set_subsys(AIC_BLUETOOTH, ON/OFF)，是真正给 AIC 芯片上下电的子系统调用。
+
+START=96
+STOP=98
+USE_PROCD=1
+
+DEPEND=boot
+EXTRA_COMMANDS="worker power_monitor"
+EXTRA_HELP="\tworker\tRun the asynchronous AIC Bluetooth initializer\n\tpower_monitor\tLog the V10 INA219 input rail during startup"
+
+BT_UART=/dev/ttyS1
+BT_TYPE=aic
+AIC_BT_CONF=/etc/bluetooth/aic_bt.conf
+HCI_WAIT_TIMEOUT=8
+HCIATTACH_SETTLE_TIMEOUT=8
+HCI_UP_RETRIES=15
+BT_MAX_ATTEMPTS=3
+
+log_console() {
+	echo "$*" > /dev/console
+	logger -t bluetooth-init "$*" 2>/dev/null || true
+}
+
+aic_bt_conf_valid() {
+	[ -s "$AIC_BT_CONF" ] || return 1
+
+	awk '
+	{
+		for (i = 1; i <= NF; i++) {
+			if ($i !~ /^[0-9A-Fa-f][0-9A-Fa-f]$/) {
+				bad = 1
+			} else {
+				v[++n] = tolower($i)
+			}
+		}
+	}
+	END {
+		if (bad || n != 6)
+			exit 1
+
+		allzero = 1
+		for (i = 1; i <= 6; i++) {
+			if (v[i] != "00")
+				allzero = 0
+		}
+		if (allzero)
+			exit 1
+
+		if (v[4] == "9e" && v[5] == "8b" && v[6] ~ /^[0-3][0-9a-f]$/)
+			exit 1
+
+		exit 0
+	}' "$AIC_BT_CONF"
+}
+
+generate_aic_bt_conf() {
+	local rnd r1 r2 r3 r4 seed
+
+	rnd="$(hexdump -n 4 -e '4/1 "%02x "' /dev/urandom 2>/dev/null)"
+	set -- $rnd
+	if [ "$#" -eq 4 ]; then
+		r1="$1"; r2="$2"; r3="$3"; r4="$4"
+	else
+		seed="$(date +%s)"
+		r1="$(printf "%02x" $((seed & 255)))"
+		r2="$(printf "%02x" $(((seed / 256) & 255)))"
+		r3="$(printf "%02x" $(((seed / 65536) & 255)))"
+		r4="$(printf "%02x" $(((seed / 16777216) & 255)))"
+	fi
+
+	if [ "$r2" = "9e" ] && [ "$r3" = "8b" ]; then
+		case "$r4" in
+			[0-3][0-9a-fA-F]) r4="40" ;;
+		esac
+	fi
+
+	mkdir -p "$(dirname "$AIC_BT_CONF")" || return 1
+	printf "22 22 %s %s %s %s\n" "$r1" "$r2" "$r3" "$r4" > "$AIC_BT_CONF" || return 1
+	chmod 0644 "$AIC_BT_CONF" 2>/dev/null
+	return 0
+}
+
+ensure_aic_bt_conf() {
+	local old new
+
+	if aic_bt_conf_valid; then
+		return 0
+	fi
+
+	old="$(cat "$AIC_BT_CONF" 2>/dev/null)"
+	log_console "bluetooth mac: invalid AIC config '${old}', regenerating"
+
+	generate_aic_bt_conf || {
+		rm -f "$AIC_BT_CONF" 2>/dev/null
+		return 1
+	}
+
+	if ! aic_bt_conf_valid; then
+		rm -f "$AIC_BT_CONF" 2>/dev/null
+		return 1
+	fi
+
+	new="$(tr 'a-f' 'A-F' < "$AIC_BT_CONF" 2>/dev/null)"
+	log_console "bluetooth mac: using AIC config ${new}"
+	return 2
+}
+
+# 动态查找 AIC 蓝牙 rfkill 的 state 文件。
+# 注意：btlpm 驱动注册的 rfkill name 是 "bluetooth"（见 aic8800_btlpm/rfkill.c
+# bt_name[]="bluetooth"），不是 "aic-bt"——"aic-bt" 是 device 路径名。sunxi 平台
+# 自带的 sunxi-bt rfkill 也叫 bluetooth type，故不能只按 name 判断，要结合
+# device 路径含 "aic" 排除 sunxi-bt（其 device 是 soc@...bt）。rfkill 编号会漂移
+# （rmmod/modprobe 后可能变 rfkill10），不能硬编码号。
+find_aic_rfkill_state() {
+	local r dev
+	for r in /sys/class/rfkill/rfkill*; do
+		[ -e "$r" ] || continue
+		[ "$(cat "$r/name" 2>/dev/null)" = "bluetooth" ] || continue
+		dev="$(readlink -f "$r/device" 2>/dev/null)"
+		case "$dev" in
+			*aic*) echo "$r/state"; return 0 ;;
+		esac
+	done
+}
+
+RFKILL_STATE="$(find_aic_rfkill_state)"
+
+# 重置 AIC 蓝牙到干净状态。三层复位（由浅到深）：
+#  1. killall hciattach + hciconfig down：清用户态 + hci0 down
+#  2. rmmod/modprobe aic8800_btlpm：重载 btlpm，清 line discipline 残留 +
+#     重新注册 rfkill（rfkill 重新注册后默认 blocked=断电）
+#  3. rfkill toggle 0→1：给 AIC 断电-上电（走 sunxi_wlan_set_power / aicbsp
+#     子系统，是软件能做的最深复位）
+# 仅靠 rfkill toggle 不足以清多次软重启后的 AIC 半死状态，故加 btlpm reload。
+# 注：btlpm 依赖 aic8800_bsp，rmmod btlpm 不影响 bsp/fdrv（WiFi 继续跑）。
+reset_bt_state() {
+	hciconfig hci0 down 2>/dev/null
+	killall hciattach 2>/dev/null
+	sleep 1
+
+	# 重载 btlpm 清 line discipline 残留（rfkill 会随之注销再重注册）
+	log_console "bluetooth reset: reload aic8800_btlpm"
+	rmmod aic8800_btlpm 2>/dev/null
+	sleep 1
+	modprobe aic8800_btlpm 2>/dev/null
+	sleep 1
+	# btlpm 重载后 rfkill 重新注册，重新查找（编号可能变）
+	RFKILL_STATE="$(find_aic_rfkill_state)"
+
+	if [ -n "$RFKILL_STATE" ] && [ -f "$RFKILL_STATE" ]; then
+		log_console "bluetooth reset: toggle $RFKILL_STATE"
+		echo 0 > "$RFKILL_STATE"
+		sleep 1
+		echo 1 > "$RFKILL_STATE"
+		sleep 1
+	else
+		log_console "bluetooth reset: AIC rfkill not found"
+	fi
+}
+
+wait_hci0() {
+	local count=0
+	local timeout="${1:-$HCI_WAIT_TIMEOUT}"
+
+	while [ ! -d /sys/class/bluetooth/hci0 ]; do
+		sleep 1
+		count=$((count + 1))
+		# hciattach normally succeeds in 1-2 seconds. If it exits early, fail
+		# immediately; if it hangs without creating hci0, do not burn the
+		# command's full internal timeout before trying the next reset.
+		if ! pidof hciattach >/dev/null 2>&1; then
+			return 1
+		fi
+		[ "$count" -ge "$timeout" ] && return 1
+	done
+
+	return 0
+}
+
+wait_hciattach_settled() {
+	local pid="$1"
+	local count=0
+
+	# hci0 appears before the AIC vendor command sequence is fully complete.
+	# Give hciattach a chance to print "Device setup complete" and exit before
+	# we ask the kernel to bring the controller UP.
+	while kill -0 "$pid" 2>/dev/null; do
+		sleep 1
+		count=$((count + 1))
+		[ "$count" -ge "$HCIATTACH_SETTLE_TIMEOUT" ] && {
+			log_console "hciattach still running after ${HCIATTACH_SETTLE_TIMEOUT}s; continue"
+			return 0
+		}
+	done
+
+	return 0
+}
+
+start_hciattach() {
+	local pid
+
+	killall hciattach 2>/dev/null
+	hciattach "$BT_UART" "$BT_TYPE" > /dev/console 2>&1 &
+	pid=$!
+	if wait_hci0 "$HCI_WAIT_TIMEOUT"; then
+		wait_hciattach_settled "$pid"
+		return 0
+	fi
+
+	kill "$pid" 2>/dev/null
+	sleep 1
+	kill -9 "$pid" 2>/dev/null
+	wait "$pid" 2>/dev/null
+	killall hciattach 2>/dev/null
+	return 1
+}
+
+bring_hci0_up() {
+	local count=1
+
+	while [ "$count" -le "$HCI_UP_RETRIES" ]; do
+		RFKILL_STATE="$(find_aic_rfkill_state)"
+		[ -n "$RFKILL_STATE" ] && [ -f "$RFKILL_STATE" ] && echo 1 > "$RFKILL_STATE"
+
+		if hciconfig hci0 up > /dev/console 2>&1; then
+			return 0
+		fi
+
+		log_console "hciconfig hci0 up retry $count/$HCI_UP_RETRIES"
+		sleep 1
+		count=$((count + 1))
+	done
+
+	return 1
+}
+
+worker() {
+	local attempt
+	local mac_repaired
+
+	# The stock kmod packages used AutoProbe, which made BSP/firmware upload,
+	# SDIO enumeration, ADB FunctionFS, eMMC writes and the display all peak
+	# at ~9.2 s.  On the R818 V10 supply this reproducibly stopped userspace at
+	# progress 84.  The package autoload is intentionally disabled; bring the
+	# radio stack up only after the UI/power rails have settled.
+	sleep 20
+	log_console "Loading deferred AIC SDIO/Wi-Fi/Bluetooth modules..."
+	modprobe aic8800_bsp || {
+		log_console "AIC BSP module load failed"
+		return 1
+	}
+	modprobe aic8800_fdrv || log_console "AIC Wi-Fi module load failed"
+	modprobe aic8800_btlpm || log_console "AIC Bluetooth LPM module load failed"
+	# wifi_daemon starts before this deferred module worker. Its initial
+	# `wifi -o sta` fails because wlan0 does not exist yet. Open station mode
+	# again after the AIC driver has registered wlan0 so persisted credentials
+	# are reused and DHCP can run on every cold boot.
+	if command -v wifi >/dev/null 2>&1; then
+		wifi -o sta > /dev/console 2>&1 ||
+			log_console "AIC Wi-Fi station retry failed"
+	fi
+	log_console "Starting bluetooth init asynchronously..."
+
+	attempt=1
+	while [ "$attempt" -le "$BT_MAX_ATTEMPTS" ]; do
+		log_console "bluetooth init attempt $attempt/$BT_MAX_ATTEMPTS"
+
+		mac_repaired=0
+		ensure_aic_bt_conf
+		case "$?" in
+			0) ;;
+			2) mac_repaired=1 ;;
+			*) log_console "bluetooth mac: failed to repair AIC config; let hciattach regenerate if possible" ;;
+		esac
+
+		if [ "$mac_repaired" -eq 1 ] && [ -d /sys/class/bluetooth/hci0 ]; then
+			log_console "bluetooth mac: reset hci0 to apply repaired AIC config"
+			reset_bt_state
+		fi
+
+		if [ ! -d /sys/class/bluetooth/hci0 ]; then
+			reset_bt_state
+			start_hciattach || {
+				attempt=$((attempt + 1))
+				[ "$attempt" -le "$BT_MAX_ATTEMPTS" ] && log_console "bring up hci0 retry..."
+				continue
+			}
+		fi
+
+		if bring_hci0_up; then
+			log_console "Bluetooth init done."
+			return 0
+		fi
+
+		log_console "hciconfig hci0 up failed"
+		reset_bt_state
+		attempt=$((attempt + 1))
+		[ "$attempt" -le "$BT_MAX_ATTEMPTS" ] && log_console "bring up hci0 retry..."
+	done
+
+	log_console "bring up hci0 failed"
+	return 1
+}
+
+power_monitor() {
+	local hwmon="" count=0
+	# Target BusyBox sleep only accepts whole seconds. Keep the original
+	# roughly 10-second discovery window without emitting fractional-sleep
+	# errors into the boot log.
+	while [ "$count" -lt 10 ]; do
+		for h in /sys/class/hwmon/hwmon*; do
+			[ -r "$h/name" ] || continue
+			[ "$(cat "$h/name" 2>/dev/null)" = "ina219" ] && hwmon="$h" && break
+		done
+		[ -n "$hwmon" ] && break
+		sleep 1
+		count=$((count + 1))
+	done
+
+	if [ -z "$hwmon" ]; then
+		log_console "power-monitor: INA219 not found"
+		return 1
+	fi
+
+	count=0
+	# One sample per second for 30 seconds is sufficient to catch the boot
+	# current peak and avoids flooding the serial console.
+	while [ "$count" -lt 30 ]; do
+		log_console "power-monitor: bus_mV=$(cat "$hwmon/in1_input" 2>/dev/null) current_mA=$(cat "$hwmon/curr1_input" 2>/dev/null) power_uW=$(cat "$hwmon/power1_input" 2>/dev/null)"
+		sleep 1
+		count=$((count + 1))
+	done
+}
+
+start_service() {
+	# The AIC power-cycle and UART handshake can take tens of seconds. Run it
+	# under procd so the sequential rcS path can continue to the S99 UI.
+	log_console "Queueing asynchronous bluetooth init..."
+	procd_open_instance initializer
+	procd_set_param command /etc/init.d/bluetooth_init worker
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+
+	procd_open_instance power-monitor
+	procd_set_param command /etc/init.d/bluetooth_init power_monitor
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
+stop_service() {
+	log_console "Stopping bluetooth init:"
+
+	hciconfig hci0 down 2>/dev/null
+	killall hciattach 2>/dev/null
+	RFKILL_STATE="$(find_aic_rfkill_state)"
+	[ -n "$RFKILL_STATE" ] && [ -f "$RFKILL_STATE" ] && echo 0 > "$RFKILL_STATE"
+}

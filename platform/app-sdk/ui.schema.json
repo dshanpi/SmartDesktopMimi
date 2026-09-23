@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AITVBox Declarative UI",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "title", "layout"],
+  "properties": {
+    "schema": {"const": 1},
+    "title": {"type": "string", "minLength": 1, "maxLength": 64},
+    "layout": {"$ref": "#/definitions/node"}
+  },
+  "definitions": {
+    "node": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "children"],
+          "properties": {
+            "type": {"const": "column"},
+            "children": {
+              "type": "array",
+              "maxItems": 64,
+              "items": {"$ref": "#/definitions/node"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "text"],
+          "properties": {
+            "type": {"const": "text"},
+            "text": {"type": "string", "maxLength": 4096}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "label", "command"],
+          "properties": {
+            "type": {"const": "action"},
+            "label": {"type": "string", "minLength": 1, "maxLength": 64},
+            "command": {
+              "enum": [
+                "app.invoke",
+                "capture.snapshot"
+              ]
+            },
+            "arguments": {"type": "object"}
+          }
+        }
+      ]
+    }
+  }
+}

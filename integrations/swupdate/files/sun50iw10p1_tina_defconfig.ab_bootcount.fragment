@@ -1,0 +1,9 @@
+# --- begin AITVBox A/B OTA bootcount (marker: AITVBOX_OTA_BOOTCOUNT) ---
+# A/B OTA 回滚所需：U-Boot bootcount 框架。
+# BOOTCOUNT_ENV 在 ARCH_SUNXI 下为默认 choice，显式写出以防被改。
+# 仅启用 bootcount+altbootcmd 路径；不开 SUNXI_SWITCH_SYSTEM（避免与
+# “直接写 boot_partition”的 sw-description 路径冲突）。
+# env（env/env-redund 冗余分区）可写，bootcount 持久化无问题。
+CONFIG_BOOTCOUNT_LIMIT=y
+CONFIG_BOOTCOUNT_ENV=y
+# --- end AITVBox A/B OTA bootcount (marker: AITVBOX_OTA_BOOTCOUNT) ---

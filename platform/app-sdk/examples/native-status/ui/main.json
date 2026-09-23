@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "title": "Native Status",
+  "layout": {
+    "type": "column",
+    "children": [
+      {
+        "type": "text",
+        "text": "Native logic runs outside the desktop process."
+      },
+      {
+        "type": "action",
+        "label": "Read hardware status",
+        "command": "app.invoke",
+        "arguments": {
+          "name": "status"
+        }
+      }
+    ]
+  }
+}

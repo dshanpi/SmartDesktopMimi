@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "a527",
+  "soc": "allwinner-a527",
+  "arch": "aarch64",
+  "support": "skeleton",
+  "hardware": {"board": "not selected; adapter skeleton"},
+  "sdk": {"environment": "AITVBOX_A527_SDK", "default_root": "", "markers": ["build/envsetup.sh"]},
+  "toolchain": "platforms/a527/toolchain.cmake",
+  "capabilities": [],
+  "components": [],
+  "packaging": {"kind": "unimplemented"},
+  "flash": {"kind": "unimplemented", "automatic": false},
+  "validation": "platforms/a527/validation.json"
+}

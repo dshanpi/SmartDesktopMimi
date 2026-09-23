@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://09make.inc/schemas/aitvbox/platform.schema.json",
+  "title": "AITVBox platform build manifest",
+  "type": "object",
+  "required": ["schema_version", "id", "soc", "arch", "support", "sdk", "toolchain", "capabilities", "components", "packaging", "flash", "validation"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+$"},
+    "soc": {"type": "string"},
+    "arch": {"enum": ["aarch64", "armv7"]},
+    "support": {"enum": ["reference", "skeleton", "validated"]},
+    "sdk": {
+      "type": "object",
+      "required": ["environment", "default_root", "markers"],
+      "properties": {
+        "environment": {"type": "string"},
+        "default_root": {"type": "string"},
+        "markers": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+      }
+    },
+    "toolchain": {"type": "string"},
+    "capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "components": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "packaging": {"type": "object"},
+    "flash": {"type": "object"},
+    "validation": {"type": "string"}
+  },
+  "additionalProperties": false
+}

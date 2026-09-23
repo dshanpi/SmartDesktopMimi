@@ -1,0 +1,85 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "AI-DeskTopBox",
+  "documentNamespace": "https://09make.inc/sbom/aitvbox/8f6d8f3b644426f93f347c4b50342ea052d62a82",
+  "creationInfo": {
+    "created": "2026-09-23T06:46:41Z",
+    "creators": [
+      "Organization: 09make.inc"
+    ]
+  },
+  "packages": [
+    {
+      "name": "LVGL",
+      "SPDXID": "SPDXRef-Package-1",
+      "versionInfo": "685aa79c2894b038c212ef7c26834bfd5b9120aa",
+      "downloadLocation": "https://github.com/100askTeam/AI-DeskTop-Box-LVGL-v9.5",
+      "filesAnalyzed": false,
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "comment": "path=apps/lv_port_linux/lvgl; license_file=apps/lv_port_linux/lvgl/LICENCE.txt; distribution=source-pruned-a133"
+    },
+    {
+      "name": "IPKVM upstream",
+      "SPDXID": "SPDXRef-Package-2",
+      "versionInfo": "product-vendored-fork",
+      "downloadLocation": "https://github.com/jetkvm/kvm",
+      "filesAnalyzed": false,
+      "licenseConcluded": "GPL-2.0-only",
+      "licenseDeclared": "GPL-2.0-only",
+      "comment": "path=apps/ipkvm/upstream; license_file=apps/ipkvm/upstream/LICENSE; distribution=separate-process-source"
+    },
+    {
+      "name": "TuyaOpen",
+      "SPDXID": "SPDXRef-Package-3",
+      "versionInfo": "e5f03d0d9655caeb9e71c1bfdcf12dd624b4133a+aitvbox",
+      "downloadLocation": "https://github.com/tuya/TuyaOpen",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0 AND LicenseRef-ComponentLicenses",
+      "licenseDeclared": "Apache-2.0 AND LicenseRef-ComponentLicenses",
+      "comment": "path=third_party/TuyaOpen; license_file=third_party/TuyaOpen/LICENSE; distribution=source-pruned-a133"
+    },
+    {
+      "name": "A133 vendor media and KWS libraries",
+      "SPDXID": "SPDXRef-Package-4",
+      "versionInfo": "content-addressed-private-input",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "LicenseRef-VendorRestricted",
+      "licenseDeclared": "LicenseRef-VendorRestricted",
+      "comment": "path=vendor/tuyaopen-a133-b6-libs; license_file=vendor/README.md; distribution=external-restricted"
+    },
+    {
+      "name": "Sarasa Gothic (SarasaUiSC-Regular.ttf)",
+      "SPDXID": "SPDXRef-Package-5",
+      "downloadLocation": "https://github.com/be5invis/Sarasa-Gothic",
+      "filesAnalyzed": false,
+      "licenseConcluded": "OFL-1.1",
+      "licenseDeclared": "OFL-1.1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9baf5d6c3d321a6438b9bad97dc5ca4e83cf1737d2efc989e2f8bdf2c662d357"
+        }
+      ],
+      "comment": "path=apps/lv_port_linux/src/ui/font/SarasaUiSC-Regular.ttf; license_file=apps/lv_port_linux/src/ui/font/LICENSE-Sarasa.txt"
+    },
+    {
+      "name": "Sarasa Gothic (SarasaUiSC-SemiBold.ttf)",
+      "SPDXID": "SPDXRef-Package-6",
+      "downloadLocation": "https://github.com/be5invis/Sarasa-Gothic",
+      "filesAnalyzed": false,
+      "licenseConcluded": "OFL-1.1",
+      "licenseDeclared": "OFL-1.1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6b71f90265dac573303e27728f4fd60f2740ea7ccf037e339d61b2ded7ec06b1"
+        }
+      ],
+      "comment": "path=apps/lv_port_linux/src/ui/font/SarasaUiSC-SemiBold.ttf; license_file=apps/lv_port_linux/src/ui/font/LICENSE-Sarasa.txt"
+    }
+  ]
+}

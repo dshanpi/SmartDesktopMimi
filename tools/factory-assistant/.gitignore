@@ -1,0 +1,13 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+.env
+*.log
+
+# 当前只发布 Windows/Linux，保留通用 PNG 与 Windows ICO。
+src-tauri/icons/android/
+src-tauri/icons/ios/
+src-tauri/icons/icon.icns
+src-tauri/icons/Square*.png
+src-tauri/icons/StoreLogo.png

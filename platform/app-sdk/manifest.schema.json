@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AITVBox App Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "name", "version", "publisher", "ui", "permissions"],
+  "properties": {
+    "schema": {"enum": [1, 2]},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$", "maxLength": 96},
+    "name": {"type": "string", "minLength": 1, "maxLength": 48},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "publisher": {"type": "string", "pattern": "^[a-zA-Z0-9._-]{1,64}$"},
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry", "presentation"],
+      "properties": {
+        "entry": {"type": "string", "pattern": "^ui/[a-zA-Z0-9._/-]+\\.json$"},
+        "presentation": {"const": "embedded"}
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "capture.snapshot",
+          "input.keyboard",
+          "input.pointer",
+          "hardware.gpio.read",
+          "hardware.gpio.write",
+          "hardware.i2c",
+          "hardware.spi",
+          "hardware.uart",
+          "hardware.usb",
+          "network.https",
+          "storage.app"
+        ]
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "entry", "api"],
+      "properties": {
+        "type": {"const": "native-rpc"},
+        "entry": {"type": "string", "pattern": "^bin/[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"},
+        "api": {"const": 1}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"schema": {"const": 2}}},
+      "then": {"required": ["runtime"]},
+      "else": {"not": {"required": ["runtime"]}}
+    }
+  ]
+}

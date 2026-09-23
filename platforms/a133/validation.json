@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "required": [
+    "bootchain_gate", "boot", "services", "hdmi_raw", "hdmi_browser_1920x1080",
+    "usb_keyboard_hidg0", "usb_relative_mouse_hidg1", "hid_released", "audio_default_50",
+    "wake_ni_hao_tu_ya", "wifi", "bluetooth", "sensor", "led_25hz", "app", "agent_observe_only", "ota_rollback"
+  ]
+}

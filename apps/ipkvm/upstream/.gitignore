@@ -1,0 +1,11 @@
+bin/*
+static/*
+.idea
+.DS_Store
+.vscode
+/package-lock.json
+/package.json
+node_modules/
+ui/.i18n_extractor.json
+
+device-tests.tar.gz

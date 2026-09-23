@@ -1,0 +1,37 @@
+sequenceDiagram
+    autonumber
+    participant Dev as APP 开发者
+    participant CLI as tools/aitapp/aitapp.py
+    participant Web as IPKVM Applications 页面
+    participant AppCtl as aitvbox-appctl
+    participant AppD as aitvbox-appd
+    participant UI as LVGL 用户应用
+    participant Native as native APP 进程
+    participant SDK as platform/app-sdk
+    participant MCP as aitvbox-mcpd
+
+    Dev->>CLI: aitapp init / compile / build
+    CLI->>CLI: 校验 manifest、生成 SHA256SUMS、RSA/SHA-256 签名
+    Dev->>CLI: aitapp verify
+    CLI->>CLI: 使用发布者公钥本地验签
+    Dev->>Web: 登录后上传 .aitapp
+    Web->>AppCtl: HTTPS multipart → install
+    AppCtl->>AppCtl: 可信公钥、路径、类型、权限、版本校验
+    AppCtl->>AppD: 同文件系统原子安装，保留 data
+    UI->>AppD: /var/run/aitvbox/apps.sock / invoke
+    AppD->>AppD: 重读系统所有 manifest、指纹与 ELF
+    alt 声明式 action
+        AppD->>MCP: platformAction + 权限检查
+        MCP-->>AppD: 严格 JSON 结果
+    else native-rpc action
+        AppD->>Native: fork → UID 65534 → rlimit → no_new_privs → seccomp → exec
+        Native->>SDK: aitvbox_capability_call()
+        SDK->>AppD: capability 请求
+        AppD->>AppD: SO_PEERCRED + /proc/PID/exe + manifest 权限绑定
+        AppD->>MCP: 允许的 capability
+        MCP-->>AppD: 严格 JSON 结果
+        AppD-->>Native: 响应（最长 5 秒）
+        Native-->>AppD: 严格 JSON action 结果
+    end
+    AppD-->>UI: 渲染结果或明确拒绝原因
+    Note over AppD,Native: 禁止 AF_INET/AF_INET6、写文件、ioctl、mount、ptrace、mknod、fork/clone

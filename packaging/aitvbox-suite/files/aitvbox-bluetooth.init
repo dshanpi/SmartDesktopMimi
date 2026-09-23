@@ -1,0 +1,71 @@
+#!/bin/sh /etc/rc.common
+
+# bluetooth_init (S96) prepares hci0 asynchronously.  This service waits for
+# that work and starts BlueZ before the S99 product backend asks btmanager to
+# register A2DP/AVRCP profiles.  Sharing S99 with aitvbox made shell glob order
+# start lv_backend first and could block it forever in bt_manager_enable().
+START=97
+STOP=3
+USE_PROCD=1
+EXTRA_COMMANDS="worker"
+EXTRA_HELP="\tworker\tWait for hci0 and run bluetoothd (procd internal)"
+
+wait_for_hci0() {
+	local attempt=1
+
+	while [ "$attempt" -le 60 ]; do
+		[ -d /sys/class/bluetooth/hci0 ] && return 0
+		sleep 1
+		attempt=$((attempt + 1))
+	done
+
+	return 1
+}
+
+power_hci0() {
+	local attempt=1
+
+	# hci0 can appear before the vendor hciattach command sequence has
+	# finished. Retry instead of permanently losing Bluetooth for this boot.
+	while [ "$attempt" -le 10 ]; do
+		hciconfig hci0 up >/dev/null 2>&1 && return 0
+		sleep 1
+		attempt=$((attempt + 1))
+	done
+
+	return 1
+}
+
+worker() {
+	[ -x /usr/bin/bluetoothd ] || {
+		logger -t aitvbox-bluetooth "bluetoothd is unavailable"
+		return 1
+	}
+	wait_for_hci0 || {
+		logger -t aitvbox-bluetooth "hci0 did not appear within 60 seconds"
+		return 1
+	}
+	# The vendor S96 service may already have launched bluetoothd while leaving
+	# the controller DOWN.  Power hci0 before deciding whether another daemon
+	# instance is needed.
+	power_hci0 || {
+		logger -t aitvbox-bluetooth "failed to power hci0 after 10 attempts"
+		return 1
+	}
+	pidof bluetoothd >/dev/null 2>&1 && return 0
+	mkdir -p /var/lib/bluetooth
+	ln -snf /etc/bluetooth/keys /var/lib/bluetooth
+	exec /usr/bin/bluetoothd -n
+}
+
+start_service() {
+	# Bluetooth recovery may legitimately need over a minute.  Run that wait
+	# under procd so the sequential rcS path can continue to S99 and start the
+	# display/UI even when the radio is absent or still recovering.
+	procd_open_instance bluetoothd
+	procd_set_param command /etc/init.d/aitvbox-bluetooth worker
+	procd_set_param respawn 5 5 0
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>智能桌面小咪解决方案</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #243039;
+      background: #eef2f2;
+      font-family: "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.55;
+    }
+    .page {
+      width: 186mm;
+      min-height: 273mm;
+      margin: 0 auto 8mm;
+      padding: 14mm;
+      background: #fff;
+      position: relative;
+      page-break-after: always;
+      overflow: hidden;
+    }
+    .page:last-child { page-break-after: auto; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: 27pt; line-height: 1.16; color: #17252d; margin-bottom: 5mm; }
+    h2 { font-size: 19pt; color: #123b43; margin-bottom: 6mm; }
+    h3 { font-size: 12.5pt; color: #126678; margin: 0 0 2mm; }
+    .eyebrow { color: #188da1; font-size: 9pt; font-weight: 700; letter-spacing: 1.2px; }
+    .lead { font-size: 14pt; line-height: 1.55; color: #31464f; }
+    .small { font-size: 8.5pt; color: #65737a; }
+    .muted { color: #65737a; }
+    .accent { color: #078ca4; }
+    .hero {
+      width: calc(100% + 28mm);
+      height: 112mm;
+      object-fit: cover;
+      margin: -14mm -14mm 13mm;
+      display: block;
+    }
+    .storyboard { width: 100%; display: block; border-radius: 4mm; }
+    .tag {
+      display: inline-block;
+      padding: 1.6mm 3.2mm;
+      margin: 0 1.4mm 1.8mm 0;
+      border-radius: 99px;
+      background: #e7f6f8;
+      color: #08748a;
+      font-size: 8.7pt;
+      font-weight: 700;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+    .card {
+      border: 1px solid #dbe5e7;
+      border-radius: 4mm;
+      padding: 5mm;
+      background: #fbfdfd;
+    }
+    .card strong { color: #123b43; }
+    .metric { font-size: 19pt; font-weight: 800; color: #078ca4; }
+    .architecture {
+      display: grid;
+      grid-template-columns: 1fr 12mm 1fr 12mm 1fr;
+      align-items: stretch;
+      margin: 6mm 0 9mm;
+    }
+    .arch-box {
+      border-radius: 4mm;
+      padding: 5mm 4mm;
+      background: linear-gradient(145deg, #e9f7f8, #f8fbfb);
+      border: 1px solid #c8e3e7;
+      text-align: center;
+    }
+    .arrow { text-align: center; align-self: center; font-size: 19pt; color: #d59a3b; }
+    ul { margin: 2mm 0 0; padding-left: 5mm; }
+    li { margin-bottom: 1.4mm; }
+    table { width: 100%; border-collapse: collapse; margin: 3mm 0 7mm; }
+    th { background: #123b43; color: white; text-align: left; }
+    th, td { padding: 2.8mm 3mm; border: 1px solid #dce5e7; vertical-align: top; }
+    tr:nth-child(even) td { background: #f5f9f9; }
+    .band {
+      border-radius: 4mm;
+      padding: 5mm;
+      background: #123b43;
+      color: white;
+      margin: 6mm 0;
+    }
+    .band h3 { color: #8fe5ef; }
+    .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; }
+    .timeline .step { padding: 4mm; border-top: 3px solid #18a1b5; background: #f2f8f8; }
+    .footer {
+      position: absolute;
+      left: 14mm;
+      right: 14mm;
+      bottom: 8mm;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: #738086;
+    }
+    .cover-title { max-width: 145mm; }
+    .cover-note { margin-top: 15mm; border-left: 3px solid #dba646; padding-left: 4mm; }
+  </style>
+</head>
+<body>
+  <section class="page">
+    <img class="hero" src="assets/smart-desktop-mimi-hero.png" alt="智能桌面小咪概念图">
+    <div class="eyebrow">MIMI AI DESKTOP SOLUTION · V1.0</div>
+    <h1 class="cover-title">智能桌面小咪<br>带屏桌面 AI 终端解决方案</h1>
+    <p class="lead">硬件 + 系统软件 + AI/IoT 接入 + 量产交付</p>
+    <div>
+      <span class="tag">A133 / Tina Linux</span>
+      <span class="tag">涂鸦 AI + IoT</span>
+      <span class="tag">英文语音对话</span>
+      <span class="tag">品牌定制</span>
+      <span class="tag">一机一密</span>
+      <span class="tag">OTA 与恢复</span>
+    </div>
+    <p class="cover-note muted">面向智能硬件品牌、方案商和行业客户的可贴牌参考设计。<br>
+      概念图以最终量产实物为准。</p>
+    <div class="footer"><span>Smart Desktop Mimi 1.0.7</span><span>2026-09-14</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">WHY MIMI</div>
+    <h2>客户买到的，不只是一块主板</h2>
+    <p class="lead">智能桌面小咪把板级驱动、桌面 UI、语音交互、设备云、手机端配置、
+      量产授权和升级恢复整合为一个可交付的平台。</p>
+    <div class="grid-2">
+      <div class="card"><h3>快速形成样机</h3><p>已有可运行参考整机、固件和构建链路，减少从 BSP 与驱动开始的重复开发。</p></div>
+      <div class="card"><h3>统一用户体验</h3><p>屏幕、语音、网络、蓝牙、状态灯与手机端配置在同一产品状态机下工作。</p></div>
+      <div class="card"><h3>面向量产设计</h3><p>每台设备使用独立身份，支持工厂写入、版本审计、恢复镜像和 OTA 回滚。</p></div>
+      <div class="card"><h3>持续差异化</h3><p>品牌 UI、角色、音色、知识、用户 APP、MCP 工具和行业流程均可分层扩展。</p></div>
+    </div>
+    <div class="band">
+      <h3>一句话定位</h3>
+      <p>客户提供品牌和销售场景，我们提供可量产的桌面 AI 软硬件底座。</p>
+    </div>
+    <h3>当前已实现</h3>
+    <p>
+      <span class="tag">英文 LVGL 桌面</span><span class="tag">自由对话</span>
+      <span class="tag">流式文字与语音</span><span class="tag">AEC 与人声打断</span>
+      <span class="tag">Wi-Fi / 蓝牙</span><span class="tag">涂鸦绑定与在线状态</span>
+      <span class="tag">角色与音色配置</span><span class="tag">WS2812 状态灯</span>
+      <span class="tag">HDMI / IPKVM / USB HID</span><span class="tag">A/B OTA</span>
+    </p>
+    <p class="small">功能承诺以项目对应固件和验收清单为准；新唤醒词和定制声学模型单独评估。</p>
+    <div class="footer"><span>智能桌面小咪解决方案</span><span>02</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">ARCHITECTURE & PACKAGES</div>
+    <h2>从设备到云端的完整交付</h2>
+    <div class="architecture">
+      <div class="arch-box"><strong>用户与品牌</strong><br>涂鸦智能 / OEM App<br>角色、音色与内容</div>
+      <div class="arrow">→</div>
+      <div class="arch-box"><strong>小咪系统</strong><br>UI / AI / AEC / APP<br>身份、OTA、诊断</div>
+      <div class="arrow">→</div>
+      <div class="arch-box"><strong>A133 硬件</strong><br>屏幕 / 音频 / 网络<br>HDMI / HID / 灯效</div>
+    </div>
+    <div class="grid-3">
+      <div class="card">
+        <h3>标准方案版</h3>
+        <p><strong>快速验证市场</strong></p>
+        <ul><li>参考主板或整机</li><li>标准系统镜像</li><li>涂鸦智能面板</li><li>烧录与恢复资料</li></ul>
+      </div>
+      <div class="card">
+        <h3>品牌定制版</h3>
+        <p><strong>形成品牌产品</strong></p>
+        <ul><li>品牌 UI 与启动视觉</li><li>角色、音色与知识</li><li>OEM App 支持</li><li>结构与声学适配</li></ul>
+      </div>
+      <div class="card">
+        <h3>行业解决方案版</h3>
+        <p><strong>进入业务流程</strong></p>
+        <ul><li>行业知识与 MCP</li><li>HDMI/IPKVM 控制</li><li>设备管理与策略</li><li>运维 SLA</li></ul>
+      </div>
+    </div>
+    <h3 style="margin-top:8mm">标准交付物</h3>
+    <table>
+      <tr><th>类别</th><th>交付内容</th></tr>
+      <tr><td>硬件</td><td>主板、套件或整机样品，BOM 与关键器件说明</td></tr>
+      <tr><td>软件</td><td>固件、恢复镜像、版本与 SHA-256、约定源码/差异包</td></tr>
+      <tr><td>量产</td><td>工厂烧录、SN/License 注入、自动测试和出货检查</td></tr>
+      <tr><td>运维</td><td>OTA、回滚、远程诊断、发布说明和售后恢复</td></tr>
+      <tr><td>合规</td><td>第三方许可、隐私数据流、安全边界和认证输入资料</td></tr>
+    </table>
+    <div class="footer"><span>硬件 + 软件 + 云 + 交付</span><span>03</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">PRODUCTIZATION</div>
+    <h2>样机成功之后，必须经过量产质量门</h2>
+    <table>
+      <tr><th>质量门</th><th>建议验收</th></tr>
+      <tr><td>启动与恢复</td><td>连续 100 次冷启动；异常状态可按标准流程恢复</td></tr>
+      <tr><td>网络与云</td><td>断网、弱网、路由器重启、DHCP 变化；绑定、重绑、MQTT 与 DP 恢复</td></tr>
+      <tr><td>AI 与音频</td><td>72 小时连续运行；统计中断、重启、AEC 自激、误打断和对话完成率</td></tr>
+      <tr><td>工厂一致性</td><td>逐台检测屏幕、触摸、麦克风、扬声器、网络、灯效、SN 与 License</td></tr>
+      <tr><td>OTA 安全</td><td>下载中断、断电、校验失败、升级成功与失败回滚</td></tr>
+      <tr><td>安全与隐私</td><td>一机一密；通用镜像、日志和仓库均不包含设备密钥</td></tr>
+    </table>
+    <h3>120 天小批量路线</h3>
+    <div class="timeline">
+      <div class="step"><strong>1～30 天</strong><br>冻结标准 SKU、BOM、工装、功能边界与销售资料</div>
+      <div class="step"><strong>31～60 天</strong><br>20 台工程样机、稳定性测试、3～5 家客户试用</div>
+      <div class="step"><strong>61～90 天</strong><br>声学与结构修正、认证预评估、工厂与售后流程</div>
+      <div class="step"><strong>91～120 天</strong><br>百台试产、跟踪激活与返修，形成首个客户案例</div>
+    </div>
+    <div class="band" style="margin-top:10mm">
+      <h3>推荐商业路径</h3>
+      <p>B2B 方案先行，收取样机费和 NRE；“智能桌面小咪”同时作为品牌样板机。
+         用首个付费客户验证需求，再决定开模和扩大库存。</p>
+    </div>
+    <div class="grid-3">
+      <div class="card"><div class="metric">20</div><strong>工程样机</strong><br><span class="small">首轮验证规模</span></div>
+      <div class="card"><div class="metric">3～5</div><strong>目标客户</strong><br><span class="small">付费场景验证</span></div>
+      <div class="card"><div class="metric">72h</div><strong>连续运行</strong><br><span class="small">基础稳定性门槛</span></div>
+    </div>
+    <div class="footer"><span>先验证，再开模，再备货</span><span>04</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">DEMO STORYBOARD</div>
+    <h2>用 60 秒讲清楚产品价值</h2>
+    <img class="storyboard" src="assets/smart-desktop-mimi-storyboard.png" alt="四格演示分镜">
+    <div class="grid-2" style="margin-top:7mm">
+      <div class="card"><h3>01 开机与唤醒</h3><p>展示真实硬件冷启动，并使用当前交付固件实际支持的唤醒词。</p></div>
+      <div class="card"><h3>02 完整自然对话</h3><p>用固定英文问题验证识别、文字流、完整语音输出和状态灯反馈。</p></div>
+      <div class="card"><h3>03 人声打断</h3><p>展示用户可自然插话，同时说明普通环境声不应频繁误打断。</p></div>
+      <div class="card"><h3>04 手机配置</h3><p>展示设备在线、音色或角色真正下发，再快速扫过扩展功能。</p></div>
+    </div>
+    <p class="small" style="margin-top:5mm">本页为视频前期视觉分镜。正式功能镜头必须使用量产候选实机拍摄；
+      手机屏幕不得暴露设备密钥、Wi-Fi 密码、账号或内部网络信息。</p>
+    <div class="footer"><span>概念图以最终量产实物为准</span><span>05</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">COOPERATION</div>
+    <h2>从付费样机开始合作</h2>
+    <div class="grid-2">
+      <div class="card"><h3>样机验证</h3><p>标准功能、客户场景和云服务成本验证。</p></div>
+      <div class="card"><h3>项目定制</h3><p>冻结 UI、结构、声学、App、AI 与验收范围，按 NRE 交付。</p></div>
+      <div class="card"><h3>批量供货</h3><p>主板或整机单价 + 每台软件授权 + AI/云服务套餐。</p></div>
+      <div class="card"><h3>持续服务</h3><p>按年提供 OTA、安全维护、版本升级、诊断与 SLA。</p></div>
+    </div>
+    <div class="band">
+      <h3>首轮合作需要确认</h3>
+      <p>目标用户与国家/地区、预计数量、产品形态、联网方式、语言与唤醒词、
+        AI 角色和内容、App 路线、认证责任、交付时间与预算。</p>
+    </div>
+    <h3>商用边界</h3>
+    <ul>
+      <li>Wi-Fi/蓝牙、电源、EMC 与最终产品分类由目标销售地区的认证要求决定。</li>
+      <li>语音、角色记忆和对话记录按最小必要、明确同意、可查询和可删除设计。</li>
+      <li>面向儿童时增加监护人同意、内容安全、防沉迷与未成年人数据保护。</li>
+      <li>AI 云服务依赖网络与对应服务套餐，不以一次性硬件价格承诺无限使用。</li>
+    </ul>
+    <h1 style="font-size:23pt; margin-top:18mm">智能桌面小咪</h1>
+    <p class="lead">从可工作的样机，走向可交付、可维护、可持续经营的 AI 硬件产品。</p>
+    <p class="muted">商务联系人：________________　联系方式：________________</p>
+    <div class="footer"><span>Mimi AI Desktop Solution</span><span>06</span></div>
+  </section>
+</body>
+</html>

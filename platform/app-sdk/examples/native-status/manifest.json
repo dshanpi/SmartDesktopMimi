@@ -1,0 +1,17 @@
+{
+  "schema": 2,
+  "id": "com.100ask.native-status",
+  "name": "Native Status",
+  "version": "1.0.0",
+  "publisher": "100ask-dev",
+  "ui": {
+    "entry": "ui/main.json",
+    "presentation": "embedded"
+  },
+  "permissions": [],
+  "runtime": {
+    "type": "native-rpc",
+    "entry": "bin/app",
+    "api": 1
+  }
+}

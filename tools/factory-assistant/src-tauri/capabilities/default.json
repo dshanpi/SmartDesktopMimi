@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The factory UI can only call explicitly registered Rust commands.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": "v883",
+  "soc": "sigmastar-v883",
+  "arch": "aarch64",
+  "support": "skeleton",
+  "hardware": {"board": "not selected; adapter skeleton"},
+  "sdk": {"environment": "AITVBOX_V883_SDK", "default_root": "", "markers": ["project", "sdk"]},
+  "toolchain": "platforms/v883/toolchain.cmake",
+  "capabilities": [],
+  "components": [],
+  "packaging": {"kind": "unimplemented"},
+  "flash": {"kind": "unimplemented", "automatic": false},
+  "validation": "platforms/v883/validation.json"
+}

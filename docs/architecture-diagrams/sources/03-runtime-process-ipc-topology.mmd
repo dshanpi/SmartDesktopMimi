@@ -1,0 +1,63 @@
+flowchart TB
+    subgraph presentation["表现层"]
+        direction LR
+        ui["lvglsim<br/>LVGL 桌面"]:::ui
+        browser["浏览器<br/>IPKVM UI"]:::external
+        userapp["签名用户 APP<br/>声明式 / native-rpc"]:::ui
+    end
+
+    subgraph orchestration["产品编排进程"]
+        direction LR
+        backend["lv_backend<br/>命令路由 + 服务运行时"]:::process
+        ipkvmd["aitvbox-ipkvmd<br/>HTTP/HTTPS + WebRTC"]:::process
+        appd["aitvbox-appd<br/>安装与沙箱执行"]:::process
+        controld["aitvbox-controld<br/>Agent 生命周期"]:::process
+        agentd["aitvbox-agentd<br/>观察-决策-动作"]:::process
+        mcpd["aitvbox-mcpd<br/>能力代理"]:::process
+    end
+
+    subgraph resource["资源拥有者与集成进程"]
+        direction LR
+        video["aitvbox-kvm-video<br/>Capture + Repair + Display<br/>Snapshot + A133 H.264"]:::boundary
+        tuya["Tuya chatbot<br/>音频 + AI 云"]:::integration
+        hidGuard["HID lock / Agent lock<br/>输入仲裁"]:::boundary
+    end
+
+    subgraph hardware["设备节点与外部端点"]
+        direction LR
+        hdmi["/dev/video0<br/>HDMI VIN"]:::boundary
+        display["本地 Display"]:::hardware
+        keyboard["/dev/hidg0<br/>keyboard"]:::boundary
+        mouse["/dev/hidg1<br/>relative mouse"]:::boundary
+        cloud["Tuya / 模型 / 100ask Cloud"]:::external
+        pc["被控 Windows / Linux"]:::external
+    end
+
+    ui <-->|"/tmp/lv_port_linux_backend.sock · V1<br/>/run/aitvbox/backend-v2.sock · V2"| backend
+    browser <-->|"HTTPS + WebRTC"| ipkvmd
+    userapp <-->|"/var/run/aitvbox/apps.sock"| appd
+    appd --> mcpd
+    browser -. "Agent 控制" .-> ipkvmd
+    ipkvmd <-->|"/var/run/aitvbox/control.sock"| controld
+    controld --> agentd --> mcpd
+
+    backend <-->|"/var/run/aitvbox/capture.sock<br/>DISPLAY / STATUS"| video
+    mcpd -->|"capture.sock · SNAPSHOT"| video
+    ipkvmd <-->|"/var/run/kvm_ctrl.sock<br/>/tmp/kvm_video_stream.sock"| video
+    backend <--> tuya
+    ipkvmd --> hidGuard
+    mcpd --> hidGuard
+
+    video --> hdmi
+    video --> display
+    hidGuard --> keyboard & mouse --> pc
+    hdmi <-- "HDMI 输出" --> pc
+    tuya <--> cloud
+    backend -. "可选 Cloud provider" .-> cloud
+
+    classDef ui fill:#FFF0F3,stroke:#D66B87,color:#3D2430,stroke-width:2px;
+    classDef process fill:#EEF4FF,stroke:#315A9B,color:#172033,stroke-width:2px;
+    classDef integration fill:#F2F0FF,stroke:#7567B5,color:#262044,stroke-width:2px;
+    classDef hardware fill:#FFF8DC,stroke:#C79A1B,color:#3D3420;
+    classDef external fill:#F5F7FA,stroke:#94A3B8,color:#263445,stroke-dasharray:6 4;
+    classDef boundary fill:#FFF1F0,stroke:#C2413B,color:#4A1D1A,stroke-width:3px;

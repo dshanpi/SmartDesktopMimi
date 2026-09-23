@@ -1,0 +1,11 @@
+AI-DeskTopBox / Smart Desktop Mimi
+Copyright (c) 2026 09make.inc (零九智造)
+
+Product-owned source is dual-licensed under GPL-3.0-or-later or a separate
+commercial agreement from 09make.inc. Third-party components remain under
+their respective licenses. See THIRD_PARTY_NOTICES.md and component license
+files before redistribution.
+
+No device UUID, AuthKey, serial number, factory authorization database,
+private signing key, model API key or production credential is part of the
+open-source distribution.

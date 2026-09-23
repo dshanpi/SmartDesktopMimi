@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    participant Procd as OpenWrt procd
+    participant HID as S81 USB HID
+    participant APP as S83 appd
+    participant CTL as S84 controld
+    participant Play as S25 boot-play
+    participant Data as S95 数据持久化
+    participant BT as S97 蓝牙初始化
+    participant KVM as S98 IPKVM
+    participant Back as S99 lv_backend
+    participant UI as aitvbox-start-ui / lvglsim
+
+    Procd->>Play: 启动开机画面，boot_progress=5
+    Procd->>HID: 配置 USB gadget
+    HID->>HID: 建立 hidg0 键盘 + hidg1 相对鼠标
+    Procd->>APP: 启动 aitvbox-appd
+    APP->>APP: 发布 /var/run/aitvbox/apps.sock
+    Procd->>CTL: 启动 aitvbox-controld
+    CTL->>CTL: 发布 /var/run/aitvbox/control.sock
+    Procd->>Data: bind overlay 持久化数据
+    Note over Data: Wi-Fi、蓝牙、Tuya KV、100ask 身份/配置
+    Procd->>BT: 初始化 AIC 蓝牙控制器
+    Procd->>KVM: 启动 aitvbox-ipkvmd 与 KVM video worker
+    KVM->>KVM: 发布 Web、WebRTC、视频/控制 Socket
+    Procd->>Back: 启动 lv_backend，boot_progress=78
+    Back->>Back: app_config_init + sys_settings_init
+    Back->>Back: mw_init(true)，先发布 IPC
+    Back->>Back: backend_command_router_register
+    Back->>Back: backend_runtime_start
+    Note over Back: LED → time → Wi-Fi → video → sensor → BT<br/>→ AI → HDMI preview → OTA → cloud
+    Procd->>UI: 启动 aitvbox-start-ui，boot_progress=84
+    UI->>Back: 等待 /tmp/lv_port_linux_backend.sock
+    Back-->>UI: IPC 可连接
+    UI->>Play: boot_progress=100，结束启动画面
+    UI->>UI: exec lvglsim → lv_init → mw_init(false) → ui_init
+    UI->>Back: 心跳 + UI 命令
+    Back-->>UI: 服务状态与事件

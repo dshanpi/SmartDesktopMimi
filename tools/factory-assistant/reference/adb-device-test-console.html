@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fixture Lab · ADB 产品测试台</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f5f5f7;
+      --surface-warm: #fbfbfd;
+      --fg: #1d1d1f;
+      --fg-2: #424245;
+      --muted: #6e6e73;
+      --meta: #86868b;
+      --border: #d2d2d7;
+      --border-soft: #e8e8ed;
+      --accent: #0071e3;
+      --accent-on: #ffffff;
+      --accent-hover: #0077ed;
+      --accent-active: #0066cc;
+      --success: #16a34a;
+      --warn:    #eab308;
+      --danger:  #dc2626;
+      --font-display:
+        "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --font-body:
+        "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --font-mono:
+        "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+      --text-xs:   12px;
+      --text-sm:   14px;
+      --text-base: 17px;
+      --text-lg:   21px;
+      --text-xl:   28px;
+      --text-2xl:  40px;
+      --text-3xl:  56px;
+      --text-4xl:  80px;
+      --leading-body:  1.47;
+      --leading-tight: 1.05;
+      --tracking-display: -0.015em;
+      --space-1:  4px;
+      --space-2:  8px;
+      --space-3:  12px;
+      --space-4:  16px;
+      --space-5:  20px;
+      --space-6:  24px;
+      --space-8:  32px;
+      --space-12: 48px;
+      --section-y-desktop: 100px;
+      --section-y-tablet:  64px;
+      --section-y-phone:   40px;
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   18px;
+      --radius-pill: 980px;
+      --elev-flat:   none;
+      --elev-ring:   0 0 0 1px var(--border);
+      --elev-raised: 0 12px 32px rgba(0, 0, 0, 0.08);
+      --focus-ring: 0 0 0 4px color-mix(in oklab, var(--accent), transparent 65%);
+      --motion-fast:   150ms;
+      --motion-base:   220ms;
+      --ease-standard: cubic-bezier(0.28, 0, 0.22, 1);
+      --container-max:            1024px;
+      --container-gutter-desktop: 22px;
+      --container-gutter-tablet:  18px;
+      --container-gutter-phone:   16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-width: 1000px; height: 100%; overflow: hidden; }
+    body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
+    button { font: inherit; }
+    button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+    .mono, .metric, .log-time, .device-id { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    .app { height: 100vh; display: grid; grid-template-rows: 64px minmax(0, 1fr); }
+    .topbar { display: grid; grid-template-columns: 258px 1fr auto; align-items: center; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 18px 0 20px; z-index: 4; }
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .brand-mark { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--fg); color: var(--surface); font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+    .brand-name { font-family: var(--font-display); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; }
+    .brand-sub { color: var(--muted); font-size: 11px; letter-spacing: 0.02em; margin-top: 3px; }
+    .station { display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border); padding-left: 22px; }
+    .station-label { color: var(--muted); font-size: 12px; }
+    .station strong { font-weight: 550; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .connection { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; margin-right: 5px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px color-mix(in oklab, var(--success), transparent 82%); }
+    .btn { min-height: 40px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); cursor: pointer; font-weight: 550; letter-spacing: 0.02em; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+    .btn:hover { background: var(--bg); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-on); box-shadow: var(--elev-raised); }
+    .btn.primary:hover { background: var(--accent-hover); }
+    .btn.danger { color: var(--danger); }
+    .btn.small { min-height: 34px; padding-inline: 11px; font-size: 12px; }
+    .btn:disabled { cursor: not-allowed; opacity: .5; box-shadow: none; }
+
+    .workspace { min-height: 0; display: grid; grid-template-columns: 258px minmax(520px, 1fr) 340px; }
+    .sidebar { min-height: 0; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 18px 14px; }
+    .section-label { margin: 0 8px 8px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .device-card { border: 1px solid var(--border); border-radius: 10px; padding: 13px; background: var(--bg); }
+    .device-row { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+    .device-name { font-weight: 600; }
+    .device-id { margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .device-grid span { display: block; color: var(--muted); font-size: 10px; letter-spacing: .03em; }
+    .device-grid strong { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+    .status-pill { display: inline-flex; align-items: center; border-radius: 999px; padding: 3px 7px; font-size: 10px; font-weight: 600; letter-spacing: .04em; white-space: nowrap; }
+    .status-pill.ready, .status-pill.passed { color: var(--success); background: color-mix(in oklab, var(--success), transparent 90%); }
+    .status-pill.running { color: var(--accent-active); background: color-mix(in oklab, var(--accent), transparent 90%); }
+    .status-pill.waiting { color: var(--fg-2); background: color-mix(in oklab, var(--warn), transparent 84%); }
+    .status-pill.failed { color: var(--danger); background: color-mix(in oklab, var(--danger), transparent 90%); }
+    .status-pill.pending { color: var(--muted); background: var(--bg); border: 1px solid var(--border); }
+    .nav-block { margin-top: 22px; }
+    .nav-item { width: 100%; min-height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: pointer; text-align: left; }
+    .nav-item:hover { background: var(--bg); color: var(--fg); }
+    .nav-item.active { color: var(--fg); background: var(--bg); font-weight: 550; }
+    .nav-count { min-width: 23px; height: 21px; padding: 0 6px; display: grid; place-items: center; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 10px; }
+    .side-note { margin-top: 22px; padding: 12px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; }
+    .side-note strong { color: var(--fg); font-weight: 550; }
+
+    .main { min-width: 0; min-height: 0; overflow-y: auto; padding: 22px 24px 32px; }
+    .main-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 18px; }
+    .eyebrow { color: var(--success); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+    h1 { margin: 0; font-family: var(--font-display); font-size: 28px; line-height: 1.15; letter-spacing: -.02em; font-weight: 600; }
+    .subtitle { margin: 7px 0 0; color: var(--muted); max-width: 64ch; }
+    .summary { display: grid; grid-template-columns: repeat(3, 62px); gap: 6px; }
+    .summary-item { padding: 8px 9px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; text-align: center; }
+    .summary-item strong { display: block; font-family: var(--font-mono); font-size: 17px; line-height: 1.2; }
+    .summary-item span { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; }
+    .progress-shell { height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+    .progress-bar { width: 0; height: 100%; background: var(--accent); transition: width .35s ease; }
+
+    .flow-card, .log-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .card-head { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--border); }
+    .card-title { font-weight: 600; }
+    .card-meta { color: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+    .test-list { display: grid; }
+    .test-row { position: relative; display: grid; grid-template-columns: 34px minmax(140px, 1fr) minmax(150px, .85fr) 88px; align-items: center; gap: 10px; min-height: 58px; padding: 8px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .16s ease; }
+    .test-row:last-child { border-bottom: 0; }
+    .test-row:hover, .test-row.selected { background: var(--bg); }
+    .test-row.current::before { content: ""; position: absolute; inset: 8px auto 8px 0; width: 2px; background: var(--fg); }
+    .test-code { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--muted); font-family: var(--font-mono); font-size: 10px; font-weight: 600; }
+    .test-name { font-weight: 550; }
+    .test-desc { color: var(--muted); font-size: 11px; margin-top: 1px; }
+    .test-value { color: var(--muted); font-family: var(--font-mono); font-size: 11px; text-align: left; }
+    .test-state { justify-self: end; }
+    .log-card { margin-top: 16px; }
+    .log-controls { display: flex; gap: 6px; }
+    .text-button { border: 0; background: transparent; color: var(--muted); min-height: 32px; padding: 0 6px; cursor: pointer; font-size: 11px; }
+    .text-button:hover { color: var(--fg); }
+    .log-list { height: 142px; overflow-y: auto; padding: 8px 14px 12px; font-family: var(--font-mono); font-size: 10px; line-height: 1.75; }
+    .log-line { display: grid; grid-template-columns: 62px 46px 1fr; gap: 8px; }
+    .log-time { color: var(--muted); }
+    .log-tag { color: var(--fg-2); }
+    .log-tag.ok { color: var(--success); }
+    .log-tag.warn { color: var(--fg-2); }
+    .log-text { overflow-wrap: anywhere; }
+
+    .inspector { min-height: 0; overflow-y: auto; background: var(--surface); border-left: 1px solid var(--border); padding: 20px; }
+    .inspector-head { display: flex; align-items: center; justify-content: space-between; }
+    .inspector-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+    .demo-tag { color: var(--muted); font-size: 10px; border: 1px solid var(--border); border-radius: 5px; padding: 2px 5px; }
+    .current-card { margin-top: 14px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+    .step-index { color: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+    .current-card h2 { margin: 9px 0 6px; font-size: 22px; line-height: 1.2; letter-spacing: -.01em; font-weight: 600; }
+    .current-card p { color: var(--muted); margin: 0; font-size: 12px; }
+    .metric-box { margin-top: 16px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; }
+    .metric-label { color: var(--muted); font-size: 10px; letter-spacing: .04em; }
+    .metric { margin-top: 5px; font-size: 24px; font-weight: 550; letter-spacing: -.02em; }
+    .metric-sub { margin-top: 2px; color: var(--muted); font-family: var(--font-mono); font-size: 10px; }
+    .visualizer { height: 54px; display: flex; align-items: center; gap: 3px; margin-top: 12px; }
+    .bar { flex: 1; height: var(--h); min-height: 4px; background: var(--fg-2); opacity: .56; border-radius: 2px; transition: height var(--motion-base) var(--ease-standard); }
+    .instruction { margin-top: 18px; }
+    .instruction h3, .criteria h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; }
+    .instruction ol { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+    .instruction li + li { margin-top: 5px; }
+    .criteria { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .criteria-row { display: flex; justify-content: space-between; align-items: center; min-height: 30px; font-size: 11px; }
+    .criteria-row span:first-child { color: var(--muted); }
+    .criteria-row strong { font-family: var(--font-mono); font-weight: 500; }
+    .manual-actions { display: none; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+    .manual-actions.visible { display: grid; }
+    .manual-actions .btn { min-height: 44px; }
+    .pass-btn { border-color: color-mix(in oklch, var(--success), var(--border) 60%); color: var(--success); }
+    .fail-btn { border-color: color-mix(in oklch, var(--danger), var(--border) 60%); color: var(--danger); }
+    .run-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .run-actions .btn { flex: 1; }
+
+    .toast { position: fixed; right: 24px; bottom: 22px; display: flex; align-items: center; gap: 9px; padding: 11px 14px; background: var(--fg); color: var(--bg); border-radius: var(--radius-md); box-shadow: var(--elev-raised); opacity: 0; transform: translateY(10px); pointer-events: none; transition: var(--motion-base) var(--ease-standard); font-size: 12px; z-index: 20; }
+    .toast.show { opacity: 1; transform: none; }
+    .modal-backdrop { position: fixed; inset: 0; background: color-mix(in oklab, var(--fg), transparent 62%); display: none; place-items: center; z-index: 30; }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(560px, calc(100vw - 80px)); background: var(--bg); border-radius: var(--radius-lg); box-shadow: var(--elev-raised); overflow: hidden; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; border-bottom: 1px solid var(--border); }
+    .modal-head h2 { margin: 0; font-size: 18px; letter-spacing: -.01em; }
+    .modal-body { padding: 20px; }
+    .report-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+    .report-score { font-family: var(--font-mono); font-size: 32px; font-weight: 600; }
+    .report-label { color: var(--muted); font-size: 11px; }
+    .report-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+    .report-chip { min-height: 54px; display: grid; place-content: center; text-align: center; border: 1px solid var(--border); border-radius: 8px; font-size: 11px; }
+    .report-chip span { color: var(--muted); font-family: var(--font-mono); font-size: 9px; }
+    .modal-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); }
+
+    @media (max-width: 1220px) {
+      .workspace { grid-template-columns: 218px minmax(480px, 1fr) 312px; }
+      .topbar { grid-template-columns: 218px 1fr auto; }
+      .main { padding-inline: 18px; }
+      .test-row { grid-template-columns: 34px minmax(130px, 1fr) 72px; }
+      .test-value { display: none; }
+    }
+
+    /* Apple 式精密工具界面：轻表面、薄边界与清晰的功能层级 */
+    body {
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.55;
+      font-weight: 400;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .mono, .log-time, .device-id,
+    .device-grid strong, .nav-count, .summary-item strong,
+    .card-meta, .test-code, .test-value, .metric-sub,
+    .criteria-row strong, .report-score, .report-chip span {
+      font-family: var(--font-mono);
+    }
+
+    .app { grid-template-rows: 72px minmax(0, 1fr); }
+    .topbar {
+      grid-template-columns: 244px 1fr auto;
+      padding: 0 22px;
+      background: color-mix(in oklab, var(--bg), transparent 8%);
+      color: var(--fg);
+      border-bottom-color: var(--border-soft);
+      box-shadow: none;
+      backdrop-filter: saturate(180%) blur(20px);
+    }
+    .brand { gap: 12px; }
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--fg);
+      color: var(--bg);
+      font-size: 13px;
+      box-shadow: none;
+    }
+    .brand-name { font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+    .brand-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .station { border-left-color: var(--border-soft); padding-left: 24px; }
+    .station-label, .connection { color: var(--muted); font-size: 13px; }
+    .station strong { color: var(--fg); font-weight: 600; }
+    .topbar .btn:not(.primary) { background: var(--surface); border-color: transparent; color: var(--fg); }
+    .topbar .btn:not(.primary):hover { background: var(--border-soft); }
+    .btn { min-height: 44px; padding-inline: 16px; font-size: 14px; font-weight: 600; }
+
+    .workspace { grid-template-columns: 244px minmax(540px, 1fr) 356px; }
+    .sidebar {
+      padding: 22px 16px;
+      background: var(--surface-warm);
+      color: var(--fg);
+      border-right-color: var(--border-soft);
+    }
+    .section-label { margin: 0 8px 10px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .device-card {
+      padding: 15px;
+      background: var(--bg);
+      border-color: var(--border-soft);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--elev-flat);
+    }
+    .device-name { color: var(--fg); font-size: 15px; font-weight: 600; }
+    .device-id { color: var(--muted); font-size: 12px; margin-top: 5px; }
+    .device-grid { gap: 12px; border-top-color: var(--border-soft); }
+    .device-grid span { color: var(--muted); font-size: 11px; }
+    .device-grid strong { color: var(--fg); font-size: 12px; font-weight: 500; }
+    .status-pill { padding: 4px 8px; font-size: 11px; }
+    .nav-block { margin-top: 26px; }
+    .nav-item { min-height: 46px; padding-inline: 12px; color: var(--muted); font-size: 14px; border-radius: var(--radius-md); }
+    .nav-item:hover { background: var(--surface); color: var(--fg); }
+    .nav-item.active { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: var(--elev-ring); }
+    .nav-count { min-width: 25px; height: 23px; background: var(--bg); border-color: var(--border-soft); color: var(--fg-2); font-size: 11px; }
+    .side-note { margin-top: 26px; padding: 15px 10px; border-top-color: var(--border-soft); color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .side-note strong { color: var(--fg); font-weight: 600; }
+
+    .main { padding: 26px 26px 34px; background: var(--surface); }
+    .main-head { margin-bottom: 20px; }
+    .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 7px; }
+    h1 { font-family: var(--font-display); font-size: 32px; line-height: 1.15; font-weight: 600; letter-spacing: var(--tracking-display); }
+    .subtitle { margin-top: 9px; color: var(--fg-2); font-size: 14px; line-height: 1.65; }
+    .summary { grid-template-columns: repeat(3, 68px); gap: 8px; }
+    .summary-item { padding: 10px; border-color: var(--border-soft); border-radius: var(--radius-md); box-shadow: none; }
+    .summary-item strong { font-size: 20px; font-weight: 600; }
+    .summary-item span { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .progress-shell { height: 6px; margin-bottom: 20px; }
+
+    .flow-card, .log-card { background: var(--bg); border-color: var(--border-soft); border-radius: var(--radius-lg); box-shadow: none; }
+    .card-head { height: 52px; padding-inline: 17px; }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .card-meta { color: var(--muted); font-size: 12px; }
+    .test-row { grid-template-columns: 38px minmax(160px, 1fr) minmax(160px, .85fr) 92px; min-height: 64px; gap: 12px; padding: 9px 16px; }
+    .test-row.current::before { inset-block: 9px; width: 3px; }
+    .test-code { width: 34px; height: 34px; font-size: 11px; color: var(--fg-2); border-color: var(--border-soft); border-radius: var(--radius-sm); }
+    .test-name { font-size: 15px; font-weight: 600; }
+    .test-desc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .test-value { color: var(--fg-2); font-size: 12px; }
+    .log-card { margin-top: 18px; }
+    .text-button { color: var(--fg-2); font-size: 12px; font-weight: 550; }
+    .log-list { height: 158px; padding: 10px 16px 14px; font-size: 12px; line-height: 1.7; }
+    .log-line { grid-template-columns: 72px 50px 1fr; gap: 10px; }
+    .log-time { color: var(--muted); }
+
+    .inspector { padding: 24px 22px; background: var(--surface-warm); border-left-color: var(--border-soft); }
+    .inspector-title { font-size: 13px; font-weight: 600; }
+    .demo-tag { color: var(--muted); font-size: 11px; padding: 3px 7px; border-radius: var(--radius-sm); }
+    .current-card { margin-top: 16px; padding: 20px; background: var(--bg); border-color: var(--border-soft); border-radius: var(--radius-lg); box-shadow: none; }
+    .step-index { color: var(--muted); font-size: 12px; }
+    .current-card h2 { margin: 10px 0 7px; font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: var(--tracking-display); }
+    .current-card p { color: var(--fg-2); font-size: 13px; line-height: 1.6; }
+    .metric-box { margin-top: 18px; padding: 16px; background: var(--surface); border-color: transparent; border-radius: var(--radius-md); }
+    .metric-label { color: var(--muted); font-size: 11px; }
+    .metric { margin-top: 7px; font-family: var(--font-display); font-size: 28px; font-weight: 600; }
+    .metric-sub { margin-top: 4px; color: var(--muted); font-size: 11px; }
+    .instruction h3, .criteria h3 { font-size: 13px; font-weight: 600; }
+    .instruction ol { color: var(--fg-2); font-size: 13px; line-height: 1.65; }
+    .instruction li + li { margin-top: 7px; }
+    .criteria-row { min-height: 34px; font-size: 12px; }
+    .criteria-row span:first-child { color: var(--muted); }
+    .run-actions .btn { min-height: 42px; font-size: 13px; }
+
+    @media (max-width: 1220px) {
+      .workspace { grid-template-columns: 224px minmax(480px, 1fr) 326px; }
+      .topbar { grid-template-columns: 224px 1fr auto; }
+      .main { padding-inline: 20px; }
+      .test-row { grid-template-columns: 38px minmax(145px, 1fr) 86px; }
+      .test-value { display: none; }
+    }
+
+    /* 结构重构：设备状态条 + 流程矩阵 + 深色当前测试台 */
+    .app { grid-template-rows: 64px minmax(0, 1fr); }
+    .topbar { grid-template-columns: 220px 1fr auto; padding-inline: 24px; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+    .brand-name { font-size: 16px; }
+    .brand-sub { font-size: 11px; }
+    .station { justify-self: start; }
+
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) 380px;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .main { padding: 30px 32px 34px; }
+    .main-head { align-items: center; margin-bottom: 18px; }
+    .eyebrow { margin-bottom: 6px; }
+    h1 { font-size: var(--text-2xl); line-height: 1.08; }
+    .subtitle { max-width: 72ch; font-size: 15px; }
+    .summary { grid-template-columns: repeat(3, 72px); }
+    .summary-item { background: var(--surface-warm); border-color: transparent; }
+    .progress-shell { margin-bottom: 16px; background: var(--border-soft); }
+
+    .device-strip {
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: 236px minmax(360px, 1fr) auto;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--radius-lg);
+    }
+    .device-identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .device-avatar {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--fg);
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .device-strip .device-name { font-size: 15px; }
+    .device-strip .device-id { margin-top: 2px; font-size: 11px; }
+    .device-facts { display: grid; grid-template-columns: repeat(4, minmax(80px, 1fr)); }
+    .device-facts > div { min-width: 0; padding: 1px 16px; border-left: 1px solid var(--border-soft); }
+    .device-facts span { display: block; color: var(--muted); font-size: 11px; letter-spacing: .01em; }
+    .device-facts strong { display: block; margin-top: 3px; overflow: hidden; color: var(--fg); font-family: var(--font-mono); font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+
+    .flow-card { margin-top: 0; }
+    .test-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .test-row {
+      grid-template-columns: 38px minmax(128px, 1fr) 112px 76px;
+      min-height: 72px;
+      gap: 10px;
+      padding: 10px 16px;
+    }
+    .test-row:nth-child(odd) { border-right: 1px solid var(--border); }
+    .test-row:nth-last-child(-n+2) { border-bottom: 0; }
+    .test-row:hover { background: var(--surface-warm); }
+    .test-row.selected { background: var(--surface); }
+    .test-row.current::before { inset-block: 12px; border-radius: var(--radius-pill); }
+    .test-name { font-size: 14px; }
+    .test-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .test-value { overflow: hidden; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+    .log-card { margin-top: 16px; }
+    .log-list { height: 130px; }
+
+    .inspector {
+      padding: 26px 24px;
+      background: var(--fg);
+      color: var(--bg);
+      border-left: 0;
+    }
+    .inspector-title { color: var(--bg); }
+    .demo-tag { color: color-mix(in oklab, var(--bg), transparent 36%); border-color: color-mix(in oklab, var(--bg), transparent 84%); }
+    .current-card {
+      margin-top: 18px;
+      padding: 22px;
+      background: color-mix(in oklab, var(--bg) 6%, var(--fg));
+      color: var(--bg);
+      border-color: color-mix(in oklab, var(--bg), transparent 88%);
+    }
+    .step-index, .current-card p, .metric-label, .metric-sub,
+    .instruction ol, .criteria-row span:first-child {
+      color: color-mix(in oklab, var(--bg), transparent 36%);
+    }
+    .current-card h2, .metric, .criteria-row strong { color: var(--bg); }
+    .metric-box { background: color-mix(in oklab, var(--bg) 8%, var(--fg)); border-color: transparent; }
+    .bar { background: var(--bg); opacity: .5; }
+    .criteria { border-top-color: color-mix(in oklab, var(--bg), transparent 86%); }
+    .run-actions .btn {
+      background: transparent;
+      color: var(--bg);
+      border-color: color-mix(in oklab, var(--bg), transparent 82%);
+    }
+    .run-actions .btn:hover { background: color-mix(in oklab, var(--bg), transparent 92%); }
+    .run-actions .btn.danger { color: color-mix(in oklab, var(--danger), var(--bg) 30%); }
+    .run-actions .btn:disabled { color: color-mix(in oklab, var(--bg), transparent 64%); }
+
+    @media (max-width: 1220px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) 340px; }
+      .topbar { grid-template-columns: 190px 1fr auto; padding-inline: 18px; }
+      .main { padding: 24px 20px 30px; }
+      .device-strip { grid-template-columns: 210px 1fr auto; gap: 12px; }
+      .device-facts > div { padding-inline: 10px; }
+      .test-row { grid-template-columns: 36px minmax(110px, 1fr) 76px; }
+      .test-value { display: none; }
+    }
+
+    /* 仪器化体验：流程退居轨道，实时测试成为主视觉 */
+    .workspace { grid-template-columns: minmax(0, 1fr) 354px; }
+    .main { padding: 24px 28px 26px; }
+    .main-head { margin-bottom: 12px; }
+    h1 { font-size: 34px; }
+    .subtitle { margin-top: 6px; }
+    .summary { grid-template-columns: repeat(3, 64px); }
+    .summary-item { padding: 7px 8px; }
+    .summary-item strong { font-size: 17px; }
+    .progress-shell { height: 4px; margin-bottom: 12px; }
+    .progress-bar { background: var(--fg-2); }
+    .device-strip { min-height: 64px; padding: 9px 14px; margin-bottom: 12px; }
+    .device-avatar { width: 38px; height: 38px; border-radius: var(--radius-md); }
+
+    .flow-card { border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md); }
+    .flow-card .card-head { height: 38px; padding-inline: 14px; }
+    .flow-card .card-title { color: var(--muted); font-size: 12px; letter-spacing: .02em; }
+    .test-list { grid-template-columns: repeat(8, minmax(92px, 1fr)); }
+    .test-node {
+      position: relative;
+      min-width: 0;
+      min-height: 64px;
+      padding: 10px 10px 9px;
+      border: 0;
+      border-right: 1px solid var(--border-soft);
+      background: var(--bg);
+      color: var(--fg);
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--motion-fast) var(--ease-standard);
+    }
+    .test-node:last-child { border-right: 0; }
+    .test-node:hover { background: var(--surface-warm); }
+    .test-node.active { background: var(--surface); }
+    .test-node.active::after { content: ""; position: absolute; right: 10px; bottom: 0; left: 10px; height: 3px; border-radius: var(--radius-pill); background: var(--fg); }
+    .node-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .node-index { color: var(--meta); font-family: var(--font-mono); font-size: 10px; letter-spacing: .02em; }
+    .node-state { width: 7px; height: 7px; border-radius: 50%; background: var(--border); }
+    .test-node.running .node-state { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 84%); }
+    .test-node.passed .node-state { background: var(--success); }
+    .test-node.failed .node-state { background: var(--danger); }
+    .test-node.waiting .node-state { background: var(--warn); }
+    .node-name { display: block; margin-top: 7px; overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+
+    .instrument-stage {
+      position: relative;
+      min-height: 318px;
+      margin-top: 12px;
+      overflow: hidden;
+      background: var(--fg);
+      color: var(--bg);
+      border-radius: 24px;
+      box-shadow: var(--elev-raised);
+    }
+    .instrument-head { position: relative; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 22px 24px 0; }
+    .instrument-kicker { color: color-mix(in oklab, var(--bg), transparent 42%); font-size: 11px; font-weight: 600; letter-spacing: .06em; }
+    .instrument-head h2 { margin: 5px 0 0; color: var(--bg); font-family: var(--font-display); font-size: 28px; line-height: 1.05; letter-spacing: var(--tracking-display); }
+    .instrument-reading { min-width: 180px; text-align: right; }
+    .instrument-reading span, .instrument-reading small { display: block; color: color-mix(in oklab, var(--bg), transparent 46%); font-size: 10px; }
+    .instrument-reading strong { display: block; margin: 2px 0; color: var(--bg); font-family: var(--font-mono); font-size: 26px; font-weight: 500; letter-spacing: -.02em; }
+    .instrument-viz { position: relative; z-index: 1; height: 218px; display: grid; place-items: center; overflow: hidden; }
+    .instrument-foot { position: absolute; right: 22px; bottom: 16px; left: 22px; z-index: 2; display: flex; align-items: center; gap: 18px; color: color-mix(in oklab, var(--bg), transparent 54%); font-size: 10px; }
+    .instrument-foot span:last-child { margin-left: auto; }
+
+    .radar { position: relative; width: 190px; height: 190px; border: 1px solid color-mix(in oklab, var(--bg), transparent 82%); border-radius: 50%; }
+    .radar::before, .radar::after { content: ""; position: absolute; border: 1px solid color-mix(in oklab, var(--bg), transparent 88%); border-radius: 50%; }
+    .radar::before { inset: 29px; }
+    .radar::after { inset: 61px; }
+    .radar-grid { position: absolute; inset: 50% 0 auto; height: 1px; background: color-mix(in oklab, var(--bg), transparent 88%); }
+    .radar-grid::after { content: ""; position: absolute; top: -95px; left: 50%; width: 1px; height: 190px; background: inherit; }
+    .radar-sweep { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 225deg, transparent 0 72%, color-mix(in oklab, var(--accent), transparent 82%) 88%, var(--accent) 100%); animation: scan 3.2s linear infinite; }
+    .radar-core { position: absolute; inset: 50% auto auto 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); transform: translate(-50%,-50%); box-shadow: 0 0 0 5px color-mix(in oklab, var(--bg), transparent 86%); }
+    .radar-dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .radar-dot.d1 { top: 25%; left: 62%; } .radar-dot.d2 { top: 64%; left: 23%; } .radar-dot.d3 { top: 73%; left: 72%; }
+    @keyframes scan { to { transform: rotate(360deg); } }
+
+    .wave-field { width: min(88%, 620px); height: 150px; display: flex; align-items: center; gap: 5px; }
+    .wave-bar { flex: 1; height: var(--h); min-height: 4px; border-radius: var(--radius-pill); background: var(--bg); opacity: .72; animation: pulse 1.3s var(--ease-standard) infinite alternate; animation-delay: var(--d); }
+    @keyframes pulse { to { transform: scaleY(.45); opacity: .34; } }
+    .led-field { width: min(82%, 620px); display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; }
+    .led-cell { aspect-ratio: .72; border-radius: var(--radius-pill); background: var(--bg); opacity: .18; animation: lamp 2s var(--ease-standard) infinite; animation-delay: var(--d); }
+    .led-cell:nth-child(4n+1) { background: var(--danger); } .led-cell:nth-child(4n+2) { background: var(--success); } .led-cell:nth-child(4n+3) { background: var(--accent); }
+    @keyframes lamp { 50% { opacity: 1; transform: translateY(-6px); } }
+    .screen-field { width: min(72%, 520px); height: 148px; display: grid; grid-template-columns: repeat(5,1fr); overflow: hidden; border: 1px solid color-mix(in oklab, var(--bg), transparent 74%); border-radius: var(--radius-md); }
+    .screen-cell { background: color-mix(in oklab, var(--bg), var(--fg) var(--shade)); }
+    .touch-field { width: 230px; display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+    .touch-cell { aspect-ratio: 1; display: grid; place-items: center; border: 1px solid color-mix(in oklab, var(--bg), transparent 78%); border-radius: var(--radius-md); }
+    .touch-cell::after { content: ""; width: 9px; height: 9px; border: 1px solid color-mix(in oklab, var(--bg), transparent 36%); border-radius: 50%; }
+    .temperature-field { width: min(78%, 580px); height: 150px; display: flex; align-items: flex-end; gap: 9px; padding-bottom: 10px; border-bottom: 1px solid color-mix(in oklab, var(--bg), transparent 78%); }
+    .temperature-bar { flex: 1; height: var(--h); border-radius: 4px 4px 0 0; background: var(--bg); opacity: .65; }
+
+    .log-card.compact .log-list { display: none; }
+    .log-card.compact .card-head { border-bottom: 0; }
+    .log-card.expanded .log-list { display: block; height: 132px; }
+    .log-card.expanded .card-head { border-bottom: 1px solid var(--border-soft); }
+
+    .inspector { padding: 24px 22px; background: var(--surface-warm); color: var(--fg); border-left: 1px solid var(--border-soft); }
+    .inspector-title { color: var(--fg); }
+    .demo-tag { color: var(--muted); border-color: var(--border); }
+    .current-card { margin-top: 14px; padding: 20px; background: var(--bg); color: var(--fg); border-color: var(--border-soft); box-shadow: none; }
+    .step-index, .current-card p, .metric-label, .metric-sub, .instruction ol, .criteria-row span:first-child { color: var(--muted); }
+    .current-card h2, .metric, .criteria-row strong { color: var(--fg); }
+    .metric-box { margin-top: 15px; padding: 14px; background: var(--surface); }
+    .criteria { margin-top: 15px; padding-top: 14px; border-top-color: var(--border-soft); }
+    .instruction { margin-top: 15px; }
+    .run-actions .btn { background: var(--bg); color: var(--fg); border-color: var(--border); }
+    .run-actions .btn:hover { background: var(--surface); }
+    .run-actions .btn.danger { color: var(--danger); }
+    .run-actions .btn:disabled { color: var(--meta); }
+
+    @media (max-width: 1220px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) 330px; }
+      .main { padding-inline: 18px; }
+      .device-strip { grid-template-columns: 190px 1fr auto; }
+      .test-list { grid-template-columns: repeat(8, minmax(76px, 1fr)); }
+      .test-node { padding-inline: 7px; }
+      .node-name { font-size: 12px; }
+      .instrument-stage { min-height: 300px; }
+    }
+
+    /* 可核验证据层：实时视觉与原始响应并列 */
+    .instrument-stage { min-height: 356px; }
+    .source-proof { display: inline-flex; margin-left: 8px; padding: 3px 7px; color: color-mix(in oklab, var(--warn), var(--bg) 28%); border: 1px solid color-mix(in oklab, var(--warn), transparent 58%); border-radius: var(--radius-pill); font-size: 9px; font-weight: 600; letter-spacing: .02em; }
+    .instrument-head h2 { font-size: 26px; }
+    .instrument-viz { height: 256px; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); gap: 14px; padding: 14px 22px 38px; overflow: visible; }
+    .viz-canvas { position: relative; min-width: 0; display: grid; place-items: center; overflow: hidden; background: color-mix(in oklab, var(--bg) 4%, var(--fg)); border: 1px solid color-mix(in oklab, var(--bg), transparent 88%); border-radius: var(--radius-lg); }
+    .evidence-panel { min-width: 0; padding: 13px 14px; overflow: hidden; background: color-mix(in oklab, var(--bg) 7%, var(--fg)); border: 1px solid color-mix(in oklab, var(--bg), transparent 88%); border-radius: var(--radius-lg); }
+    .evidence-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 9px; border-bottom: 1px solid color-mix(in oklab, var(--bg), transparent 88%); }
+    .evidence-head strong { color: var(--bg); font-size: 11px; font-weight: 600; }
+    .evidence-head span { color: color-mix(in oklab, var(--bg), transparent 48%); font-family: var(--font-mono); font-size: 9px; }
+    .evidence-list { display: grid; gap: 2px; margin-top: 7px; }
+    .evidence-row { min-width: 0; min-height: 28px; display: grid; grid-template-columns: minmax(82px, 1fr) minmax(98px, 1.15fr) auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid color-mix(in oklab, var(--bg), transparent 92%); }
+    .evidence-row:last-child { border-bottom: 0; }
+    .evidence-name { overflow: hidden; color: var(--bg); font-size: 10px; font-weight: 550; text-overflow: ellipsis; white-space: nowrap; }
+    .evidence-raw { overflow: hidden; color: color-mix(in oklab, var(--bg), transparent 46%); font-family: var(--font-mono); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .evidence-value { color: var(--bg); font-family: var(--font-mono); font-size: 9px; white-space: nowrap; }
+    .evidence-note { margin: 7px 0 0; color: color-mix(in oklab, var(--bg), transparent 48%); font-size: 9px; line-height: 1.45; }
+    .command-proof { display: flex; align-items: center; gap: 7px; margin-top: 7px; padding: 6px 8px; overflow: hidden; background: color-mix(in oklab, var(--bg) 6%, var(--fg)); border-radius: var(--radius-sm); }
+    .command-proof span { flex: 0 0 auto; color: var(--meta); font-size: 8px; letter-spacing: .06em; }
+    .command-proof code { overflow: hidden; color: color-mix(in oklab, var(--bg), transparent 34%); font-family: var(--font-mono); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+
+    .radar-label { position: absolute; padding: 3px 5px; color: var(--bg); background: color-mix(in oklab, var(--fg), transparent 18%); border: 1px solid color-mix(in oklab, var(--bg), transparent 80%); border-radius: 5px; font-family: var(--font-mono); font-size: 8px; white-space: nowrap; }
+    .radar-label.l1 { top: 18%; left: 66%; } .radar-label.l2 { top: 65%; left: 4%; } .radar-label.l3 { right: 2%; bottom: 14%; }
+    .spectrum-field { width: 90%; height: 158px; display: flex; align-items: flex-end; gap: 7px; padding: 22px 8px 24px; border-bottom: 1px solid color-mix(in oklab, var(--bg), transparent 80%); }
+    .spectrum-bin { position: relative; flex: 1; height: var(--h); border-radius: 5px 5px 2px 2px; background: color-mix(in oklab, var(--bg), transparent 70%); animation: spectrum 1.5s var(--ease-standard) infinite alternate; animation-delay: var(--d); }
+    .spectrum-bin.active { background: var(--accent); }
+    .spectrum-bin::after { content: attr(data-ch); position: absolute; right: 0; bottom: -19px; left: 0; color: color-mix(in oklab, var(--bg), transparent 52%); font-family: var(--font-mono); font-size: 8px; text-align: center; }
+    @keyframes spectrum { to { transform: scaleY(.76); opacity: .62; } }
+    .stereo-field { width: 90%; display: grid; gap: 18px; }
+    .stereo-channel { display: grid; grid-template-columns: 18px 1fr; align-items: center; gap: 10px; }
+    .stereo-channel > span { color: color-mix(in oklab, var(--bg), transparent 42%); font-family: var(--font-mono); font-size: 10px; }
+    .channel-wave { height: 58px; display: flex; align-items: center; gap: 3px; }
+    .channel-wave i { flex: 1; height: var(--h); min-height: 3px; background: var(--bg); border-radius: var(--radius-pill); opacity: .74; animation: pulse 1.2s var(--ease-standard) infinite alternate; animation-delay: var(--d); }
+    .mic-field { position: relative; width: 90%; height: 150px; display: flex; align-items: center; gap: 4px; padding: 20px 0; }
+    .mic-field::before { content: "-30 dBFS 阈值"; position: absolute; top: 28%; right: 0; left: 0; border-top: 1px dashed color-mix(in oklab, var(--warn), transparent 45%); color: color-mix(in oklab, var(--warn), var(--bg) 20%); font-family: var(--font-mono); font-size: 8px; text-align: right; }
+    .mic-bar { flex: 1; height: var(--h); min-height: 3px; background: var(--bg); border-radius: var(--radius-pill); opacity: .68; animation: pulse 1s var(--ease-standard) infinite alternate; animation-delay: var(--d); }
+    .screen-field::after { content: ""; position: absolute; right: 0; left: 0; height: 2px; background: var(--bg); opacity: .62; animation: scanline 2.2s linear infinite; }
+    @keyframes scanline { from { top: 0; } to { top: calc(100% - 2px); } }
+    .screen-field { position: relative; }
+    .touch-cell { animation: touch-check 2.4s var(--ease-standard) infinite; animation-delay: var(--d); }
+    @keyframes touch-check { 35% { background: color-mix(in oklab, var(--accent), transparent 58%); border-color: var(--accent); transform: scale(.92); } }
+    .temperature-bar { animation: temp-sample 1.8s var(--ease-standard) infinite alternate; animation-delay: var(--d); }
+    @keyframes temp-sample { to { transform: scaleY(.94); opacity: .82; } }
+
+    @media (max-width: 1220px) {
+      .instrument-viz { grid-template-columns: minmax(0, 1fr) 300px; padding-inline: 16px; }
+      .evidence-row { grid-template-columns: minmax(74px,1fr) minmax(82px,1fr) auto; gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" data-od-id="adb-test-console">
+    <header class="topbar" data-od-id="application-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">FL</div>
+        <div><div class="brand-name">Fixture Lab</div><div class="brand-sub">ADB 产品测试台</div></div>
+      </div>
+      <div class="station"><span class="station-label">当前工位</span><strong>上海 · A-07</strong></div>
+      <div class="top-actions">
+        <div class="connection" id="connectionStatus"><span class="dot"></span><span>ADB 演示链路</span></div>
+        <button class="btn" id="rescanBtn" data-od-id="rescan-device-button">重新扫描</button>
+        <button class="btn primary" id="startBtn" data-od-id="start-auto-test-button">开始自动测试</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <main class="main" data-od-id="test-flow-main">
+        <div class="main-head">
+          <div>
+            <div class="eyebrow">标准出厂测试 · 自动模式</div>
+            <h1 data-od-id="test-flow-heading">硬件功能测试流程</h1>
+            <p class="subtitle">依次验证无线连接、音频、灯效、显示、触控与温度传感器。所有测试数据均为原型演示数据。</p>
+          </div>
+          <div class="summary" aria-label="测试结果摘要">
+            <div class="summary-item"><strong id="passedCount">0</strong><span>通过</span></div>
+            <div class="summary-item"><strong id="failedCount">0</strong><span>未通过</span></div>
+            <div class="summary-item"><strong id="pendingCount">8</strong><span>待测试</span></div>
+          </div>
+        </div>
+        <div class="progress-shell" aria-label="测试进度"><div class="progress-bar" id="progressBar"></div></div>
+
+        <section class="device-strip" data-od-id="connected-device-card">
+          <div class="device-identity">
+            <div class="device-avatar">S2</div>
+            <div><div class="device-name">Nova Hub S2</div><div class="device-id">R58N72Q4K9P · 模拟 ADB 响应</div></div>
+          </div>
+          <div class="device-facts" aria-label="设备信息">
+            <div><span>系统</span><strong>Android 14</strong></div>
+            <div><span>固件</span><strong>2.8.14-rc3</strong></div>
+            <div><span>电量</span><strong>86%</strong></div>
+            <div><span>链路</span><strong>USB 3.0</strong></div>
+          </div>
+          <span class="status-pill ready">模拟设备</span>
+        </section>
+
+        <section class="flow-card" data-od-id="automated-test-sequence">
+          <div class="card-head"><span class="card-title">测试序列</span><span class="card-meta" id="runTimer">00:00.0</span></div>
+          <div class="test-list" id="testList"></div>
+        </section>
+
+        <section class="instrument-stage" data-od-id="live-test-instrument">
+          <div class="instrument-head">
+            <div><span class="instrument-kicker" id="stageStatus">准备测试</span><span class="source-proof">数据源 · 原型模拟</span><h2 id="stageTitle">蓝牙扫描</h2></div>
+            <div class="instrument-reading"><span id="stageMetricLabel">发现设备</span><strong id="stageMetricValue">—</strong><small id="stageMetricSub">等待测试指令</small></div>
+          </div>
+          <div class="instrument-viz" id="instrumentViz" aria-label="当前测试实时视觉"></div>
+          <div class="instrument-foot"><span>Nova Hub S2</span><span class="mono">R58N72Q4K9P</span><span id="stageHint">ADB 链路稳定</span></div>
+        </section>
+
+        <section class="log-card compact" id="logCard" data-od-id="realtime-adb-log">
+          <div class="card-head">
+            <span class="card-title">实时 ADB 日志</span>
+            <div class="log-controls"><button class="text-button" id="toggleLogBtn">展开</button><button class="text-button" id="copyLogBtn">复制</button><button class="text-button" id="clearLogBtn">清空</button></div>
+          </div>
+          <div class="log-list" id="logList" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <aside class="inspector" data-od-id="current-test-inspector">
+        <div class="inspector-head"><h2 class="inspector-title">判定与操作</h2><span class="demo-tag">演示数据</span></div>
+        <section class="current-card">
+          <div class="step-index" id="stepIndex">步骤 01 / 08</div>
+          <h2 id="currentTitle">蓝牙</h2>
+          <p id="currentDescription">验证蓝牙模块状态、扫描能力与本机地址读取。</p>
+          <div class="metric-box">
+            <div class="metric-label" id="metricLabel">模块状态</div>
+            <div class="metric" id="metricValue">待开始</div>
+            <div class="metric-sub" id="metricSub">等待自动测试任务</div>
+          </div>
+          <div class="instruction">
+            <h3>操作说明</h3>
+            <ol id="instructionList"></ol>
+          </div>
+          <div class="criteria">
+            <h3>判定条件</h3>
+            <div id="criteriaList"></div>
+          </div>
+          <div class="manual-actions" id="manualActions">
+            <button class="btn fail-btn" id="failBtn">判定未通过</button>
+            <button class="btn pass-btn" id="passBtn">确认通过</button>
+          </div>
+          <div class="run-actions">
+            <button class="btn small" id="pauseBtn" disabled>暂停</button>
+            <button class="btn small danger" id="abortBtn" disabled>终止测试</button>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"><span class="dot"></span><span id="toastText">操作完成</span></div>
+  <div class="modal-backdrop" id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <div class="modal">
+      <div class="modal-head"><h2 id="reportTitle">本次测试报告</h2><button class="text-button" id="closeModalBtn">关闭</button></div>
+      <div class="modal-body">
+        <div class="report-hero"><div><div class="report-score" id="reportScore">8 / 8</div><div class="report-label">已完成测试项目 · 数据源：原型模拟</div></div><span class="status-pill passed" id="reportStatus">全部通过</span></div>
+        <div class="report-grid" id="reportGrid"></div>
+      </div>
+      <div class="modal-foot"><button class="btn" id="exportBtn">导出 JSON</button><button class="btn primary" id="newRunBtn">开始新一轮</button></div>
+    </div>
+  </div>
+
+  <script>
+    const tests = [
+      { code:'BT', name:'蓝牙', desc:'模块、扫描与地址读取', mode:'auto', duration:1450, metric:['发现设备','6 台','RSSI 最强 -42 dBm'], value:'6 台 · -42 dBm', instructions:['读取蓝牙适配器状态','执行 5 秒周边设备扫描','校验本机蓝牙地址'], criteria:[['适配器','已启用'],['扫描结果','≥ 1 台'],['地址格式','有效']] },
+      { code:'WF', name:'WiFi', desc:'扫描、连接与信号强度', mode:'auto', duration:1650, metric:['网络连接','QA-LAB-5G','RSSI -48 dBm · 5 GHz'], value:'QA-LAB-5G · -48 dBm', instructions:['扫描工位无线网络','连接 QA-LAB-5G','读取频段与信号强度'], criteria:[['连接状态','已连接'],['频段','5 GHz'],['RSSI','≥ -70 dBm']] },
+      { code:'SP', name:'喇叭', desc:'左右声道与扫频播放', mode:'manual', duration:1100, metric:['播放信号','左右声道','440 Hz → 8 kHz'], value:'等待人工确认', instructions:['确认环境保持安静','听取左、右声道提示音','确认无破音、杂音或缺失'], criteria:[['左声道','清晰'],['右声道','清晰'],['失真','不可感知']] },
+      { code:'MIC', name:'麦克风', desc:'录音、增益与底噪检测', mode:'auto', duration:1700, metric:['输入电平','-18.6 dBFS','底噪 -53.2 dBFS'], value:'-18.6 dBFS', instructions:['采集 3 秒环境音','计算峰值与平均底噪','回放录音片段供追溯'], criteria:[['峰值','-30 ~ -6 dBFS'],['底噪','≤ -45 dBFS'],['数据帧','连续']] },
+      { code:'LED', name:'灯带', desc:'红绿蓝白与亮度循环', mode:'manual', duration:1150, metric:['当前灯效','四色循环','亮度 20% → 100%'], value:'等待人工确认', instructions:['观察红、绿、蓝、白四色循环','检查所有灯珠是否点亮','确认亮度变化连续、无闪烁'], criteria:[['颜色','无偏色'],['灯珠','全部点亮'],['调光','连续']] },
+      { code:'LCD', name:'屏幕', desc:'纯色、灰阶与坏点检查', mode:'manual', duration:1050, metric:['显示图案','灰阶测试','即将进入全屏色卡'], value:'等待人工确认', instructions:['观察红、绿、蓝、黑、白画面','检查亮点、暗点与色块','确认灰阶过渡连续'], criteria:[['坏点','未发现'],['色块','均匀'],['灰阶','连续']] },
+      { code:'TP', name:'触摸', desc:'九宫格触点与滑动轨迹', mode:'manual', duration:1000, metric:['触控覆盖','0 / 9 区域','等待操作触摸屏'], value:'等待人工确认', instructions:['依次触摸屏幕九个目标区域','沿屏幕边缘完成一圈滑动','确认轨迹连续且无断点'], criteria:[['触点','9 / 9'],['边缘轨迹','连续'],['多点触控','≥ 5 点']] },
+      { code:'TEMP', name:'温度传感器', desc:'读数、稳定性与合理范围', mode:'auto', duration:1500, metric:['实时温度','36.8 °C','波动 ±0.2 °C / 5 秒'], value:'36.8 °C · 稳定', instructions:['连续采集 5 组温度数据','计算波动区间','校验读数是否处于合理范围'], criteria:[['读取状态','正常'],['温度范围','-10 ~ 70 °C'],['短时波动','≤ 1.0 °C']] }
+    ];
+
+    let current = 0, running = false, paused = false, startedAt = 0, timerId = null, taskId = null;
+    const state = tests.map(() => 'pending');
+    const el = id => document.getElementById(id);
+
+    const evidenceSets = [
+      { title:'蓝牙扫描明细', command:'adb shell cmd bluetooth_manager dump', rows:[['Nova_Beacon_A1','C8:2B:96:1A:04:7C','-42 dBm'],['QA-Headset','7C:9E:BD:34:11:A8','-55 dBm'],['BLE_Sensor_07','D0:39:72:88:2F:10','-67 dBm']], note:'演示响应样本；真实接入后由蓝牙扫描回调逐条写入，共发现 6 台。' },
+      { title:'当前网络证据', command:'adb shell dumpsys wifi | grep mWifiInfo', rows:[['QA-LAB-5G','58:EF:68:21:9C:40','-48 dBm'],['中心频率','5220 MHz','信道 44'],['链路速率','866 Mbps','WiFi 6']], note:'SSID、BSSID、频率与 RSSI 来自同一条 WiFiInfo 响应。' },
+      { title:'音频路由回执', command:'adb shell dumpsys audio', rows:[['输出设备','AUDIO_DEVICE_OUT_SPEAKER','已路由'],['左声道','440 Hz → 8 kHz','已播放'],['右声道','440 Hz → 8 kHz','已播放']], note:'系统回执只能证明播放命令成功；破音、杂音仍必须由测试员确认。' },
+      { title:'录音采样证据', command:'adb shell tinycap /data/local/tmp/mic.wav', rows:[['峰值','-18.6 dBFS','合格'],['平均底噪','-53.2 dBFS','合格'],['采样帧','144,000','连续']], note:'演示样本为 48 kHz / 16 bit / 3 秒，判定结果保留原始 WAV 引用。' },
+      { title:'灯带控制回执', command:'adb shell setprop persist.test.led cycle', rows:[['红色通道','ACK 0x01','已执行'],['绿色通道','ACK 0x02','已执行'],['蓝／白通道','ACK 0x03/04','已执行']], note:'控制器 ACK 不等于灯珠实际点亮；颜色、坏灯和闪烁需要人工确认。' },
+      { title:'显示测试证据', command:'adb shell am start -n .display/.PatternActivity', rows:[['面板分辨率','1920 × 1080','已读取'],['色卡序列','RGBKW + 灰阶','7 帧'],['截图校验','frame_006.png','已保存']], note:'程序确认测试图案已显示；坏点和色块均匀性仍需要人工观察。' },
+      { title:'触控事件证据', command:'adb shell getevent -lt /dev/input/event4', rows:[['目标区域','0 / 9','等待触摸'],['轨迹事件','0 samples','等待输入'],['最大触点','5 points','能力已读取']], note:'真实测试时逐点显示坐标、压力值与事件时间，未触发区域不会自动通过。' },
+      { title:'温度采样序列', command:'adb shell cat /sys/class/thermal/thermal_zone0/temp', rows:[['样本 01','36.7 °C','10:42:18.1'],['样本 02','36.8 °C','10:42:19.1'],['样本 03–05','36.9 / 36.8 / 36.8','Δ 0.2 °C']], note:'展示完整采样序列而非单个均值，便于核对范围、波动与时间连续性。' }
+    ];
+
+    function renderInstrument() {
+      const t = tests[current];
+      const active = state[current];
+      const titles = ['蓝牙空间扫描','WiFi 频谱分析','声道扫频输出','麦克风输入采样','灯带颜色循环','显示面板检查','触控区域追踪','温度稳定性采样'];
+      el('stageStatus').textContent = active === 'pending' ? '准备测试' : statusText(active);
+      el('stageTitle').textContent = titles[current];
+      el('stageMetricLabel').textContent = t.metric[0];
+      el('stageMetricValue').textContent = active === 'pending' ? '—' : active === 'running' ? '采集中' : t.metric[1];
+      el('stageMetricSub').textContent = active === 'pending' ? '等待测试指令' : t.metric[2];
+      el('stageHint').textContent = active === 'waiting' ? '等待操作员确认' : active === 'running' ? '实时数据采集中' : 'ADB 链路稳定';
+
+      let visual = '';
+      if (current === 0) {
+        visual = `<div class="radar"><span class="radar-grid"></span><span class="radar-sweep"></span><span class="radar-core"></span><span class="radar-dot d1"></span><span class="radar-dot d2"></span><span class="radar-dot d3"></span><span class="radar-label l1">Beacon · -42</span><span class="radar-label l2">Headset · -55</span><span class="radar-label l3">Sensor · -67</span></div>`;
+      } else if (current === 1) {
+        visual = `<div class="spectrum-field">${Array.from({length:12},(_,i)=>`<span class="spectrum-bin ${i===3||i===8?'active':''}" data-ch="${36+i*4}" style="--h:${36+((i*29)%102)}px;--d:${i*-.07}s"></span>`).join('')}</div>`;
+      } else if (current === 2) {
+        visual = `<div class="stereo-field">${['L','R'].map((ch,row)=>`<div class="stereo-channel"><span>${ch}</span><div class="channel-wave">${Array.from({length:28},(_,i)=>`<i style="--h:${10+((i*19+row*13)%48)}px;--d:${i*-.05}s"></i>`).join('')}</div></div>`).join('')}</div>`;
+      } else if (current === 3) {
+        visual = `<div class="mic-field">${Array.from({length:42},(_,i)=>`<span class="mic-bar" style="--h:${12+((i*31)%116)}px;--d:${i*-.04}s"></span>`).join('')}</div>`;
+      } else if (current === 4) {
+        visual = `<div class="led-field">${Array.from({length:12},(_,i)=>`<span class="led-cell" style="--d:${i*.11}s"></span>`).join('')}</div>`;
+      } else if (current === 5) {
+        visual = `<div class="screen-field">${Array.from({length:20},(_,i)=>`<span class="screen-cell" style="--shade:${Math.round(i/19*88)}%"></span>`).join('')}</div>`;
+      } else if (current === 6) {
+        visual = `<div class="touch-field">${Array.from({length:9},(_,i)=>`<span class="touch-cell" style="--d:${i*.16}s"></span>`).join('')}</div>`;
+      } else {
+        visual = `<div class="temperature-field">${Array.from({length:20},(_,i)=>`<span class="temperature-bar" style="--h:${72 + ((i*7)%28)}px;--d:${i*-.06}s"></span>`).join('')}</div>`;
+      }
+      const evidence = evidenceSets[current];
+      const sourceState = active === 'pending' ? '演示样本 · 尚未执行' : `原型模拟 · ${new Date().toLocaleTimeString('zh-CN',{hour12:false})}`;
+      const proof = `<section class="evidence-panel"><div class="evidence-head"><strong>${evidence.title}</strong><span>${sourceState}</span></div><div class="evidence-list">${evidence.rows.map(row=>`<div class="evidence-row"><span class="evidence-name">${row[0]}</span><span class="evidence-raw">${row[1]}</span><span class="evidence-value">${row[2]}</span></div>`).join('')}</div><p class="evidence-note">${evidence.note}</p><div class="command-proof"><span>命令模板</span><code>${evidence.command}</code></div></section>`;
+      el('instrumentViz').innerHTML = `<div class="viz-canvas">${visual}</div>${proof}`;
+    }
+
+    function statusText(s) { return ({pending:'待测试',running:'测试中',waiting:'待确认',passed:'已通过',failed:'未通过'})[s]; }
+
+    function renderList() {
+      el('testList').innerHTML = tests.map((t, i) => `
+        <button class="test-node ${i === current ? 'active' : ''} ${state[i]}" data-index="${i}" data-od-id="test-step-${t.code.toLowerCase()}" aria-label="${String(i+1).padStart(2,'0')} ${t.name}，${statusText(state[i])}">
+          <span class="node-top"><span class="node-index">${String(i+1).padStart(2,'0')} · ${t.code}</span><span class="node-state"></span></span>
+          <span class="node-name">${t.name}</span>
+        </button>`).join('');
+      document.querySelectorAll('.test-node').forEach(row => row.addEventListener('click', () => { current = Number(row.dataset.index); renderAll(); }));
+    }
+
+    function renderInspector() {
+      const t = tests[current];
+      el('stepIndex').textContent = `步骤 ${String(current+1).padStart(2,'0')} / ${String(tests.length).padStart(2,'0')}`;
+      el('currentTitle').textContent = t.name;
+      el('currentDescription').textContent = t.desc + '。';
+      el('metricLabel').textContent = t.metric[0];
+      const active = state[current];
+      el('metricValue').textContent = active === 'pending' ? '待开始' : active === 'running' ? '检测中…' : t.metric[1];
+      el('metricSub').textContent = active === 'pending' ? '等待自动测试任务' : t.metric[2];
+      el('instructionList').innerHTML = t.instructions.map(x => `<li>${x}</li>`).join('');
+      el('criteriaList').innerHTML = t.criteria.map(x => `<div class="criteria-row"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('');
+      el('manualActions').classList.toggle('visible', active === 'waiting');
+    }
+
+    function updateSummary() {
+      const passed = state.filter(x => x === 'passed').length;
+      const failed = state.filter(x => x === 'failed').length;
+      const done = passed + failed;
+      el('passedCount').textContent = passed;
+      el('failedCount').textContent = failed;
+      el('pendingCount').textContent = tests.length - done;
+      el('progressBar').style.width = `${done / tests.length * 100}%`;
+    }
+
+    function renderAll() { renderList(); renderInspector(); renderInstrument(); updateSummary(); }
+
+    function addLog(tag, text, kind='') {
+      const now = new Date();
+      const time = now.toLocaleTimeString('zh-CN', {hour12:false}) + '.' + String(now.getMilliseconds()).padStart(3,'0').slice(0,1);
+      el('logList').insertAdjacentHTML('beforeend', `<div class="log-line"><span class="log-time">${time}</span><span class="log-tag ${kind}">${tag}</span><span class="log-text">${text}</span></div>`);
+      el('logList').scrollTop = el('logList').scrollHeight;
+    }
+
+    function showToast(text) {
+      el('toastText').textContent = text; el('toast').classList.add('show');
+      setTimeout(() => el('toast').classList.remove('show'), 1800);
+    }
+
+    function updateControls() {
+      el('startBtn').disabled = running;
+      el('pauseBtn').disabled = !running || state[current] === 'waiting';
+      el('abortBtn').disabled = !running;
+      el('pauseBtn').textContent = paused ? '继续' : '暂停';
+    }
+
+    function tickTimer() {
+      if (!running || paused) return;
+      const elapsed = (performance.now() - startedAt) / 1000;
+      el('runTimer').textContent = `${String(Math.floor(elapsed/60)).padStart(2,'0')}:${(elapsed%60).toFixed(1).padStart(4,'0')}`;
+      timerId = requestAnimationFrame(tickTimer);
+    }
+
+    function runCurrent() {
+      if (!running || paused) return;
+      const t = tests[current];
+      state[current] = 'running'; renderAll();
+      addLog('ADB', `开始执行 ${t.code} / ${t.name} 测试`, '');
+      taskId = setTimeout(() => {
+        if (!running || paused) return;
+        if (t.mode === 'manual') {
+          state[current] = 'waiting'; renderAll(); updateControls();
+          addLog('等待', `${t.name} 自动指令完成，请操作员确认结果`, 'warn');
+        } else {
+          state[current] = 'passed'; renderAll();
+          addLog('通过', `${t.name} 测试满足判定条件 · ${t.value}`, 'ok');
+          nextTest();
+        }
+      }, t.duration);
+    }
+
+    function nextTest() {
+      if (current >= tests.length - 1) { finishRun(); return; }
+      current += 1; renderAll();
+      taskId = setTimeout(runCurrent, 380);
+    }
+
+    function startRun() {
+      clearTimeout(taskId); state.fill('pending'); current = 0; running = true; paused = false; startedAt = performance.now();
+      el('runTimer').textContent = '00:00.0';
+      addLog('任务', '创建标准出厂测试批次，设备 R58N72Q4K9P', '');
+      addLog('模拟', '已载入原型 ADB 响应，开始连续测试演示', 'ok');
+      renderAll(); updateControls(); tickTimer(); runCurrent();
+    }
+
+    function finishRun() {
+      running = false; cancelAnimationFrame(timerId); updateControls(); updateSummary();
+      const failed = state.filter(x => x === 'failed').length;
+      addLog('完成', `测试流程结束：${tests.length-failed} 项通过，${failed} 项未通过`, failed ? 'warn' : 'ok');
+      showToast('测试流程已完成'); openReport();
+    }
+
+    function manualDecision(result) {
+      if (state[current] !== 'waiting') return;
+      state[current] = result; renderAll();
+      addLog(result === 'passed' ? '通过' : '未通过', `${tests[current].name} 已由操作员确认`, result === 'passed' ? 'ok' : 'warn');
+      updateControls(); taskId = setTimeout(nextTest, 420);
+    }
+
+    function openReport() {
+      const done = state.filter(x => x === 'passed' || x === 'failed').length;
+      const failed = state.filter(x => x === 'failed').length;
+      el('reportScore').textContent = `${done} / ${tests.length}`;
+      el('reportStatus').textContent = done < tests.length ? '测试未完成' : failed ? `${failed} 项未通过` : '全部通过';
+      el('reportStatus').className = `status-pill ${done === tests.length && !failed ? 'passed' : 'waiting'}`;
+      el('reportGrid').innerHTML = tests.map((t,i) => `<div class="report-chip">${t.name}<span>${statusText(state[i])}</span></div>`).join('');
+      el('reportModal').classList.add('open');
+    }
+
+    el('startBtn').addEventListener('click', startRun);
+    el('passBtn').addEventListener('click', () => manualDecision('passed'));
+    el('failBtn').addEventListener('click', () => manualDecision('failed'));
+    el('pauseBtn').addEventListener('click', () => {
+      paused = !paused; clearTimeout(taskId); updateControls();
+      addLog(paused ? '暂停' : '继续', paused ? '测试流程已暂停' : '测试流程继续执行', paused ? 'warn' : '');
+      if (!paused) { startedAt = performance.now(); tickTimer(); runCurrent(); }
+    });
+    el('abortBtn').addEventListener('click', () => { running = false; paused = false; clearTimeout(taskId); cancelAnimationFrame(timerId); updateControls(); addLog('终止','操作员已终止本轮测试','warn'); showToast('本轮测试已终止'); });
+    el('rescanBtn').addEventListener('click', () => { el('connectionStatus').innerHTML = '<span class="dot"></span><span>载入演示链路…</span>'; setTimeout(() => { el('connectionStatus').innerHTML = '<span class="dot"></span><span>ADB 演示链路</span>'; showToast('已载入 1 台模拟设备'); addLog('模拟','演示链路已重置，设备 R58N72Q4K9P','ok'); }, 900); });
+    el('clearLogBtn').addEventListener('click', () => { el('logList').innerHTML = ''; showToast('日志已清空'); });
+    el('toggleLogBtn').addEventListener('click', () => {
+      const expanded = el('logCard').classList.toggle('expanded');
+      el('logCard').classList.toggle('compact', !expanded);
+      el('toggleLogBtn').textContent = expanded ? '收起' : '展开';
+    });
+    el('copyLogBtn').addEventListener('click', async () => { try { await navigator.clipboard.writeText(el('logList').innerText); showToast('日志已复制'); } catch { showToast('当前环境不支持复制'); } });
+    el('closeModalBtn').addEventListener('click', () => el('reportModal').classList.remove('open'));
+    el('reportModal').addEventListener('click', e => { if (e.target === el('reportModal')) el('reportModal').classList.remove('open'); });
+    el('newRunBtn').addEventListener('click', () => { el('reportModal').classList.remove('open'); startRun(); });
+    el('exportBtn').addEventListener('click', () => {
+      const payload = { device:'R58N72Q4K9P', mode:'automatic', dataSource:'prototype-simulated', generatedAt:new Date().toISOString(), results:tests.map((t,i)=>({test:t.name,status:state[i],value:t.value,commandTemplate:evidenceSets[i].command,evidence:evidenceSets[i].rows})) };
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})); link.download = 'adb-test-result.json'; link.click(); URL.revokeObjectURL(link.href); showToast('报告已导出');
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') el('reportModal').classList.remove('open'); if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !running) startRun(); });
+
+    renderAll(); updateControls();
+    addLog('系统', '测试工具就绪，等待开始任务');
+    addLog('模拟', '已载入 Nova Hub S2 · R58N72Q4K9P 原型响应', 'ok');
+  </script>
+</body>
+</html>

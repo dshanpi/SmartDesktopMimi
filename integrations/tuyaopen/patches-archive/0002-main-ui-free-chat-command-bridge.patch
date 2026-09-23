@@ -1,0 +1,442 @@
+diff --git a/apps/tuya.ai/your_chat_bot/include/app_chat_bot.h b/apps/tuya.ai/your_chat_bot/include/app_chat_bot.h
+index 2415ea03..19835069 100755
+--- a/apps/tuya.ai/your_chat_bot/include/app_chat_bot.h
++++ b/apps/tuya.ai/your_chat_bot/include/app_chat_bot.h
+@@ -27,6 +27,8 @@ extern "C" {
+ ********************function declaration********************
+ ***********************************************************/
+ OPERATE_RET app_chat_bot_init(void);
++int app_chat_bot_main_ui_send_bind_url(const char *url);
++int app_chat_bot_main_ui_send_bound(BOOL_T bound);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c b/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c
+index 58969481..b79b4b9d 100644
+--- a/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c
++++ b/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c
+@@ -6,15 +6,27 @@
+  */
+ 
+ #include "tal_api.h"
++#include "tal_thread.h"
+ 
+ #include "netmgr.h"
+ 
+ #include "ai_manage_mode.h"
++#include "ai_mode_free.h"
+ #include "ai_chat_main.h"
+ #include "app_chat_bot.h"
++#include "tuya_ai_agent.h"
++#include "tuya_ai_protocol.h"
++
++#if defined(ENABLE_COMP_AI_AUDIO) && (ENABLE_COMP_AI_AUDIO == 1)
++#include "ai_audio_player.h"
++#include "tuya_ai_input.h"
++#endif
+ 
+ #include <arpa/inet.h>
++#include <errno.h>
+ #include <stdlib.h>
++#include <stdint.h>
++#include <string.h>
+ #include <sys/socket.h>
+ #include <unistd.h>
+ 
+@@ -32,6 +44,7 @@
+ #define PRINTF_FREE_HEAP_TTIME (10 * 1000)
+ #define DISP_NET_STATUS_TIME   (1 * 1000)
+ #define TUYA_MAIN_UI_PORT      5679
++#define TUYA_MAIN_UI_CMD_PORT  5678
+ #define MAIN_UI_REPLY_TEXT_MAX 1024
+ 
+ /***********************************************************
+@@ -47,6 +60,8 @@
+ ***********************************************************/
+ static TIMER_ID sg_printf_heap_tm;
+ static int sg_main_ui_udp_fd = -1;
++static int sg_main_ui_cmd_fd = -1;
++static THREAD_HANDLE sg_main_ui_cmd_thread = NULL;
+ static BOOL_T sg_main_ui_udp_close_registered = FALSE;
+ static char sg_main_ui_reply_text[MAIN_UI_REPLY_TEXT_MAX];
+ static size_t sg_main_ui_reply_len = 0;
+@@ -64,6 +79,8 @@ extern void app_ui_action_register(void);
+ #endif
+ 
+ static void __main_ui_bridge_close(void);
++static void __json_escape_copy(char *dst, size_t dst_size,
++                               const char *src, size_t src_len);
+ 
+ static int __main_ui_bridge_send(const char *json)
+ {
+@@ -108,6 +125,37 @@ static void __main_ui_bridge_close(void)
+         close(sg_main_ui_udp_fd);
+         sg_main_ui_udp_fd = -1;
+     }
++
++    if (sg_main_ui_cmd_fd >= 0) {
++        close(sg_main_ui_cmd_fd);
++        sg_main_ui_cmd_fd = -1;
++    }
++}
++
++int app_chat_bot_main_ui_send_bind_url(const char *url)
++{
++    char escaped[300];
++    char payload[384];
++
++    if (NULL == url || url[0] == '\0') {
++        return -1;
++    }
++
++    __json_escape_copy(escaped, sizeof(escaped), url, strlen(url));
++    snprintf(payload, sizeof(payload),
++             "{\"runtime\":\"tuya\",\"bound\":false,\"bind_url\":\"%s\"}",
++             escaped);
++    return __main_ui_bridge_send(payload);
++}
++
++int app_chat_bot_main_ui_send_bound(BOOL_T bound)
++{
++    char payload[64];
++
++    snprintf(payload, sizeof(payload),
++             "{\"runtime\":\"tuya\",\"bound\":%s}",
++             bound ? "true" : "false");
++    return __main_ui_bridge_send(payload);
+ }
+ 
+ static const char *__main_ui_state_from_mode(AI_MODE_STATE_E state)
+@@ -128,6 +176,22 @@ static const char *__main_ui_state_from_mode(AI_MODE_STATE_E state)
+     }
+ }
+ 
++static const char *__main_ui_chat_mode_name(AI_CHAT_MODE_E mode)
++{
++    switch (mode) {
++    case AI_CHAT_MODE_FREE:
++        return "free";
++    case AI_CHAT_MODE_WAKEUP:
++        return "wakeup";
++    case AI_CHAT_MODE_HOLD:
++        return "hold";
++    case AI_CHAT_MODE_ONE_SHOT:
++        return "one_shot";
++    default:
++        return "unknown";
++    }
++}
++
+ static void __main_ui_bridge_send_state(const char *state)
+ {
+     char payload[128];
+@@ -138,6 +202,184 @@ static void __main_ui_bridge_send_state(const char *state)
+     __main_ui_bridge_send(payload);
+ }
+ 
++static void __main_ui_bridge_send_mode(AI_CHAT_MODE_E mode)
++{
++    char payload[160];
++    AI_MODE_STATE_E state = ai_mode_get_state();
++
++    snprintf(payload, sizeof(payload),
++             "{\"runtime\":\"tuya\",\"mode\":\"%s\",\"state\":\"%s\"}",
++             __main_ui_chat_mode_name(mode),
++             __main_ui_state_from_mode(state));
++    __main_ui_bridge_send(payload);
++}
++
++static void __main_ui_break_chat(void)
++{
++#if defined(ENABLE_COMP_AI_AUDIO) && (ENABLE_COMP_AI_AUDIO == 1)
++    ai_audio_player_stop(AI_AUDIO_PLAYER_ALL);
++    tuya_ai_input_stop();
++#endif
++    tuya_ai_agent_event(AI_EVENT_CHAT_BREAK, 0);
++}
++
++static void __main_ui_handle_enter_free_chat(BOOL_T wake)
++{
++    OPERATE_RET rt;
++
++    rt = ai_mode_switch(AI_CHAT_MODE_FREE);
++    if (rt != OPRT_OK) {
++        PR_WARN("main ui enter free chat failed: %d", rt);
++        __main_ui_bridge_send_state("error");
++        return;
++    }
++
++    if (wake) {
++        TUYA_CALL_ERR_LOG(ai_mode_free_wakeup());
++    }
++
++    __main_ui_bridge_send_mode(AI_CHAT_MODE_FREE);
++}
++
++static void __main_ui_handle_exit_free_chat(void)
++{
++    OPERATE_RET rt;
++
++    __main_ui_break_chat();
++    rt = ai_mode_switch(AI_CHAT_MODE_WAKEUP);
++    if (rt != OPRT_OK) {
++        PR_WARN("main ui exit free chat failed: %d", rt);
++        __main_ui_bridge_send_state("error");
++        return;
++    }
++
++    __main_ui_bridge_send_mode(AI_CHAT_MODE_WAKEUP);
++}
++
++static BOOL_T __json_has_cmd(const char *json, const char *cmd)
++{
++    char pattern[96];
++
++    if (NULL == json || NULL == cmd) {
++        return FALSE;
++    }
++
++    snprintf(pattern, sizeof(pattern), "\"cmd\":\"%s\"", cmd);
++    if (strstr(json, pattern)) {
++        return TRUE;
++    }
++
++    snprintf(pattern, sizeof(pattern), "\"cmd\" : \"%s\"", cmd);
++    return strstr(json, pattern) ? TRUE : FALSE;
++}
++
++static void __main_ui_cmd_handle(const char *json)
++{
++    if (__json_has_cmd(json, "enter_free_chat")) {
++        BOOL_T wake = strstr(json, "\"wake\":false") ? FALSE : TRUE;
++
++        PR_NOTICE("main ui command: enter_free_chat wake=%d", wake);
++        __main_ui_handle_enter_free_chat(wake);
++        return;
++    }
++
++    if (__json_has_cmd(json, "exit_free_chat")) {
++        PR_NOTICE("main ui command: exit_free_chat");
++        __main_ui_handle_exit_free_chat();
++        return;
++    }
++
++    PR_WARN("main ui unknown command: %s", json ? json : "(null)");
++}
++
++static void __main_ui_cmd_thread(void *arg)
++{
++    struct sockaddr_in addr;
++    char buf[256];
++    int opt = 1;
++    ssize_t n;
++
++    (void)arg;
++
++    sg_main_ui_cmd_fd = socket(AF_INET, SOCK_DGRAM, 0);
++    if (sg_main_ui_cmd_fd < 0) {
++        PR_WARN("main ui cmd socket create failed");
++        return;
++    }
++
++    setsockopt(sg_main_ui_cmd_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
++
++    memset(&addr, 0, sizeof(addr));
++    addr.sin_family = AF_INET;
++    addr.sin_port = htons(TUYA_MAIN_UI_CMD_PORT);
++    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
++
++    if (bind(sg_main_ui_cmd_fd, (const struct sockaddr *)&addr, sizeof(addr)) != 0) {
++        PR_WARN("main ui cmd bind %d failed, errno=%d", TUYA_MAIN_UI_CMD_PORT, errno);
++        close(sg_main_ui_cmd_fd);
++        sg_main_ui_cmd_fd = -1;
++        return;
++    }
++
++    PR_NOTICE("main ui command bridge listening on 127.0.0.1:%d", TUYA_MAIN_UI_CMD_PORT);
++
++    while (1) {
++        n = recv(sg_main_ui_cmd_fd, buf, sizeof(buf) - 1, 0);
++        if (n < 0) {
++            if (errno == EINTR) {
++                continue;
++            }
++            PR_WARN("main ui cmd recv failed, errno=%d", errno);
++            break;
++        }
++
++        buf[n] = '\0';
++        __main_ui_cmd_handle(buf);
++    }
++}
++
++static void __main_ui_cmd_start(void)
++{
++    OPERATE_RET rt = OPRT_OK;
++    THREAD_CFG_T cfg = {
++        .thrdname = "ui_cmd",
++        .priority = THREAD_PRIO_3,
++        .stackDepth = 4096,
++    };
++
++    if (sg_main_ui_cmd_thread) {
++        return;
++    }
++
++    if (FALSE == sg_main_ui_udp_close_registered) {
++        atexit(__main_ui_bridge_close);
++        sg_main_ui_udp_close_registered = TRUE;
++    }
++
++    TUYA_CALL_ERR_LOG(tal_thread_create_and_start(&sg_main_ui_cmd_thread,
++                                                  NULL,
++                                                  NULL,
++                                                  __main_ui_cmd_thread,
++                                                  NULL,
++                                                  &cfg));
++}
++
++static void __main_ui_bridge_send_emotion(const char *emotion)
++{
++    char escaped[64];
++    char payload[128];
++
++    if (NULL == emotion || emotion[0] == '\0') {
++        return;
++    }
++
++    __json_escape_copy(escaped, sizeof(escaped), emotion, strlen(emotion));
++    snprintf(payload, sizeof(payload),
++             "{\"runtime\":\"tuya\",\"emotion\":\"%s\"}",
++             escaped);
++    __main_ui_bridge_send(payload);
++}
++
+ static void __json_escape_copy(char *dst, size_t dst_size,
+                                const char *src, size_t src_len)
+ {
+@@ -334,6 +576,18 @@ static void __ai_chat_handle_event(AI_NOTIFY_EVENT_T *event)
+         case AI_USER_EVT_TTS_ERROR: {
+             __main_ui_bridge_send_state("idle");
+         } break;
++        case AI_USER_EVT_MODE_SWITCH: {
++            AI_CHAT_MODE_E mode = (AI_CHAT_MODE_E)(uintptr_t)(event->data);
++            __main_ui_bridge_send_mode(mode);
++        } break;
++        case AI_USER_EVT_EMOTION:
++        case AI_USER_EVT_LLM_EMOTION: {
++            AI_NOTIFY_EMO_T *emo = (AI_NOTIFY_EMO_T *)event->data;
++            if (emo && emo->name) {
++                PR_NOTICE("main ui emotion: %s", emo->name);
++                __main_ui_bridge_send_emotion(emo->name);
++            }
++        } break;
+         #if defined(ENABLE_PRINTER) && (ENABLE_PRINTER == 1)
+         case AI_USER_EVT_GENERATE_PICTURE:
+         case AI_USER_EVT_GET_PICTURE_FROM_APP: {
+@@ -391,6 +645,7 @@ OPERATE_RET app_chat_bot_init(void)
+ #endif
+ 
+     __main_ui_bridge_send_state("connecting");
++    __main_ui_cmd_start();
+ 
+     return OPRT_OK;
+ }
+diff --git a/apps/tuya.ai/your_chat_bot/src/tuya_main.c b/apps/tuya.ai/your_chat_bot/src/tuya_main.c
+index 82cf7654..9e174ff6 100644
+--- a/apps/tuya.ai/your_chat_bot/src/tuya_main.c
++++ b/apps/tuya.ai/your_chat_bot/src/tuya_main.c
+@@ -172,6 +172,7 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
+     switch (event->id) {
+     case TUYA_EVENT_BIND_START:
+         PR_INFO("Device Bind Start!");
++        app_chat_bot_main_ui_send_bound(FALSE);
+ 
+ #if defined(ENABLE_COMP_AI_AUDIO) && (ENABLE_COMP_AI_AUDIO == 1)
+         ai_audio_player_alert(AI_AUDIO_ALERT_NETWORK_CFG);
+@@ -185,6 +186,7 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
+         char buffer[255];
+         sprintf(buffer, "https://smartapp.tuya.com/s/p?p=%s&uuid=%s&v=2.0", TUYA_PRODUCT_ID, license.uuid);
+         PR_INFO("Tuya APP bind URL: %s", buffer);
++        app_chat_bot_main_ui_send_bind_url(buffer);
+         PR_INFO("If QR code is not visible, generate a QR code from the URL above.");
+         qrcode_string_output(buffer, user_log_output_cb, 0);
+ #endif
+@@ -196,6 +198,7 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
+     /* MQTT with tuya cloud is connected, device online */
+     case TUYA_EVENT_MQTT_CONNECTED:
+         PR_INFO("Device MQTT Connected!");
++        app_chat_bot_main_ui_send_bound(TRUE);
+ 
+         static uint8_t first = 1;
+         if (first) {
+diff --git a/src/ai_components/ai_mode/include/ai_mode_free.h b/src/ai_components/ai_mode/include/ai_mode_free.h
+index 2bc43164..20bf1958 100755
+--- a/src/ai_components/ai_mode/include/ai_mode_free.h
++++ b/src/ai_components/ai_mode/include/ai_mode_free.h
+@@ -37,6 +37,12 @@ extern "C" {
+ */
+ OPERATE_RET ai_mode_free_register(void);
+ 
++/**
++@brief Wake free mode and enter listen state
++@return OPERATE_RET Operation result
++*/
++OPERATE_RET ai_mode_free_wakeup(void);
++
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/src/ai_components/ai_mode/src/ai_mode_free.c b/src/ai_components/ai_mode/src/ai_mode_free.c
+index 26712846..722adf3a 100755
+--- a/src/ai_components/ai_mode/src/ai_mode_free.c
++++ b/src/ai_components/ai_mode/src/ai_mode_free.c
+@@ -303,6 +303,20 @@ static OPERATE_RET __ai_mode_free_vad_change(AI_AUDIO_VAD_STATE_E vad_flag)
+     return OPRT_OK;
+ }
+ 
++OPERATE_RET ai_mode_free_wakeup(void)
++{
++    ai_audio_player_stop(AI_AUDIO_PLAYER_ALL);
++    ai_audio_input_reset();
++    tuya_ai_agent_event(AI_EVENT_CHAT_BREAK, 0);
++
++    ai_audio_player_alert(AI_AUDIO_ALERT_WAKEUP);
++
++    MODE_STATE_CHANGE(sg_mode_set_state, AI_MODE_STATE_LISTEN);
++    sg_is_wakeup = true;
++
++    return OPRT_OK;
++}
++
+ #if defined(ENABLE_BUTTON) && (ENABLE_BUTTON == 1)
+ static OPERATE_RET __ai_mode_free_handle_key(TDL_BUTTON_TOUCH_EVENT_E event, void *arg)
+ {
+@@ -310,14 +324,7 @@ static OPERATE_RET __ai_mode_free_handle_key(TDL_BUTTON_TOUCH_EVENT_E event, voi
+ 
+     switch(event) {
+         case TDL_BUTTON_PRESS_SINGLE_CLICK: {
+-            ai_audio_player_stop(AI_AUDIO_PLAYER_ALL);
+-            ai_audio_input_reset();
+-            tuya_ai_agent_event(AI_EVENT_CHAT_BREAK, 0);
+-
+-            ai_audio_player_alert(AI_AUDIO_ALERT_WAKEUP);
+-
+-            MODE_STATE_CHANGE(sg_mode_set_state, AI_MODE_STATE_LISTEN);
+-            sg_is_wakeup = true;
++            TUYA_CALL_ERR_LOG(ai_mode_free_wakeup());
+         }
+         break;
+         default:
+@@ -360,4 +367,9 @@ OPERATE_RET ai_mode_free_register(void)
+     return OPRT_NOT_SUPPORTED;
+ }
+ 
+-#endif
+\ No newline at end of file
++OPERATE_RET ai_mode_free_wakeup(void)
++{
++    return OPRT_NOT_SUPPORTED;
++}
++
++#endif

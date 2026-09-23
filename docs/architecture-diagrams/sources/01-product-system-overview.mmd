@@ -1,0 +1,35 @@
+flowchart TB
+    user["终端用户<br/>触屏 · 语音 · 浏览器"]:::actor
+    brand["品牌方 / 行业客户<br/>品牌 UI · 角色 · 知识 · MCP"]:::actor
+    mobile["涂鸦智能 / OEM App<br/>配网 · 绑定 · 设备面板"]:::external
+    tuya["涂鸦 AI + IoT 云<br/>ASR · 对话 · TTS · DP 同步"]:::external
+    cloud["100ask Cloud（可选）<br/>设备身份 · MQTT · OTA"]:::external
+    pc["被控 Windows / Linux 主机"]:::external
+
+    subgraph device["智能桌面小咪 · A133 / Tina Linux"]
+        direction TB
+        ui["交互层<br/>LVGL 桌面 · 用户 APP · IPKVM Web"]:::ui
+        orchestration["产品服务层<br/>lv_backend · APP/MCP/Agent · OTA"]:::process
+        integration["集成层<br/>TuyaOpen · WebRTC · SWUpdate · 蓝牙"]:::integration
+        platform["平台与资源层<br/>Capture · Input · Audio · Network · LED"]:::platform
+        hardware["硬件<br/>LCD/触摸 · 麦克风/扬声器 · Wi-Fi/BT<br/>HDMI IN · USB HID · WS2812 · eMMC"]:::hardware
+        ui --> orchestration --> integration --> platform --> hardware
+    end
+
+    user --> ui
+    brand -. "配置与扩展" .-> ui
+    brand -. "业务能力" .-> orchestration
+    mobile <--> tuya
+    tuya <--> integration
+    cloud <--> orchestration
+    platform -- "HDMI 视频" --> ui
+    platform -- "USB 键鼠" --> pc
+    pc -- "HDMI 输出" --> hardware
+
+    classDef actor fill:#FFF0F3,stroke:#D66B87,color:#3D2430,stroke-width:2px;
+    classDef ui fill:#FFF4F6,stroke:#D66B87,color:#3D2430,stroke-width:2px;
+    classDef process fill:#EEF4FF,stroke:#315A9B,color:#172033,stroke-width:2px;
+    classDef integration fill:#F2F0FF,stroke:#7567B5,color:#262044,stroke-width:2px;
+    classDef platform fill:#EAF9F5,stroke:#278878,color:#153D36,stroke-width:2px;
+    classDef hardware fill:#FFF8DC,stroke:#C79A1B,color:#3D3420,stroke-width:2px;
+    classDef external fill:#F5F7FA,stroke:#94A3B8,color:#263445,stroke-dasharray:6 4;

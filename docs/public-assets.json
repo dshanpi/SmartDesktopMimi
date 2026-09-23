@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "path": "docs/architecture-diagrams/rendered/01-product-system-overview.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "715b9571abebaf284fc6a0ff7c37a2854c07d79e7af7dd7412dd2437a2f19e5d"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/01-product-system-overview.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "609594e4ca7a0bc15673875e85937fd68798bf73a782e2af8abf0405ed3534bd"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/02-source-module-architecture.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "c4eaf34a5320854a5eacec65131f524f9f1339c9f0dae03fccf7d1dc7ef23a00"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/02-source-module-architecture.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "fcbd329a57308f6a1e7b300d094ed9c4e85d01ebb28f190ddd84185c75f2cc52"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/03-runtime-process-ipc-topology.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "16fd8646ef5b95262113aea13372364fcc691edd73fe62739e187f43ef296533"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/03-runtime-process-ipc-topology.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "4ab30eb4c386f03e4e5c2cd997f4cfa2c00bacdba0d45ae49bd95cf7ec3e3bb8"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/04-system-boot-sequence.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "42c062115f4a5c0dc3a84c587d500b7bbd7a0b8aad02d80c5736c8d81add27eb"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/04-system-boot-sequence.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "0e9b22d34a590f7cbe41ba4d7660bd8ba984f1e4030cb7365b2ced5e51b48a0d"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/05-ui-backend-function-calls.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "5eb8234cf4c8e250d2cadd8d89b9c2a7d9c6e10604da8efc54fc7041559cc17b"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/05-ui-backend-function-calls.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "127dc51f6e8217f648abd57cb5345d158446ccf76559b90dd573b762e06541e0"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/06-ai-tuya-conversation-calls.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "984297deb200488cebb14c4ec38e8b6d4d38067903f2b8207a6b4844ae7650a0"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/06-ai-tuya-conversation-calls.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "e13ba7b193845e1066c6f7c6887c883143024b57db19e05e4aba7aadd1b4ef34"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/07-hdmi-ipkvm-hid-agent-calls.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "1df5f4b1ad5b2f4f6ea488b9eb88af180abb506dcc9f9d9206268884ba21419f"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/07-hdmi-ipkvm-hid-agent-calls.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "26ff67272700e4978eb49826c1ef0f707b908b59ba3fe649212e8d8fe60fb56f"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/08-user-app-trust-call-chain.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "5d9b1f6d1fb0ee75d0275e31a3458c49678994a1ac850deb07afbba3588d7010"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/08-user-app-trust-call-chain.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "fdea11252599e733b304942e3047ab6b06afeccd5976c2c08df50c975b46f85c"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/09-cloud-ota-call-chain.png",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "0b66e2146380a0b0830f20761cf1a9a3c5e38294ef954dcf9dde971119006d80"
+    },
+    {
+      "path": "docs/architecture-diagrams/rendered/09-cloud-ota-call-chain.svg",
+      "source": "09make Smart Desktop Mimi architecture diagram generated from the tracked Mermaid source",
+      "license": "GPL-3.0-or-later",
+      "sha256": "73cfda272919e27e1b3ad182e5c6412b444bd78d5ab1b5e9a35fff421d703afd"
+    },
+    {
+      "path": "docs/solution/assets/smart-desktop-mimi-hero.png",
+      "source": "09make Smart Desktop Mimi solution artwork",
+      "license": "GPL-3.0-or-later",
+      "sha256": "2f997727d57f7d0e88a3ff8be618d6771149eaa90b6cef3dce5aa659a4505d1d"
+    },
+    {
+      "path": "docs/solution/assets/smart-desktop-mimi-storyboard.png",
+      "source": "09make Smart Desktop Mimi solution artwork",
+      "license": "GPL-3.0-or-later",
+      "sha256": "8bf18c6b0a26d348fbf76ba5791d146152a2a7f20601f1eb597f64e9dd4e7e75"
+    },
+    {
+      "path": "desktop-ui-concept-v1.png",
+      "source": "09make Smart Desktop Mimi UI concept artwork generated for this project",
+      "license": "GPL-3.0-or-later",
+      "sha256": "69ea81d3cfd43b7375e0827d8d09b9bd2991acd1aeddccf732390b0a4d665329"
+    },
+    {
+      "path": "docs/solution/smart-desktop-mimi-solution-brief.pdf",
+      "source": "09make Smart Desktop Mimi solution brief",
+      "license": "GPL-3.0-or-later",
+      "sha256": "e2dac6ab4f8ceed9a9d8d58f1e46492f17b6187f13517415291d8b0a4f11f72b"
+    },
+    {
+      "path": "docs/debug-evidence/kvm-pointer-calibration.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "ce447fd912bf51f680b2da0593072297580cc69d0b43e91ec2570a4a95a30677"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/bluetooth.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "6d152e9b8e84c58c6073499a6d4acc75b0c2d650b5f5adfd6fa2dd10e7014a0f"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/hdmi-mcp.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "2befeb1d32b302edfdeeeb1a70f79066864ec7fc5a9ef14b402004aae9d606b3"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/settings.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "8d8234dc50a0e1613736d9c48c1795c735bb4f1549800379b25b040fd9a9fa78"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/system-update.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "605e5f2de2ee3de40bd693cb8fc2274fe3c35b4fa5e4877da66ed996f56de06e"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/final/ai-chat.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "e73822c1f12e0c27992185e1dedf004e020b40bc9ba525c4c16a86344d8bb419"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/final/all-apps.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "0d9858524158eb6d2e2a10a572f1bdd5986102ac166f6245c1f3859d084ef786"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/final/desktop-r3.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "2efc5b0b81ff0f2e9f703b0a16f5b4f30123f493e627a6d68075d4a3292258f1"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/final/desktop.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "2384a4ee8eea4cca464db283f6ae7fcac19893f489f0bd607c1f23f437e88c55"
+    },
+    {
+      "path": "docs/debug-evidence/a133-en-us-20260906/final/video.png",
+      "source": "09make A133 validation capture",
+      "license": "GPL-3.0-or-later",
+      "sha256": "3dac08f5da903103c660a7e8b0a2abbc1ed7571f28d1f787744611e605358ae7"
+    }
+  ]
+}

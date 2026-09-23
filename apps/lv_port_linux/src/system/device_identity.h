@@ -1,0 +1,7 @@
+#ifndef DEVICE_IDENTITY_H
+#define DEVICE_IDENTITY_H
+
+#define APP_DEVICE_NAME "AI-DeskTopBox"
+#define APP_SYSTEM_VERSION "1.0.0"
+
+#endif /* DEVICE_IDENTITY_H */

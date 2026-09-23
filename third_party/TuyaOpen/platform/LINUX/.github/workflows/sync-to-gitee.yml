@@ -1,0 +1,19 @@
+name: syncToGitee
+on: 
+  - push
+  - delete
+
+jobs:
+  sync:
+    if: github.repository == 'tuya/TuyaOpen-ubuntu'
+    runs-on: ubuntu-latest
+    name: Git Repo Sync
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: tuya/TuyaOpen-ubuntu@platform_ubuntu
+      with:
+        target-url: 'https://gitee.com/tuya-open/TuyaOpen-ubuntu.git'
+        target-username: 'flyingcys'
+        target-token: ${{ secrets.GITEE_TOKEN }}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AITVBox HDMI/HID Debugging"
+  short_description: "Safely diagnose AITVBox HDMI, IPKVM, and USB HID"
+  default_prompt: "Use $aitvbox-debug-hdmi-hid to diagnose and validate this AITVBox HDMI, browser IPKVM, or USB keyboard/mouse issue."

@@ -1,0 +1,20 @@
+# 100ask Cloud 服务器配置（方式1：SoC 芯片签名自主注册）
+#
+# 所有设备共用这份服务器配置。缺失时用默认值（联调零配置）。
+# 复制到 secrets/100ask_cloud.env（gitignore，不提交），打包时注入 /etc/100ask/cloud.conf：
+#   cp packaging/aitvbox-suite/files/cloud.conf.example secrets/100ask_cloud.env
+#
+# 凭据不在此填（方式1 自动获取）：
+#   - deviceId = 芯片 cpuid（自动读 /sys/class/sunxi_info/sys_info）
+#   - secret   = 首次开机 provision 注册时服务器下发，缓存到 /etc/100ask/secret
+#   - device_sig = 出厂签名，烧到 /etc/100ask/device_sig（每台不同，工厂用
+#                  私有 SDK 的 tools/sign_device.sh 签 cpuid 生成）
+#
+# 格式：KEY=VALUE 每行一个，# 开头注释。
+
+MQTT_HOST=120.76.140.213
+MQTT_PORT=1883
+USE_TLS=0
+PROVISION_URL=https://www.100ask.net/api/device/provision
+LATEST_JSON_URL=https://dl.100ask.net/Hardware/MPU/ai-desktop/ai-desktop-system.json
+# CA_FILE=/etc/100ask/ca.crt   # USE_TLS=1 时必填

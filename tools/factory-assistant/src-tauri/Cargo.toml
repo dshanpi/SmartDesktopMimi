@@ -1,0 +1,18 @@
+[package]
+name = "aitvbox-factory-assistant"
+version = "0.1.0"
+description = "AITVBOX cross-platform factory assistant"
+authors = ["AITVBOX"]
+edition = "2021"
+
+[lib]
+name = "aitvbox_factory_assistant_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+aitvbox-factory-core = { path = "../factory-core" }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+tauri = { version = "2", features = [] }

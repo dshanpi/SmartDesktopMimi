@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "com.100ask.hello",
+  "name": "Hello Device",
+  "version": "1.0.0",
+  "publisher": "100ask-dev",
+  "ui": {
+    "entry": "ui/main.json",
+    "presentation": "embedded"
+  },
+  "permissions": [
+    "capture.snapshot"
+  ]
+}

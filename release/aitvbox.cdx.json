@@ -1,0 +1,182 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "serialNumber": "urn:uuid:2040796a-59d7-556a-ba0c-f5baf8f7d8a4",
+  "metadata": {
+    "timestamp": "2026-09-23T06:46:41Z",
+    "component": {
+      "type": "application",
+      "name": "AI-DeskTopBox",
+      "version": "8f6d8f3b644426f93f347c4b50342ea052d62a82"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "LVGL",
+      "version": "685aa79c2894b038c212ef7c26834bfd5b9120aa",
+      "bom-ref": "path:apps/lv_port_linux/lvgl",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "properties": [
+        {
+          "name": "09make:distribution",
+          "value": "source-pruned-a133"
+        },
+        {
+          "name": "09make:license-file",
+          "value": "apps/lv_port_linux/lvgl/LICENCE.txt"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/100askTeam/AI-DeskTop-Box-LVGL-v9.5"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "IPKVM upstream",
+      "version": "product-vendored-fork",
+      "bom-ref": "path:apps/ipkvm/upstream",
+      "licenses": [
+        {
+          "expression": "GPL-2.0-only"
+        }
+      ],
+      "properties": [
+        {
+          "name": "09make:distribution",
+          "value": "separate-process-source"
+        },
+        {
+          "name": "09make:license-file",
+          "value": "apps/ipkvm/upstream/LICENSE"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/jetkvm/kvm"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "TuyaOpen",
+      "version": "e5f03d0d9655caeb9e71c1bfdcf12dd624b4133a+aitvbox",
+      "bom-ref": "path:third_party/TuyaOpen",
+      "licenses": [
+        {
+          "expression": "Apache-2.0 AND LicenseRef-ComponentLicenses"
+        }
+      ],
+      "properties": [
+        {
+          "name": "09make:distribution",
+          "value": "source-pruned-a133"
+        },
+        {
+          "name": "09make:license-file",
+          "value": "third_party/TuyaOpen/LICENSE"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/tuya/TuyaOpen"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "A133 vendor media and KWS libraries",
+      "version": "content-addressed-private-input",
+      "bom-ref": "path:vendor/tuyaopen-a133-b6-libs",
+      "licenses": [
+        {
+          "expression": "LicenseRef-VendorRestricted"
+        }
+      ],
+      "properties": [
+        {
+          "name": "09make:distribution",
+          "value": "external-restricted"
+        },
+        {
+          "name": "09make:license-file",
+          "value": "vendor/README.md"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "name": "SarasaUiSC-Regular.ttf",
+      "bom-ref": "path:apps/lv_port_linux/src/ui/font/SarasaUiSC-Regular.ttf",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9baf5d6c3d321a6438b9bad97dc5ca4e83cf1737d2efc989e2f8bdf2c662d357"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "OFL-1.1"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/be5invis/Sarasa-Gothic"
+        }
+      ],
+      "properties": [
+        {
+          "name": "09make:component",
+          "value": "Sarasa Gothic"
+        },
+        {
+          "name": "09make:license-file",
+          "value": "apps/lv_port_linux/src/ui/font/LICENSE-Sarasa.txt"
+        }
+      ]
+    },
+    {
+      "type": "file",
+      "name": "SarasaUiSC-SemiBold.ttf",
+      "bom-ref": "path:apps/lv_port_linux/src/ui/font/SarasaUiSC-SemiBold.ttf",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6b71f90265dac573303e27728f4fd60f2740ea7ccf037e339d61b2ded7ec06b1"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "OFL-1.1"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://github.com/be5invis/Sarasa-Gothic"
+        }
+      ],
+      "properties": [
+        {
+          "name": "09make:component",
+          "value": "Sarasa Gothic"
+        },
+        {
+          "name": "09make:license-file",
+          "value": "apps/lv_port_linux/src/ui/font/LICENSE-Sarasa.txt"
+        }
+      ]
+    }
+  ]
+}

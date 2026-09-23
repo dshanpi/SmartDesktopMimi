@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "title": "Hello Device",
+  "layout": {
+    "type": "column",
+    "children": [
+      {
+        "type": "text",
+        "text": "Trusted declarative application"
+      },
+      {
+        "type": "action",
+        "label": "Capture HDMI Snapshot",
+        "command": "capture.snapshot",
+        "arguments": {}
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+boot() {
+    (
+        # Let VIN, ALSA, the desktop backend and the HDMI bridge settle.
+        sleep 20
+        echo "hdmi-i2s-test: begin" > /dev/console
+        rm -f /tmp/hdmi_preview.log
+
+        HDMI_PREVIEW_STATUS_SOCK=/tmp/hdmi_i2s_test_status.sock \
+            /usr/bin/hdmi_preview --probe > /dev/console 2>&1
+        probe_result=$?
+        echo "hdmi-i2s-test: probe_result=${probe_result}" > /dev/console
+
+        if [ "${probe_result}" -eq 0 ]; then
+            HDMI_PREVIEW_STATUS_SOCK=/tmp/hdmi_i2s_test_status.sock \
+                /usr/bin/hdmi_preview --service --display \
+                > /dev/console 2>&1 &
+            preview_pid=$!
+            sleep 25
+            kill -TERM "${preview_pid}" 2>/dev/null || true
+            wait "${preview_pid}" 2>/dev/null || true
+        fi
+
+        echo "hdmi-i2s-test: log-begin" > /dev/console
+        tail -n 120 /tmp/hdmi_preview.log > /dev/console 2>&1 || true
+        echo "hdmi-i2s-test: complete" > /dev/console
+    ) &
+}

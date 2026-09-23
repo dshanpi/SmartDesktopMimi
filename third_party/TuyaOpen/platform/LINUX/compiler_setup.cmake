@@ -1,0 +1,20 @@
+# Auto-replaced by build_a133.sh — A133 Tina SDK 工具链适配
+# 强制从环境变量读取编译器
+if(NOT DEFINED ENV{CC} OR NOT DEFINED ENV{CXX})
+    message(FATAL_ERROR "A133 build requires CC and CXX env vars (aarch64-openwrt-linux-gnu-gcc/g++)")
+endif()
+set(CMAKE_C_COMPILER "$ENV{CC}")
+set(CMAKE_CXX_COMPILER "$ENV{CXX}")
+set(CMAKE_ASM_COMPILER "$ENV{CC}")
+set(CMAKE_AR "$ENV{AR}")
+set(CMAKE_RANLIB "$ENV{RANLIB}")
+set(CMAKE_STRIP "$ENV{STRIP}")
+set(CMAKE_SYSTEM_NAME Linux)
+set(CMAKE_SYSTEM_PROCESSOR aarch64)
+set(IS_CROSS_COMPILE TRUE)
+
+if (WIN32)
+    set(EXE_SUFFIX ".exe")
+else()
+    set(EXE_SUFFIX "")
+endif()

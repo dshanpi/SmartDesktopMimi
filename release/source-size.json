@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "files": 6160,
+  "bytes": 171801194,
+  "top_level": {
+    ".codex": {
+      "files": 4,
+      "bytes": 23273
+    },
+    ".gitattributes": {
+      "files": 1,
+      "bytes": 27
+    },
+    ".github": {
+      "files": 1,
+      "bytes": 1454
+    },
+    ".gitignore": {
+      "files": 1,
+      "bytes": 1778
+    },
+    "CLA.md": {
+      "files": 1,
+      "bytes": 860
+    },
+    "CONTRIBUTING.md": {
+      "files": 1,
+      "bytes": 852
+    },
+    "LICENSE": {
+      "files": 1,
+      "bytes": 35147
+    },
+    "LICENSE-COMMERCIAL.md": {
+      "files": 1,
+      "bytes": 540
+    },
+    "NOTICE": {
+      "files": 1,
+      "bytes": 509
+    },
+    "README.en.md": {
+      "files": 1,
+      "bytes": 5146
+    },
+    "README.md": {
+      "files": 1,
+      "bytes": 15895
+    },
+    "README.zh-CN.md": {
+      "files": 1,
+      "bytes": 15655
+    },
+    "SECURITY.md": {
+      "files": 1,
+      "bytes": 1202
+    },
+    "THIRD_PARTY_NOTICES.md": {
+      "files": 1,
+      "bytes": 1589
+    },
+    "VERSION": {
+      "files": 1,
+      "bytes": 6
+    },
+    "apps": {
+      "files": 2121,
+      "bytes": 94646360
+    },
+    "components": {
+      "files": 1,
+      "bytes": 330
+    },
+    "core": {
+      "files": 4,
+      "bytes": 13471
+    },
+    "desktop-ui-concept-v1.png": {
+      "files": 1,
+      "bytes": 1951124
+    },
+    "docs": {
+      "files": 92,
+      "bytes": 16814992
+    },
+    "frontends": {
+      "files": 1,
+      "bytes": 336
+    },
+    "integrations": {
+      "files": 23,
+      "bytes": 132885
+    },
+    "packaging": {
+      "files": 19,
+      "bytes": 66352
+    },
+    "platform": {
+      "files": 15,
+      "bytes": 43899
+    },
+    "platforms": {
+      "files": 21,
+      "bytes": 8230
+    },
+    "release": {
+      "files": 4,
+      "bytes": 16341
+    },
+    "scripts": {
+      "files": 23,
+      "bytes": 166139
+    },
+    "services": {
+      "files": 1,
+      "bytes": 947
+    },
+    "tests": {
+      "files": 5,
+      "bytes": 154923
+    },
+    "third_party": {
+      "files": 3718,
+      "bytes": 53317976
+    },
+    "tools": {
+      "files": 91,
+      "bytes": 4349393
+    },
+    "vendor": {
+      "files": 2,
+      "bytes": 13563
+    }
+  }
+}

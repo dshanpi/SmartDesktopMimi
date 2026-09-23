@@ -1,0 +1,65 @@
+#!/bin/sh
+set -eu
+
+SECRET_DIR=${AITVBOX_SECRET_DIR:-/overlay/aitvbox/secrets}
+KEY_FILE=$SECRET_DIR/model-api-key
+CONFIG_FILE=$SECRET_DIR/model.conf
+STOP_FILE=${AITVBOX_STOP_FILE:-/var/run/aitvbox/agent.stop}
+HIDCTL=${AITVBOX_HIDCTL:-/usr/bin/aitvbox-hidctl}
+NL='
+'
+
+store_key() {
+	key=$1
+	[ "${#key}" -ge 12 ] || { echo "key is too short" >&2; exit 1; }
+	[ "${#key}" -le 4096 ] || { echo "key is too long" >&2; exit 1; }
+	case "$key" in *"$NL"*) echo "key contains control characters" >&2; exit 1 ;; esac
+	printf '%s' "$key" | LC_ALL=C grep -q '[[:cntrl:]]' &&
+		{ echo "key contains control characters" >&2; exit 1; }
+	umask 077
+	mkdir -p "$SECRET_DIR"
+	printf '%s\n' "$key" >"$KEY_FILE.tmp"
+	mv "$KEY_FILE.tmp" "$KEY_FILE"
+	echo "OK"
+}
+
+case "${1:-}" in
+	set-key-stdin)
+		[ "$#" = 1 ] || { echo "usage: $0 set-key-stdin" >&2; exit 2; }
+		IFS= read -r key || { echo "cannot read key from stdin" >&2; exit 1; }
+		store_key "$key"
+		;;
+	configure)
+		[ "$#" = 3 ] || { echo "usage: $0 configure ENDPOINT MODEL" >&2; exit 2; }
+		case "$2" in https://*) ;; *) echo "endpoint must use HTTPS" >&2; exit 1 ;; esac
+		case "$2$3" in *"$NL"*) echo "endpoint/model contains control characters" >&2; exit 1 ;; esac
+		printf '%s\n%s' "$2" "$3" | LC_ALL=C grep -q '[[:cntrl:]]' &&
+			{ echo "endpoint/model contains control characters" >&2; exit 1; }
+		[ -n "$3" ] || { echo "model must not be empty" >&2; exit 1; }
+		umask 077
+		mkdir -p "$SECRET_DIR"
+		{ printf 'ENDPOINT=%s\n' "$2"; printf 'MODEL=%s\n' "$3"; } >"$CONFIG_FILE.tmp"
+		mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+		echo "OK"
+		;;
+	status)
+		[ -s "$KEY_FILE" ] && key=configured || key=missing
+		[ -s "$CONFIG_FILE" ] && config=configured || config=missing
+		echo "key=$key config=$config"
+		;;
+	clear)
+		rm -f "$KEY_FILE" "$CONFIG_FILE"
+		echo "OK"
+		;;
+	stop)
+		case "$STOP_FILE" in
+			*/*) mkdir -p "${STOP_FILE%/*}" ;;
+		esac
+		umask 077
+		: > "$STOP_FILE"
+		"$HIDCTL" key 0 0 2>/dev/null || true
+		"$HIDCTL" mouse 0 0 0 0 2>/dev/null || true
+		echo "OK"
+		;;
+	*) echo "usage: $0 {set-key-stdin|configure ENDPOINT MODEL|status|clear|stop}" >&2; exit 2 ;;
+esac
