@@ -158,6 +158,20 @@ class PlatformManifestTests(unittest.TestCase):
         self.assertIn("至少需要 15 GiB", wrapper)
         self.assertNotIn("./build.sh pack", wrapper)
 
+    def test_firmware_build_reaps_only_its_sdk_buildserver(self):
+        firmware_build = (ROOT / "scripts/build_firmware.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("SDK_BUILDSERVER_PIDS_BEFORE", firmware_build)
+        self.assertIn("./buildserver --path ${SDK}", firmware_build)
+        self.assertIn("stop_build_local_sdk_buildservers", firmware_build)
+        self.assertIn("kill -TERM", firmware_build)
+        self.assertIn("kill -KILL", firmware_build)
+        self.assertLess(
+            firmware_build.index("stop_build_local_sdk_buildservers\n"),
+            firmware_build.index('if [[ -n "${ROOTFS_LIST}"'),
+        )
+
     def test_architecture_dependency_gate(self):
         result = subprocess.run(
             [sys.executable, ROOT / "scripts/check_architecture.py"],

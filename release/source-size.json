@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "files": 6160,
-  "bytes": 171810294,
+  "bytes": 171813264,
   "top_level": {
     ".codex": {
       "files": 4,
@@ -109,7 +109,7 @@
     },
     "scripts": {
       "files": 23,
-      "bytes": 169513
+      "bytes": 171816
     },
     "services": {
       "files": 1,
@@ -117,7 +117,7 @@
     },
     "tests": {
       "files": 5,
-      "bytes": 156757
+      "bytes": 157424
     },
     "third_party": {
       "files": 3718,

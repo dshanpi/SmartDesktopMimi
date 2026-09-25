@@ -3,9 +3,9 @@
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
   "name": "AI-DeskTopBox",
-  "documentNamespace": "https://09make.inc/sbom/aitvbox/6fa6c9cfc6b946cb99fc282a97bf210b18e4d9aa",
+  "documentNamespace": "https://09make.inc/sbom/aitvbox/db0c23a2764bbb5ca2036f4b0feea201d239fb9c",
   "creationInfo": {
-    "created": "2026-09-25T05:39:17Z",
+    "created": "2026-09-25T06:09:06Z",
     "creators": [
       "Organization: 09make.inc"
     ]

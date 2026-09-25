@@ -16,6 +16,7 @@ BT_CONFIG_BACKUP=""
 BT_HOOK_PRODUCT="${PRODUCT_ROOT}/packaging/aitvbox-suite/files/bt_init.sh"
 BT_HOOK_TARGET=""
 BT_HOOK_BACKUP=""
+declare -a SDK_BUILDSERVER_PIDS_BEFORE=()
 # shellcheck source=scripts/lib.sh
 source "${SELF_DIR}/lib.sh"
 
@@ -48,6 +49,63 @@ fi
 if [[ ! -d "${SDK}/.repo" ]]; then
     die "not a Tina SDK root: ${SDK}" "SDK 路径错或缺 .repo"
 fi
+SDK="$(cd "${SDK}" && pwd)"
+
+# Tina's kernel build launches tools/build/buildserver in the background with
+# stdout redirected but stderr still inherited.  When this script is wrapped
+# by build_release.sh's tee pipeline, that inherited descriptor keeps the
+# pipeline open after firmware packaging has already finished.  Track the
+# server processes that existed before this build and stop only processes that
+# this invocation created for the exact SDK path.
+sdk_buildserver_pids() {
+    local proc_dir pid cmdline
+    for proc_dir in /proc/[0-9]*; do
+        [[ -r "${proc_dir}/cmdline" ]] || continue
+        pid="${proc_dir##*/}"
+        cmdline="$(tr '\0' ' ' < "${proc_dir}/cmdline" 2>/dev/null || true)"
+        if [[ "${cmdline% }" == "./buildserver --path ${SDK}" ]]; then
+            printf '%s\n' "${pid}"
+        fi
+    done
+}
+
+buildserver_was_running() {
+    local candidate="$1" existing
+    for existing in "${SDK_BUILDSERVER_PIDS_BEFORE[@]}"; do
+        [[ "${candidate}" == "${existing}" ]] && return 0
+    done
+    return 1
+}
+
+stop_build_local_sdk_buildservers() {
+    local pid cmdline
+    local -a current=() targets=() survivors=()
+    mapfile -t current < <(sdk_buildserver_pids)
+    for pid in "${current[@]}"; do
+        if ! buildserver_was_running "${pid}"; then
+            targets+=("${pid}")
+        fi
+    done
+    [[ ${#targets[@]} -gt 0 ]] || return 0
+
+    echo "Stopping build-local Tina buildserver: ${targets[*]}"
+    kill -TERM "${targets[@]}" 2>/dev/null || true
+    for pid in "${targets[@]}"; do
+        timeout 5 tail --pid="${pid}" -f /dev/null 2>/dev/null || true
+        if kill -0 "${pid}" 2>/dev/null; then
+            cmdline="$(tr '\0' ' ' < "/proc/${pid}/cmdline" 2>/dev/null || true)"
+            if [[ "${cmdline% }" == "./buildserver --path ${SDK}" ]]; then
+                survivors+=("${pid}")
+            fi
+        fi
+    done
+    if [[ ${#survivors[@]} -gt 0 ]]; then
+        echo "Force-stopping unresponsive Tina buildserver: ${survivors[*]}" >&2
+        kill -KILL "${survivors[@]}" 2>/dev/null || true
+    fi
+}
+
+mapfile -t SDK_BUILDSERVER_PIDS_BEFORE < <(sdk_buildserver_pids)
 
 # 前置输入检查
 require_file "${SDK}/build/envsetup.sh" "SDK 未初始化：${SDK}"
@@ -56,9 +114,12 @@ require_cmd unsquashfs "apt install squashfs-tools"
 require_cmd debugfs "apt install e2fsprogs"
 require_cmd blkid "apt install util-linux"
 require_cmd sha256sum "apt install coreutils"
+require_cmd timeout "apt install coreutils"
+require_cmd tail "apt install coreutils"
 
 restore_sdk_pure_mode() {
     local status=$?
+    stop_build_local_sdk_buildservers
     if [[ -n "${ROOTFS_LIST}" && -f "${ROOTFS_LIST}" ]]; then
         rm -f "${ROOTFS_LIST}"
     fi
