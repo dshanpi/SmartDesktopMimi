@@ -35,7 +35,9 @@ jobs:
           cache-dependency-path: apps/ipkvm/upstream/ui/package-lock.json
 
       - name: Install host build prerequisites
-        run: sudo apt-get update && sudo apt-get install --yes libjson-c-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes adb libcurl4-openssl-dev libjson-c-dev
 
       - name: Validate architecture and public boundary
         run: |
@@ -51,7 +53,7 @@ jobs:
           set -e
           cat "$host_log"
           if (( status != 0 )); then
-            python3 -c 'import pathlib, sys; lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()[-20:]; [print("::error::" + line.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")) for line in lines]' "$host_log"
+            python3 -c 'import pathlib, sys; lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()[-9:]; [print("::error::" + line.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")) for line in lines]' "$host_log"
           fi
           exit "$status"
 
