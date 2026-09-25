@@ -43,7 +43,17 @@ jobs:
           python3 -u scripts/check_architecture.py
 
       - name: Validate host integration
-        run: env -u AITVBOX_TINA_SDK python3 -u -m unittest -v tests.platform.test_host_integration
+        run: |
+          host_log="$RUNNER_TEMP/host-integration.log"
+          set +e
+          env -u AITVBOX_TINA_SDK python3 -u -m unittest -v tests.platform.test_host_integration >"$host_log" 2>&1
+          status=$?
+          set -e
+          cat "$host_log"
+          if (( status != 0 )); then
+            python3 -c 'import pathlib, sys; lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()[-20:]; [print("::error::" + line.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")) for line in lines]' "$host_log"
+          fi
+          exit "$status"
 
       - name: Build and lint the IPKVM web UI
         working-directory: apps/ipkvm/upstream/ui
