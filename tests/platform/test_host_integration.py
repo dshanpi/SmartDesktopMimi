@@ -403,6 +403,13 @@ class PlatformHostTests(unittest.TestCase):
             "# CONFIG_ENABLE_AI_LANGUAGE_CHINESE is not set", tuya_config
         )
 
+    def test_ipkvm_web_ui_defaults_to_chinese(self):
+        store = (
+            REPO / "apps/ipkvm/upstream/ui/src/hooks/stores.ts"
+        ).read_text(encoding="utf-8")
+        self.assertIn('language: "zh",', store)
+        self.assertNotIn('language: "en",', store)
+
     def test_a133_atomic_compat_helper_cannot_recurse(self):
         source = (
             REPO / "third_party/TuyaOpen/platform/LINUX/tuyaos_adapter/src/"

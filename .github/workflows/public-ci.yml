@@ -37,8 +37,37 @@ jobs:
       - name: Install host build prerequisites
         run: sudo apt-get update && sudo apt-get install --yes libjson-c-dev
 
-      - name: Run the public release gate
-        run: python3 tools/aitvbox.py test --platform a133 --scope public
+      - name: Validate architecture and public boundary
+        run: |
+          python3 -u -m unittest -v tests.architecture.test_architecture
+          python3 -u scripts/check_architecture.py
+
+      - name: Validate host integration
+        run: env -u AITVBOX_TINA_SDK python3 -u -m unittest -v tests.platform.test_host_integration
+
+      - name: Build and lint the IPKVM web UI
+        working-directory: apps/ipkvm/upstream/ui
+        run: |
+          npm ci
+          npm run build:device
+          npm run lint:public
+
+      - name: Run Go tests
+        working-directory: apps/ipkvm/upstream
+        run: |
+          go test ./...
+          go test -race ./...
+
+      - name: Audit the public tree and deterministic SBOM
+        run: |
+          python3 -u tools/public_release_audit.py --candidate
+          first="$(mktemp -d)"
+          second="$(mktemp -d)"
+          trap 'rm -rf -- "$first" "$second"' EXIT
+          SOURCE_DATE_EPOCH=1700000000 python3 -u tools/generate_sbom.py --output "$first"
+          SOURCE_DATE_EPOCH=1700000000 python3 -u tools/generate_sbom.py --output "$second"
+          cmp "$first/aitvbox.spdx.json" "$second/aitvbox.spdx.json"
+          cmp "$first/aitvbox.cdx.json" "$second/aitvbox.cdx.json"
 
       - name: Reject generated source-tree changes
         run: git diff --exit-code

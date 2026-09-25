@@ -396,7 +396,7 @@ export interface SettingsState {
 export const useSettingsStore = create(
   persist<SettingsState>(
     set => ({
-      language: "en",
+      language: "zh",
       setLanguage: language => set({ language }),
 
       isCursorHidden: false,
