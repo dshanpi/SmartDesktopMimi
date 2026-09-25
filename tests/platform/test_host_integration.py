@@ -1020,6 +1020,7 @@ int main(int argc, char **argv)
         cls.agentd = cls.bin_dir / "aitvbox-agentd"
         run([
             "gcc", "-std=gnu99", "-O2", "-Wall", "-Wextra", "-Werror",
+            "-Wformat-truncation=2",
             macro("KEY_FILE", cls.key_file),
             macro("CONFIG_FILE", cls.config_file),
             macro("SCREEN_FILE", cls.screen),

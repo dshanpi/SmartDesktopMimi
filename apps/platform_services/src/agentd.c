@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -915,16 +916,23 @@ static json_object *make_request(const char *model, const char *task,
     json_object_object_add(text, "type", json_object_new_string("text"));
     json_object_object_add(text, "text", json_object_new_string(prompt));
     json_object_array_add(content, text);
-    json_object *image_part = json_object_new_object();
-    json_object_object_add(image_part, "type", json_object_new_string("image_url"));
-    json_object *image_url = json_object_new_object();
-    size_t url_size = strlen(image) + 24;
+    static const char image_prefix[] = "data:image/jpeg;base64,";
+    size_t image_length = strlen(image);
+    if (image_length > SIZE_MAX - sizeof(image_prefix)) {
+        json_object_put(root);
+        return NULL;
+    }
+    size_t url_size = image_length + sizeof(image_prefix);
     char *url = malloc(url_size);
     if (!url) {
         json_object_put(root);
         return NULL;
     }
-    snprintf(url, url_size, "data:image/jpeg;base64,%s", image);
+    memcpy(url, image_prefix, sizeof(image_prefix) - 1);
+    memcpy(url + sizeof(image_prefix) - 1, image, image_length + 1);
+    json_object *image_part = json_object_new_object();
+    json_object_object_add(image_part, "type", json_object_new_string("image_url"));
+    json_object *image_url = json_object_new_object();
     json_object_object_add(image_url, "url", json_object_new_string(url));
     free(url);
     json_object_object_add(image_part, "image_url", image_url);
@@ -962,7 +970,15 @@ static json_object *model_action(const char *endpoint, const char *model,
         return NULL;
     }
     struct response response = {0};
-    size_t auth_size = strlen(key) + sizeof("Authorization: Bearer ");
+    static const char auth_prefix[] = "Authorization: Bearer ";
+    size_t key_length = strlen(key);
+    if (key_length > SIZE_MAX - sizeof(auth_prefix)) {
+        free(request_url);
+        curl_easy_cleanup(curl);
+        json_object_put(request);
+        return NULL;
+    }
+    size_t auth_size = key_length + sizeof(auth_prefix);
     char *auth = malloc(auth_size);
     if (!auth) {
         free(request_url);
@@ -970,7 +986,8 @@ static json_object *model_action(const char *endpoint, const char *model,
         json_object_put(request);
         return NULL;
     }
-    snprintf(auth, auth_size, "Authorization: Bearer %s", key);
+    memcpy(auth, auth_prefix, sizeof(auth_prefix) - 1);
+    memcpy(auth + sizeof(auth_prefix) - 1, key, key_length + 1);
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, auth);
