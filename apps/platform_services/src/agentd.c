@@ -1010,7 +1010,11 @@ static json_object *model_action(const char *endpoint, const char *model,
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, transfer_progress);
+#if LIBCURL_VERSION_NUM >= 0x075500
+    curl_easy_setopt(curl, CURLOPT_PROTOCOLS_STR, "https");
+#else
     curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+#endif
 #ifdef CAINFO_PATH
     curl_easy_setopt(curl, CURLOPT_CAINFO, CAINFO_PATH);
 #endif

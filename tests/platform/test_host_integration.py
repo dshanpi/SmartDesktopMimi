@@ -46,15 +46,22 @@ JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xf
 
 
 def run(command, *, env=None, cwd=None, input_data=None, check=True):
-    return subprocess.run(
-        [str(item) for item in command],
-        cwd=str(cwd or REPO),
-        env=env,
-        input=input_data,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=check,
-    )
+    try:
+        return subprocess.run(
+            [str(item) for item in command],
+            cwd=str(cwd or REPO),
+            env=env,
+            input=input_data,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=check,
+        )
+    except subprocess.CalledProcessError as error:
+        if error.stdout:
+            sys.stderr.buffer.write(error.stdout)
+        if error.stderr:
+            sys.stderr.buffer.write(error.stderr)
+        raise
 
 
 def write_executable(path, text):
