@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="AI-DeskTopBox 嵌入式 AI 桌面平台：整合涂鸦聊天助手、自由对话、智能家庭中控、蓝牙音箱、自定义应用商店、HDMI/IPKVM 与 A/B OTA。"
+    >
+    <meta name="theme-color" content="#f2f4f7">
+    <title>AI-DeskTopBox｜嵌入式 AI 桌面平台解决方案</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="site-header" data-header>
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="返回首页">
+          <span class="brand-symbol" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </span>
+          <span class="brand-copy">
+            <strong>AI-DeskTopBox</strong>
+            <small>嵌入式 AI 设备平台</small>
+          </span>
+        </a>
+
+        <button
+          class="menu-button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="site-nav"
+          aria-label="打开导航"
+          data-menu-toggle
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <nav class="site-nav" id="site-nav" aria-label="主导航" data-nav>
+          <a href="#experience">智能体验</a>
+          <a href="#blueprint">方案蓝图</a>
+          <a href="#scenes">产品场景</a>
+          <a href="#evidence">实现证据</a>
+          <a href="#delivery">交付边界</a>
+        </nav>
+
+        <a class="header-action" href="#paths">选择接入路径</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="page-shell hero-layout">
+          <div class="hero-copy">
+            <p class="hero-context">A133 参考实现 · Tina Linux · 面向设备量产</p>
+            <h1>让 AI 看见屏幕、理解任务，并安全连接真实设备</h1>
+            <p class="hero-lead">
+              AI-DeskTopBox 将涂鸦对话与自由聊天、智能家庭中控、蓝牙音箱、电脑视觉控制、自定义应用和设备生命周期整合为一套面向量产的嵌入式平台。
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#blueprint">查看完整方案</a>
+              <a class="button button-secondary" href="#evidence">查看实机证据</a>
+            </div>
+            <ul class="hero-tags">
+              <li>涂鸦聊天助手</li>
+              <li>自由对话</li>
+              <li>智能家庭中控</li>
+              <li>蓝牙音箱</li>
+              <li>HDMI / IPKVM</li>
+              <li>自定义应用商店</li>
+            </ul>
+          </div>
+
+          <figure class="hero-visual">
+            <div class="product-render-stage">
+              <a href="assets/SmartDesktopMimi.png" aria-label="查看 Smart Desktop Mimi 家庭智能终端完整场景图">
+                <img
+                  src="assets/SmartDesktopMimi.png"
+                  width="1672"
+                  height="941"
+                  alt="Smart Desktop Mimi 家庭智能终端场景，展示涂鸦设备绑定、云端状态同步和 AI 自由对话"
+                >
+              </a>
+            </div>
+            <figcaption>
+              <span>Smart Desktop Mimi · 家庭智能终端</span>
+              <small>涂鸦设备绑定、云端状态同步与 AI 自由对话</small>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="value-section" aria-labelledby="value-title">
+        <div class="page-shell value-layout">
+          <div class="value-heading">
+            <p class="section-label">平台价值</p>
+            <h2 id="value-title">不是又一个 AI Demo，<br>而是一套设备方案</h2>
+          </div>
+          <div class="value-list">
+            <article>
+              <strong>更快形成原型</strong>
+              <p>从已运行的桌面、音视频、AI 与设备服务出发，减少重复搭底座。</p>
+            </article>
+            <article>
+              <strong>统一多种交互</strong>
+              <p>触摸、语音、浏览器和外部智能体共享一致的设备能力与状态。</p>
+            </article>
+            <article>
+              <strong>受控连接真实设备</strong>
+              <p>电脑画面、键鼠执行和应用权限经过策略层，不把风险直接暴露给模型。</p>
+            </article>
+            <article>
+              <strong>支持持续运营</strong>
+              <p>设备身份、签名应用、A/B 升级、回滚和诊断进入同一生命周期。</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section smart-experience" id="experience">
+        <div class="page-shell">
+          <header class="section-heading">
+            <div>
+              <p class="section-label">桌面智能体验</p>
+              <h2>不只会聊天，它也是家庭中控、应用终端和蓝牙音箱</h2>
+            </div>
+            <p>
+              产品体验以涂鸦 AI 为对话入口，以屏幕承载状态与应用，并通过 IoT、蓝牙和签名应用扩展到家庭与日常使用场景。
+            </p>
+          </header>
+
+          <div class="experience-grid">
+            <article class="experience-card experience-chat">
+              <div class="experience-copy">
+                <div class="experience-status"><span>A133 实机</span><small>Tuya AI</small></div>
+                <h3>涂鸦对话与聊天助手</h3>
+                <p>
+                  支持“你好涂鸦”离线唤醒、英文识别与回复、流式文字和语音输出，并通过 AEC 抑制自激、支持外部人声打断。
+                </p>
+                <div class="experience-points">
+                  <span>涂鸦 Assistant</span><span>角色与音色</span><span>对话状态</span><span>情绪表情</span>
+                </div>
+                <div class="free-chat-note">
+                  <strong>自由对话</strong>
+                  <p>从助手页进入全屏 Free Chat，连续聆听和回复；双击屏幕即可退出，不改变设备保存的默认对话模式。</p>
+                </div>
+              </div>
+              <figure>
+                <img
+                  src="assets/ui-device-ai-chat.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 涂鸦聊天助手和自由对话入口真实界面"
+                >
+                <figcaption>设备端真实界面 · Tuya Assistant / Free Chat</figcaption>
+              </figure>
+            </article>
+
+            <article class="experience-card experience-home">
+              <div class="experience-status"><span>方案能力</span><small>Tuya AI + IoT</small></div>
+              <h3>智能家庭中控</h3>
+              <p>
+                连接涂鸦智能或品牌 OEM App，通过 MQTT 在线状态和 DP 数据点同步，把语音、屏幕面板与家庭设备场景连接起来。
+              </p>
+              <div class="home-control-map" role="group" aria-label="智能家庭中控连接关系">
+                <div><small>手机端</small><strong>涂鸦智能 / OEM App</strong></div>
+                <span aria-hidden="true">↓</span>
+                <div class="home-cloud"><small>云端</small><strong>Tuya AI + IoT</strong></div>
+                <span aria-hidden="true">↓</span>
+                <div><small>桌面端</small><strong>Smart Desktop Mimi</strong></div>
+              </div>
+              <div class="home-device-types">
+                <span>照明</span><span>插座</span><span>环境</span><span>安防</span>
+              </div>
+              <p class="experience-boundary">具体可控设备品类、PID、DP 和自动化场景按客户项目配置并验收。</p>
+            </article>
+
+            <article class="experience-card experience-apps">
+              <div class="experience-copy">
+                <div class="experience-status"><span>A133 实机</span><small>品牌应用生态</small></div>
+                <h3>自定义应用商店</h3>
+                <p>
+                  品牌方可发布声明式或 Native-RPC C 应用。设备在安装前校验发布者、公钥签名、权限、版本和包内容，再把应用放入用户应用中心。
+                </p>
+                <div class="experience-points">
+                  <span>签名验签</span><span>权限清单</span><span>浏览器安装</span><span>隔离存储</span>
+                </div>
+              </div>
+              <figure>
+                <img
+                  src="assets/ui-device-all-apps.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 设备端全部应用和用户应用入口真实界面"
+                >
+                <figcaption>设备端应用中心 · 系统应用与品牌自定义应用入口</figcaption>
+              </figure>
+            </article>
+
+            <article class="experience-card experience-bluetooth">
+              <div class="experience-copy">
+                <div class="experience-status"><span>A133 实机</span><small>Bluetooth Audio</small></div>
+                <h3>蓝牙音箱</h3>
+                <p>
+                  手机可把设备作为 A2DP Sink 播放音乐，并通过 AVRCP 传递播放控制与媒体状态；设备端提供连接状态、音量与曲目界面。
+                </p>
+                <div class="experience-points">
+                  <span>A2DP Sink</span><span>AVRCP</span><span>PCM 播放</span><span>断线恢复</span>
+                </div>
+              </div>
+              <figure>
+                <img
+                  src="assets/ui-device-bluetooth.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 蓝牙音箱 A2DP Sink 真实界面"
+                >
+                <figcaption>设备端真实界面 · Bluetooth Audio / A2DP Sink</figcaption>
+              </figure>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section blueprint-section" id="blueprint">
+        <div class="page-shell">
+          <header class="section-heading heading-on-dark">
+            <div>
+              <p class="section-label">端到端方案蓝图</p>
+              <h2 id="blueprint-title">把感知、决策、执行与运维放进同一条可信链路</h2>
+            </div>
+            <p>
+              上层入口不直接占用硬件。平台通过策略、事件和稳定接口协调采集、输入与系统资源，最终连接设备能力和量产服务。
+            </p>
+          </header>
+
+          <section class="solution-blueprint" aria-labelledby="blueprint-title">
+            <div class="blueprint-entry">
+              <p>用户与智能体入口</p>
+              <div>
+                <span><b>本机</b>触摸 · 语音 · LVGL</span>
+                <span><b>远程</b>Web · IPKVM</span>
+                <span><b>开发</b>CLI · MCP Host</span>
+              </div>
+            </div>
+
+            <div class="flow-rail" aria-hidden="true"><span></span></div>
+
+            <div class="platform-core">
+              <header>
+                <div>
+                  <small>AI-DESKTOPBOX PLATFORM</small>
+                  <h3>嵌入式 AI 设备平台</h3>
+                </div>
+                <p>A133 参考实现</p>
+              </header>
+
+              <div class="domain-grid">
+                <article>
+                  <span class="domain-mark mark-coral" aria-hidden="true"></span>
+                  <h4>AI 桌面与设备交互</h4>
+                  <p>LVGL 桌面、涂鸦对话、家庭中控、蓝牙音频、AEC 与灯效反馈。</p>
+                </article>
+                <article>
+                  <span class="domain-mark mark-cyan" aria-hidden="true"></span>
+                  <h4>电脑视觉与安全控制</h4>
+                  <p>HDMI 采集、H.264 / WebRTC、USB HID 与受控视觉任务。</p>
+                </article>
+                <article>
+                  <span class="domain-mark mark-violet" aria-hidden="true"></span>
+                  <h4>签名应用与 MCP 扩展</h4>
+                  <p>应用签名、权限代理、隔离存储与本地或远程工具接入。</p>
+                </article>
+                <article>
+                  <span class="domain-mark mark-lime" aria-hidden="true"></span>
+                  <h4>身份、升级与量产运维</h4>
+                  <p>逐台身份注入、A/B OTA、回滚、持久数据与恢复工件。</p>
+                </article>
+              </div>
+
+              <footer>
+                <span>领域策略</span>
+                <span>类型化事件</span>
+                <span>资源仲裁</span>
+                <span>IPC V2 / V1 兼容</span>
+                <span>Provider 适配层</span>
+              </footer>
+            </div>
+
+            <div class="flow-rail flow-rail-down" aria-hidden="true"><span></span></div>
+
+            <div class="blueprint-output">
+              <p>面向产品与业务的输出</p>
+              <div>
+                <span><b>设备产品</b>品牌化桌面与 AI 体验</span>
+                <span><b>电脑控制</b>浏览器级 HDMI / HID 协作</span>
+                <span><b>应用生态</b>签名 APP 与 MCP 工具</span>
+                <span><b>持续运营</b>身份、升级、诊断与恢复</span>
+              </div>
+            </div>
+          </section>
+
+          <div class="safety-note">
+            <strong>安全执行原则</strong>
+            <p>采集单所有者、输入独占、HID 自动释放、能力白名单、步骤上限与紧急停止共同约束自动化任务。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section capabilities" id="capabilities">
+        <div class="page-shell capability-layout">
+          <header class="capability-intro">
+            <p class="section-label">四大能力域</p>
+            <h2>从交互体验到底层运维，能力不是孤立插件</h2>
+            <p>
+              每个能力域都通过统一策略和设备接口与其他模块协作，适合品牌化、行业化和后续平台迁移。
+            </p>
+          </header>
+
+          <div class="capability-list">
+            <article class="capability-row">
+              <span class="capability-symbol symbol-ai" aria-hidden="true">AI</span>
+              <div>
+                <h3>AI 桌面与自然交互</h3>
+                <p>面向桌面终端的本地体验层，覆盖涂鸦对话、家庭中控、蓝牙音频、触摸与状态呈现。</p>
+              </div>
+              <ul>
+                <li>LVGL 桌面与品牌主题</li>
+                <li>涂鸦聊天助手、自由对话与情绪</li>
+                <li>Tuya AI + IoT 与 DP 数据点</li>
+                <li>A2DP 蓝牙音箱与 AVRCP</li>
+                <li>Wi-Fi、设备绑定与 WS2812 状态灯</li>
+              </ul>
+            </article>
+
+            <article class="capability-row">
+              <span class="capability-symbol symbol-vision" aria-hidden="true">⌁</span>
+              <div>
+                <h3>HDMI / IPKVM 与电脑控制</h3>
+                <p>不要求目标电脑安装客户端，通过视频采集和 USB HID 建立可审计的控制通道。</p>
+              </div>
+              <ul>
+                <li>HDMI 输入与硬件 H.264</li>
+                <li>浏览器 WebRTC 低时延预览</li>
+                <li>键盘、鼠标与组合键注入</li>
+                <li>视觉任务白名单与紧急停止</li>
+              </ul>
+            </article>
+
+            <article class="capability-row">
+              <span class="capability-symbol symbol-app" aria-hidden="true">{ }</span>
+              <div>
+                <h3>签名应用与 MCP 生态</h3>
+                <p>把业务能力装进可验证、可授权、可隔离的扩展机制，而不是开放任意 Linux 程序。</p>
+              </div>
+              <ul>
+                <li>声明式或 Native-RPC C 应用</li>
+                <li>RSA 签名与浏览器安装</li>
+                <li>Manifest 权限与隔离存储</li>
+                <li>本地、ADB、SSH stdio MCP</li>
+              </ul>
+            </article>
+
+            <article class="capability-row">
+              <span class="capability-symbol symbol-ops" aria-hidden="true">↻</span>
+              <div>
+                <h3>设备身份与可恢复更新</h3>
+                <p>从通用固件到逐台设备交付，覆盖凭据、升级、回滚和故障恢复。</p>
+              </div>
+              <ul>
+                <li>敏感凭据不进入通用固件</li>
+                <li>逐台设备身份与工厂注入</li>
+                <li>SWUpdate 与 A/B 系统更新</li>
+                <li>持久分区、回滚与恢复工件</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section product-scenes" id="scenes">
+        <div class="page-shell">
+          <header class="section-heading">
+            <div>
+              <p class="section-label">Smart Desktop Mimi 产品场景</p>
+              <h2>同一台设备，连接对话、屏幕与电脑操作</h2>
+            </div>
+            <p>
+              三张场景图分别对应语音陪伴、HDMI 屏幕预览和浏览器 IPKVM 协作，展示平台能力如何组合成完整产品体验。
+            </p>
+          </header>
+
+          <div class="scene-gallery">
+            <figure class="scene-primary">
+              <img
+                src="assets/scene-ai.webp"
+                width="1672"
+                height="941"
+                alt="Smart Desktop Mimi 在桌面上进行语音 AI 交互的产品场景"
+              >
+              <figcaption>
+                <div><strong>自然语音 AI</strong><span>桌面陪伴与免手交互</span></div>
+                <p>语音唤醒、连续对话、AEC 与状态反馈共同形成设备端交互闭环。</p>
+              </figcaption>
+            </figure>
+
+            <figure>
+              <img
+                src="assets/scene-hdmi.webp"
+                width="1672"
+                height="941"
+                alt="Smart Desktop Mimi 展示 HDMI 输入画面的产品场景"
+              >
+              <figcaption>
+                <div><strong>HDMI 视觉输入</strong><span>看见并理解电脑屏幕</span></div>
+                <p>通过 HDMI 采集和本机预览，把外部电脑画面接入视觉任务链路。</p>
+              </figcaption>
+            </figure>
+
+            <figure>
+              <img
+                src="assets/scene-kvm.webp"
+                width="1672"
+                height="941"
+                alt="Smart Desktop Mimi 连接电脑进行浏览器 IPKVM 控制的产品场景"
+              >
+              <figcaption>
+                <div><strong>浏览器 IPKVM</strong><span>画面、键盘与鼠标协作</span></div>
+                <p>无需在目标电脑安装客户端，即可通过浏览器完成受控查看与操作。</p>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section evidence" id="evidence">
+        <div class="page-shell">
+          <header class="section-heading">
+            <div>
+              <p class="section-label">真实实现证据</p>
+              <h2>不是概念清单，关键链路已有 A133 实机界面</h2>
+            </div>
+            <p>
+              以下画面来自当前仓库的自动化 UI 取证。它们用于证明浏览器 IPKVM、AI HDMI MCP 与签名应用管理已经形成可操作界面。
+            </p>
+          </header>
+
+          <div class="evidence-viewer">
+            <div class="evidence-tabs" role="tablist" aria-label="选择实机界面">
+              <button
+                class="evidence-tab is-active"
+                type="button"
+                role="tab"
+                id="evidence-tab-ipkvm"
+                aria-controls="evidence-panel-ipkvm"
+                aria-selected="true"
+                data-evidence-tab="ipkvm"
+              >
+                <strong>浏览器 IPKVM</strong>
+                <span>HDMI 直播与 HID 状态</span>
+              </button>
+              <button
+                class="evidence-tab"
+                type="button"
+                role="tab"
+                id="evidence-tab-mcp"
+                aria-controls="evidence-panel-mcp"
+                aria-selected="false"
+                data-evidence-tab="mcp"
+              >
+                <strong>AI HDMI MCP</strong>
+                <span>视觉理解与执行配置</span>
+              </button>
+              <button
+                class="evidence-tab"
+                type="button"
+                role="tab"
+                id="evidence-tab-apps"
+                aria-controls="evidence-panel-apps"
+                aria-selected="false"
+                data-evidence-tab="apps"
+              >
+                <strong>签名应用</strong>
+                <span>构建、信任、安装与运行</span>
+              </button>
+            </div>
+
+            <div class="evidence-panels">
+              <figure
+                class="evidence-panel is-active"
+                id="evidence-panel-ipkvm"
+                role="tabpanel"
+                aria-labelledby="evidence-tab-ipkvm"
+                data-evidence-panel="ipkvm"
+              >
+                <img
+                  src="assets/ui-live-desktop.png"
+                  width="1920"
+                  height="1080"
+                  alt="A133 浏览器 IPKVM 真实运行界面，包含 HDMI 画面、USB 与 HID 状态"
+                >
+                <figcaption><span>A133 实机取证</span>HDMI 视频、USB HID 与浏览器控制集中在同一操作面。</figcaption>
+              </figure>
+
+              <figure
+                class="evidence-panel"
+                id="evidence-panel-mcp"
+                role="tabpanel"
+                aria-labelledby="evidence-tab-mcp"
+                data-evidence-panel="mcp"
+                hidden
+              >
+                <img
+                  src="assets/ui-ai-hdmi-mcp.png"
+                  width="1920"
+                  height="1080"
+                  alt="A133 AI HDMI MCP 真实运行界面，包含电脑画面和任务执行配置"
+                >
+                <figcaption><span>A133 实机取证</span>模型配置、画面理解与 HID 执行记录位于受控服务中。</figcaption>
+              </figure>
+
+              <figure
+                class="evidence-panel"
+                id="evidence-panel-apps"
+                role="tabpanel"
+                aria-labelledby="evidence-tab-apps"
+                data-evidence-panel="apps"
+                hidden
+              >
+                <img
+                  src="assets/ui-applications.png"
+                  width="1920"
+                  height="1080"
+                  alt="A133 签名应用管理真实界面，展示签名、构建和安装流程"
+                >
+                <figcaption><span>A133 实机取证</span>发布者信任、包签名、权限和版本策略在安装前完成校验。</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <section class="device-ui-evidence" aria-labelledby="device-ui-title">
+            <header>
+              <div>
+                <p class="section-label">设备端 UI</p>
+                <h3 id="device-ui-title">从桌面入口到应用与系统更新</h3>
+              </div>
+              <p>以下四张均为 A133 framebuffer 真实取证截图，保持源文件原始 4:3 比例。</p>
+            </header>
+            <div class="device-ui-grid">
+              <figure>
+                <img
+                  src="assets/ui-device-desktop.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 设备端桌面主页真实截图"
+                >
+                <figcaption><strong>桌面主页</strong><span>时间、状态与系统入口</span></figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/ui-device-ai-chat.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 设备端 AI 对话真实截图"
+                >
+                <figcaption><strong>AI 对话</strong><span>设备端会话与交互状态</span></figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/ui-device-all-apps.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 设备端全部应用与自定义应用入口真实截图"
+                >
+                <figcaption><strong>应用中心</strong><span>系统应用与自定义应用入口</span></figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/ui-device-update.png"
+                  width="1024"
+                  height="768"
+                  alt="A133 设备端系统更新真实截图"
+                >
+                <figcaption><strong>系统更新</strong><span>版本、更新与设备生命周期</span></figcaption>
+              </figure>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="section paths" id="paths">
+        <div class="page-shell">
+          <header class="section-heading compact-heading">
+            <div>
+              <p class="section-label">开发者接入路径</p>
+              <h2>按你的产品角色进入，不必理解整套系统后再开始</h2>
+            </div>
+          </header>
+
+          <div class="path-list">
+            <article>
+              <div class="path-name">
+                <span>设备应用</span>
+                <h3>构建设备端 APP</h3>
+              </div>
+              <p>适合把行业业务、品牌服务或离线工具直接带进设备桌面。</p>
+              <ul>
+                <li>选择声明式或 Native-RPC C 模式</li>
+                <li>声明权限、配置隔离存储</li>
+                <li>签名、构建并通过浏览器安装</li>
+              </ul>
+              <code>docs/user-app-development-guide.md</code>
+            </article>
+
+            <article>
+              <div class="path-name">
+                <span>智能体工具</span>
+                <h3>连接 MCP Host</h3>
+              </div>
+              <p>适合让外部智能体通过稳定工具协议调用设备能力和业务工具。</p>
+              <ul>
+                <li>选择本地、ADB 或 SSH stdio</li>
+                <li>按能力白名单开放工具</li>
+                <li>把高风险执行留在策略层</li>
+              </ul>
+              <code>docs/mcp-user-guide.md</code>
+            </article>
+
+            <article>
+              <div class="path-name">
+                <span>电脑协作</span>
+                <h3>集成浏览器 IPKVM</h3>
+              </div>
+              <p>适合远程运维、实验设备、桌面助理或无人值守电脑控制场景。</p>
+              <ul>
+                <li>接入 HDMI 与 USB Gadget</li>
+                <li>配置 WebRTC 和网络路径</li>
+                <li>验证时延、映射与断连释放</li>
+              </ul>
+              <code>docs/ipkvm-user-guide.md</code>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section architecture" id="architecture">
+        <div class="page-shell architecture-layout">
+          <header>
+            <p class="section-label">平台架构</p>
+            <h2 id="architecture-title">上层稳定、下层可换，适配工作停留在明确边界内</h2>
+            <p>
+              业务不应直接绑定驱动或某一块芯片。AI-DeskTopBox 用稳定端口和 Provider 层隔离硬件、第三方服务与产品逻辑。
+            </p>
+          </header>
+
+          <div class="architecture-stack" role="group" aria-labelledby="architecture-title">
+            <div class="architecture-layer layer-interface">
+              <strong>交互入口</strong>
+              <span>LVGL UI</span><span>Web</span><span>CLI</span>
+            </div>
+            <div class="architecture-layer">
+              <strong>应用编排</strong>
+              <span>Use Cases</span><span>Command Routing</span><span>App Runtime</span>
+            </div>
+            <div class="architecture-layer">
+              <strong>领域治理</strong>
+              <span>Domain Policy</span><span>Typed Events</span><span>Resource Arbitration</span>
+            </div>
+            <div class="architecture-layer">
+              <strong>稳定接口</strong>
+              <span>Stable Ports</span><span>IPC V2</span><span>V1 Compatibility</span>
+            </div>
+            <div class="architecture-layer layer-provider">
+              <strong>实现与服务</strong>
+              <span>A133 Provider</span><span>Tuya</span><span>WebRTC</span><span>MCP</span><span>SWUpdate</span><span>Cloud</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section delivery" id="delivery">
+        <div class="page-shell">
+          <header class="section-heading">
+            <div>
+              <p class="section-label">交付状态与项目边界</p>
+              <h2>明确区分“已经实现”与“需要适配”</h2>
+            </div>
+            <p>
+              方案以 A133 作为参考实现。其他 SoC 展示的是可迁移接口，不等同于已经完成的产品交付。
+            </p>
+          </header>
+
+          <div class="delivery-status">
+            <article class="status-implemented">
+              <span class="status-tag">当前基线</span>
+              <h3>A133 参考实现</h3>
+              <p>核心平台、桌面、应用机制、IPKVM 服务和升级链路已在当前仓库形成实现与验证资产。</p>
+              <ul>
+                <li>可重复构建与自动化回归</li>
+                <li>真实 A133 交叉编译</li>
+                <li>安全默认值与权限边界</li>
+                <li>可回滚、可恢复的发布设计</li>
+              </ul>
+            </article>
+            <article class="status-adaptation">
+              <span class="status-tag">适配接口</span>
+              <h3>A527 / V883 / RK3576 / RV1106</h3>
+              <p>架构预留 Provider 和稳定端口，具体芯片仍需完成驱动、媒体链路、性能和板级工程验证。</p>
+              <ul>
+                <li>不是当前现成交付物</li>
+                <li>不预设相同的视频与 AI 性能</li>
+                <li>按目标硬件重新完成验证矩阵</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="validation-boundary">
+            <h3>量产前必须在目标硬件和目标网络验证</h3>
+            <div>
+              <span>HDMI 电气与兼容性</span>
+              <span>USB 枚举与 HID 行为</span>
+              <span>声学、AEC 与麦克风布局</span>
+              <span>触摸与显示品质</span>
+              <span>NAT / 弱网与远程访问</span>
+              <span>温升、功耗与认证</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing">
+        <div class="page-shell closing-layout">
+          <div>
+            <p class="section-label">从可运行的平台开始</p>
+            <h2>不要再把 AI、设备控制、应用和 OTA 当成四个孤立项目</h2>
+          </div>
+          <div>
+            <p>先确认业务场景与硬件边界，再从设备 APP、MCP Host 或浏览器 IPKVM 选择最短接入路径。</p>
+            <div class="closing-actions">
+              <a class="button button-light" href="#paths">查看接入路径</a>
+              <a
+                class="button button-outline-light"
+                href="https://github.com/dshanpi/SmartDesktopMimi"
+                target="_blank"
+                rel="noreferrer"
+              >查看源码仓库<span aria-hidden="true">↗</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="page-shell footer-layout">
+        <div>
+          <a class="brand footer-brand" href="#top">
+            <span class="brand-symbol" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="brand-copy"><strong>AI-DeskTopBox</strong><small>Embedded AI Device Platform</small></span>
+          </a>
+          <p>100ASK 团队嵌入式 AI 桌面平台解决方案。</p>
+        </div>
+        <div class="footer-links">
+          <a href="#blueprint">方案蓝图</a>
+          <a href="#experience">智能体验</a>
+          <a href="#capabilities">平台能力</a>
+          <a href="#scenes">产品场景</a>
+          <a href="#evidence">实现证据</a>
+          <a href="#delivery">交付边界</a>
+        </div>
+        <p class="footer-note">页面概念图均已标注；能力范围以仓库文档、实现和目标硬件验证结果为准。</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
