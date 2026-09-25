@@ -27,6 +27,7 @@ jobs:
           test -f styles.css
           test -f script.js
           test -f .nojekyll
+          echo "2f997727d57f7d0e88a3ff8be618d6771149eaa90b6cef3dce5aa659a4505d1d  assets/SmartDesktopMimi.png" | sha256sum --check
           node --check script.js
           if grep -R -I -l -E 'BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' \
             --exclude-dir=.git --exclude-dir=_site .; then
