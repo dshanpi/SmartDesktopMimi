@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "source_revision": "8f6d8f3b644426f93f347c4b50342ea052d62a82",
-  "source_date_epoch": 1790146001,
+  "source_revision": "6fa6c9cfc6b946cb99fc282a97bf210b18e4d9aa",
+  "source_date_epoch": 1790314757,
   "lvgl_revision": "685aa79c2894b038c212ef7c26834bfd5b9120aa",
   "history": "fresh-single-commit",
   "release_profile": "docs/public-release.json"

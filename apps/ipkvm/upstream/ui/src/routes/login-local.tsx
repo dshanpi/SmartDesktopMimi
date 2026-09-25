@@ -1,4 +1,5 @@
-import { ActionFunctionArgs, Form, redirect, useActionData } from "react-router-dom";
+import type { ActionFunctionArgs } from "react-router";
+import { Form, redirect, useActionData } from "react-router-dom";
 import { useState } from "react";
 import { LuEye, LuEyeOff } from "react-icons/lu";
 
@@ -10,6 +11,7 @@ import { Button } from "@components/Button";
 import Logo100Ask from "@/assets/logo-100ask.png";
 import { DEVICE_API } from "@/ui.config";
 import { DeviceStatus } from "@routes/login_page/index";
+import { useLanguageSettings } from "@routes/login_page/useLocalAuth";
 
 import api from "../api";
 import ExtLink from "../components/ExtLink";
@@ -51,6 +53,7 @@ const action = async ({ request }: ActionFunctionArgs) => {
 export default function LoginLocalRoute() {
   const actionData = useActionData() as { error?: string; success?: boolean };
   const [showPassword, setShowPassword] = useState(false);
+  const { $at } = useLanguageSettings();
 
   return (
     <>
@@ -70,23 +73,33 @@ export default function LoginLocalRoute() {
 
               <div className="space-y-2 text-center">
                 <h1 className="text-4xl font-semibold text-black dark:text-white">
-                  Welcome back to KVM
+                  {$at("Welcome back to Smart Desktop Mimi")}
                 </h1>
                 <p className="font-medium text-slate-600 dark:text-[#ffffff]">
-                  Enter your password to access your KVM.
+                  {$at("Enter your password to access Smart Desktop Mimi.")}
                 </p>
               </div>
 
               <Fieldset className="space-y-12">
                 <Form method="POST" className="mx-auto max-w-sm space-y-4">
+                  <input
+                    type="text"
+                    name="username"
+                    value="local-device"
+                    autoComplete="username"
+                    readOnly
+                    aria-hidden="true"
+                    className="hidden"
+                  />
                   <div className="space-y-4">
                     <InputFieldWithLabel
-                      label="Password"
+                      label={$at("Password")}
                       type={showPassword ? "text" : "password"}
                       name="password"
-                      placeholder="Enter your password"
+                      placeholder={$at("Please enter a password")}
+                      autoComplete="current-password"
                       autoFocus
-                      error={actionData?.error}
+                      error={actionData?.error ? $at(actionData.error) : undefined}
                       TrailingElm={
                         showPassword ? (
                           <div
@@ -112,7 +125,7 @@ export default function LoginLocalRoute() {
                     theme="primary"
                     fullWidth
                     type="submit"
-                    text="Log In"
+                    text={$at("Log In")}
                     textAlign="center"
                   />
 
@@ -121,7 +134,7 @@ export default function LoginLocalRoute() {
                       href="https://100ask.net/"
                       className="hover:underline"
                     >
-                      Forgot password?
+                      {$at("Forgot password?")}
                     </ExtLink>
                   </div>
                 </Form>

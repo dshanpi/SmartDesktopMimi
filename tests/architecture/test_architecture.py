@@ -153,6 +153,9 @@ class PlatformManifestTests(unittest.TestCase):
         self.assertIn("--check-only", wrapper)
         self.assertIn("AITVBOX_A133_SDK", wrapper)
         self.assertIn("MISSING_COMMANDS", wrapper)
+        self.assertIn("LICHEE_TOOLCHAIN_PATH", wrapper)
+        self.assertIn("libaudio_subsys.a", wrapper)
+        self.assertIn("至少需要 15 GiB", wrapper)
         self.assertNotIn("./build.sh pack", wrapper)
 
     def test_architecture_dependency_gate(self):

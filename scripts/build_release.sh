@@ -131,7 +131,10 @@ echo "==> 记录当前 SDK/产品审计"
 
 AVAILABLE_KIB="$(df -Pk "${SDK}" | awk 'NR == 2 {print $4}')"
 if [[ "${AVAILABLE_KIB}" =~ ^[0-9]+$ && "${AVAILABLE_KIB}" -lt 15728640 ]]; then
-    echo "warning: SDK 所在文件系统可用空间不足 15 GiB：${AVAILABLE_KIB} KiB" >&2
+    die "SDK 所在文件系统可用空间不足 15 GiB：${AVAILABLE_KIB} KiB" \
+        "清理旧构建产物或扩大磁盘后重试；不要在低空间状态启动正式发布"
+elif [[ "${AVAILABLE_KIB}" =~ ^[0-9]+$ && "${AVAILABLE_KIB}" -lt 31457280 ]]; then
+    echo "warning: SDK 所在文件系统可用空间低于建议值 30 GiB：${AVAILABLE_KIB} KiB" >&2
 fi
 
 if [[ "${CHECK_ONLY}" -eq 1 ]]; then

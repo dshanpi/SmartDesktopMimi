@@ -35,7 +35,10 @@ git submodule update --init --recursive
 
 主机至少需要 `git`、`make`、`cmake`、`python3`、`rsync`、`gawk`、
 `squashfs-tools`、`e2fsprogs`、`util-linux`、`coreutils`、Node/npm 和 Go。
-`auto_build_package.sh` 会在开始前一次性汇总缺项，并显示 CPU、内存、磁盘和目标板规格。
+前端以 Node 22.21.1 为可复现基线，Go 版本不得低于 `go.mod` 声明。
+`auto_build_package.sh` 会在开始前一次性汇总缺项，验证受限 vendor 库、SDK 的
+`A133/B6/OpenWrt/arm64` 配置和交叉编译器，并显示 CPU、内存、磁盘和目标板规格。
+SDK 所在文件系统至少保留 15 GiB，建议 30 GiB；低于最低值会在编译前直接停止。
 
 ## 正式发布：先预检，再一键构建
 

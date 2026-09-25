@@ -130,7 +130,8 @@ git submodule update --init --recursive
 
 若 SDK 不在默认路径，可加 `--sdk-root /path/to/A133-Tina-SDK` 或设置
 `AITVBOX_A133_SDK`。脚本会一次性检查主机依赖、CPU/内存/磁盘、源码输入与 SDK
-目标配置；完整构建仍由安全的 `build_release.sh` 唯一流水线执行，不会自动烧录设备。
+目标配置、交叉编译器和受限 vendor 库；磁盘至少保留 15 GiB（建议 30 GiB）。完整构建
+仍由安全的 `build_release.sh` 唯一流水线执行，不会自动烧录设备。
 
 最终固件（脚本结束后 SDK 会恢复纯模式）：
 

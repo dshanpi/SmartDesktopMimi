@@ -417,6 +417,29 @@ class PlatformHostTests(unittest.TestCase):
         self.assertIn('language: "zh",', store)
         self.assertNotIn('language: "en",', store)
 
+        login = (
+            REPO / "apps/ipkvm/upstream/ui/src/routes/login-local.tsx"
+        ).read_text(encoding="utf-8")
+        self.assertIn("useLanguageSettings", login)
+        self.assertIn('$at("Welcome back to Smart Desktop Mimi")', login)
+        self.assertIn('autoComplete="username"', login)
+        self.assertIn('autoComplete="current-password"', login)
+        self.assertNotIn(">Welcome back to KVM<", login.replace("\n", ""))
+
+        translations = json.loads((
+            REPO / "apps/ipkvm/upstream/ui/src/locales/zh.json"
+        ).read_text(encoding="utf-8"))
+        expected = {
+            "Welcome back to Smart Desktop Mimi": "欢迎回到 Smart Desktop Mimi",
+            "Enter your password to access Smart Desktop Mimi.":
+                "请输入密码以访问 Smart Desktop Mimi。",
+            "Log In": "登录",
+            "Forgot password?": "忘记密码？",
+        }
+        for source, translated in expected.items():
+            key = hashlib.md5(source.encode("utf-8")).hexdigest()[:10]
+            self.assertEqual(translations[key], translated)
+
     def test_a133_atomic_compat_helper_cannot_recurse(self):
         source = (
             REPO / "third_party/TuyaOpen/platform/LINUX/tuyaos_adapter/src/"

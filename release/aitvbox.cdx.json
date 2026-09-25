@@ -2,13 +2,13 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.5",
   "version": 1,
-  "serialNumber": "urn:uuid:2040796a-59d7-556a-ba0c-f5baf8f7d8a4",
+  "serialNumber": "urn:uuid:8541f81a-d836-5a30-b3ca-a0164a3b9c6f",
   "metadata": {
-    "timestamp": "2026-09-23T06:46:41Z",
+    "timestamp": "2026-09-25T05:39:17Z",
     "component": {
       "type": "application",
       "name": "AI-DeskTopBox",
-      "version": "8f6d8f3b644426f93f347c4b50342ea052d62a82"
+      "version": "6fa6c9cfc6b946cb99fc282a97bf210b18e4d9aa"
     }
   },
   "components": [

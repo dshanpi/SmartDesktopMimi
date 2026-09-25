@@ -186,8 +186,14 @@ declare -a REQUIRED_INPUTS=(
     "${PRODUCT_ROOT}/VERSION"
     "${PRODUCT_ROOT}/apps/lv_port_linux/lvgl/CMakeLists.txt"
     "${PRODUCT_ROOT}/third_party/TuyaOpen/tos.py"
-    "${PRODUCT_ROOT}/third_party/TuyaOpen/.tools/python"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs"
+    "${PRODUCT_ROOT}/third_party/TuyaOpen/export.sh"
+    "${PRODUCT_ROOT}/third_party/TuyaOpen/.tools/python/3.12.13/cpython-3.12.13-linux-x86_64-gnu/bin/python3.12"
+    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/MNN/libMNN.so"
+    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/MNN/libMNN_Express.so"
+    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/audio_subsys/libaudio_subsys.a"
+    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/opus/libopus.a"
+    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/models/mdtc_chunk_300ms.mnn"
+    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/models/tokens.txt"
 )
 declare -a MISSING_INPUTS=()
 for input_path in "${REQUIRED_INPUTS[@]}"; do
@@ -207,6 +213,58 @@ echo "  产品仓库 : ${PRODUCT_ROOT}"
 echo "  目标平台 : ${PLATFORM}"
 echo "  Tina SDK : ${SDK}（${SDK_SOURCE}）"
 echo "  构建模式 : $([[ ${CHECK_ONLY} -eq 1 ]] && echo 仅检查 || echo 完整编译并打包)"
+echo
+
+python3 - "${SDK}" <<'PY'
+from __future__ import annotations
+
+from pathlib import Path
+import os
+import re
+import sys
+
+sdk = Path(sys.argv[1]).resolve()
+config_path = sdk / ".buildconfig"
+values = {}
+for raw_line in config_path.read_text(encoding="utf-8").splitlines():
+    match = re.fullmatch(r"export\s+([A-Z0-9_]+)=(.*)", raw_line.strip())
+    if not match:
+        continue
+    values[match.group(1)] = match.group(2).strip().strip('"').strip("'")
+
+expected = {
+    "LICHEE_PLATFORM": "linux",
+    "LICHEE_LINUX_DEV": "openwrt",
+    "LICHEE_IC": "a133",
+    "LICHEE_BOARD": "b6",
+    "LICHEE_ARCH": "arm64",
+}
+errors = [
+    f"{key}={values.get(key, '未设置')}（要求 {required}）"
+    for key, required in expected.items()
+    if values.get(key) != required
+]
+toolchain = Path(values.get("LICHEE_TOOLCHAIN_PATH", ""))
+compiler = toolchain / "bin/aarch64-linux-gnu-gcc"
+try:
+    toolchain.relative_to(sdk)
+except ValueError:
+    errors.append(f"LICHEE_TOOLCHAIN_PATH 不在当前 SDK 内：{toolchain}")
+if not compiler.is_file() or not os.access(compiler, os.X_OK):
+    errors.append(f"交叉编译器不存在：{compiler}")
+if errors:
+    print("SDK 目标配置检查失败：", file=sys.stderr)
+    for error in errors:
+        print(f"  - {error}", file=sys.stderr)
+    raise SystemExit(2)
+
+print("SDK 目标配置")
+print("  SoC / 板卡 : A133 / B6")
+print("  系统 / 架构: OpenWrt / arm64")
+print("  固件变体   : UART0")
+print(f"  交叉编译器 : {compiler}")
+PY
+
 echo
 
 python3 - "${SDK}" <<'PY'
@@ -234,12 +292,18 @@ print(f"  系统       : {platform.system()} {platform.release()} ({platform.mac
 print(f"  CPU 线程   : {cpu_count or '未知'}")
 print(f"  物理内存   : {memory_kib / 1024 / 1024:.1f} GiB" if memory_kib else "  物理内存   : 未知")
 print(f"  SDK盘可用  : {disk.free / 1024**3:.1f} GiB")
+print(f"  SDK盘占用率: {(disk.total - disk.free) / disk.total:.0%}")
 if cpu_count and cpu_count < 4:
     print("  warning    : 少于 4 个 CPU 线程，完整构建会较慢")
 if memory_kib and memory_kib < 8 * 1024 * 1024:
     print("  warning    : 少于 8 GiB 内存，建议增加 swap 或降低并行负载")
 if disk.free < 15 * 1024**3:
-    print("  warning    : SDK 所在磁盘可用空间不足 15 GiB，构建可能失败")
+    print("  error      : SDK 所在磁盘至少需要 15 GiB 可用空间", file=sys.stderr)
+    raise SystemExit(2)
+if disk.free < 30 * 1024**3:
+    print("  warning    : 可用空间低于建议值 30 GiB；请避免并行保留旧固件产物")
+if disk.free / disk.total < 0.05:
+    print("  warning    : SDK 所在文件系统剩余空间低于 5%")
 PY
 
 echo
@@ -252,6 +316,30 @@ echo "  Go     : $("${GO}" version)"
 if [[ ! "$(node --version)" =~ ^v22\. ]]; then
     echo "  warning: Node 主版本与项目声明不一致，npm 会警告且前端构建可能失败"
 fi
+GO_REQUIRED="$(awk '$1 == "go" { print $2; exit }' "${PRODUCT_ROOT}/apps/ipkvm/upstream/go.mod")"
+GO_ACTUAL="$("${GO}" env GOVERSION | sed 's/^go//')"
+python3 - "${GO_ACTUAL}" "${GO_REQUIRED}" <<'PY'
+import re
+import sys
+
+def version(value):
+    match = re.match(r"^(\d+)\.(\d+)(?:\.(\d+))?", value)
+    if not match:
+        raise ValueError(value)
+    return tuple(int(part or 0) for part in match.groups())
+
+try:
+    actual, required = version(sys.argv[1]), version(sys.argv[2])
+except ValueError as error:
+    print(f"error: 无法解析 Go 版本：{error}", file=sys.stderr)
+    raise SystemExit(2)
+if actual < required:
+    print(
+        f"error: Go {sys.argv[1]} 低于 go.mod 要求的 {sys.argv[2]}",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+PY
 echo
 
 python3 "${PRODUCT_ROOT}/tools/aitvbox.py" doctor \

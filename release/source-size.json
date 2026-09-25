@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "files": 6160,
-  "bytes": 171801194,
+  "bytes": 171810294,
   "top_level": {
     ".codex": {
       "files": 4,
@@ -13,7 +13,7 @@
     },
     ".github": {
       "files": 1,
-      "bytes": 1454
+      "bytes": 3110
     },
     ".gitignore": {
       "files": 1,
@@ -45,7 +45,7 @@
     },
     "README.md": {
       "files": 1,
-      "bytes": 15895
+      "bytes": 15981
     },
     "README.zh-CN.md": {
       "files": 1,
@@ -65,7 +65,7 @@
     },
     "apps": {
       "files": 2121,
-      "bytes": 94646360
+      "bytes": 94648234
     },
     "components": {
       "files": 1,
@@ -81,7 +81,7 @@
     },
     "docs": {
       "files": 92,
-      "bytes": 16814992
+      "bytes": 16815268
     },
     "frontends": {
       "files": 1,
@@ -109,7 +109,7 @@
     },
     "scripts": {
       "files": 23,
-      "bytes": 166139
+      "bytes": 169513
     },
     "services": {
       "files": 1,
@@ -117,7 +117,7 @@
     },
     "tests": {
       "files": 5,
-      "bytes": 154923
+      "bytes": 156757
     },
     "third_party": {
       "files": 3718,
