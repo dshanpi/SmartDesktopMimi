@@ -106,8 +106,13 @@ BASELINE_VERSION_CHECK
 fi
 
 VERSION="$(tr -d '[:space:]' < "${PRODUCT_ROOT}/VERSION")"
-[[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
-    die "VERSION is not MAJOR.MINOR.PATCH: ${VERSION}"
+python3 - "${PRODUCT_ROOT}" "${VERSION}" <<'APPLICATION_VERSION_CHECK'
+import sys
+sys.path.insert(0, sys.argv[1] + '/tools/update')
+from release_identity import valid_version
+if not valid_version(sys.argv[2]):
+    raise SystemExit('invalid application SemVer: ' + sys.argv[2])
+APPLICATION_VERSION_CHECK
 COMMIT="$(git -C "${PRODUCT_ROOT}" rev-parse HEAD)"
 SHORT_COMMIT="$(git -C "${PRODUCT_ROOT}" rev-parse --short=12 HEAD)"
 BRANCH="$(git -C "${PRODUCT_ROOT}" symbolic-ref --short -q HEAD || echo detached)"
