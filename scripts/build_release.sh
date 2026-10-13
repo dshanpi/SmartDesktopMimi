@@ -319,7 +319,7 @@ PURE_CONFIGS=(
 )
 for config in "${PURE_CONFIGS[@]}"; do
     [[ -f "${config}" ]] || continue
-    for package in suite platform usb-hid ipkvm; do
+    for package in suite platform usb-hid ipkvm mimi-update; do
         if ! grep -qx "# CONFIG_PACKAGE_aitvbox-${package} is not set" "${config}"; then
             die "SDK was not restored to pure mode" \
                 "${config}: aitvbox-${package} is not disabled"
