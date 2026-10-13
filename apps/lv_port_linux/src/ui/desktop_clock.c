@@ -194,11 +194,14 @@ static void home_screen_event_cb(lv_event_t *event)
     }
 }
 
+static int32_t ai_width, hdmi_width, card_height;
+static bool compact_cards;
+
 static void create_ai_orb(lv_obj_t *parent)
 {
     lv_obj_t *stage = lv_obj_create(parent);
     lv_obj_set_size(stage, 164, 164);
-    lv_obj_set_pos(stage, 328, 70);
+    lv_obj_align(stage, LV_ALIGN_TOP_RIGHT, -72, 70);
     style_clear_container(stage);
     lv_obj_set_style_clip_corner(stage, false, 0);
     lv_obj_add_flag(stage, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
@@ -250,7 +253,7 @@ static void create_ai_orb(lv_obj_t *parent)
 static lv_obj_t *create_ai_card(lv_obj_t *parent)
 {
     lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, 566, HOME_DASHBOARD_H);
+    lv_obj_set_size(card, ai_width, card_height);
     style_surface(card, HOME_RADIUS);
     lv_obj_set_style_bg_color(card,
                               lv_color_mix(HOME_SURFACE, HOME_CORAL, 232), 0);
@@ -266,21 +269,21 @@ static lv_obj_t *create_ai_card(lv_obj_t *parent)
 
     sensor_label = create_text(card, "Environment  --°  --%",
                                ui_font_body_md(), HOME_TEXT_MUTED);
-    lv_obj_set_pos(sensor_label, 32, 300);
+    lv_obj_set_pos(sensor_label, 24, compact_cards ? 184 : 338);
 
-    create_ai_orb(card);
+    if (!compact_cards) create_ai_orb(card);
 
     greeting_label = create_text(card, ui_tr(UI_STR_HOME_GREETING_MORNING),
                                  ui_font_h1(), HOME_TEXT);
-    lv_obj_set_width(greeting_label, 354);
+    lv_obj_set_width(greeting_label, ai_width - 48);
     lv_obj_set_style_text_align(greeting_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_obj_set_pos(greeting_label, 32, 230);
+    lv_obj_set_pos(greeting_label, 24, compact_cards ? 80 : 230);
 
     lv_obj_t *prompt = create_text(card, ui_tr(UI_STR_HOME_HELP_PROMPT),
                                    ui_font_body_lg(), HOME_TEXT_MUTED);
-    lv_obj_set_width(prompt, 354);
+    lv_obj_set_width(prompt, ai_width - 48);
     lv_obj_set_style_text_align(prompt, LV_TEXT_ALIGN_LEFT, 0);
-    lv_obj_set_pos(prompt, 32, 276);
+    lv_obj_set_pos(prompt, 24, compact_cards ? 132 : 286);
 
     ai_action_button = create_action_button(card, LV_SYMBOL_AUDIO,
                                              ui_tr(UI_STR_HOME_TALK_MIMI), HOME_CORAL,
@@ -292,7 +295,8 @@ static lv_obj_t *create_ai_card(lv_obj_t *parent)
 static void create_monitor_preview(lv_obj_t *parent)
 {
     lv_obj_t *preview = lv_obj_create(parent);
-    lv_obj_set_size(preview, 282, 232);
+    int32_t preview_height = compact_cards ? 120 : 232;
+    lv_obj_set_size(preview, hdmi_width - 48, preview_height);
     lv_obj_set_pos(preview, 24, 65);
     lv_obj_set_style_radius(preview, 16, 0);
     lv_obj_set_style_bg_color(preview, lv_color_hex(0x0C1830), 0);
@@ -326,6 +330,10 @@ static void create_monitor_preview(lv_obj_t *parent)
     lv_obj_set_style_pad_all(stand, 0, 0);
     make_noninteractive(stand);
 
+    if (preview_height < 200) {
+        lv_obj_add_flag(monitor, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(stand, LV_OBJ_FLAG_HIDDEN);
+    }
     lv_obj_t *ready = create_text(preview, ui_tr(UI_STR_HOME_READY_CONTROL),
                                   ui_font_h2(), HOME_DARK_TEXT);
     lv_obj_align(ready, LV_ALIGN_BOTTOM_MID, 0, -47);
@@ -337,7 +345,7 @@ static void create_monitor_preview(lv_obj_t *parent)
 static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
 {
     lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, 330, HOME_DASHBOARD_H);
+    lv_obj_set_size(card, hdmi_width, card_height);
     style_surface(card, HOME_RADIUS);
     lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(card, home_action_event, LV_EVENT_CLICKED,
@@ -348,7 +356,7 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
 
     lv_obj_t *live_dot = lv_obj_create(card);
     lv_obj_set_size(live_dot, 10, 10);
-    lv_obj_align(live_dot, LV_ALIGN_TOP_RIGHT, -70, 28);
+    lv_obj_align(live_dot, LV_ALIGN_TOP_RIGHT, -110, 28);
     lv_obj_set_style_radius(live_dot, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(live_dot, HOME_CYAN, 0);
     lv_obj_set_style_bg_opa(live_dot, LV_OPA_COVER, 0);
@@ -366,7 +374,7 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
     create_monitor_preview(card);
     hdmi_action_button = create_action_button(card, LV_SYMBOL_VIDEO,
                                                ui_tr(UI_STR_HOME_OPEN_KVM), HOME_BLUE,
-                                               282, HOME_ACTION_HDMI);
+                                               hdmi_width - 48, HOME_ACTION_HDMI);
     lv_obj_align(hdmi_action_button, LV_ALIGN_BOTTOM_MID, 0, -20);
     return card;
 }
@@ -482,6 +490,11 @@ void ui_clock_create(lv_obj_t *parent)
                             LV_EVENT_SCREEN_LOADED, NULL);
     }
 
+    bool stacked = HOME_SCREEN_W < 1000;
+    compact_cards = stacked || HOME_DASHBOARD_H < 414;
+    card_height = compact_cards ? 300 : HOME_DASHBOARD_H;
+    ai_width = stacked ? HOME_CONTENT_W : (HOME_CONTENT_W - HOME_GAP) * 566 / 896;
+    hdmi_width = stacked ? HOME_CONTENT_W : HOME_CONTENT_W - HOME_GAP - ai_width;
     lv_obj_t *dashboard = lv_obj_create(parent);
     lv_obj_set_size(dashboard, HOME_CONTENT_W, HOME_DASHBOARD_H);
     style_clear_container(dashboard);
@@ -490,15 +503,18 @@ void ui_clock_create(lv_obj_t *parent)
     lv_obj_set_flex_align(dashboard, LV_FLEX_ALIGN_START,
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_row(dashboard, 16, 0);
-    lv_obj_add_flag(dashboard, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
+    lv_obj_add_flag(dashboard, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(dashboard, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(dashboard, LV_SCROLLBAR_MODE_AUTO);
 
     lv_obj_t *hero_row = lv_obj_create(dashboard);
-    lv_obj_set_size(hero_row, HOME_CONTENT_W, HOME_DASHBOARD_H);
+    lv_obj_set_size(hero_row, HOME_CONTENT_W, stacked ? card_height * 2 + HOME_GAP : card_height);
     style_clear_container(hero_row);
-    lv_obj_set_flex_flow(hero_row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_flow(hero_row, stacked ? LV_FLEX_FLOW_COLUMN : LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(hero_row, LV_FLEX_ALIGN_START,
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(hero_row, 16, 0);
+    lv_obj_set_style_pad_column(hero_row, HOME_GAP, 0);
+    lv_obj_set_style_pad_row(hero_row, HOME_GAP, 0);
     lv_obj_add_flag(hero_row, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
     create_ai_card(hero_row);
     create_hdmi_card(hero_row);
@@ -510,13 +526,13 @@ void ui_clock_create(lv_obj_t *parent)
     lv_obj_add_flag(time_label, LV_OBJ_FLAG_FLOATING | LV_OBJ_FLAG_IGNORE_LAYOUT);
     lv_obj_set_width(time_label, 86);
     lv_obj_set_style_text_align(time_label, LV_TEXT_ALIGN_RIGHT, 0);
-    lv_obj_set_pos(time_label, 350, 19);
+    lv_obj_set_pos(time_label, HOME_SCREEN_W / 2 - (stacked ? 183 : 162), stacked ? 72 : 19);
     date_label = create_text(parent, "Monday  Sep 21",
                              ui_font_body_md(), HOME_TEXT_MUTED);
     lv_obj_add_flag(date_label, LV_OBJ_FLAG_FLOATING | LV_OBJ_FLAG_IGNORE_LAYOUT);
     lv_obj_set_width(date_label, 280);
     lv_obj_set_style_text_align(date_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_obj_set_pos(date_label, 448, 22);
+    lv_obj_set_pos(date_label, HOME_SCREEN_W / 2 - (stacked ? 85 : 64), stacked ? 75 : 22);
 
     clock_timer_cb(NULL);
     if (!clock_timer) {

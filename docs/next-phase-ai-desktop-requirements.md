@@ -42,3 +42,19 @@ SDK 自动依赖检查、单板平台、支持分辨率列表和打包格式选�
 
 ## 2026-10-13 D02 用户批准实施
 用户确认修订图并要求当前会话循环完成全部功能和交付。现在授权实施首页抽屉、100ask.net 配对/凭据隔离、独立涂鸦 IoT、可选语音文字控制，以及仅开发主机上的 SDK/板型/分辨率配置和 deb 打包。不得将编译配置加入桌面 UI。保留旧验收候选，新功能建立新提交/产物并重跑受影响验收；既有系统、稳定性和完整发布门禁继续完成，全部必需真机测试通过后才上传。此前待设计确认状态由本次批准更新；不把批准等同于功能或真机验收完成。
+
+
+### 2026-10-14 responsive desktop implementation
+Home now derives its viewport from the actual display. Wide displays retain two cards;
+narrow displays use a vertically scrollable column above the persistent drawer grip.
+The status bar uses a second clock row on narrow displays. Short displays use a single
+row of horizontally paged launcher cards. Control Center cards scroll horizontally.
+Developer configuration remains exclusively in tools/sdkbuild; no SDK/build settings
+are exposed on the desktop.
+
+Use scripts/render_ui_review.py with --resolutions 1024x768 480x800 800x480 1280x800
+1920x1080 to exercise real LVGL rendering and pointer navigation with host fixtures.
+This covers Home, launcher and Control Center geometry, not every application screen.
+Physical qualification still requires the corresponding display, touch calibration,
+application matrix and signed build receipt. Only the actual A133 1024x768 panel has
+hardware evidence; selection in a build profile does not qualify other resolutions.

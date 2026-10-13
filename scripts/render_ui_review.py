@@ -27,7 +27,17 @@ def main():
     parser.add_argument('--config', type=Path, default=APP / 'build/lv_conf.h')
     parser.add_argument('--output', type=Path, default=ROOT / 'output/lvgl-ui-v2-batch1')
     parser.add_argument('--pages', nargs='+', default=['home', 'control-center', 'apps', 'settings', 'desktop-update', 'wifi', 'password', 'bt', 'bt-connected', 'bt-details', 'bt-rename', 'video', 'video-library', 'ota', 'ota-error', 'ota-downloading', 'ai', 'ai-pairing', 'ai-offline', 'ai-speaking', 'ai-free-chat', 'user', 'hdmi'])
+    parser.add_argument('--resolutions', nargs='+', default=['1024x768'],
+                        help='Host render sizes only; does not qualify physical displays')
     args = parser.parse_args()
+    resolutions = []
+    for value in args.resolutions:
+        if not re.fullmatch(r'[0-9]{3,4}x[0-9]{3,4}', value):
+            parser.error('resolution must be WIDTHxHEIGHT')
+        w, h = map(int, value.split('x'))
+        if not (480 <= w <= 1920 and 480 <= h <= 1920):
+            parser.error('host review sizes must be between 480 and 1920')
+        resolutions.append((w, h))
     build = ROOT / 'build/ui-review'
     build.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
@@ -85,22 +95,25 @@ def main():
              '-o', build / 'review-manager'], log)
     from PIL import Image
     count = 0
-    for page in args.pages:
-        for language in ['zh', 'en']:
-            for theme in ['light', 'dark']:
-                stem = f'{page}-{language}-{theme}'
-                ppm = output / (stem + '.ppm')
-                with (output / (stem + '.log')).open('w') as log:
-                    run([build / 'review', page, language, theme, ppm], log)
-                with Image.open(ppm) as image:
-                    assert image.size == (1024, 768)
-                    image.save(output / (stem + '.png'))
-                ppm.unlink()
-                count += 1
-    with (output / 'manager.log').open('w') as log:
-        ppm = output / 'manager.ppm'
-        run([build / 'review-manager', 'home', 'zh', 'dark', ppm], log)
-        ppm.unlink()
+    for width, height in resolutions:
+        render_output = output if resolutions == [(1024, 768)] else output / f'{width}x{height}'
+        render_output.mkdir(exist_ok=True)
+        for page in args.pages:
+            for language in ['zh', 'en']:
+                for theme in ['light', 'dark']:
+                    stem = f'{page}-{language}-{theme}'
+                    ppm = render_output / (stem + '.ppm')
+                    with (render_output / (stem + '.log')).open('w') as log:
+                        run([build / 'review', page, language, theme, ppm, width, height], log)
+                    with Image.open(ppm) as image:
+                        assert image.size == (width, height)
+                        image.save(render_output / (stem + '.png'))
+                    ppm.unlink()
+                    count += 1
+        with (render_output / 'manager.log').open('w') as log:
+            ppm = render_output / 'manager.ppm'
+            run([build / 'review-manager', 'home', 'zh', 'dark', ppm, width, height], log)
+            ppm.unlink()
     print(f'PASS: {count} LVGL renders ({", ".join(args.pages)}); page assertions and real app-manager checks passed.')
 
 

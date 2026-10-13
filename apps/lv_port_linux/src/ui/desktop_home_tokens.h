@@ -25,14 +25,14 @@
 #define HOME_CORAL              mimi_ui_color(MIMI_CORAL)
 #define HOME_GREEN              mimi_ui_color(MIMI_TEAL)
 
-#define HOME_SCREEN_W           1024
-#define HOME_SCREEN_H           768
-#define HOME_CONTENT_X          56
-#define HOME_DASHBOARD_Y        90
-#define HOME_DOCK_Y             688
-#define HOME_CONTENT_W          912
-#define HOME_STATUS_H           68
-#define HOME_DASHBOARD_H        576
+#define HOME_SCREEN_W           lv_display_get_horizontal_resolution(NULL)
+#define HOME_SCREEN_H           lv_display_get_vertical_resolution(NULL)
+#define HOME_CONTENT_X          (HOME_SCREEN_W >= 1000 ? 56 : 16)
+#define HOME_DASHBOARD_Y        (HOME_STATUS_H + 22)
+#define HOME_DOCK_Y             (HOME_SCREEN_H - HOME_DOCK_H - 18)
+#define HOME_CONTENT_W          (HOME_SCREEN_W - 2 * HOME_CONTENT_X)
+#define HOME_STATUS_H           (HOME_SCREEN_W >= 1000 ? 68 : 112)
+#define HOME_DASHBOARD_H        (HOME_SCREEN_H - HOME_DASHBOARD_Y - 102)
 #define HOME_DOCK_H             62
 #define HOME_GAP                16
 #define HOME_RADIUS             22

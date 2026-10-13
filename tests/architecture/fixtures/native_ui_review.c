@@ -116,16 +116,17 @@ static void emit(mw_topic_t t, void *data, size_t size) {
  mw_msg_t msg={.topic=t,.data_len=size};memcpy(msg.data,data,size);
  for(int i=0;i<10;i++)if(callbacks[t][i])callbacks[t][i](&msg);
 }
-static unsigned char pixels[1024*768*4];
+static int review_width = 1024, review_height = 768;
+static unsigned char *pixels;
 static void flush(lv_display_t*d,const lv_area_t*a,uint8_t*p) {
- for(int y=a->y1;y<=a->y2;y++)memcpy(pixels+(y*1024+a->x1)*4,p+(y-a->y1)*(a->x2-a->x1+1)*4,(a->x2-a->x1+1)*4);
+ for(int y=a->y1;y<=a->y2;y++)memcpy(pixels+(y*review_width+a->x1)*4,p+(y-a->y1)*(a->x2-a->x1+1)*4,(a->x2-a->x1+1)*4);
  lv_display_flush_ready(d);
 }
 static void save(const char*path) {
  lv_obj_update_layout(lv_scr_act());
  lv_refr_now(NULL);
- FILE*f=fopen(path,"wb");assert(f);fprintf(f,"P6\n1024 768\n255\n");
- for(int i=0;i<1024*768;i++){unsigned char rgb[]={pixels[i*4+2],pixels[i*4+1],pixels[i*4]};fwrite(rgb,1,3,f);}fclose(f);
+ FILE*f=fopen(path,"wb");assert(f);fprintf(f,"P6\n%d %d\n255\n",review_width,review_height);
+ for(int i=0;i<review_width*review_height;i++){unsigned char rgb[]={pixels[i*4+2],pixels[i*4+1],pixels[i*4]};fwrite(rgb,1,3,f);}fclose(f);
 }
 static void inspect(lv_obj_t*o) {
  if(lv_obj_has_flag(o,LV_OBJ_FLAG_HIDDEN))return;
@@ -175,7 +176,7 @@ static void test_password(void) {
  lv_obj_update_layout(password_modal);
  lv_area_t kb,ta,dialog;lv_obj_get_coords(password_kb,&kb);lv_obj_get_coords(password_ta,&ta);
  lv_obj_get_coords(lv_obj_get_parent(password_kb),&dialog);
- assert(kb.y1>ta.y2 && kb.y2<dialog.y2 && kb.y2<768 && kb.y2-kb.y1>=240);
+ assert(kb.y1>ta.y2 && kb.y2<dialog.y2 && kb.y2<review_height && kb.y2-kb.y1>=240);
  const char *letters="abcdefghijklmnopqrstuvwxyz";
  const char *const *map=lv_keyboard_get_map_array(password_kb);
  for(const char *c=letters;*c;c++) {bool found=false;for(int i=0;map[i][0];i++)if(map[i][0]==*c && map[i][1]==0)found=true;assert(found);}
@@ -226,30 +227,60 @@ static void test_home_navigation(void) {
  lv_obj_t *home=lv_screen_active();
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
  lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
- tap_screen(pointer,512,720);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
+ tap_screen(pointer,review_width/2,review_height-48);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
  lv_obj_t *setting=find_label(home,ui_tr(UI_STR_APP_SETTINGS));assert(setting);
+ lv_obj_scroll_to_view_recursive(setting,LV_ANIM_OFF);pump();
  lv_area_t pos;lv_obj_get_coords(setting,&pos);tap_screen(pointer,(pos.x1+pos.x2)/2,(pos.y1+pos.y2)/2);
  assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_APP_SETTINGS)));
  app_manager_back_home();lv_tick_inc(500);pump();pump();
- tap_screen(pointer,512,720);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
- tap_screen(pointer,100,160);pump();assert(!ui_all_apps_is_visible());
- tap_screen(pointer,512,32);
+ tap_screen(pointer,review_width/2,review_height-48);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
+ tap_screen(pointer,100,20);pump();assert(!ui_all_apps_is_visible());
+ tap_screen(pointer,review_width/2,review_width<1000?84:32);
  lv_obj_t *center=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));
  assert(center && lv_obj_is_visible(center));
- tap_screen(pointer,512,650);
+ tap_screen(pointer,review_width/2,review_height-16);
  lv_indev_delete(pointer);
  puts("PASS real Home pointer navigation: Settings, Apps, top-bar Control Center reach their own targets");
 }
 
+/* Scroll each primary action into view and verify actual hit testing at every
+ * rendered size. This is host geometry evidence, never display qualification. */
+static void test_responsive_home(void) {
+ lv_obj_t *home=lv_screen_active();
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
+ lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ lv_obj_t *brand=find_label(home,"Mimi");assert(brand);pump();assert(lv_obj_get_height(brand)<=62);
+ const ui_string_id_t actions[]={UI_STR_HOME_TALK_MIMI,UI_STR_HOME_OPEN_KVM};
+ for(int i=0;i<2;i++) {
+  lv_obj_t *label=find_label(home,ui_tr(actions[i]));assert(label);
+  lv_obj_t *button=lv_obj_get_parent(label);
+  lv_obj_scroll_to_view_recursive(button,LV_ANIM_OFF);pump();
+  lv_area_t b,t;lv_obj_get_coords(button,&b);lv_obj_get_coords(label,&t);
+  assert(b.x1>=0 && b.x2<review_width && b.y1>=HOME_STATUS_H && b.y2<review_height-78);
+  assert(t.x1>=b.x1 && t.x2<=b.x2 && t.y1>=b.y1 && t.y2<=b.y2);
+  tap_screen(pointer,(b.x1+b.x2)/2,(b.y1+b.y2)/2);
+  assert(lv_screen_active()!=home);
+  app_manager_back_home();lv_tick_inc(500);pump();pump();
+ }
+ lv_obj_t *first=find_label(home,ui_tr(UI_STR_HOME_AI_ASSISTANT));assert(first);
+ lv_obj_scroll_to_view_recursive(first,LV_ANIM_OFF);pump();
+ lv_indev_delete(pointer);
+ puts("PASS responsive Home: primary actions visible after scrolling and pointer navigation succeeds");
+}
+
 int main(int argc,char**argv) {
- assert(argc==5);lv_init();
+ assert(argc==5 || argc==7);
+ if(argc==7){review_width=atoi(argv[5]);review_height=atoi(argv[6]);}
+ assert(review_width>=480 && review_width<=1920 && review_height>=480 && review_height<=1920);
+ pixels=calloc((size_t)review_width*review_height,4);assert(pixels);lv_init();
  settings.locale_mode=strcmp(argv[2],"zh")==0?SYS_LOCALE_ZH_CN:SYS_LOCALE_EN_US;
  settings.appearance_mode=strcmp(argv[3],"light")==0?SYS_APPEARANCE_LIGHT:SYS_APPEARANCE_DARK;
- lv_display_t*d=lv_display_create(1024,768);lv_display_set_color_format(d,LV_COLOR_FORMAT_XRGB8888);
- static uint8_t buf[1024*100*4];lv_display_set_buffers(d,buf,NULL,sizeof(buf),LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,flush);
+ lv_display_t*d=lv_display_create(review_width,review_height);lv_display_set_color_format(d,LV_COLOR_FORMAT_XRGB8888);
+ static uint8_t buf[1920*100*4];lv_display_set_buffers(d,buf,NULL,sizeof(buf),LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,flush);
  ui_init();
 #ifdef REVIEW_REAL_APP_MANAGER
  test_home_navigation();
+ test_responsive_home();
  test_launcher_rounds();
  lv_obj_t *home=lv_screen_active();
  assert(!ui_lockscreen_show());
@@ -269,7 +300,7 @@ int main(int argc,char**argv) {
  else if(strcmp(argv[1],"control-center")==0){
   lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
-  tap_screen(pointer,512,32);lv_indev_delete(pointer);
+  tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_indev_delete(pointer);
   lv_obj_t *title=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));assert(title && lv_obj_is_visible(title));
  }
  else if(strcmp(argv[1],"desktop-update")==0){
@@ -421,7 +452,7 @@ int main(int argc,char**argv) {
   lv_obj_t *modal=lv_obj_get_parent(dialog);
   lv_obj_t *keyboard=lv_obj_get_child(modal,-1);assert(lv_obj_check_type(keyboard,&lv_keyboard_class));
   lv_area_t da,ka;lv_obj_get_coords(dialog,&da);lv_obj_get_coords(keyboard,&ka);
-  assert(da.y1>=12 && da.y2<ka.y1 && ka.y2<768);
+  assert(da.y1>=12 && da.y2<ka.y1 && ka.y2<review_height);
   assert(lv_obj_get_height(lv_obj_get_parent(cancel))>=48);
   lv_font_glyph_dsc_t glyph;
   const lv_font_t *key_font=lv_obj_get_style_text_font(keyboard,LV_PART_ITEMS);

@@ -1,4 +1,5 @@
 #include "desktop_all_apps.h"
+#include "desktop_home_tokens.h"
 #include "ui_fonts.h"
 #include "ui_i18n.h"
 #include "theme/theme.h"
@@ -28,6 +29,7 @@ static int32_t all_apps_focus_index;
 static lv_obj_t *all_apps_cards[APP_ID_MAX];
 static uint32_t all_apps_count;
 static int32_t all_apps_columns = ALL_APPS_COLUMN_COUNT;
+static int32_t all_apps_rows = 2;
 static int32_t all_apps_card_width = ALL_APPS_CARD_WIDTH;
 static int32_t all_apps_card_height = ALL_APPS_CARD_HEIGHT;
 static lv_obj_t *return_focus;
@@ -260,7 +262,7 @@ void ui_all_apps_create(lv_obj_t *parent)
 
     drawer_sheet = lv_obj_create(all_apps_overlay);
     mimi_ui_clear(drawer_sheet);
-    lv_obj_set_size(drawer_sheet, lv_pct(100), lv_pct(72));
+    lv_obj_set_size(drawer_sheet, lv_pct(100), lv_pct(HOME_SCREEN_H < 600 ? 88 : 72));
     lv_obj_align(drawer_sheet, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_style_bg_color(drawer_sheet, mimi_ui_color(MIMI_BG), 0);
     lv_obj_set_style_bg_opa(drawer_sheet, LV_OPA_COVER, 0);
@@ -283,13 +285,16 @@ void ui_all_apps_create(lv_obj_t *parent)
     lv_obj_t *title = mimi_ui_text(drawer_sheet, ui_tr(UI_STR_ALL_APPS), ui_font_h2(), MIMI_TEXT);
     lv_obj_set_pos(title, 24, 56);
     lv_obj_t *hint = mimi_ui_text(drawer_sheet, ui_i18n_is_zh() ? "左右滑动 · 下滑收起" : "Swipe sideways · pull handle down to close", ui_font_body_md(), MIMI_MUTED);
+    lv_obj_set_width(hint, lv_pct(95));
+    lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -14);
     lv_obj_update_layout(drawer_sheet);
     int32_t width = lv_obj_get_width(drawer_sheet) - 48;
     int32_t height = lv_obj_get_height(drawer_sheet) - 148;
     all_apps_columns = width >= 800 ? 4 : width >= 580 ? 3 : 2;
     all_apps_card_width = (width - (all_apps_columns - 1) * 12) / all_apps_columns;
-    all_apps_card_height = (height - 12) / 2;
+    all_apps_rows = height >= 370 ? 2 : 1;
+    all_apps_card_height = (height - (all_apps_rows - 1) * 12) / all_apps_rows;
     all_apps_grid = lv_obj_create(drawer_sheet);
     mimi_ui_clear(all_apps_grid);
     lv_obj_set_size(all_apps_grid, width, height);
@@ -306,7 +311,7 @@ void ui_all_apps_create(lv_obj_t *parent)
     for (size_t i = 0; i < count && all_apps_count < APP_ID_MAX; ++i) {
         const app_registry_entry_t *entry = i + 1 == count ? &desktop_update_entry : app_registry_get_launcher_entry(i);
         if (!entry) continue;
-        if (all_apps_count % (all_apps_columns * 2) == 0) {
+        if (all_apps_count % (all_apps_columns * all_apps_rows) == 0) {
             page = lv_obj_create(all_apps_grid);
             mimi_ui_clear(page);
             lv_obj_set_size(page, width, height);

@@ -15,12 +15,12 @@ LV_IMAGE_DECLARE(wireless_network_wifi);
 LV_IMAGE_DECLARE(cloud);
 
 /* 顶栏布局尺寸 */
-#define HDMI_MODE_ROW_WIDTH 252
+#define HDMI_MODE_ROW_WIDTH (HOME_SCREEN_W >= 1000 ? 252 : 200)
 #define HDMI_MODE_ROW_HEIGHT 36
-#define HDMI_MODE_LABEL_WIDTH 178
-#define TOP_STATUS_GROUP_WIDTH 232
+#define HDMI_MODE_LABEL_WIDTH (HOME_SCREEN_W >= 1000 ? 178 : 128)
+#define TOP_STATUS_GROUP_WIDTH (HOME_SCREEN_W >= 1000 ? 232 : 210)
 #define TOP_POWER_LABEL_WIDTH 300
-#define CONTROL_CENTER_WIDTH 976
+#define CONTROL_CENTER_WIDTH (HOME_SCREEN_W - 48)
 #define CONTROL_CENTER_HEIGHT 344
 #define CONTROL_CENTER_CARD_WIDTH 216
 #define CONTROL_CENTER_CARD_HEIGHT 184
@@ -250,7 +250,7 @@ static void control_center_build(void)
 
     control_center_power_detail = lv_label_create(control_center_panel);
     lv_label_set_text(control_center_power_detail, "--.-V ---mA --.-W");
-    lv_obj_align(control_center_power_detail, LV_ALIGN_TOP_RIGHT, -4, 6);
+    lv_obj_align(control_center_power_detail, HOME_SCREEN_W < 700 ? LV_ALIGN_TOP_LEFT : LV_ALIGN_TOP_RIGHT, HOME_SCREEN_W < 700 ? 4 : -4, HOME_SCREEN_W < 700 ? 44 : 6);
     lv_obj_set_style_text_font(control_center_power_detail, ui_font_body_lg(), 0);
     lv_obj_set_style_text_color(control_center_power_detail, lv_color_hex(0xD8DEEA), 0);
 
@@ -261,9 +261,11 @@ static void control_center_build(void)
     lv_obj_set_style_border_width(cards, 0, 0);
     lv_obj_set_style_pad_all(cards, 0, 0);
     lv_obj_set_style_pad_column(cards, 20, 0);
-    lv_obj_clear_flag(cards, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(cards, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(cards, LV_DIR_HOR);
+    lv_obj_set_scrollbar_mode(cards, LV_SCROLLBAR_MODE_AUTO);
     lv_obj_set_flex_flow(cards, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(cards, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
+    lv_obj_set_flex_align(cards, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
                           LV_FLEX_ALIGN_CENTER);
 
     control_center_wifi_detail =
@@ -386,7 +388,7 @@ static void control_center_trigger_event(lv_event_t *event)
 void ui_statusbar_create(lv_obj_t *parent)
 {
     lv_obj_t *bar = lv_obj_create(parent);
-    lv_obj_set_size(bar, 1024, HOME_STATUS_H);
+    lv_obj_set_size(bar, HOME_SCREEN_W, HOME_STATUS_H);
     lv_obj_set_pos(bar, 0, 0);
     lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_radius(bar, 0, 0);
@@ -412,7 +414,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     apply_debug_outline(bar, lv_color_hex(0xE63946));
 
     lv_obj_t *top_row = lv_obj_create(bar);
-    lv_obj_set_size(top_row, lv_pct(100), 62);
+    lv_obj_set_size(top_row, lv_pct(100), HOME_STATUS_H - 6);
     lv_obj_set_style_bg_opa(top_row, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(top_row, 0, 0);
     lv_obj_set_style_pad_all(top_row, 0, 0);
@@ -422,8 +424,8 @@ void ui_statusbar_create(lv_obj_t *parent)
     apply_debug_outline(top_row, lv_color_hex(0xFF7F11));
 
     lv_obj_t *left_status_group = lv_obj_create(top_row);
-    lv_obj_set_size(left_status_group, TOP_STATUS_GROUP_WIDTH, lv_pct(100));
-    lv_obj_align(left_status_group, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_set_size(left_status_group, TOP_STATUS_GROUP_WIDTH, 62);
+    lv_obj_align(left_status_group, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_bg_opa(left_status_group, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(left_status_group, 0, 0);
     lv_obj_set_style_pad_all(left_status_group, 0, 0);
@@ -438,7 +440,7 @@ void ui_statusbar_create(lv_obj_t *parent)
 
     lv_obj_t *brand = lv_label_create(left_status_group);
     lv_label_set_text(brand, "Mimi");
-    lv_obj_set_width(brand, 104);
+    lv_obj_set_width(brand, HOME_SCREEN_W >= 1000 ? 104 : 84);
     lv_obj_set_style_text_font(brand, ui_font_h1(), 0);
     lv_obj_set_style_text_color(brand, HOME_TEXT, 0);
     lv_obj_set_style_text_align(brand, LV_TEXT_ALIGN_LEFT, 0);
@@ -525,6 +527,10 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_t *mid_col = lv_obj_create(top_row);
     lv_obj_set_size(mid_col, TOP_POWER_LABEL_WIDTH, lv_pct(100));
     lv_obj_align(mid_col, LV_ALIGN_CENTER, 0, 0);
+    if (HOME_SCREEN_W < 1000) {
+        lv_obj_set_size(mid_col, lv_pct(100), 44);
+        lv_obj_align(mid_col, LV_ALIGN_BOTTOM_MID, 0, 0);
+    }
     lv_obj_set_style_bg_opa(mid_col, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(mid_col, 0, 0);
     lv_obj_set_style_pad_all(mid_col, 0, 0);
@@ -569,8 +575,8 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_clear_flag(pull_handle, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *right_col = lv_obj_create(top_row);
-    lv_obj_set_size(right_col, HDMI_MODE_ROW_WIDTH + 12, lv_pct(100));
-    lv_obj_align(right_col, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_set_size(right_col, HDMI_MODE_ROW_WIDTH + 12, 62);
+    lv_obj_align(right_col, LV_ALIGN_TOP_RIGHT, 0, 0);
     lv_obj_set_style_bg_opa(right_col, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(right_col, 0, 0);
     lv_obj_set_style_pad_all(right_col, 0, 0);
@@ -603,7 +609,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     apply_debug_outline(hdmi_row, lv_color_hex(0x3A86FF));
 
     lv_obj_t *hdmi_label = lv_label_create(hdmi_row);
-    lv_label_set_text(hdmi_label, ui_tr(UI_STR_DISPLAY_MODE));
+    lv_label_set_text(hdmi_label, HOME_SCREEN_W >= 1000 ? ui_tr(UI_STR_DISPLAY_MODE) : "HDMI");
     lv_label_set_long_mode(hdmi_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_width(hdmi_label, HDMI_MODE_LABEL_WIDTH);
     lv_obj_set_style_min_width(hdmi_label, HDMI_MODE_LABEL_WIDTH, 0);

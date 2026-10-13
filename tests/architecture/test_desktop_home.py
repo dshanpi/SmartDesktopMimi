@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Source contracts for the 1024x768 Mimi home desktop."""
+"""Source contracts for the adaptive Mimi home desktop."""
 
 from pathlib import Path
 import re
@@ -8,13 +8,6 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[2]
 UI = REPO / "apps/lv_port_linux/src/ui"
-
-
-def macro_value(source: str, name: str) -> int:
-    match = re.search(rf"^#define\s+{name}\s+(\d+)\s*$", source, re.MULTILINE)
-    if not match:
-        raise AssertionError(f"missing numeric macro {name}")
-    return int(match.group(1))
 
 
 class DesktopHomeContractTests(unittest.TestCase):
@@ -36,20 +29,8 @@ class DesktopHomeContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         cls.i18n = (UI / "ui_i18n.c").read_text(encoding="utf-8")
 
-    def test_vertical_layout_exactly_fits_the_panel(self):
-        screen_h = macro_value(self.tokens, "HOME_SCREEN_H")
-        status_h = macro_value(self.tokens, "HOME_STATUS_H")
-        dashboard_h = macro_value(self.tokens, "HOME_DASHBOARD_H")
-        dock_h = macro_value(self.tokens, "HOME_DOCK_H")
-        gap = macro_value(self.tokens, "HOME_GAP")
-        dashboard_y = macro_value(self.tokens, "HOME_DASHBOARD_Y")
-        dock_y = macro_value(self.tokens, "HOME_DOCK_Y")
-        content_x = macro_value(self.tokens, "HOME_CONTENT_X")
-        content_w = macro_value(self.tokens, "HOME_CONTENT_W")
-        self.assertGreaterEqual(dashboard_y - status_h, gap)
-        self.assertGreaterEqual(dock_y - (dashboard_y + dashboard_h), gap)
-        self.assertLessEqual(dock_y + dock_h, screen_h)
-        self.assertLessEqual(content_x + content_w, macro_value(self.tokens, "HOME_SCREEN_W"))
+    # Geometry is exercised by native_ui_review.c against real LVGL at each
+    # requested size, including scroll-to-view and pointer hit testing.
 
     def test_primary_cards_route_to_real_applications(self):
         self.assertIn("app_manager_open(APP_ID_AI)", self.dashboard)
