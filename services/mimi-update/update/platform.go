@@ -57,10 +57,17 @@ func readHealth() (UIHealth, error) {
 	if e != nil {
 		return h, e
 	}
+	return h, validateUIHealth(h, now)
+}
+
+func validateUIHealth(h UIHealth, now uint64) error {
 	if h.PID <= 1 || h.Tick == 0 || h.Backend == 0 || h.Tick > now || h.Backend > now || now-h.Tick > 4000 || now-h.Backend > 5000 {
-		return h, fmt.Errorf("desktop/backend readiness is stale")
+		return fmt.Errorf("desktop/backend readiness is stale")
 	}
-	return h, nil
+	if !h.Ready {
+		return fmt.Errorf("desktop activity status is incomplete")
+	}
+	return nil
 }
 func platformIdentity(c Config) error {
 	if e := trustedFile(c.DeviceFile); e != nil {
