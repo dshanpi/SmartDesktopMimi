@@ -109,6 +109,8 @@ def main():
         screens=os.environ.get('MIMI_DISPLAY_PROFILES','1024x768')
         if not re.fullmatch(r'[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3}){0,15}',screens):
             p.error('invalid build-time display profile list')
+        voice=os.environ.get('MIMI_ENABLE_VOICE_CONTROL','OFF')
+        if voice not in ('ON','OFF'):p.error('voice option must be ON or OFF')
         cache=a.build_dir/'CMakeCache.txt'
         if cache.exists() and ('MIMI_SDK_ROOT:PATH='+str(sdk)) not in cache.read_text():
             p.error('build directory belongs to a different SDK; select a fresh --build-dir')
@@ -117,7 +119,7 @@ def main():
         subprocess.run(['cmake','-S',str(ROOT/'apps/lv_port_linux'),'-B',str(a.build_dir),
                         '-DCMAKE_TOOLCHAIN_FILE='+str(ROOT/'cmake/application-sdk.cmake'),
                         '-DAITVBOX_ENABLE_100ASK_CLOUD=OFF','-DAITVBOX_PLATFORM=a133',
-                        '-DMIMI_APPLICATION_ONLY=ON','-DMIMI_DISPLAY_PROFILES='+screens],env=env,check=True)
+                        '-DMIMI_APPLICATION_ONLY=ON','-DMIMI_DISPLAY_PROFILES='+screens,'-DMIMI_ENABLE_VOICE_CONTROL='+voice],env=env,check=True)
         subprocess.run(['cmake','--build',str(a.build_dir),'--target','lvglsim','-j4'],env=env,check=True)
         verify_sdk(sdk,a.expected_sdk_sha256)
         receipt=create_receipt(ROOT,record,a.expected_sdk_sha256,a.build_dir,before_source,before_contract)

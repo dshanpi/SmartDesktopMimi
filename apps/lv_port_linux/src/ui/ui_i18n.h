@@ -198,6 +198,7 @@ typedef enum {
     UI_STR_LOCKSCREEN_WAKE,
     UI_STR_APP_PAIRING,
     UI_STR_APP_IOT,
+    UI_STR_APP_VOICE,
     UI_STR_COUNT
 } ui_string_id_t;
 

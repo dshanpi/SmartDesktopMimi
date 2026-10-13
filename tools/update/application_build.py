@@ -69,6 +69,8 @@ def create_receipt(root, sdk, sdk_hash, build_dir, before_source, before_contrac
     cache=(build_dir/'CMakeCache.txt').read_text()
     display=re.search(r'^MIMI_DISPLAY_PROFILES:STRING=(.+)$',cache,re.MULTILINE)
     record['build']['display_profiles']=display.group(1).split(',') if display else ['1024x768']
+    voice=re.search(r'^MIMI_ENABLE_VOICE_CONTROL:BOOL=(ON|OFF)$',cache,re.MULTILINE)
+    record['build']['voice_control']=bool(voice and voice.group(1)=='ON')
     destination=build_dir/'application-build.json'
     temporary=build_dir/'.application-build.json.tmp'
     temporary.write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')

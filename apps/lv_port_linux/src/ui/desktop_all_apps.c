@@ -58,6 +58,7 @@ static lv_obj_t *create_generated_icon(lv_obj_t *parent,
     const char *symbol_text = LV_SYMBOL_DIRECTORY;
     switch (entry->id) {
     case APP_ID_IOT: symbol_text = LV_SYMBOL_HOME; break;
+    case APP_ID_VOICE: symbol_text = LV_SYMBOL_AUDIO; break;
     case APP_ID_AI: symbol_text = LV_SYMBOL_AUDIO; break;
     case APP_ID_BT: symbol_text = LV_SYMBOL_BLUETOOTH; break;
     case APP_ID_WIFI: symbol_text = LV_SYMBOL_WIFI; break;

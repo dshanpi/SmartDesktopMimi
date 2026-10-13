@@ -49,9 +49,10 @@ def main():
         sources = [ROOT / 'tests/architecture/fixtures/native_ui_review.c',
                    APP / 'src/apps/setting/setting_app.c', APP / 'src/system/app_registry.c']
         sources.extend(APP / f'src/apps/{name}/{name}_app.c'
-                       for name in ['bt', 'video', 'ota', 'user', 'hdmi_mcp', 'ai', 'pairing', 'iot'])
+                       for name in ['bt', 'video', 'ota', 'user', 'hdmi_mcp', 'ai', 'pairing', 'iot', 'voice'])
         sources.append(APP / 'src/apps/ai/ai_free_chat_view.c')
         sources.append(APP / 'src/apps/iot/iot_client.c')
+        sources.append(APP / 'src/apps/voice/voice_command.c')
         for directory in ['src/ui', 'src/ui/theme', 'src/ui/font', 'src/ui/images']:
             sources.extend(p for p in sorted((APP / directory).glob('*.c')) if p.name not in ('lockscreen.c', 'lockscreen_3d.c'))
 
@@ -67,7 +68,7 @@ def main():
                     for p in dependencies)):
                 run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
                      f'-DLV_CONF_PATH="{config_path}"', f'-I{APP}', f'-I{APP / "lvgl"}',
-                     '-MMD', '-MF', dep, '-c', source, '-o', obj], log)
+                     '-DMIMI_ENABLE_VOICE_CONTROL=1', '-MMD', '-MF', dep, '-c', source, '-o', obj], log)
             return obj
 
         with ThreadPoolExecutor(max_workers=4) as pool:
@@ -76,7 +77,7 @@ def main():
              build / 'lvgl/lib/liblvgl.a', '-lm', '-lpthread', '-ljson-c', '-lcurl', '-o', build / 'review'], log)
         manager_fixture = build / 'review_manager_fixture.o'
         run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
-             '-DREVIEW_REAL_APP_MANAGER', f'-DLV_CONF_PATH="{config_path}"',
+             '-DREVIEW_REAL_APP_MANAGER', '-DMIMI_ENABLE_VOICE_CONTROL=1', f'-DLV_CONF_PATH="{config_path}"',
              f'-I{APP}', f'-I{APP / "lvgl"}', '-c', sources[0], '-o', manager_fixture], log)
         manager = compile_one(APP / 'src/system/app_manager.c')
         run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', manager_fixture,

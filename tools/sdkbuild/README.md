@@ -18,7 +18,8 @@ list cannot report healthy startup.
 Current qualified compiler adapter: A133 Tina aarch64. T527/RK3576 remain
 unavailable. Tina SDK input is rejected for Debian/Ubuntu packaging. A Debian
 SDK/toolchain and actual target OS must be qualified before .deb delivery;
-that packaging adapter is not implemented yet. Enabling voice_control also
-fails closed until the independent speech provider is integrated. Selecting a
+that packaging adapter is not implemented yet. The voice_control flag includes
+the optional navigation app and is recorded in its receipt. Runtime voice is
+off by default; cloud ASR requires the existing bound Tuya service. Selecting a
 resolution is not layout or hardware acceptance: only 1024x768 has current
 A133 evidence; further responsive layouts and physical matrices remain open.

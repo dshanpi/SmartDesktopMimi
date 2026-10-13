@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 project(lvgl)
 
+option(MIMI_ENABLE_VOICE_CONTROL "Build the optional voice navigation app" OFF)
 option(MIMI_APPLICATION_ONLY "Configure only the independently released desktop" OFF)
 
 option(LV_USE_SUNXI_G2D "Allwinner sunxi-g2d draw unit (FILL acceleration, RGB565)" OFF)
@@ -729,6 +730,7 @@ set(MIMI_DISPLAY_PROFILES "1024x768" CACHE STRING "Compiled screen geometries, s
 if(NOT MIMI_DISPLAY_PROFILES MATCHES "^[0-9]+x[0-9]+(,[0-9]+x[0-9]+)*$")
     message(FATAL_ERROR "Invalid MIMI_DISPLAY_PROFILES")
 endif()
+target_compile_definitions(lvglsim PRIVATE MIMI_ENABLE_VOICE_CONTROL=$<BOOL:${MIMI_ENABLE_VOICE_CONTROL}>)
 target_compile_definitions(lvglsim PRIVATE MIMI_DISPLAY_PROFILES="${MIMI_DISPLAY_PROFILES}")
 
 # Repeat lvgl_linux to resolve circular dependency with lvgl

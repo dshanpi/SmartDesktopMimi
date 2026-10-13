@@ -134,9 +134,8 @@ def main():
         profile=validate(json.loads(a.profile.read_text()))
         print(json.dumps(check_sdk(profile,a.sdk),ensure_ascii=False))
         if a.command=='build':
-            if profile['voice_control']:raise ValueError('Voice build option requires the independent STT provider integration')
             if profile['target_os']!='tina':raise ValueError('Debian SDK build adapter still requires platform qualification')
-            env={**os.environ,'MIMI_DISPLAY_PROFILES':','.join(f"{s['width']}x{s['height']}" for s in profile['screens'])}
+            env={**os.environ,'MIMI_ENABLE_VOICE_CONTROL':'ON' if profile['voice_control'] else 'OFF','MIMI_DISPLAY_PROFILES':','.join(f"{s['width']}x{s['height']}" for s in profile['screens'])}
             subprocess.run([sys.executable,str(ROOT/'tools/update/build_application.py'),'--sdk-root',str(a.sdk.resolve().parent),'--sdk-id',a.sdk.resolve().name,'--expected-sdk-sha256',profile['sdk_lock_sha256'],'--output',str(a.output.resolve())],env=env,check=True)
             (a.output/'build-profile.json').write_text(json.dumps(profile,sort_keys=True,indent=2)+'\n')
     except (ValueError,OSError,subprocess.SubprocessError,KeyError,TypeError) as e:p.exit(1,'BUILD CONFIGURATION BLOCKED: '+str(e)+'\n')

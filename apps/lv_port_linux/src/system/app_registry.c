@@ -1,4 +1,5 @@
 #include "app_registry.h"
+#include "../apps/voice/voice_app.h"
 #include "../apps/iot/iot_app.h"
 #include "../apps/pairing/pairing_app.h"
 #include "../ui/ui_i18n.h"
@@ -18,6 +19,11 @@ LV_IMAGE_DECLARE(aibot_app);
 LV_IMAGE_DECLARE(bt_speaker);
 
 static const app_registry_entry_t app_registry[] = {
+#if MIMI_ENABLE_VOICE_CONTROL
+    { .id=APP_ID_VOICE, .name="Voice actions", .name_id=UI_STR_APP_VOICE,
+      .icon_type=APP_ICON_GENERATED, .accent_color=0x626DAA,
+      .show_in_launcher=true, .descriptor=&app_voice },
+#endif
     { .id=APP_ID_IOT, .name="Tuya Smart Home", .name_id=UI_STR_APP_IOT,
       .icon_type=APP_ICON_GENERATED, .accent_color=0xF2A647,
       .show_in_launcher=true, .descriptor=&app_iot },

@@ -10,6 +10,7 @@
 #include "src/ui/desktop_all_apps.h"
 #include "src/apps/pairing/pairing_app.h"
 #include "src/apps/iot/iot_app.h"
+#include "src/apps/voice/voice_app.h"
 #include "src/ui/desktop_home_tokens.h"
 #include "src/ui/desktop_status_bar.h"
 #include "src/ui/desktop_clock.h"
@@ -188,6 +189,7 @@ static void test_password(void) {
 }
 #include "native_lockscreen_checks.h"
 
+static lv_obj_t* find_textarea(lv_obj_t*root){if(lv_obj_check_type(root,&lv_textarea_class))return root;for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t*v=find_textarea(lv_obj_get_child(root,i));if(v)return v;}return NULL;}
 static void tap_screen(lv_indev_t *pointer, int x, int y) {
  touch_x=x;touch_y=y;lv_obj_update_layout(lv_screen_active());
  touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
@@ -353,6 +355,20 @@ int main(int argc,char**argv) {
   if(!strcmp(argv[1],"ota-error")){status.state=OTA_STATE_ERROR;status.error_code=11;}
   if(!strcmp(argv[1],"ota-downloading")){status.state=OTA_STATE_DOWNLOADING;status.progress=47;}
   emit(TOPIC_OTA_STATUS,&status,sizeof(status));
+ }else if(strcmp(argv[1],"voice")==0){
+  app_voice.init();pump();lv_obj_t*entry=find_textarea(lv_scr_act());assert(entry);
+  ai_text_t text={0};strcpy(text.text,"You: 打开设置");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
+  ai_status_t state={.state=AI_STATE_IDLE,.tuya_bound=true,.control_center_running=true};emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  lv_obj_t*l=find_label(lv_scr_act(),ui_i18n_is_zh()?"启用本次语音控制":"Enable voice for this session");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);lv_tick_inc(250);pump();
+  l=find_label(lv_scr_act(),ui_i18n_is_zh()?"开始识别":"Start recognition");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+  state.state=AI_STATE_LISTENING;state.free_chat_active=true;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  strcpy(text.text,"Assistant: 打开设置");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
+  strcpy(text.text,"You: 打开设置");int before=app_open_count;emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();assert(!strcmp(lv_textarea_get_text(entry),"打开设置"));assert(app_open_count==before);
+  l=find_label(lv_scr_act(),ui_i18n_is_zh()?"确认执行":"Confirm action");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);assert(app_open_count==before+1);
+  lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);assert(app_open_count==before+1);
+  lv_textarea_set_text(entry,"open settings");l=find_label(lv_scr_act(),ui_i18n_is_zh()?"预览文字指令":"Preview command");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);lv_tick_inc(31000);pump();
+  l=find_label(lv_scr_act(),ui_i18n_is_zh()?"确认执行":"Confirm action");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);assert(app_open_count==before+1);
+  puts("PASS voice host fixture: disabled ignores transcripts, assistant text ignored, confirmation required and single-use, stale action rejected");
  }else if(strncmp(argv[1],"iot",3)==0){
   review_iot_connected=strcmp(argv[1],"iot")!=0;
   app_iot.init();for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
