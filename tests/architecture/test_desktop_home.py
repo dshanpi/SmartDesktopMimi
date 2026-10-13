@@ -55,7 +55,8 @@ class DesktopHomeContractTests(unittest.TestCase):
         self.assertIn("app_manager_open(APP_ID_AI)", self.dashboard)
         self.assertIn("app_manager_open(APP_ID_HDMI_MCP)", self.dashboard)
         self.assertIn("app_manager_open(APP_ID_WIFI)", self.dashboard)
-        self.assertIn("app_manager_open(APP_ID_OTA)", self.dashboard)
+        self.assertIn("desktop_update_show()", self.dashboard)
+        self.assertNotIn("app_manager_open(APP_ID_OTA)", self.dashboard)
         self.assertIn("app_manager_open(APP_ID_SETTING)", self.dashboard)
         self.assertIn("ui_all_apps_show()", self.dashboard)
 
