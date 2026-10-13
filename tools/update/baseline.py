@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import posixpath
+import re
 from pathlib import Path
 import shutil
 import struct
@@ -45,7 +46,37 @@ def verify(directory):
     return seal
 
 
-def verify_rootfs(directory, rootfs):
+def verify_image_owners(image, paths):
+    """Inspect original filesystem metadata; extraction may lose ownership."""
+    kind=subprocess.check_output(['blkid','-p','-s','TYPE','-o','value',str(image)],text=True).strip()
+    protected={'.'}
+    for name in paths:
+        protected.add(name)
+        protected.update(str(parent) for parent in Path(name).parents)
+    owners={}
+    if kind=='squashfs':
+        listing=subprocess.check_output(['unsquashfs','-lln',str(image)],text=True)
+        for line in listing.splitlines():
+            fields=line.split(None,5)
+            if len(fields)!=6 or not re.fullmatch(r'\d+/\d+',fields[1]):continue
+            name=fields[5].split(' -> ',1)[0]
+            if name=='squashfs-root':name='.'
+            elif name.startswith('squashfs-root/'):name=name[len('squashfs-root/'):]
+            else:continue
+            owners[name]=tuple(int(value) for value in fields[1].split('/'))
+    elif kind in ('ext2','ext3','ext4'):
+        for name in sorted(protected):
+            if any(ord(c)<32 or c in '\\"' for c in name):raise ValueError('unsupported filesystem metadata path')
+            path='/' if name=='.' else '/'+name
+            result=subprocess.check_output(['debugfs','-R','stat "'+path+'"',str(image)],text=True,stderr=subprocess.DEVNULL)
+            match=re.search(r'User:\s*(\d+)\s+Group:\s*(\d+)',result)
+            if match:owners[name]=tuple(int(value) for value in match.groups())
+    else:raise ValueError('unsupported final filesystem: '+kind)
+    for name in sorted(protected):
+        if owners.get(name)!=(0,0):raise ValueError('final image protected path is not root-owned: '+name)
+
+
+def verify_rootfs(directory, rootfs, image=None):
     """Compare the final filesystem with the prepared, verified factory input.
 
     This is a packaging readback, not a replacement for signature verification
@@ -94,6 +125,9 @@ def verify_rootfs(directory, rootfs):
             raise ValueError('final rootfs stale service ordering: '+path.name)
     if (rootfs/'overlay/smartdesktopmimi-platform/enrollment.json').exists():
         raise ValueError('unit-specific enrollment must not be baked into final rootfs')
+    if image is not None:
+        verify_image_owners(image,list(seal['files'])+['etc/init.d/aitvbox','usr/bin/aitvbox-start-ui']+
+                            ['etc/rc.d/'+name for name in links])
     return seal
 
 def prepare(args):
@@ -144,6 +178,7 @@ def main():
     parser.add_argument('operation',choices=['prepare','verify','verify-rootfs'])
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--rootfs',type=Path,help='extracted final filesystem, read-only verification')
+    parser.add_argument('--image',type=Path,help='original ext4/SquashFS image for owner verification')
     for name in ['device','trust','application','updater','checker']:parser.add_argument('--'+name,type=Path)
     parser.add_argument('--system-device',type=Path,help='controlled A133 system descriptor with measured partition geometry')
     args=parser.parse_args();args.output=args.output.resolve()
@@ -152,9 +187,9 @@ def main():
             value=getattr(args,name)
             if value is None:parser.error('prepare requires --'+name)
             setattr(args,name,value.resolve())
-    if args.operation=='verify-rootfs' and args.rootfs is None:parser.error('verify-rootfs requires --rootfs')
+    if args.operation=='verify-rootfs' and (args.rootfs is None or args.image is None):parser.error('verify-rootfs requires --rootfs and --image')
     try:
-        result=prepare(args) if args.operation=='prepare' else verify_rootfs(args.output,args.rootfs) if args.operation=='verify-rootfs' else verify(args.output)
+        result=prepare(args) if args.operation=='prepare' else verify_rootfs(args.output,args.rootfs,args.image) if args.operation=='verify-rootfs' else verify(args.output)
     except (ValueError,KeyError,OSError,subprocess.CalledProcessError) as error:parser.exit(1,'BASELINE BLOCKED: '+str(error)+'\n')
     print('PASS signed factory baseline '+result['factory_version']+'; physical enrollment and acceptance still required')
 if __name__=='__main__':main()

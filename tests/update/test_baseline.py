@@ -93,13 +93,20 @@ class BaselineSealTests(unittest.TestCase):
                 image=self.path/(kind+'.img');extracted=self.path/('readback-'+kind)
                 if kind=='ext4':
                     with image.open('wb') as stream:stream.truncate(8*1024*1024)
-                    subprocess.run(['mkfs.ext4','-F','-q','-d',str(final),str(image)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                    subprocess.run(['fakeroot','mkfs.ext4','-F','-q','-d',str(final),str(image)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                     extracted.mkdir()
                     subprocess.run(['debugfs','-R','rdump / '+str(extracted),str(image)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                 else:
-                    subprocess.run(['mksquashfs',str(final),str(image),'-noappend','-no-progress','-processors','1'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                    subprocess.run(['mksquashfs',str(final),str(image),'-all-root','-noappend','-no-progress','-processors','1'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                     subprocess.run(['unsquashfs','-no-progress','-d',str(extracted),str(image)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-                baseline.verify_rootfs(self.path,extracted)
+                baseline.verify_rootfs(self.path,extracted,image)
+                if kind=='ext4':
+                    subprocess.run(['debugfs','-w','-R','set_inode_field /etc/smartdesktopmimi uid 1000',str(image)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                    with self.assertRaisesRegex(ValueError,'not root-owned'):baseline.verify_rootfs(self.path,extracted,image)
+                else:
+                    wrong=self.path/'wrong-owner.squashfs'
+                    subprocess.run(['mksquashfs',str(final),str(wrong),'-force-uid','1000','-force-gid','1000','-noappend','-no-progress','-processors','1'],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                    with self.assertRaisesRegex(ValueError,'not root-owned'):baseline.verify_rootfs(self.path,extracted,wrong)
                 (extracted/'etc/smartdesktopmimi/device.json').write_text('{}')
                 with self.assertRaisesRegex(ValueError,'differs'):baseline.verify_rootfs(self.path,extracted)
 

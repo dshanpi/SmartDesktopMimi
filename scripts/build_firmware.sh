@@ -427,7 +427,7 @@ if [[ "${MIMI_APPLICATION_UPDATES:-0}" == 1 || -d "${PRODUCT_ROOT}/build/mimi-ba
             || die "cannot extract final rootfs for signed baseline readback"
     fi
     python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify-rootfs \
-        --output "${PRODUCT_ROOT}/build/mimi-baseline" --rootfs "${ROOTFS_EXTRACT}" \
+        --output "${PRODUCT_ROOT}/build/mimi-baseline" --rootfs "${ROOTFS_EXTRACT}" --image "${ROOTFS_IMAGE}" \
         || die "final rootfs signed baseline verification failed"
 fi
 

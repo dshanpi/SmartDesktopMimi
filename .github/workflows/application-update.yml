@@ -16,6 +16,10 @@ jobs:
         with:
           go-version-file: services/mimi-update/go.mod
           cache: false
+      - name: Install image and package test prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes cpio openssl e2fsprogs util-linux squashfs-tools fakeroot make
       - name: Signed package and transaction fault tests
         working-directory: services/mimi-update
         run: |

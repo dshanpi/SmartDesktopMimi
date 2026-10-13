@@ -127,7 +127,9 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - 产品包开关和增量清理显式包含 `aitvbox-mimi-update`，同时清理旧信任、工厂应用和启动链接；不清理用户 overlay 数据。旧版 suite 通过依赖带入更新器，但仅关闭 suite 不能保证增量残留被清除。
 - 更新器系统包禁用签名后的 ELF strip，文件裁剪必须发生在应用打包签名前。包依赖跟踪更新器、基线目录及启动文件，避免复用旧输入。
 - OpenWrt rc.d 按字符串排序；使用 `S98mimi-update` → `S99aitvbox` → `S99mimi-desktop`，不使用会排到前面的 S100。
-- `baseline.py verify-rootfs --output PREPARED_BASELINE --rootfs EXTRACTED_FINAL_ROOTFS` 核对最终镜像读回的工厂文件、更新器、信任和配置的字节/模式、启动器及启用链接，拒绝链接逃逸、额外未签名文件和机器专属登记。固件入口对 ext4/SquashFS 的实际读回调用该检查。
+- `baseline.py verify-rootfs --output PREPARED_BASELINE --rootfs EXTRACTED_FINAL_ROOTFS --image FINAL_ROOTFS_IMAGE` 核对最终镜像读回的工厂文件、更新器、信任和配置的字节/模式、启动器及启用链接，拒绝链接逃逸、额外未签名文件和机器专属登记。固件入口对 ext4/SquashFS 的实际读回调用该检查。
 - 镜像读回检查不替代 prepare 阶段签名校验、真实板卡登记或实机升级验收。测试中构造的小型文件系统和 Make 安装夹具均只计为主机测试。
 
 - 桌面启动入口通过 `Engine.StartSelected` 在同一应用/系统事务锁内完成选择、验签和平台启动；启动失败释放锁，验签失败不调用平台启动。不能先 Select 后释放锁再单独激活。
+
+- 最终镜像检查直接读取 ext4/SquashFS inode 元数据，要求受保护文件及父目录 uid/gid 均为 0；不把普通账户解包后的属主当作镜像属主。CI 安装 fakeroot、e2fsprogs 和 squashfs-tools，覆盖错误文件/目录属主的拒绝。
