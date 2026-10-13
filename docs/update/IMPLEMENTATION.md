@@ -254,3 +254,6 @@ Web 将连接错误与操作错误分开显示，成功轮询不再清除操作�
 - failed → 修复待验：真机首页“更新”仍打开系统固件页，应用更新入口原在设置中。已修正首页路由并命名“桌面更新”，rc.5 正在构建，待签名安装和页面回放验证。
 - not_run：完整集成镜像与系统 OTA、应用/系统双向实机兼容、其他断电阶段、完整功能/物理输入与长期稳定性、发布运行器和远端附件复验。整体未完成，不输出 COMPLETE。
 - 本批证据：`output/physical-acceptance-20261013/progress.json`、`rc3-startup-rollback.json`、`rc4-powercut-result.json`、`native-negative-tests.json`、`hdmi-demand-cycles.json`。关键原程序/数据备份位于受限 `.delivery/physical-backup-20261013`，未复制 SDK/编译缓存。
+
+
+- 五十一补充：rc.5 来源 `16ce4d2d86fc0607624e9d216e3b1fd332d52b76`，实际包 SHA256 `cddad85c047337a2becd10e9a937c3125158fde75b672353658612779e517b43`；A133 编译、生产签名/校验和真机安装提交通过。传包/安装采用临时 1008000 kHz，上线后恢复 1512000 kHz。首页坐标回放进入桌面更新页，显示 1.0.8-rc.5；检查返回 idle、无错误、无候选，关闭后完整桌面健康通过。不是 GitHub 在线下载安装验收，也不是物理触摸验收。证据 `rc5-installed-state.json`、`rc5-ui-check.json`、`rc5-desktop-update.png`。
