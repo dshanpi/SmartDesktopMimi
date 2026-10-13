@@ -250,7 +250,7 @@ static void create_ai_orb(lv_obj_t *parent)
 static lv_obj_t *create_ai_card(lv_obj_t *parent)
 {
     lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, 566, 414);
+    lv_obj_set_size(card, 566, HOME_DASHBOARD_H);
     style_surface(card, HOME_RADIUS);
     lv_obj_set_style_bg_color(card,
                               lv_color_mix(HOME_SURFACE, HOME_CORAL, 232), 0);
@@ -337,7 +337,7 @@ static void create_monitor_preview(lv_obj_t *parent)
 static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
 {
     lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, 330, 414);
+    lv_obj_set_size(card, 330, HOME_DASHBOARD_H);
     style_surface(card, HOME_RADIUS);
     lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(card, home_action_event, LV_EVENT_CLICKED,
@@ -371,47 +371,6 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
     return card;
 }
 
-static lv_obj_t *create_quick_tile(lv_obj_t *parent, const char *symbol,
-                                   const char *title, const char *detail,
-                                   lv_color_t accent, home_action_t action)
-{
-    lv_obj_t *tile = lv_obj_create(parent);
-    lv_obj_set_size(tile, 215, 124);
-    style_clear_container(tile);
-    lv_obj_set_style_bg_color(tile, HOME_SURFACE_PRESSED, LV_STATE_PRESSED);
-    lv_obj_set_style_bg_opa(tile, LV_OPA_COVER, LV_STATE_PRESSED);
-    lv_obj_set_style_radius(tile, HOME_RADIUS_SM, LV_STATE_PRESSED);
-    lv_obj_add_flag(tile, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_CLICK_FOCUSABLE);
-    lv_obj_add_event_cb(tile, home_action_event, LV_EVENT_CLICKED,
-                        (void *)(intptr_t)action);
-
-    lv_obj_t *icon_plate = lv_obj_create(tile);
-    lv_obj_set_size(icon_plate, 38, 38);
-    lv_obj_set_pos(icon_plate, 14, 40);
-    lv_obj_set_style_radius(icon_plate, 14, 0);
-    lv_obj_set_style_bg_color(icon_plate, accent, 0);
-    lv_obj_set_style_bg_opa(icon_plate, LV_OPA_20, 0);
-    lv_obj_set_style_border_width(icon_plate, 1, 0);
-    lv_obj_set_style_border_color(icon_plate, accent, 0);
-    lv_obj_set_style_border_opa(icon_plate, LV_OPA_40, 0);
-    lv_obj_set_style_pad_all(icon_plate, 0, 0);
-    make_noninteractive(icon_plate);
-
-    lv_obj_t *icon = create_text(icon_plate, symbol,
-                                 &lv_font_montserrat_28, accent);
-    lv_obj_center(icon);
-
-    lv_obj_t *name = create_text(tile, title, ui_font_body_lg(), HOME_TEXT);
-    lv_obj_set_pos(name, 64, 36);
-    lv_obj_set_width(name, 148);
-    lv_label_set_long_mode(name, LV_LABEL_LONG_DOT);
-    lv_obj_t *meta = create_text(tile, detail, ui_font_body_md(), HOME_TEXT_MUTED);
-    lv_obj_set_pos(meta, 64, 70);
-    lv_obj_set_width(meta, 148);
-    lv_label_set_long_mode(meta, LV_LABEL_LONG_WRAP);
-
-    return tile;
-}
 
 static bool local_time_is_plausible(const struct tm *local_tm)
 {
@@ -534,7 +493,7 @@ void ui_clock_create(lv_obj_t *parent)
     lv_obj_add_flag(dashboard, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
 
     lv_obj_t *hero_row = lv_obj_create(dashboard);
-    lv_obj_set_size(hero_row, HOME_CONTENT_W, 414);
+    lv_obj_set_size(hero_row, HOME_CONTENT_W, HOME_DASHBOARD_H);
     style_clear_container(hero_row);
     lv_obj_set_flex_flow(hero_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(hero_row, LV_FLEX_ALIGN_START,
@@ -543,25 +502,6 @@ void ui_clock_create(lv_obj_t *parent)
     lv_obj_add_flag(hero_row, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
     create_ai_card(hero_row);
     create_hdmi_card(hero_row);
-
-    lv_obj_t *quick_row = lv_obj_create(dashboard);
-    lv_obj_set_size(quick_row, HOME_CONTENT_W, 146);
-    style_surface(quick_row, HOME_RADIUS_SM);
-    lv_obj_set_style_shadow_width(quick_row, 0, 0);
-    lv_obj_set_style_pad_hor(quick_row, 0, 0);
-    lv_obj_set_style_pad_ver(quick_row, 11, 0);
-    lv_obj_set_flex_flow(quick_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(quick_row, LV_FLEX_ALIGN_START,
-                          LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(quick_row, 16, 0);
-    create_quick_tile(quick_row, LV_SYMBOL_LIST, ui_tr(UI_STR_HOME_APPS), ui_tr(UI_STR_HOME_BROWSE_APPS),
-                      HOME_BLUE, HOME_ACTION_APPS);
-    create_quick_tile(quick_row, LV_SYMBOL_WIFI, ui_tr(UI_STR_APP_WIFI), ui_tr(UI_STR_HOME_SCAN_CONNECT),
-                      HOME_CYAN, HOME_ACTION_DEVICES);
-    create_quick_tile(quick_row, LV_SYMBOL_DOWNLOAD, ui_tr(UI_STR_HOME_UPDATES), ui_tr(UI_STR_HOME_SYSTEM_SOFTWARE),
-                      HOME_GREEN, HOME_ACTION_UPDATES);
-    create_quick_tile(quick_row, LV_SYMBOL_SETTINGS, ui_tr(UI_STR_APP_SETTINGS), ui_tr(UI_STR_HOME_DISPLAY_SOUND),
-                      HOME_VIOLET, HOME_ACTION_SETTINGS);
 
     /* Draw the clock above the previously-created status bar. It is a child
      * of the desktop root (not the dashboard), so it cannot be clipped by a

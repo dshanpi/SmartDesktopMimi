@@ -1,4 +1,5 @@
 #include "app_registry.h"
+#include "../apps/pairing/pairing_app.h"
 #include "../ui/ui_i18n.h"
 #include "../apps/ai/ai_app.h"
 #include "../apps/bt/bt_app.h"
@@ -16,6 +17,9 @@ LV_IMAGE_DECLARE(aibot_app);
 LV_IMAGE_DECLARE(bt_speaker);
 
 static const app_registry_entry_t app_registry[] = {
+    { .id=APP_ID_PAIRING, .name="100ask.net Pairing", .name_id=UI_STR_APP_PAIRING,
+      .icon_type=APP_ICON_GENERATED, .accent_color=0x626DAA,
+      .show_in_launcher=true, .descriptor=&app_pairing },
     {
         .id = APP_ID_VIDEO,
         .name = "Video Player",

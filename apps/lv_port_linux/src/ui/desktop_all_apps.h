@@ -3,7 +3,7 @@
 
 #include "../../lvgl/lvgl.h"
 
-/* Full-screen application library shown from the compact desktop Dock. */
+/* Bottom-sheet app drawer with horizontal pages and persistent focus. */
 void ui_all_apps_create(lv_obj_t *parent);
 void ui_all_apps_show(void);
 void ui_all_apps_hide(void);

@@ -61,8 +61,8 @@ class DesktopHomeContractTests(unittest.TestCase):
         self.assertIn("ui_all_apps_show()", self.dashboard)
 
     def test_wifi_scan_is_named_and_resyncs_the_backend_runtime(self):
-        self.assertIn("ui_tr(UI_STR_APP_WIFI)", self.dashboard)
-        self.assertIn("ui_tr(UI_STR_HOME_SCAN_CONNECT)", self.dashboard)
+        self.assertIn("case APP_ID_WIFI:", self.all_apps)
+        self.assertIn("ui_tr(UI_STR_HOME_SCAN_CONNECT)", self.all_apps)
         self.assertIn('[UI_STR_HOME_SCAN_CONNECT] = T("扫描并连接", "Scan & connect")', self.i18n)
         subscribe_at = self.wifi.index(
             "mw_subscribe(TOPIC_WIFI_RUNTIME, wifi_runtime_handler)"
@@ -92,8 +92,8 @@ class DesktopHomeContractTests(unittest.TestCase):
         self.assertIn("Paired to Tuya · pairing QR is hidden.", self.i18n)
 
     def test_bottom_navigation_routes_are_not_placeholders(self):
-        self.assertIn("app_manager_open(APP_ID_AI)", self.dock)
-        self.assertIn("app_manager_open(APP_ID_HDMI_MCP)", self.dock)
+        self.assertNotIn("NAV_ASSISTANT", self.dock)
+        self.assertNotIn("NAV_HDMI", self.dock)
         self.assertIn("ui_all_apps_show()", self.dock)
         self.assertIn("LV_OBJ_FLAG_CLICK_FOCUSABLE", self.dock)
 
@@ -115,18 +115,12 @@ class DesktopHomeContractTests(unittest.TestCase):
         action = re.search(
             r"lv_obj_set_size\(button,\s*width,\s*(\d+)\);", self.dashboard
         )
-        tile = re.search(
-            r"lv_obj_set_size\(tile,\s*(\d+),\s*(\d+)\);", self.dashboard
-        )
-        nav = re.search(
-            r"lv_obj_set_size\(item,\s*(\d+),\s*(\d+)\);", self.dock
-        )
         self.assertIsNotNone(action)
-        self.assertIsNotNone(tile)
-        self.assertIsNotNone(nav)
         self.assertGreaterEqual(int(action.group(1)), 48)
-        for target in (tile, nav):
-            self.assertGreaterEqual(int(target.group(2)), 48)
+        handle = re.search(r"lv_obj_set_size\(handle,\s*(\d+),\s*(\d+)\);", self.dock)
+        self.assertIsNotNone(handle)
+        self.assertGreaterEqual(int(handle.group(2)), 48)
+        self.assertNotIn("create_quick_tile", self.dashboard)
 
     def test_home_runtime_pauses_when_screen_is_hidden(self):
         self.assertIn("LV_EVENT_SCREEN_UNLOADED", self.dashboard)
@@ -152,7 +146,7 @@ class DesktopHomeContractTests(unittest.TestCase):
         self.assertIn("key == LV_KEY_UP", self.all_apps)
         self.assertIn("key == LV_KEY_DOWN", self.all_apps)
         self.assertIn("key == LV_KEY_ENTER", self.all_apps)
-        self.assertIn("lv_obj_scroll_to_view(card, LV_ANIM_ON)", self.all_apps)
+        self.assertIn("lv_obj_scroll_to_view_recursive(card, LV_ANIM_ON)", self.all_apps)
 
 
 if __name__ == "__main__":

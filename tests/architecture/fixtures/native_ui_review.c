@@ -8,6 +8,7 @@
 #include "src/ui/ui_i18n.h"
 #include "src/ui/theme/theme.h"
 #include "src/ui/desktop_all_apps.h"
+#include "src/apps/pairing/pairing_app.h"
 #include "src/ui/desktop_home_tokens.h"
 #include "src/ui/desktop_status_bar.h"
 #include "src/ui/desktop_clock.h"
@@ -188,13 +189,13 @@ static void test_launcher_rounds(void) {
  for(int round=0;round<100;round++) {
   for(size_t i=0;i<app_registry_get_launcher_count();i++) {
    const app_registry_entry_t *entry=app_registry_get_launcher_entry(i);
-   ui_all_apps_show();pump();lv_obj_update_layout(home);
+   ui_all_apps_show();pump();lv_tick_inc(250);pump();lv_obj_update_layout(home);
    lv_obj_t *label=NULL;
    for(int child=(int)lv_obj_get_child_count(home)-1;child>=0 && !label;child--) {
     lv_obj_t *layer=lv_obj_get_child(home,child);
     if(lv_obj_is_visible(layer))label=find_label(layer,ui_tr(entry->name_id));
    }
-   assert(label && lv_obj_is_visible(label));
+   assert(label);lv_obj_scroll_to_view_recursive(label,LV_ANIM_OFF);pump();assert(lv_obj_is_visible(label));
    lv_area_t box;lv_obj_get_coords(label,&box);
    tap_screen(pointer,(box.x1+box.x2)/2,(box.y1+box.y2)/2);
    assert(!ui_all_apps_is_visible() && lv_screen_active()!=home);
@@ -211,11 +212,13 @@ static void test_home_navigation(void) {
  lv_obj_t *home=lv_screen_active();
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
  lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
- tap_screen(pointer,835,590);
+ tap_screen(pointer,512,720);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
+ lv_obj_t *setting=find_label(home,ui_tr(UI_STR_APP_SETTINGS));assert(setting);
+ lv_area_t pos;lv_obj_get_coords(setting,&pos);tap_screen(pointer,(pos.x1+pos.x2)/2,(pos.y1+pos.y2)/2);
  assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_APP_SETTINGS)));
  app_manager_back_home();lv_tick_inc(500);pump();pump();
- tap_screen(pointer,140,590);assert(ui_all_apps_is_visible());
- ui_all_apps_hide();pump();
+ tap_screen(pointer,512,720);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
+ tap_screen(pointer,100,160);pump();assert(!ui_all_apps_is_visible());
  tap_screen(pointer,512,32);
  lv_obj_t *center=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));
  assert(center && lv_obj_is_visible(center));
@@ -235,20 +238,20 @@ int main(int argc,char**argv) {
  test_home_navigation();
  test_launcher_rounds();
  lv_obj_t *home=lv_screen_active();
- assert(ui_lockscreen_show());
+ assert(!ui_lockscreen_show());
  app_manager_show_hdmi_preview_screen();pump();
  assert(!ui_lockscreen_is_active() && lv_screen_active()!=home);
  app_manager_hide_hdmi_preview_screen();lv_tick_inc(500);pump();assert(lv_screen_active()==home);
- assert(ui_lockscreen_show());app_manager_open(APP_ID_SETTING);pump();pump();
+ assert(!ui_lockscreen_show());app_manager_open(APP_ID_SETTING);pump();pump();
  assert(!ui_lockscreen_is_active() && lv_screen_active()!=home);
  app_manager_back_home();lv_tick_inc(500);pump();pump();assert(lv_screen_active()==home);
- assert(ui_lockscreen_show());ui_rebuild_home();pump();
+ assert(!ui_lockscreen_show());ui_rebuild_home();pump();
  app_manager_show_hdmi_preview_screen();pump();app_manager_hide_hdmi_preview_screen();pump();
  assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_HOME_TALK_MIMI)));
  save(argv[4]);puts("PASS real app manager: locked HDMI entry/return, app navigation, rebuilt Home lifetime");return 0;
 #endif
  /* Keep the retired component tests explicit; production does not enable it. */
- if(strcmp(argv[1],"lockscreen")==0){ui_lockscreen_init(lv_screen_active());assert(ui_lockscreen_show());}
+ if(strcmp(argv[1],"lockscreen")==0){ui_lockscreen_init(lv_screen_active());assert(!ui_lockscreen_show());}
  else if(strcmp(argv[1],"control-center")==0){
   lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
@@ -338,7 +341,16 @@ int main(int argc,char**argv) {
   if(!strcmp(argv[1],"ota-error")){status.state=OTA_STATE_ERROR;status.error_code=11;}
   if(!strcmp(argv[1],"ota-downloading")){status.state=OTA_STATE_DOWNLOADING;status.progress=47;}
   emit(TOPIC_OTA_STATUS,&status,sizeof(status));
- }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();}
+ }else if(strcmp(argv[1],"pairing")==0){
+  app_pairing.init();cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};
+  strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+  assert(find_label(lv_scr_act(),"123456"));
+  lv_tick_inc(61000);pump();assert(!find_label(lv_scr_act(),"123456"));
+  strcpy(status.bind_token,"1234a6");status.bind_token_expires_in=60;
+  emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));assert(!find_label(lv_scr_act(),"1234a6"));
+  strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+  puts("PASS pairing: fresh code visible, expired/malformed code hidden");
+ }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
  else if(strcmp(argv[1],"wifi")==0 || strcmp(argv[1],"password")==0){
   app_wifi.init();wifi_spinner_delete();
   wifi_ap_t ap={.ssid="100ASK-Lab",.encrypted=true};

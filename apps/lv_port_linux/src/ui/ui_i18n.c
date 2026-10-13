@@ -13,6 +13,7 @@ typedef struct {
 #define T(zh_value, en_value) { (zh_value), (en_value) }
 
 static const ui_translation_t translations[UI_STR_COUNT] = {
+    [UI_STR_APP_PAIRING] = T("100ask.net 配对", "100ask.net Pairing"),
     [UI_STR_LOCKSCREEN_WAKE] = T("轻触屏幕唤醒", "Tap anywhere to wake"),
     [UI_STR_APP_VIDEO] = T("视频", "Video"),
     [UI_STR_APP_WIFI] = T("无线网络", "Wi-Fi"),
