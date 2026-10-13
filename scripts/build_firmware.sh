@@ -243,7 +243,8 @@ cd "${SDK}"
 # 的 $1、build.sh 内部有良性非零返回。source envsetup 与调用 build.sh 期间临时关闭
 # nounset/errexit，靠下方显式 || die 检测真实失败。
 set +eu
-source build/envsetup.sh
+source build/envsetup.sh || die "Tina SDK environment initialization failed"
+[[ "${TINA_TOPDIR:-}" == "${SDK}" ]] || die "Tina SDK environment points outside the selected SDK"
 echo "Building Tina kernel only; verified Boot0/U-Boot are intentionally untouched."
 ./build.sh kernel \
     || die "Tina kernel 编译失败" \
