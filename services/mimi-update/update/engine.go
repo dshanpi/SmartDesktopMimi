@@ -423,8 +423,19 @@ func (e *Engine) ValidatePaths() error {
 	return nil
 }
 
-// SystemHealth keeps application activation excluded through the A/B commit.
+// SystemHealth waits for desktop startup without holding its launch lock, then
+// revalidates the selected application and health under the A/B commit lock.
 func (e *Engine) SystemHealth(commit func() error) error {
+	if err := e.Hooks.Preflight(); err != nil {
+		return err
+	}
+	observed, err := e.Select()
+	if err != nil {
+		return err
+	}
+	if err = e.Hooks.Healthy(observed, 60*time.Second); err != nil {
+		return err
+	}
 	unlock, err := e.lock()
 	if err != nil {
 		return err
@@ -436,6 +447,9 @@ func (e *Engine) SystemHealth(commit func() error) error {
 	dir, err := e.selectLocked()
 	if err != nil {
 		return err
+	}
+	if dir != observed {
+		return fmt.Errorf("selected application changed while waiting for system health")
 	}
 	if err = e.Hooks.Healthy(dir, 60*time.Second); err != nil {
 		return err

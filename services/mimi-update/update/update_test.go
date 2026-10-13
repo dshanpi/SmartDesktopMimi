@@ -622,3 +622,63 @@ func TestStartSelectedRejectsUntrustedTreeBeforeLaunch(t *testing.T) {
 		t.Fatal("platform launched before admission")
 	}
 }
+
+// Model the real boot order: backend requests confirmation before the desktop
+// launcher has run. The launch must be able to acquire the same update lock.
+type systemStartupProbe struct {
+	Hooks
+	healthy func(string, time.Duration) error
+}
+
+func (h systemStartupProbe) Healthy(dir string, timeout time.Duration) error {
+	return h.healthy(dir, timeout)
+}
+func TestSystemHealthAllowsDesktopStartupBeforeCommit(t *testing.T) {
+	e, h, _, _, _, _ := engineFixture(t)
+	checks, committed := 0, false
+	e.Hooks = systemStartupProbe{Hooks: h, healthy: func(dir string, timeout time.Duration) error {
+		checks++
+		if checks == 1 {
+			if err := e.StartSelected(); err != nil {
+				return fmt.Errorf("desktop startup blocked by health waiter: %w", err)
+			}
+		} else {
+			unlock, err := e.lock()
+			if err == nil {
+				unlock()
+				return fmt.Errorf("final health check lost update lock")
+			}
+		}
+		return nil
+	}}
+	if err := e.SystemHealth(func() error { committed = true; return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if checks != 2 || !committed || len(h.starts) != 1 {
+		t.Fatalf("checks=%d committed=%v starts=%v", checks, committed, h.starts)
+	}
+}
+func TestSystemHealthRejectsReadinessFailure(t *testing.T) {
+	for _, failAt := range []int{1, 2} {
+		t.Run(fmt.Sprint(failAt), func(t *testing.T) {
+			e, h, _, _, _, _ := engineFixture(t)
+			checks, committed := 0, false
+			e.Hooks = systemStartupProbe{Hooks: h, healthy: func(string, time.Duration) error {
+				checks++
+				if checks == failAt {
+					return fmt.Errorf("desktop not ready")
+				}
+				return nil
+			}}
+			err := e.SystemHealth(func() error { committed = true; return nil })
+			if err == nil || committed {
+				t.Fatalf("unsafe commit: %v %v", err, committed)
+			}
+			unlock, err := e.lock()
+			if err != nil {
+				t.Fatal("failure retained update lock", err)
+			}
+			unlock()
+		})
+	}
+}
