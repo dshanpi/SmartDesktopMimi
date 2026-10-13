@@ -16,6 +16,14 @@ import tempfile
 ROOT=Path(__file__).resolve().parents[2]
 
 
+def compiler_environment():
+    # Host search overrides must not leak headers, libraries or helper tools
+    # into a build attributed to the pinned target SDK.
+    excluded = {'CPATH', 'C_INCLUDE_PATH', 'CPLUS_INCLUDE_PATH', 'OBJC_INCLUDE_PATH',
+                'LIBRARY_PATH', 'COMPILER_PATH', 'GCC_EXEC_PREFIX', 'PKG_CONFIG_PATH'}
+    return {key: value for key, value in os.environ.items() if key not in excluded}
+
+
 def digest(path):
     with path.open('rb') as file:
         result=hashlib.sha256()
@@ -146,7 +154,7 @@ def main():
         # A failed rebuild must not leave an earlier successful receipt usable.
         (a.build_dir/'application-build.json').unlink(missing_ok=True)
         target=sdk_target(record,sdk)
-        env={**os.environ,'MIMI_SDK_ROOT':str(sdk),'STAGING_DIR':str(sdk),
+        env={**compiler_environment(),'MIMI_SDK_ROOT':str(sdk),'STAGING_DIR':str(sdk),
              'MIMI_COMPILER_PREFIX':target['compiler_prefix']}
         screens=os.environ.get('MIMI_DISPLAY_PROFILES','1024x768')
         if not re.fullmatch(r'[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3}){0,15}',screens):

@@ -20,6 +20,13 @@ import application_sdk as sdk
 
 
 class SDKTargetTests(unittest.TestCase):
+    def test_host_include_library_and_pkgconfig_overrides_do_not_leak(self):
+        dirty={'CPATH':'/host/include','LIBRARY_PATH':'/host/lib','PKG_CONFIG_PATH':'/host/pkgconfig','GCC_EXEC_PREFIX':'/host/tools','MIMI_DISPLAY_PROFILES':'480x800'}
+        with patch.dict(os.environ,dirty):
+            clean=sdk.compiler_environment()
+        for key in dirty:
+            if key!='MIMI_DISPLAY_PROFILES':self.assertNotIn(key,clean)
+        self.assertEqual(clean['MIMI_DISPLAY_PROFILES'],'480x800')
     def setUp(self):
         t = tempfile.TemporaryDirectory(); self.addCleanup(t.cleanup); self.root = Path(t.name)
         (self.root/'toolchain/bin').mkdir(parents=True)

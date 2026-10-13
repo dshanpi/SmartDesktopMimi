@@ -12,7 +12,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/update'))
-from application_sdk import verify_sdk, sdk_target
+from application_sdk import verify_sdk, sdk_target, compiler_environment
 
 PLATFORMS = {'a133': 'integrated', 't527': 'pending', 'rk3576': 'pending'}
 FORMATS = {'tina': 'mimi-application', 'debian': 'deb', 'ubuntu': 'deb'}
@@ -83,7 +83,7 @@ def check_sdk(profile, sdk, link_probe=True):
     compiler = sdk/'toolchain/bin'/(prefix+'gcc')
     if not compiler.is_file(): missing.append('toolchain/bin/'+prefix+'gcc')
     if missing: raise ValueError('Missing SDK inputs: ' + ', '.join(missing))
-    machine = subprocess.check_output([str(compiler),'-dumpmachine'],text=True).strip()
+    machine = subprocess.check_output([str(compiler),'-dumpmachine'],text=True,env=compiler_environment()).strip()
     machines = ('aarch64-openwrt-linux', 'aarch64-openwrt-linux-gnu') if target_os == 'tina' else ('aarch64-linux-gnu',)
     if machine not in machines:
         raise ValueError('Compiler target differs from locked SDK')
@@ -93,7 +93,7 @@ def check_sdk(profile, sdk, link_probe=True):
             (p/'probe.c').write_text('#include <alsa/asoundlib.h>\n#include <curl/curl.h>\n#include <json-c/json.h>\n#include <libevdev/libevdev.h>\nint main(void){CURL*c=curl_easy_init();curl_easy_cleanup(c);struct libevdev *d=libevdev_new();libevdev_free(d);struct json_object *j=json_object_new_object();json_object_put(j);return snd_asoundlib_version()==0;}\n')
             sysroot=sdk/'sysroot'
             command=[str(compiler),f'--sysroot={sysroot}',f'-I{sysroot}/usr/include',f'-I{sysroot}/usr/include/aarch64-linux-gnu',f'-I{sysroot}/usr/include/libevdev-1.0',str(p/'probe.c'),f'-L{sysroot}/usr/lib/aarch64-linux-gnu',f'-L{sysroot}/usr/lib',f'-Wl,-rpath-link,{sysroot}/lib',f'-Wl,-rpath-link,{sysroot}/usr/lib',f'-Wl,-rpath-link,{sysroot}/lib/aarch64-linux-gnu',f'-Wl,-rpath-link,{sysroot}/usr/lib/aarch64-linux-gnu','-lasound','-ljson-c','-levdev','-lcurl','-o',str(p/'probe')]
-            result=subprocess.run(command,env={**os.environ,'STAGING_DIR':str(sdk)},stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+            result=subprocess.run(command,env={**compiler_environment(),'STAGING_DIR':str(sdk)},stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             if result.returncode: raise ValueError('Target dependency link failed:\n'+result.stdout[-4000:])
     return {'sdk_verified':True,'compiler':machine,'dependency_link':'passed' if link_probe else 'not_run',
             'physical_acceptance':'not_run','selected_screens':profile['screens']}
