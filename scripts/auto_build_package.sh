@@ -187,13 +187,13 @@ declare -a REQUIRED_INPUTS=(
     "${PRODUCT_ROOT}/apps/lv_port_linux/lvgl/CMakeLists.txt"
     "${PRODUCT_ROOT}/third_party/TuyaOpen/tos.py"
     "${PRODUCT_ROOT}/third_party/TuyaOpen/export.sh"
-    "${PRODUCT_ROOT}/third_party/TuyaOpen/.tools/python/3.12.13/cpython-3.12.13-linux-x86_64-gnu/bin/python3.12"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/MNN/libMNN.so"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/MNN/libMNN_Express.so"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/audio_subsys/libaudio_subsys.a"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/opus/libopus.a"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/models/mdtc_chunk_300ms.mnn"
-    "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/models/tokens.txt"
+    "${TUYAOPEN_TOOLS_ROOT:-${PRODUCT_ROOT}/third_party/TuyaOpen/.tools}/python/3.12.13/cpython-3.12.13-linux-x86_64-gnu/bin/python3.12"
+    "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/MNN/libMNN.so"
+    "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/MNN/libMNN_Express.so"
+    "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/audio_subsys/libaudio_subsys.a"
+    "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/opus/libopus.a"
+    "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/models/mdtc_chunk_300ms.mnn"
+    "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/models/tokens.txt"
 )
 declare -a MISSING_INPUTS=()
 for input_path in "${REQUIRED_INPUTS[@]}"; do

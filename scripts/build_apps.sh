@@ -89,7 +89,7 @@ require_file "${PRODUCT_ROOT}/apps/platform_services/Makefile"
 require_file "${PRODUCT_ROOT}/apps/ipkvm/Makefile"
 require_dir "${PRODUCT_ROOT}/third_party/TuyaOpen" \
     "vendored 源码缺失：先跑 ./scripts/vendor_tuyaopen.sh"
-require_dir "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs" \
+require_dir "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}" \
     "vendor 库缺失，检查 vendor/tuyaopen-a133-b6-libs 是否完整"
 if [[ "${ENABLE_100ASK_CLOUD}" == "ON" ]]; then
     [[ "${PRIVATE_100ASK_SDK_ROOT}" == /* ]] ||

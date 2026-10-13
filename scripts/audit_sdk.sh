@@ -86,12 +86,12 @@ check_path "${PRODUCT_ROOT}/build/ipkvm/aitvbox-kvm-video"
 check_path "${PRODUCT_ROOT}/build/tuyaopen/your_chat_bot_QIO_1.0.1.bin"
 
 # 产品仓库 vendor 库与模型（薄包 install 时从 vendor/ 读）
-check_path "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/MNN/libMNN.so"
-check_path "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/MNN/libMNN_Express.so"
-check_path "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/audio_subsys/libaudio_subsys.a"
-check_path "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/opus/libopus.a"
-check_path "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/models/mdtc_chunk_300ms.mnn"
-check_path "${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs/models/tokens.txt"
+check_path "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/MNN/libMNN.so"
+check_path "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/MNN/libMNN_Express.so"
+check_path "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/audio_subsys/libaudio_subsys.a"
+check_path "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/opus/libopus.a"
+check_path "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/models/mdtc_chunk_300ms.mnn"
+check_path "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}/models/tokens.txt"
 
 # 产品仓库 app 源码字体（薄包 install 时从 apps/ 读）
 check_path "${PRODUCT_ROOT}/apps/lv_port_linux/src/ui/font/SarasaUiSC-Regular.ttf"

@@ -105,6 +105,13 @@ if device['runtime']['system'] != sys.argv[2]:
 BASELINE_VERSION_CHECK
 fi
 
+AITVBOX_TUYA_VENDOR_ROOT="${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}"
+[[ "$AITVBOX_TUYA_VENDOR_ROOT" == /* ]] || die "AITVBOX_TUYA_VENDOR_ROOT must be absolute"
+require_dir "$AITVBOX_TUYA_VENDOR_ROOT" "Private vendor libraries must be supplied by the platform builder"
+AITVBOX_TUYA_VENDOR_ROOT="$(cd "$AITVBOX_TUYA_VENDOR_ROOT" && pwd -P)"
+export AITVBOX_TUYA_VENDOR_ROOT
+VENDOR_INPUT_SHA="$(python3 "$PRODUCT_ROOT/tools/update/external_inputs.py" "$AITVBOX_TUYA_VENDOR_ROOT")"
+
 VERSION="$(tr -d '[:space:]' < "${PRODUCT_ROOT}/VERSION")"
 python3 - "${PRODUCT_ROOT}" "${VERSION}" <<'APPLICATION_VERSION_CHECK'
 import sys
@@ -222,6 +229,9 @@ run_logged() {
     fi
 }
 
+python3 "$PRODUCT_ROOT/tools/update/external_inputs.py" "$AITVBOX_TUYA_VENDOR_ROOT" \
+    --expect "$VENDOR_INPUT_SHA" --output "$OUTPUT_DIR/metadata/vendor-inputs.json"
+
 run_logged 10-build-apps "${SELF_DIR}/build_apps.sh" --clean "${SDK}"
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     run_logged 20-build-firmware env AITVBOX_OTA=1 \
@@ -297,6 +307,7 @@ SDK_MANIFEST_SHA="unknown"
 if [[ -n "${SDK_MANIFEST}" && -f "${SDK_MANIFEST}" ]]; then
     SDK_MANIFEST_SHA="$(sha256sum "${SDK_MANIFEST}" | awk '{print $1}')"
 fi
+python3 "$PRODUCT_ROOT/tools/update/external_inputs.py" "$AITVBOX_TUYA_VENDOR_ROOT" --expect "$VENDOR_INPUT_SHA"
 SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
 
 [[ "$(git -C "${PRODUCT_ROOT}" rev-parse HEAD)" == "${COMMIT}" && \
@@ -323,6 +334,7 @@ SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
     echo "SDK_MANIFEST=${SDK_MANIFEST:-unknown}"
     echo "SDK_MANIFEST_SHA256=${SDK_MANIFEST_SHA}"
     echo "SDK_BUILDCONFIG_SHA256=${SDK_BUILDCONFIG_SHA}"
+    echo "VENDOR_INPUT_SHA256=${VENDOR_INPUT_SHA}"
     echo
     echo "[submodules]"
     printf '%s\n' "${SUBMODULE_STATUS:-none}"

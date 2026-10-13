@@ -14,7 +14,7 @@ $(error AITVBOX_PRODUCT_BUILD is not set. Run via scripts/build_firmware.sh whic
 endif
 PRODUCT_ROOT := $(abspath $(AITVBOX_PRODUCT_BUILD))
 BUILD_OUT    := $(PRODUCT_ROOT)/build
-VENDOR_LIBS  := $(PRODUCT_ROOT)/vendor/tuyaopen-a133-b6-libs
+VENDOR_LIBS  := $(if $(strip $(AITVBOX_TUYA_VENDOR_ROOT)),$(AITVBOX_TUYA_VENDOR_ROOT),$(PRODUCT_ROOT)/vendor/tuyaopen-a133-b6-libs)
 LV_PORT_DIR  := $(PRODUCT_ROOT)/apps/lv_port_linux
 SWUPDATE_KEYS := $(PRODUCT_ROOT)/integrations/swupdate/keys
 # New system releases select a public verification key without copying secrets.

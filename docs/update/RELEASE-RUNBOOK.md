@@ -157,3 +157,10 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 ## 应用源码归属检查（2026-10-13）
 
 见 [源码归属与迁移边界](SOURCE-OWNERSHIP.md)。应用构建检查逐文件归属及真实编译清单，拒绝平台服务进入应用；过渡硬件客户端和共享实现固定哈希。应用发布新增必需附件 source-ownership.json，构建回执和发布门禁核对其 SHA-256。旧回执缺失此项须重新构建，不能沿用旧包验收。平台源码物理迁移仍未完成。
+
+
+## 平台私有输入外置（2026-10-13）
+
+独立源码不包含受限涂鸦 A133 库与离线 Python 工具。平台构建使用绝对路径 `AITVBOX_TUYA_VENDOR_ROOT` 和 `TUYAOPEN_TOOLS_ROOT` 指向开发目录中受控依赖，私有云仍使用 `AITVBOX_ENABLE_100ASK_CLOUD=ON` 与外部 `AITVBOX_100ASK_SDK_ROOT`。库安装、审计、构建准备和自动构建入口使用同一库路径；离线工具仅链接进被忽略的构建工作副本。不得将这些输入复制到公开源码归档。
+
+完整构建前后对外部 vendor 文件、权限和内部相对链接生成确定性清单并比对哈希，拒绝逃逸链接；元数据保存 vendor-inputs.json，构建记录固定 VENDOR_INPUT_SHA256。这些哈希不替代合法来源、完整 SDK 输入和实机验收。系统构建使用统一 SemVer 校验，允许正式版本及合法 rc 版本，拒绝前导零等不合法版本。

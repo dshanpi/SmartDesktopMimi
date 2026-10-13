@@ -17,9 +17,10 @@ source "${SELF_DIR}/lib.sh"
 
 # vendored 源码树（普通目录，非 submodule）
 SOURCE_ROOT="${PRODUCT_ROOT}/third_party/TuyaOpen"
+TOOLS_ROOT="${TUYAOPEN_TOOLS_ROOT:-${SOURCE_ROOT}/.tools}"
 BUILD_ROOT="${TUYAOPEN_BUILD_ROOT:-${PRODUCT_ROOT}/.tuyaopen-build}"
 INTEGRATION_DIR="${PRODUCT_ROOT}/integrations/tuyaopen"
-VENDOR_ROOT="${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs"
+VENDOR_ROOT="${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}"
 CLEAN=0
 RUN_EXPORT=1
 
@@ -55,7 +56,7 @@ require_file "${SOURCE_ROOT}/tos.py" \
 require_file "${SOURCE_ROOT}/export.sh" "vendored 源码缺失（无 export.sh）"
 require_dir "${SOURCE_ROOT}/platform/LINUX/tuyaos_adapter" \
     "vendored platform/LINUX 缺失：重跑 vendor_tuyaopen.sh"
-require_dir "${SOURCE_ROOT}/.tools/python" \
+require_dir "${TOOLS_ROOT}/python" \
     "vendored .tools 缺失：重跑 vendor_tuyaopen.sh"
 require_dir "${VENDOR_ROOT}" \
     "vendor 库缺失，检查 vendor/tuyaopen-a133-b6-libs 是否完整"
@@ -72,7 +73,19 @@ fi
 # 1) 新鲜工作副本：每次从 vendored 源（已含固化定制）rsync，--delete 清残留，保留 .venv/.git。
 echo "==> rsync vendored source → ${BUILD_ROOT}（保留 .venv / .git）"
 mkdir -p "${BUILD_ROOT}"
-rsync -a --delete --exclude='.venv' --exclude='.git' "${SOURCE_ROOT}/" "${BUILD_ROOT}/"
+if [[ "${TOOLS_ROOT}" != "${SOURCE_ROOT}/.tools" ]]; then
+    [[ "${TOOLS_ROOT}" == /* ]] || die "TUYAOPEN_TOOLS_ROOT must be absolute"
+    TOOLS_ROOT="$(cd "${TOOLS_ROOT}" && pwd -P)"
+    rsync -a --delete --exclude='.venv' --exclude='.git' --exclude='.tools' "${SOURCE_ROOT}/" "${BUILD_ROOT}/"
+    if [[ -e "${BUILD_ROOT}/.tools" || -L "${BUILD_ROOT}/.tools" ]]; then
+        [[ -L "${BUILD_ROOT}/.tools" && "$(readlink -f "${BUILD_ROOT}/.tools")" == "${TOOLS_ROOT}" ]] ||
+            die "build tools already exist with a different source"
+    else
+        ln -s "${TOOLS_ROOT}" "${BUILD_ROOT}/.tools"
+    fi
+else
+    rsync -a --delete --exclude='.venv' --exclude='.git' "${SOURCE_ROOT}/" "${BUILD_ROOT}/"
+fi
 
 # tos.py 的 env_check 用 GitPython 对构建树调 Repo()，要求是合法 git 仓。
 # vendored 源已删根 .gitmodules（内嵌库作普通目录 vendor），故 download_submoudules
