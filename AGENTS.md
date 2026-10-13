@@ -32,3 +32,8 @@
 - 用户于 2026-10-13 最新要求优先上传 100askTeam/A133-AIDesktop-Tina5 的底层驱动和板级适配差异。本次允许完成源码重放及敏感内容核对后上传私有 SDK 源码归档；不扩大到应用源码、升级包、系统镜像或公开 Release，这些仍等待全部必需真机验收。归档未测项目如实标 not_run，不标产品发布合格。
 
 - 用户于 2026-10-13 明确 SDK 差异必须沿用私有仓库根目录 repo overlay 形式：overlay/、meta/ 和 scripts/apply_overlay.sh；包含实际修改/新增源码、配置、下载包、固件包并展开未追踪目录。排除 out/bak/project/tools/OpenixCLI/tools/serial_agent/prebuilt/rootfsbuilt/.local_patch 和编译缓存；openwrt/target、openwrt/openwrt/target 保留。不得用另一套组件 patch 目录替代该使用入口。
+
+
+## 2026-10-13 签名执行澄清（用户确认）
+
+用户要求直接使用专用签名继续开发。沿用已生成的产品签名密钥，不重复生成或替换现有可信密钥；私钥保存在源码树外。现有加密备份及恢复验证保留，额外的独立离线介质与交接不作为当前开发、候选签名和验证的前置条件；未做交接仍如实记录，不记为已完成。设备信任部署、真实硬件登记、验签和必需真机验收继续执行，正式上传约束不变。
