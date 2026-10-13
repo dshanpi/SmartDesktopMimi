@@ -266,3 +266,14 @@ rc.6 应用来源 0558589f622d35ee8e8d2936c673329bb870db19，包 SHA256 7b8ec1c1
 更新器 IPK 已补齐工厂桌面运行依赖，真实 SDK 包与 37 个基线文件读回通过。完整发布入口 r3 因 SDK 输出配置缺失失败；随后补回配置和哈希固定的黄金启动镜像后，窄 pack、认证启动链门禁、实际 rootfs 签名工厂 rc.6 验证通过，完整入口仍需重新跑。构建源码 bb82184ee41027431dad6493d115c96df567a725，镜像 SHA256 3b9dfce7120ec660e380099a134d2eb1a0b8535816e4a4bc39406b5ea815cce7；未刷机，未上传，不是发布合格。
 
 新增五项功能仅登记于 ../next-phase-ai-desktop-requirements.md：先完成本轮交付，再提供 UI 效果图与业务功能设计，用户确认后才实现。
+
+
+## 五十三、完整产品构建通过与硬件通道阻塞（2026-10-13）
+
+- passed：构建前校验恢复 SDK 的 A133/B6/OpenWrt 目标/路径、输出 .buildconfig 与根配置一致，以及固定黄金镜像哈希；构建后复验并归档输入。5 项新增边界测试通过，更新/发布回归共 99 项通过。首次测试缺 Go PATH 的环境失败日志保留，补齐后全部重跑。
+- passed：源码 23ec61689c5852fafd42501fb1e7a32e59369590 的完整发布入口 r4 成功生成 BUILD-COMPLETE。应用 1.0.8-rc.6、系统 1.0.0-rc.1，工厂应用包 7b8ec1c17b09a9bdde79603da28c7d5e31393586e1db4959c325a7a7ffc7bf8b。实际文件系统签名基线、认证启动链、输入前后核对和归档全部 SHA256SUMS 复验通过。
+- 完整镜像 SHA256 f0b9e8e44e2e8580ace66c7b969997581e8a2e5ed2573632c20541cf30c3a567，位于 .delivery/system-product-rc1-build-20261013-r4。WITH_OTA=0，仅具备应用更新基线，不标系统 OTA 已完成。
+- failed/unresolved：默认 1512000 kHz、HDMI 无采集条件再次复现：27 MB 网络到 /dev/null 成功，到 tmpfs 后 SSH/串口失联。授权继电器恢复已观察启动；随后 MCP 控制接口持续超时，网络 SSH 服务存在但临时授权未恢复，本地复制对照未执行成功。
+- blocked：已请求用户在 LYNX 重连 A133 控制通道；serial-4 关闭及临时维护认证清理未能确认，不假记已完成。不得将控制通道失效与板端失联视为同一已查明根因。
+- not_run：新镜像刷机启动、系统升级/回退、其余断电、完整数据/功能/稳定性、源码/Release 上传及远端附件复核。当前 release_qualified=false。新增五项功能继续先设计、用户确认后实现。
+- 本批证据：output/product-qualification-20261013/progress.json、transfer-diagnosis.json、product-build-r4.log 和构建目录内 logs/metadata/SHA256SUMS。
