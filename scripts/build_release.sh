@@ -241,7 +241,7 @@ run_logged 10-build-apps "${SELF_DIR}/build_apps.sh" --clean "${SDK}"
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     run_logged 20-build-firmware env AITVBOX_OTA=1 \
         "${SELF_DIR}/build_firmware.sh" "${SDK}"
-    run_logged 30-build-swu "${SELF_DIR}/build_swu.sh" "${SDK}"
+    run_logged 30-build-swu "${SELF_DIR}/build_swu.sh" "${SDK}" "${OUTPUT_DIR}/ota"
 else
     run_logged 20-build-firmware "${SELF_DIR}/build_firmware.sh" "${SDK}"
 fi
@@ -286,11 +286,10 @@ if [[ "${INCLUDE_SDK_IMAGES}" -eq 1 ]]; then
         "${BOOT_IMAGE}" "${ROOTFS_IMAGE}" "${OUTPUT_DIR}/sdk-images/"
 fi
 if [[ "${WITH_OTA}" -eq 1 ]]; then
-    SWU_IMAGE="${PRODUCT_ROOT}/build/swu/${MIMI_SYSTEM_VERSION}/system.swu"
+    SWU_IMAGE="${OUTPUT_DIR}/ota/system.swu"
     require_file "${SWU_IMAGE}" "build_swu.sh 未生成预期 .swu"
     mkdir -p "${OUTPUT_DIR}/ota"
-    cp --reflink=auto --preserve=timestamps "${SWU_IMAGE}" "${OUTPUT_DIR}/ota/"
-    cp "${PRODUCT_ROOT}/build/swu/${MIMI_SYSTEM_VERSION}/swu-build.json" "${OUTPUT_DIR}/metadata/"
+    mv "${OUTPUT_DIR}/ota/swu-build.json" "${OUTPUT_DIR}/metadata/"
 fi
 
 APP_SUMS="${OUTPUT_DIR}/metadata/APPLICATION-SHA256SUMS"
