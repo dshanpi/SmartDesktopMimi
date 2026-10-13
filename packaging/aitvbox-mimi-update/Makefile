@@ -19,7 +19,7 @@ define Package/aitvbox-mimi-update
   TITLE:=SmartDesktopMimi independent application updater
   # The signed factory desktop is shipped in this package and needs these
   # platform libraries before it can start (the Go updater itself is static).
-  DEPENDS:=+ca-bundle +alsa-lib +libevdev +libjson-c +libstdcpp
+  DEPENDS:=+ca-bundle +alsa-lib +libevdev +libjson-c +libstdcpp +libcurl
 endef
 define Build/Prepare
 endef

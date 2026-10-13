@@ -110,6 +110,13 @@ AITVBOX_TUYA_VENDOR_ROOT="${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuy
 require_dir "$AITVBOX_TUYA_VENDOR_ROOT" "Private vendor libraries must be supplied by the platform builder"
 AITVBOX_TUYA_VENDOR_ROOT="$(cd "$AITVBOX_TUYA_VENDOR_ROOT" && pwd -P)"
 export AITVBOX_TUYA_VENDOR_ROOT
+# Public sources exclude Tuya host tools. Fail before cleaning application
+# outputs when the platform builder has not supplied the retained tool input.
+TUYAOPEN_TOOLS_ROOT="${TUYAOPEN_TOOLS_ROOT:-${PRODUCT_ROOT}/third_party/TuyaOpen/.tools}"
+[[ "$TUYAOPEN_TOOLS_ROOT" == /* ]] || die "TUYAOPEN_TOOLS_ROOT must be absolute"
+require_dir "$TUYAOPEN_TOOLS_ROOT/python" "Set TUYAOPEN_TOOLS_ROOT to the retained external Tuya host tools"
+TUYAOPEN_TOOLS_ROOT="$(cd "$TUYAOPEN_TOOLS_ROOT" && pwd -P)"
+export TUYAOPEN_TOOLS_ROOT
 VENDOR_INPUT_SHA="$(python3 "$PRODUCT_ROOT/tools/update/external_inputs.py" "$AITVBOX_TUYA_VENDOR_ROOT")"
 
 VERSION="$(tr -d '[:space:]' < "${PRODUCT_ROOT}/VERSION")"
