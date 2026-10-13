@@ -66,6 +66,8 @@ def create_receipt(root, sdk, sdk_hash, build_dir, before_source, before_contrac
                 build=dict(target='lvglsim',application_only=True,cloud_provider=False,
                            compile_commands_sha256=digest(build_dir/'compile_commands.json'), **ownership),
                 desktop_sha256=digest(binary))
+    if sdk.get('schema_version') == 2:
+        record['target_os_version'] = sdk['target_os_version']
     cache=(build_dir/'CMakeCache.txt').read_text()
     display=re.search(r'^MIMI_DISPLAY_PROFILES:STRING=(.+)$',cache,re.MULTILINE)
     record['build']['display_profiles']=display.group(1).split(',') if display else ['1024x768']

@@ -6,6 +6,7 @@ import json
 import os
 import re
 import stat
+import shlex
 from application_build import load, source_state, contract, create_receipt
 from pathlib import Path
 import shutil
@@ -47,17 +48,50 @@ def inventory(root):
     return files
 
 
+def sdk_target(record, sdk):
+    """Validate compiler and OS provenance without executing target code."""
+    if record.get('schema_version') == 1:
+        if record.get('target_os', 'tina') != 'tina':
+            raise ValueError('legacy SDK target OS is Tina only; use schema 2')
+        return {'target_os': 'tina', 'compiler_prefix': 'aarch64-openwrt-linux-'}
+    if record.get('schema_version') != 2 or record.get('target_os') not in ('debian', 'ubuntu'):
+        raise ValueError('unsupported SDK target/schema')
+    if record.get('compiler_prefix') != 'aarch64-linux-gnu-':
+        raise ValueError('unsupported Debian compiler prefix')
+    version = record.get('target_os_version', '')
+    if not isinstance(version, str) or not re.fullmatch(r'[0-9]+(?:\.[0-9]+){0,2}', version):
+        raise ValueError('SDK target OS version is required')
+    release = sdk/'sysroot/usr/lib/os-release'
+    if release.is_symlink() or not release.is_file():
+        raise ValueError('SDK requires its target usr/lib/os-release')
+    fields = {}
+    for line in release.read_text().splitlines():
+        if not line or line.lstrip().startswith('#'): continue
+        key, sep, value = line.partition('=')
+        if not sep or key in fields: raise ValueError('invalid or duplicate target OS field')
+        values = shlex.split(value, comments=False)
+        if len(values) != 1: raise ValueError('invalid target OS value')
+        fields[key] = values[0]
+    if fields.get('ID') != record['target_os'] or fields.get('VERSION_ID') != version:
+        raise ValueError('SDK target OS differs from sysroot os-release')
+    for name in ('gcc', 'g++', 'ar', 'ranlib', 'strip'):
+        tool = sdk/'toolchain/bin'/('aarch64-linux-gnu-' + name)
+        if not tool.is_file(): raise ValueError('SDK compiler tool missing: ' + name)
+    return {key: record[key] for key in ('target_os', 'target_os_version', 'compiler_prefix')}
+
+
 def verify_sdk(sdk, expected=None):
     lock=sdk/'sdk-lock.json'
     if lock.is_symlink() or not lock.is_file():raise ValueError('SDK lock must be a regular file')
     if expected is not None and (not re.fullmatch('[a-f0-9]{64}',expected) or digest(lock)!=expected):
         raise ValueError('SDK lock does not match externally pinned SHA256')
     record=load(lock)
-    if record.get('schema_version')!=1 or record.get('platform_id')!='a133' or record.get('architecture')!='aarch64':
+    if record.get('schema_version') not in (1,2) or record.get('platform_id')!='a133' or record.get('architecture')!='aarch64':
         raise ValueError('unsupported SDK target/schema')
     if not isinstance(record.get('system_baseline'),str) or not re.fullmatch('[A-Za-z0-9][A-Za-z0-9._-]{0,191}',record['system_baseline']):
         raise ValueError('missing/invalid SDK system baseline')
     if inventory(sdk)!=record['files']:raise ValueError('SDK input differs from its lock')
+    sdk_target(record, sdk)
     return record
 
 
@@ -68,6 +102,8 @@ def main():
     p.add_argument('--toolchain',type=Path)
     p.add_argument('--sysroot',type=Path)
     p.add_argument('--baseline')
+    p.add_argument('--target-os',choices=['tina','debian','ubuntu'],default='tina')
+    p.add_argument('--target-os-version',help='Required for Debian/Ubuntu; must match target sysroot os-release')
     p.add_argument('--expected-sdk-sha256',help='externally pinned sdk-lock.json hash; required for build')
     p.add_argument('--build-dir',type=Path,default=ROOT/'build/application-only')
     a=p.parse_args();sdk=a.sdk.resolve()
@@ -95,6 +131,10 @@ def main():
                     destination.parent.mkdir(parents=True,exist_ok=True)
                     shutil.copytree(source,destination,symlinks=True)
             record={'schema_version':1,'platform_id':'a133','architecture':'aarch64','system_baseline':a.baseline,'excluded':excluded,'files':inventory(staging)}
+            if a.target_os != 'tina':
+                record.update(schema_version=2,target_os=a.target_os,target_os_version=a.target_os_version,
+                              compiler_prefix='aarch64-linux-gnu-')
+            sdk_target(record, staging)
             (staging/'sdk-lock.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
             os.rename(staging,sdk)
     record=verify_sdk(sdk,a.expected_sdk_sha256)
@@ -105,7 +145,9 @@ def main():
         before_contract=contract(ROOT)
         # A failed rebuild must not leave an earlier successful receipt usable.
         (a.build_dir/'application-build.json').unlink(missing_ok=True)
-        env={**os.environ,'MIMI_SDK_ROOT':str(sdk),'STAGING_DIR':str(sdk)}
+        target=sdk_target(record,sdk)
+        env={**os.environ,'MIMI_SDK_ROOT':str(sdk),'STAGING_DIR':str(sdk),
+             'MIMI_COMPILER_PREFIX':target['compiler_prefix']}
         screens=os.environ.get('MIMI_DISPLAY_PROFILES','1024x768')
         if not re.fullmatch(r'[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3}){0,15}',screens):
             p.error('invalid build-time display profile list')
