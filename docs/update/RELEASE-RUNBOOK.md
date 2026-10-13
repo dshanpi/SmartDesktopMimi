@@ -153,3 +153,7 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - 用户于 2026-10-13 最新要求优先上传 100askTeam/A133-AIDesktop-Tina5 的底层驱动和板级适配差异。本次允许完成源码重放及敏感内容核对后上传私有 SDK 源码归档；不扩大到应用源码、升级包、系统镜像或公开 Release，这些仍等待全部必需真机验收。归档未测项目如实标 not_run，不标产品发布合格。
 
 - 用户于 2026-10-13 明确 SDK 差异必须沿用私有仓库根目录 repo overlay 形式：overlay/、meta/ 和 scripts/apply_overlay.sh；包含实际修改/新增源码、配置、下载包、固件包并展开未追踪目录。排除 out/bak/project/tools/OpenixCLI/tools/serial_agent/prebuilt/rootfsbuilt/.local_patch 和编译缓存；openwrt/target、openwrt/openwrt/target 保留。不得用另一套组件 patch 目录替代该使用入口。
+
+## 应用源码归属检查（2026-10-13）
+
+见 [源码归属与迁移边界](SOURCE-OWNERSHIP.md)。应用构建检查逐文件归属及真实编译清单，拒绝平台服务进入应用；过渡硬件客户端和共享实现固定哈希。应用发布新增必需附件 source-ownership.json，构建回执和发布门禁核对其 SHA-256。旧回执缺失此项须重新构建，不能沿用旧包验收。平台源码物理迁移仍未完成。

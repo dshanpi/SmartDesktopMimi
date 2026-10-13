@@ -12,7 +12,7 @@ def inventory_digest(files, prefix):
 
 def application(directory, lock, manifest, stage, load):
     assets=lock['assets']
-    required={'application-build.json','sdk-lock.json','dependency-lock.json'}
+    required={'application-build.json','sdk-lock.json','dependency-lock.json','source-ownership.json'}
     if not required<=assets.keys():raise ValueError('missing application build provenance assets')
     receipt=load(directory/'application-build.json');sdk=load(directory/'sdk-lock.json')
     if receipt.get('schema_version')!=1 or receipt.get('kind')!='application-build' or sdk.get('schema_version')!=1:
@@ -29,6 +29,11 @@ def application(directory, lock, manifest, stage, load):
         raise ValueError('build/interface provenance mismatch')
     if receipt['build'].get('target')!='lvglsim' or receipt['build'].get('application_only') is not True or receipt['build'].get('cloud_provider') is not False:
         raise ValueError('build is not application-only')
+    ownership=load(directory/'source-ownership.json')
+    if (ownership.get('schema_version')!=1 or ownership.get('platform_id')!=sdk['platform_id']
+            or not ownership.get('files') or not ownership.get('scopes')
+            or receipt['build'].get('source_ownership_sha256')!=assets['source-ownership.json']):
+        raise ValueError('source ownership/build provenance mismatch')
     for target in manifest['targets']:
         for field in ['platform_id','architecture']:
             if target['identity'][field]!=sdk[field] or receipt[field]!=sdk[field]:

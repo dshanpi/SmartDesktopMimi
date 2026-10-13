@@ -13,12 +13,15 @@ def application(directory, manifest, lock):
     sdk=dict(schema_version=1,platform_id=identity['platform_id'],architecture=identity['architecture'],system_baseline='host-fixture-only',
              files={'toolchain/bin/compiler':{'sha256':'a'*64,'mode':493},'sysroot/include/fixture.h':{'sha256':'b'*64,'mode':420}})
     write(directory/'sdk-lock.json',sdk);write(directory/'dependency-lock.json',{'host_fixture':True})
+    write(directory/'source-ownership.json',dict(schema_version=1,platform_id=sdk['platform_id'],
+          scopes=['fixture'],files={'fixture/main.c':{'owner':'application'}}))
     files=manifest.setdefault('files',{})
     files.setdefault('bin/lvglsim',{'sha256':'c'*64,'size':1,'mode':493})
     receipt=dict(schema_version=1,kind='application-build',platform_id=sdk['platform_id'],architecture=sdk['architecture'],system_baseline=sdk['system_baseline'],
                  sdk_lock_sha256=sha(directory/'sdk-lock.json'),source=dict(commit=lock['source_commit'],dirty=False),
                  interface=dict(id=lock['ipc_contract'],sha256=sha(directory/'platform-contract-lock.json')),
-                 build=dict(target='lvglsim',application_only=True,cloud_provider=False,compile_commands_sha256='d'*64),desktop_sha256=files['bin/lvglsim']['sha256'])
+                 build=dict(target='lvglsim',application_only=True,cloud_provider=False,compile_commands_sha256='d'*64,
+                            source_ownership_sha256=sha(directory/'source-ownership.json')),desktop_sha256=files['bin/lvglsim']['sha256'])
     write(directory/'application-build.json',receipt)
     files['resources/application-build.json']=dict(sha256=sha(directory/'application-build.json'),size=(directory/'application-build.json').stat().st_size,mode=420)
     lock.update(sdk_lock_sha256=receipt['sdk_lock_sha256'],toolchain_sha256=inventory_digest(sdk['files'],'toolchain'),

@@ -12,6 +12,10 @@ set(AITVBOX_100ASK_SDK_ROOT "" CACHE PATH
 set(AITVBOX_PLATFORM "a133" CACHE STRING "AITVBox board adapter")
 set_property(CACHE AITVBOX_PLATFORM PROPERTY STRINGS a133 a527 v883 rk3576 rv1106)
 
+if(MIMI_APPLICATION_ONLY AND AITVBOX_ENABLE_100ASK_CLOUD)
+    message(FATAL_ERROR "Application builds cannot enable the private platform cloud provider")
+endif()
+
 if(AITVBOX_PLATFORM STREQUAL "a133")
     set(AITVBOX_PLATFORM_SOURCES
         src/platform/a133/platform_capabilities_a133.c)
@@ -517,7 +521,18 @@ file(GLOB_RECURSE UI_HPP_SOURCES "src/ui/*.hpp")
 # sites as no-ops, and never pull its separate renderer into application builds.
 list(FILTER UI_SOURCES EXCLUDE REGEX "/lockscreen(_3d)?\\.c$")
 list(FILTER UI_SOURCES EXCLUDE REGEX "/images/sleeping_cat\\.c$")
-file(GLOB_RECURSE SYSTEM_SOURCES "src/system/*.c")
+# Explicit application/shared inputs: a new platform service must never enter
+# the independently updated desktop through a broad source glob.
+set(SYSTEM_SOURCES
+    src/system/app_manager.c
+    src/system/app_registry.c
+    src/system/backlight_control.c
+    src/system/bt_pcm_player.c
+    src/system/config/app_config.c
+    src/system/log/app_log.c
+    src/system/settings.c
+    src/system/volume_control.c
+)
 file(GLOB_RECURSE MIDDLEWARE_SOURCES "src/middleware/*.c")
 file(GLOB_RECURSE IPC_SOURCES "src/ipc/*.c")
 file(GLOB_RECURSE FONT_SOURCES "src/ui/font/*.c")

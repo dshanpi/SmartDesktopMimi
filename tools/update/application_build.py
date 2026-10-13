@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import source_ownership
 
 
 def digest(path):
@@ -57,11 +58,12 @@ def create_receipt(root, sdk, sdk_hash, build_dir, before_source, before_contrac
         name=Path(entry['file']).as_posix()
         if '/src/backend/' in name or name.endswith('/backend_main.c'):
             raise ValueError('platform backend entered application-only build')
+    ownership = source_ownership.audit_commands(root, commands)
     record=dict(schema_version=1,kind='application-build',platform_id=sdk['platform_id'],
                 architecture=sdk['architecture'],system_baseline=sdk['system_baseline'],
                 sdk_lock_sha256=sdk_hash,source=before_source,interface=before_contract,
                 build=dict(target='lvglsim',application_only=True,cloud_provider=False,
-                           compile_commands_sha256=digest(build_dir/'compile_commands.json')),
+                           compile_commands_sha256=digest(build_dir/'compile_commands.json'), **ownership),
                 desktop_sha256=digest(binary))
     destination=build_dir/'application-build.json'
     temporary=build_dir/'.application-build.json.tmp'
@@ -82,5 +84,8 @@ def verify_receipt(receipt, desktop, root):
     if not r.get('system_baseline') or r['interface']!=contract(root):raise ValueError('build/interface baseline mismatch')
     if r['build'].get('target')!='lvglsim' or r['build'].get('application_only') is not True or r['build'].get('cloud_provider') is not False:
         raise ValueError('not an independent application build')
+    source_ownership.verify(root)
+    if r['build'].get('source_ownership_sha256') != digest(root/source_ownership.LOCK):
+        raise ValueError('source ownership/build receipt mismatch')
     if desktop.is_symlink() or not desktop.is_file() or r['desktop_sha256']!=digest(desktop):raise ValueError('desktop differs from build receipt')
     return r

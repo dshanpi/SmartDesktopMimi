@@ -57,10 +57,14 @@ class BuildReceiptTests(unittest.TestCase):
         (self.root/'api.h').write_text('interface fixture')
         (self.root/'docs/update/platform-contract-lock.json').write_text(json.dumps(dict(schema_version=1,contract_id='host-v1',headers={'api.h':build.digest(self.root/'api.h')})))
         self.desktop=self.root/'desktop';self.desktop.write_bytes(b'host fixture binary')
+        (self.root/'fixture').mkdir();(self.root/'fixture/main.c').write_text('fixture')
+        (self.root/'docs/update/source-ownership.json').write_text(json.dumps(dict(schema_version=1,platform_id='a133',
+             scopes=['fixture'],files={'fixture/main.c':{'owner':'application'}})))
         self.receipt=self.root/'application-build.json'
         self.record=dict(schema_version=1,kind='application-build',platform_id='a133',architecture='aarch64',system_baseline='host-unvalidated',
                          sdk_lock_sha256='a'*64,source=dict(commit='b'*40,dirty=True),interface=build.contract(self.root),
-                         build=dict(target='lvglsim',application_only=True,cloud_provider=False,compile_commands_sha256='c'*64),desktop_sha256=build.digest(self.desktop))
+                         build=dict(target='lvglsim',application_only=True,cloud_provider=False,compile_commands_sha256='c'*64,
+                                    source_ownership_sha256=build.digest(self.root/'docs/update/source-ownership.json')),desktop_sha256=build.digest(self.desktop))
         self.save()
     def save(self):self.receipt.write_text(json.dumps(self.record))
     def test_exact_binary_and_interface_required(self):

@@ -1,0 +1,345 @@
+{
+  "application_repository": "dshanpi/SmartDesktopMimi",
+  "files": {
+    "apps/lv_port_linux/src/apps/video/tplayer_wrapper.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/apps/video/tplayer_wrapper.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend/backend_command_router.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend/backend_command_router.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend/backend_runtime.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend/backend_runtime.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend/backend_v2_server.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend/backend_v2_server.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/backend_main.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/g2d_driver.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "91ca1f04b773e479e8d7ff1fbd20c0c088a5286c2747ac16620513c4f4e913e8"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/lv_draw_buf_sunxi_g2d.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "4f6b5e820e1a8b41161244cb906708472dbe6546bad6d3a8152864eeb233f202"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/lv_draw_buf_sunxi_g2d.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "8fd71939ba216fa9baf12906093c4cd1e01ee5150fde4307dde936b7eea4cb38"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/lv_draw_sunxi_g2d.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "d0a4664877f43fad0ee62b341e02005b34c053f1b92bf2a7f2dc35d0462568d7"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/lv_draw_sunxi_g2d.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "0384d71d15837bf66e09d297b644a101c6e2f38f2373798ad900b671cd93e23a"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/lv_sunxi_g2d_buf_map.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "224f43af1c0536dc7d27f9692c851d48d5f6041067ea44a373c0838d6e9ef491"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/lv_sunxi_g2d_buf_map.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "2ce4252b366783ee7fc9a11bf62a00b44e008acdbfd966e307854e4771171755"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/sunxi_g2d_utils.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "0b124980eddfc4c9698d34351c7c3cd7c4ffa1fda5e10f9ac1c8c1a801b0062f"
+    },
+    "apps/lv_port_linux/src/draw/sunxi_g2d/sunxi_g2d_utils.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "581a73509eec45dedaa1b780baff33f47044cfde3222b12db4079b419ad00394"
+    },
+    "apps/lv_port_linux/src/ipc/ipc_socket.c": {
+      "owner": "shared-frozen",
+      "sha256": "c8f577d07f56402177d92ea3b7cb9756387da3737106c089d09c485ef307dd75"
+    },
+    "apps/lv_port_linux/src/ipc/ipc_socket.h": {
+      "owner": "shared-frozen",
+      "sha256": "43bf645d440b2688f72c99c0efbc30caf49484c819f1ac9f4b16608f58b86f3f"
+    },
+    "apps/lv_port_linux/src/ipc/ipc_v2.c": {
+      "owner": "shared-frozen",
+      "sha256": "7aae8b04439e47d1cd9aa0d305f7aebebbb849c65519025d00e7990693967738"
+    },
+    "apps/lv_port_linux/src/ipc/ipc_v2.h": {
+      "owner": "shared-frozen",
+      "sha256": "e24671b2139c3e6487498ecbab99440947dc8e79c8869cabfaa1a616949969ab"
+    },
+    "apps/lv_port_linux/src/lib/backends.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "fccb1b0ed9345820466ec9301048356ebb265f729e299f3d884f70188a27ebfa"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/drm.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "779bfd69b83e079ce0e69a25e3458ddc92acb0e4b010ddcd4d99d7babcf97a9e"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/fbdev.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "fd6986c44198414e62ce37b136bb82f1d1ccc9e07c14152d7af36df9726452bd"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/glfw3.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "005952c0b19d73185fc804ef7da3676aab23b4992a218dbea33ec82e78e2d3f1"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/sdl.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "f56e2e40e77cb264a45e4f7e46104e883b22bfad849342277f69f2cbaeff7a82"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/sunxifb_custom.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "1aa28010d0f56ad62b223eedc76d8b9d11883b64dbe50b62858db24de11ea87b"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/wayland.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "48ac39d489cd26f6dd2632dcf4f9d550f57087755bcc3318043f931697f7b107"
+    },
+    "apps/lv_port_linux/src/lib/display_backends/x11.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "610a6a70a41c23f7af0f322b24bbbf77a9fb9362a2a2a61e7fbbb70f2d0e15c0"
+    },
+    "apps/lv_port_linux/src/lib/driver_backends.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "c8df2da584a3aa0976477834fc5bb051f15ea5341cc9cc616ddc9907e45288ee"
+    },
+    "apps/lv_port_linux/src/lib/driver_backends.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "a0d3e637d86d1260b9c30e263491c59d8d0be00c8d6967f568aa69e348862a99"
+    },
+    "apps/lv_port_linux/src/lib/indev_backends/evdev.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "a61c85e18267a759f58dc41ac44a78040cd8ac0d2564171fa6a2b21c03da1067"
+    },
+    "apps/lv_port_linux/src/lib/mouse_cursor_icon.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "14bcce3caa0ff11a2ed1de6378cff52a85d37b3bf226fa84fb283e41bc2dcb80"
+    },
+    "apps/lv_port_linux/src/lib/simulator_settings.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "680fda632b32129d176af17714acb4ca50a8ab4fe35b0959f263e0e2bb7326e6"
+    },
+    "apps/lv_port_linux/src/lib/simulator_util.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "59d6e19634b29483613033924f4cef188bdd821c742f448a3627cecc404b58a9"
+    },
+    "apps/lv_port_linux/src/lib/simulator_util.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "f144eda730b78633379b3437d61adf73bfdeccf783bc1cb113321f7c97aaedc6"
+    },
+    "apps/lv_port_linux/src/middleware/middleware.c": {
+      "owner": "shared-frozen",
+      "sha256": "3a64e4b6394bbff20530e59398d52fd29e01c6651accbf03d1d507658f9b338c"
+    },
+    "apps/lv_port_linux/src/middleware/middleware.h": {
+      "owner": "shared-frozen",
+      "sha256": "28901cd87e233af0882bae6df2c7fb411bebb0940794e297a8aa24a7b9bc21ee"
+    },
+    "apps/lv_port_linux/src/platform/a133/platform_capabilities_a133.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/platform/platform_capabilities.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/platform/platform_capabilities.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/app_manager.c": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/app_manager.h": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/app_registry.c": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/app_registry.h": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/backend_service.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/backend_types.h": {
+      "owner": "shared-frozen",
+      "sha256": "1deb1d5c4c0d0b9d4dd1795d80cf2d487ccfe8b669afbb250d222674cb22a085"
+    },
+    "apps/lv_port_linux/src/system/backlight_control.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "9145016d19f54c17873da45485e2d2f61d074b9151864d8b15f93b01181f4355"
+    },
+    "apps/lv_port_linux/src/system/backlight_control.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "7614ce0677de9527442daca15196c34000aac65b3a9742c37d7be6d1e44c9203"
+    },
+    "apps/lv_port_linux/src/system/bluez_player_monitor.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/bluez_player_monitor.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/bt_pcm_player.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "0772716357de34c1cc87bc0789679ac7c910ba3a8a20d11645fc66df2219616f"
+    },
+    "apps/lv_port_linux/src/system/bt_pcm_player.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "9aace3fa603a839adcb23203554978229be8f2f902c9cc914db829fbfc5d2571"
+    },
+    "apps/lv_port_linux/src/system/config/app_config.c": {
+      "owner": "shared-frozen",
+      "sha256": "f1969b994b3ed2c633ba00eae737853010247d169adecc1e43df297a6ac834be"
+    },
+    "apps/lv_port_linux/src/system/config/app_config.h": {
+      "owner": "shared-frozen",
+      "sha256": "265cbdad76f47c0822b96da89f19d8c71c5e6ffd1430223e36bf4f9376d08c04"
+    },
+    "apps/lv_port_linux/src/system/config/app_config_defaults.h": {
+      "owner": "shared-frozen",
+      "sha256": "231f4df8341a8a945e76b5f35f7e51da4c7575c2895245e17f15bfd153dd4be5"
+    },
+    "apps/lv_port_linux/src/system/device_identity.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/led_strip_hal.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/led_strip_hal.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/log/app_log.c": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/log/app_log.h": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/ota_slot.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_ai.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_ai_runtime.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_bt.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_bt.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_cloud.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_cloud.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_cloud_stub.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_cloud_validation.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_cloud_validation.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_hdmi_preview.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_hdmi_preview.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_led.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_led.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_ota.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_ota.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_sensor.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_sensor.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_time.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_time.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_video.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_video.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_wifi.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/service_wifi.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/settings.c": {
+      "owner": "shared-frozen",
+      "sha256": "848ed8a9150b11f82b6fddc4377325b19db1915d2953a3bdefeeea994848ba56"
+    },
+    "apps/lv_port_linux/src/system/settings.h": {
+      "owner": "shared-frozen",
+      "sha256": "483e2d8d125062d602820f5e5a03200276aeb5d0c52363905ea5ca847f546a03"
+    },
+    "apps/lv_port_linux/src/system/volume_control.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "f7b8ff7567ae1605d940a601cab06566195487405cba35655f5a7f989f26d2eb"
+    },
+    "apps/lv_port_linux/src/system/volume_control.h": {
+      "owner": "platform-client-frozen",
+      "sha256": "7a1337a7097677eb9e64e20663164232d03b568dbdb6737bf85a12e65fd920fa"
+    },
+    "apps/lv_port_linux/src/system/wifi_hal.c": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/wifi_hal.h": {
+      "owner": "platform"
+    },
+    "apps/lv_port_linux/src/system/wifi_hal_types.h": {
+      "owner": "platform"
+    }
+  },
+  "migration_complete": false,
+  "platform_id": "a133",
+  "schema_version": 1,
+  "scopes": [
+    "apps/lv_port_linux/src/system",
+    "apps/lv_port_linux/src/backend",
+    "apps/lv_port_linux/src/platform",
+    "apps/lv_port_linux/src/ipc",
+    "apps/lv_port_linux/src/middleware",
+    "apps/lv_port_linux/src/lib",
+    "apps/lv_port_linux/src/draw"
+  ],
+  "sdk_repository": "100askTeam/A133-AIDesktop-Tina5"
+}

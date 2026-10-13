@@ -47,6 +47,7 @@ def build(sdk, pin, output):
             subprocess.run([str(p) for p in command], cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
     execute('public-source-audit', [sys.executable, ROOT/'tools/public_release_audit.py', '--candidate'])
     execute('contracts', [sys.executable, ROOT/'tools/update/check_contracts.py'])
+    execute('source-ownership', [sys.executable, ROOT/'tools/update/source_ownership.py'])
     execute('desktop', [sys.executable, ROOT/'tools/update/application_sdk.py', 'build', '--sdk', sdk,
                         '--expected-sdk-sha256', pin, '--build-dir', output/'desktop'])
     web = ROOT/'apps/ipkvm/upstream/ui'
@@ -58,6 +59,7 @@ def build(sdk, pin, output):
     execute('sbom', [sys.executable, ROOT/'tools/generate_sbom.py', '--output', output/'sbom'])
     shutil.copyfile(sdk/'sdk-lock.json', output/'sdk-lock.json')
     shutil.copyfile(ROOT/'docs/update/platform-contract-lock.json', output/'platform-contract-lock.json')
+    shutil.copyfile(ROOT/'docs/update/source-ownership.json', output/'source-ownership.json')
     # Bind Web inputs and outputs too, so a stale directory cannot be silently
     # paired with a newly compiled desktop. These records are still unsigned.
     dependencies = {str(p.relative_to(ROOT)): digest(p) for p in [web/'package-lock.json', ROOT/'third_party/components.json']}

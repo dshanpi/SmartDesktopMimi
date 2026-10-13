@@ -23,7 +23,7 @@ NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,140}')
 HASH = re.compile(r'[a-f0-9]{64}')
 COMMON = {'source.tar.gz', 'sbom.spdx.json', 'platform-contract-lock.json'}
 APPLICATION = {'application.tar.gz', 'manifest.json', 'manifest.sig',
-               'application-build.json', 'sdk-lock.json', 'dependency-lock.json'}
+               'application-build.json', 'sdk-lock.json', 'dependency-lock.json', 'source-ownership.json'}
 SYSTEM = {'system.img.gz', 'system-manifest.json', 'system-manifest.sig',
           'system-build.json', 'sdk-components.json', 'factory-manifest.json',
           'factory-manifest.sig', 'dependency-lock.json'}
