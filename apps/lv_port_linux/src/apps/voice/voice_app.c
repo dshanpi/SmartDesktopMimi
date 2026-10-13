@@ -14,6 +14,9 @@ static bool active, enabled, armed, owns_session, listening_seen, received;
 static ai_status_t status;
 static mimi_command_t proposal;
 static uint32_t armed_at, proposed_at;
+/* The frozen legacy topic has no utterance ID. Retain the last observed user
+ * text only for this page, including the GET_STATUS cache replay while idle. */
+static char last_user_text[sizeof(((ai_text_t *)0)->text)];
 static const char * tr(const char * z, const char * e)
 {
     return ui_i18n_is_zh() ? z : e;
@@ -54,7 +57,12 @@ static void prepare(lv_event_t * event)
 static void edited(lv_event_t * event)
 {
     (void)event;
+    bool was_listening = armed;
+    stop_listen();
     clear_proposal();
+    if(was_listening && message)
+        lv_label_set_text(message, tr("已停止语音输入，请预览文字指令",
+                                      "Voice input stopped. Preview your typed command."));
 }
 static void execute(lv_event_t * event)
 {
@@ -119,9 +127,13 @@ static void on_status(const mw_msg_t * msg)
     if(!active || !msg || !msg->data || msg->data_len != sizeof(status)) return;
     memcpy(&status, msg->data, sizeof(status));
     received = true;
-    if(armed && status.state == AI_STATE_LISTENING) {
+    if(armed && status.free_chat_active && status.state == AI_STATE_LISTENING) {
         listening_seen = true;
         lv_label_set_text(message, tr("正在聆听，请说出导航指令…", "Listening. Speak a navigation command…"));
+    }
+    if(armed && listening_seen && !status.free_chat_active) {
+        stop_listen();
+        lv_label_set_text(message, tr("识别会话已结束，请重新开始", "Recognition session ended. Start again."));
     }
     if(armed &&
        (status.last_error_code || status.state == AI_STATE_NETWORK_UNAVAILABLE || status.state == AI_STATE_ERROR)) {
@@ -132,12 +144,36 @@ static void on_status(const mw_msg_t * msg)
 }
 static void on_text(const mw_msg_t * msg)
 {
-    if(!active || !enabled || !armed || !listening_seen || !msg || !msg->data || msg->data_len != sizeof(ai_text_t))
+    if(!active || !msg || !msg->data || msg->data_len != sizeof(ai_text_t))
         return;
     const ai_text_t * t = (const ai_text_t *)msg->data;
     size_t n = strnlen(t->text, sizeof(t->text)); /* Existing Tuya adapter prefixes genuine ASR with You:, replies with
                                                      Assistant:. All proposals still require a local confirmation. */
     if(n >= sizeof(t->text) || n <= 5 || strncmp(t->text, "You: ", 5)) return;
+    bool repeated = !strcmp(last_user_text, t->text);
+    memcpy(last_user_text, t->text, n + 1);
+    if(!enabled || !armed || !listening_seen) return;
+    if(lv_tick_elaps(armed_at) > 30000 || !status.free_chat_active ||
+       !status.tuya_bound || !status.control_center_running) {
+        stop_listen();
+        clear_proposal();
+        lv_label_set_text(message, tr("识别会话已结束或超时，请重新开始",
+                                      "Recognition session ended or timed out. Start again."));
+        return;
+    }
+    if(repeated) {
+        lv_label_set_text(message, tr("已忽略重复或缓存的转写，请输入文字或换一种说法",
+                                      "Repeated or cached transcript ignored. Type the command or rephrase it."));
+        return;
+    }
+    /* Never truncate a long transcript into a shorter whitelisted command. */
+    if(n - 5 > 127) {
+        stop_listen();
+        clear_proposal();
+        lv_label_set_text(message, tr("转写过长，请使用简短导航指令",
+                                      "Transcript too long. Use a short navigation command."));
+        return;
+    }
     stop_listen();
     lv_textarea_set_text(entry, t->text + 5);
     prepare(NULL);
@@ -198,6 +234,7 @@ static void close_app(void)
     proposal                                                                    = MIMI_COMMAND_NONE;
     enabled = received = false;
     memset(&status, 0, sizeof(status));
+    memset(last_user_text, 0, sizeof(last_user_text));
 }
 static void focus(lv_event_t * e)
 {

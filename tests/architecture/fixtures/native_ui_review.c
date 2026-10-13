@@ -32,9 +32,12 @@
  * read account configuration or call the real cloud. */
 static bool review_iot_connected;
 static unsigned review_iot_commands;
+static const char *review_iot_reply="{\"accepted\":true,\"state_confirmed\":false}";
+static unsigned review_iot_delay_us;
 int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_t cap){
+ if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
- if(command){review_iot_commands++;snprintf(out,cap,"{\"accepted\":true,\"state_confirmed\":false}");return 0;}
+ if(command){review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
  else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"TEST Lamp\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}");
  return 0;
@@ -394,14 +397,50 @@ int main(int argc,char**argv) {
   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"开始识别":"Start recognition");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
   state.state=AI_STATE_LISTENING;state.free_chat_active=true;emit(TOPIC_AI_STATUS,&state,sizeof(state));
   strcpy(text.text,"Assistant: 打开设置");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
-  strcpy(text.text,"You: 打开设置");int before=app_open_count;emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();assert(!strcmp(lv_textarea_get_text(entry),"打开设置"));assert(app_open_count==before);
+  strcpy(text.text,"You: 打开设置");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
+  strcpy(text.text,"You: open settings");int before=app_open_count;emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();assert(!strcmp(lv_textarea_get_text(entry),"open settings"));assert(app_open_count==before);
   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"确认执行":"Confirm action");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);assert(app_open_count==before+1);
   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);assert(app_open_count==before+1);
   lv_textarea_set_text(entry,"open settings");l=find_label(lv_scr_act(),ui_i18n_is_zh()?"预览文字指令":"Preview command");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);lv_tick_inc(31000);pump();
   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"确认执行":"Confirm action");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);assert(app_open_count==before+1);
-  puts("PASS voice host fixture: disabled ignores transcripts, assistant text ignored, confirmation required and single-use, stale action rejected");
+  /* Deadline must be checked on receipt even before the LVGL timer runs. */
+  state.state=AI_STATE_IDLE;state.free_chat_active=false;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  l=find_label(lv_scr_act(),ui_i18n_is_zh()?"开始识别":"Start recognition");lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+  state.state=AI_STATE_LISTENING;state.free_chat_active=true;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  lv_tick_inc(30001);strcpy(text.text,"You: open wifi");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
+  /* A long string must not be truncated into a recognized short command. */
+  state.state=AI_STATE_IDLE;state.free_chat_active=false;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+  state.state=AI_STATE_LISTENING;state.free_chat_active=true;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  memset(text.text,' ',sizeof(text.text));memcpy(text.text,"You: open settings",18);strcpy(text.text+180," invalid suffix");
+  emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
+  /* Provider session closure disarms acceptance immediately. */
+  state.state=AI_STATE_IDLE;state.free_chat_active=false;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+  state.state=AI_STATE_LISTENING;state.free_chat_active=true;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  state.state=AI_STATE_IDLE;state.free_chat_active=false;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  strcpy(text.text,"You: go home");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
+  assert(app_open_count==before+1);
+  /* Manual editing takes ownership of the text and stops speech input. */
+  lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+  state.state=AI_STATE_LISTENING;state.free_chat_active=true;emit(TOPIC_AI_STATUS,&state,sizeof(state));
+  lv_textarea_set_text(entry,"open bluetooth");strcpy(text.text,"You: open pairing");
+  emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strcmp(lv_textarea_get_text(entry),"open bluetooth"));
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"已停止语音输入，请预览文字指令":"Voice input stopped. Preview your typed command."));
+  puts("PASS voice: cached/duplicate text, assistant text, expired receipt before timer, long transcript, closed session rejected; confirmation single-use");
  }else if(strncmp(argv[1],"iot",3)==0){
   review_iot_connected=strcmp(argv[1],"iot")!=0;
+  bool rejected=!strcmp(argv[1],"iot-rejected"),malformed=!strcmp(argv[1],"iot-malformed");
+  if(rejected)review_iot_reply="{\"accepted\":false,\"state_confirmed\":false}";
+  if(malformed)review_iot_reply="{\"accepted\":true,\"state_confirmed\":false} garbage";
+  if(!strcmp(argv[1],"iot-reopen")){
+   review_iot_delay_us=300000;app_iot.init();app_iot.close();app_iot.init();pump();
+   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"正在等待上一请求结束…":"Waiting for the previous request to finish…"));
+   for(int i=0;i<80;i++){usleep(10000);lv_tick_inc(100);pump();}
+   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"TEST Lamp  ·  在线":"TEST Lamp  ·  Online"));
+   puts("PASS IoT reopen: pending request visible; obsolete generation discarded; refreshed devices shown");
+   save(argv[4]);return 0;
+  }
   app_iot.init();for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
   if(review_iot_connected){
    lv_obj_t*l=find_label(lv_scr_act(),ui_i18n_is_zh()?"TEST Lamp  ·  在线":"TEST Lamp  ·  Online");assert(l);
@@ -416,7 +455,9 @@ int main(int argc,char**argv) {
    l=find_label(lv_layer_top(),ui_i18n_is_zh()?"确认发送":"Send command");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
    assert(review_iot_commands==1);
-   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"指令已受理，尚未确认设备状态。请刷新核对结果。":"Command accepted; device state is not confirmed. Refresh to check the result."));
+   const char *accepted=ui_i18n_is_zh()?"指令已受理，尚未确认设备状态。请刷新核对结果。":"Command accepted; device state is not confirmed. Refresh to check the result.";
+   if(rejected || malformed){assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…"));assert(!find_label(lv_scr_act(),accepted));assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"未确认指令受理结果。请先刷新设备状态，避免重复操作。":"Command acceptance is unconfirmed. Refresh device state before retrying."));}
+   else assert(find_label(lv_scr_act(),accepted));
    puts("PASS IoT host fixture: explicit confirmation, cancel sends nothing, one command, no false state confirmation");
   }
  }else if(strcmp(argv[1],"pairing")==0){

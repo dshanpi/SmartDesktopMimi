@@ -53,3 +53,15 @@ Official references consulted on 2026-10-13:
 Status: host protocol, permission and LVGL fixture tests passed. Live Tuya
 account/device acceptance is NOT RUN pending authorized cloud inputs and a
 real test device. A133 UI compilation is not evidence of real device control.
+
+### Desktop response contract
+
+A command acknowledgement is exactly an object with boolean `accepted: true`
+and `state_confirmed: false`. The native client must not infer acceptance from
+HTTP 200 alone or infer device state from an acknowledgement. Missing/mistyped
+flags, rejected acknowledgements, conflicting fields and malformed JSON show
+an unconfirmed result; users must refresh state before deciding to retry.
+Commands are never retried automatically. Readbacks remain separate requests.
+The client rejects embedded NUL bytes, trailing JSON garbage and credential
+strings with embedded NULs. Opening the app while a prior worker is finishing
+shows a waiting state; old-generation responses cannot repopulate the page.

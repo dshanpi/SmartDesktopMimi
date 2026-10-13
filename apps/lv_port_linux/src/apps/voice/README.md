@@ -29,3 +29,19 @@ single-use confirmation and expiry. Actual microphone-to-cloud-to-navigation
 acceptance still needs to run on the target; injected IPC text is not that test.
 A future provider with authenticated transcript roles/session IDs should use a
 separate versioned capability instead of changing the frozen IPC contract.
+
+## Legacy transcript handling
+
+The app remembers the most recent valid user-prefixed text for the current page,
+including cached GET_STATUS replies seen before recognition. Exact repeats are
+ignored with an explanation. The legacy topic cannot prove utterance freshness:
+a deliberately repeated phrase may also be ignored; type it or rephrase it.
+This filter does not replace authenticated utterance/session identifiers, and
+explicit local confirmation remains mandatory. No transcript is persisted.
+
+Receipt checks the 30-second deadline directly, even if the UI timer has not
+run. Ended provider sessions, unavailable providers and transcripts longer than
+127 UTF-8 bytes cannot create proposals. Long text is rejected before the
+textarea can truncate it into a valid command. Manual edits stop recognition so
+a subsequent speech response cannot replace typed text. Host tests cover these
+boundaries; actual spoken recognition still requires target-board acceptance.

@@ -1,4 +1,5 @@
 #include "iot_client.h"
+#include "iot_json.h"
 #include <curl/curl.h>
 #include <json-c/json.h>
 #include <ctype.h>
@@ -28,7 +29,7 @@ static size_t receive(void * ptr, size_t size, size_t count, void * user)
     struct result * r = user;
     if(size && count > SIZE_MAX / size) return 0;
     size_t n = size * count;
-    if(n >= r->capacity - r->used) return 0;
+    if(n >= r->capacity - r->used || memchr(ptr, 0, n)) return 0;
     memcpy(r->data + r->used, ptr, n);
     r->used += n;
     r->data[r->used] = 0;
@@ -72,12 +73,14 @@ int mimi_iot_request(const char * path, const char * command, char * out, size_t
     ssize_t n = read(fd, raw, sizeof(raw) - 1);
     close(fd);
     if(n != st.st_size) return -2;
-    json_object *config = json_tokener_parse(raw), *endpoint = NULL, *token = NULL;
+    json_object *config = mimi_iot_json_object(raw, (size_t)n), *endpoint = NULL, *token = NULL;
     bool valid = config && json_object_get_type(config) == json_type_object && json_object_object_length(config) == 2 &&
                  json_object_object_get_ex(config, "endpoint", &endpoint) &&
                  json_object_get_type(endpoint) == json_type_string &&
                  json_object_object_get_ex(config, "token", &token) &&
-                 json_object_get_type(token) == json_type_string && origin_valid(json_object_get_string(endpoint)) &&
+                 json_object_get_type(token) == json_type_string &&
+                 strlen(json_object_get_string(endpoint)) == (size_t)json_object_get_string_len(endpoint) &&
+                 strlen(json_object_get_string(token)) == (size_t)json_object_get_string_len(token) && origin_valid(json_object_get_string(endpoint)) &&
                  token_valid(json_object_get_string(token));
     if(!valid) {
         if(config) json_object_put(config);

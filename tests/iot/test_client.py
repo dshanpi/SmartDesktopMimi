@@ -24,4 +24,12 @@ class ClientTests(unittest.TestCase):
    with self.subTest(origin=origin):self.assertIn('invalid_private_configuration',self.probe(self.config(origin)))
  def test_failed_connection_does_not_echo_credentials(self):
   output=self.probe(self.config());self.assertIn('connection_failed',output);self.assertNotIn('fixture_only_',output)
+ def test_valid_prefix_followed_by_garbage_or_nul_is_rejected(self):
+  for suffix in [' trailing', '\x00ignored', '{}']:
+   p=self.config();p.write_bytes(p.read_bytes()+suffix.encode())
+   with self.subTest(suffix=repr(suffix)):self.assertIn('invalid_private_configuration',self.probe(p))
+ def test_embedded_nul_in_credentials_is_rejected(self):
+  for field in ['token','endpoint']:
+   p=self.config();data=json.loads(p.read_text());data[field]+='\x00suffix';p.write_text(json.dumps(data))
+   with self.subTest(field=field):self.assertIn('invalid_private_configuration',self.probe(p))
 if __name__=='__main__':unittest.main()

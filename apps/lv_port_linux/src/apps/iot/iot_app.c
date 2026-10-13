@@ -1,5 +1,6 @@
 #include "iot_app.h"
 #include "iot_client.h"
+#include "iot_json.h"
 #include "../../system/app_manager.h"
 #include "../../ui/mimi_ui.h"
 #include "../../ui/ui_fonts.h"
@@ -101,7 +102,12 @@ static bool is_busy(void)
 static void fetch_devices(lv_event_t * event)
 {
     (void)event;
-    if(is_busy()) return;
+    if(modal) return;
+    if(is_busy()) {
+        lv_label_set_text(message, tr("正在等待上一请求结束…", "Waiting for the previous request to finish…"));
+        lv_obj_add_state(refresh, LV_STATE_DISABLED);
+        return;
+    }
     selected_id[0] = 0;
     lv_obj_clean(content);
     launch("/v1/devices", NULL);
@@ -135,6 +141,8 @@ static char pending[2048];
 static void send_confirmed(lv_event_t * e)
 {
     (void)e;
+    if(is_busy() || !modal || !identifier(selected_id) || !selected_online || !selected_controls || !pending[0])
+        return;
     char path[320];
     snprintf(path, sizeof(path), "/v1/devices/%s/commands", selected_id);
     close_modal(NULL);
@@ -354,10 +362,15 @@ static void tick(lv_timer_t * t)
         return;
     }
     lv_obj_remove_state(refresh, LV_STATE_DISABLED);
-    json_object * root = result ? json_tokener_parse(result) : NULL;
+    json_object * root = result ? mimi_iot_json_object(result, strlen(result)) : NULL;
     free(result);
-    if(rc || !root) {
+    if(rc || !root || (strstr(path, "/commands") && !mimi_iot_command_accepted(root))) {
         const char * error = field(root, "error");
+        if(strstr(path, "/commands")) {
+            /* An unknown outcome may already have changed the real device. */
+            lv_obj_clean(content);
+            button(content, tr("刷新设备状态", "Refresh device status"), fetch_devices, NULL);
+        }
         lv_label_set_text(message,
                           !strcmp(error, "not_configured")
                               ? tr("尚未连接智家账号，请由管理员配置受限授权",
@@ -365,8 +378,11 @@ static void tick(lv_timer_t * t)
                               : !strcmp(error, "authorization_required")
                                     ? tr("授权已失效或权限不足，请重新授权",
                                          "Authorization expired or permission denied. Reauthorize the account.")
-                                    : tr("连接失败或设备未接受指令，请刷新后重试",
-                                         "Connection failed or command rejected. Refresh before retrying."));
+                                    : strstr(path, "/commands")
+                                          ? tr("未确认指令受理结果。请先刷新设备状态，避免重复操作。",
+                                               "Command acceptance is unconfirmed. Refresh device state before retrying.")
+                                          : tr("连接失败或设备数据无效，请刷新后重试",
+                                               "Connection failed or invalid device data. Refresh before retrying."));
     } else if(strstr(path, "/commands")) {
         lv_obj_clean(content);
         lv_label_set_text(message, tr("指令已受理，尚未确认设备状态。请刷新核对结果。",
