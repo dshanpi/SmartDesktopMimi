@@ -51,7 +51,7 @@ $(TARGET): $(OBJECTS)
 $(OBJECT_DIR):
 	mkdir -p $@
 
-$(OBJECT_DIR)/main.o: main.cpp capture_cache_sync.h | $(OBJECT_DIR)
+$(OBJECT_DIR)/main.o: main.cpp capture_cache_sync.h capture_supervisor.h | $(OBJECT_DIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wno-unused-function -c -o $@ $<
 
 $(OBJECT_DIR)/sdklog.o: $(SDK_LIB_DIR)/sdk_log/sdklog.c | $(OBJECT_DIR)

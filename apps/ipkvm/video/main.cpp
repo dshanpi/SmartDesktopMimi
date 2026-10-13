@@ -29,6 +29,7 @@
 #include "AWVideoEncoder.h"
 #include "sunxiMemInterface.h"
 #include "capture_cache_sync.h"
+#include "capture_supervisor.h"
 extern "C" {
 #include <videoOutPort.h>
 }
@@ -99,15 +100,15 @@ using namespace awvideoencoder;
 
 // Global variables
 static int g_video_fd = -1;
-static bool g_running = false;
+static std::atomic<bool> g_running(false);
 static std::atomic<bool> g_capture_started(false);
 static std::atomic<bool> g_capture_stopping(false);
-static time_t g_last_capture_stop_time = 0;
 static pthread_t g_cap_thread = 0;
 static AWVideoEncoder* g_encoder = NULL;
-static std::atomic<bool> g_display_requested(true);
+static std::atomic<bool> g_display_requested(false);
 static std::atomic<bool> g_display_enabled(false);
 static std::atomic<bool> g_stream_requested(false);
+static std::atomic<bool> g_snapshot_requested(false);
 static std::atomic<bool> g_force_keyframe(false);
 static std::atomic<uint64_t> g_frame_count(0);
 static std::atomic<uint64_t> g_last_frame_ms(0);
@@ -149,6 +150,7 @@ static int g_video_socket_fd = -1;
 // Timestamp for frames
 static uint64_t g_encoder_start_time = 0;
 static pthread_t g_snapshot_server_thread = 0;
+static pthread_t g_capture_supervisor_thread = 0;
 static pthread_t g_snapshot_encode_thread = 0;
 static pthread_mutex_t g_snapshot_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_snapshot_cond = PTHREAD_COND_INITIALIZER;
@@ -159,6 +161,7 @@ static long g_snapshot_size = 0;
 
 static void* capture_thread(void* arg);
 static int ensure_capture_started(void);
+static void stop_capture_if_idle(void);
 static int init_display_output(void);
 static void deinit_display_output(void);
 static void set_display_requested(bool enabled);
@@ -428,12 +431,6 @@ static void* snapshot_server_thread(void*)
     while (g_running) {
         int client = accept4(server_fd, NULL, NULL, SOCK_CLOEXEC);
         if (client < 0) {
-            // This thread is also the lightweight capture supervisor. A lost
-            // HDMI signal or V4L2 timeout must recover without waiting for a
-            // browser, UI action or operator intervention.
-            if (g_display_requested.load() || g_stream_requested.load()) {
-                (void)ensure_capture_started();
-            }
             usleep(50000);
             continue;
         }
@@ -447,16 +444,10 @@ static void* snapshot_server_thread(void*)
              * MCP control must not depend on a browser already consuming
              * WebRTC video. After a reboot there is normally no peer session,
              * so start the shared capture pipeline on the first snapshot
-             * request and let a later WebRTC start/stop command adopt it.
-             * Keeping the pipeline alive also avoids a two-second hardware
-             * encoder warm-up before every agent step.
+             * request. The dedicated supervisor owns capture start/join/stop;
+             * after the snapshot it releases capture unless display or WebRTC
+             * still needs it. A snapshot is not persistent demand.
              */
-            if (ensure_capture_started() != 0) {
-                dprintf(client, "ERROR capture-start\n");
-                close(client);
-                continue;
-            }
-
             struct timespec deadline;
             clock_gettime(CLOCK_REALTIME, &deadline);
             deadline.tv_sec += 8;
@@ -466,6 +457,7 @@ static void* snapshot_server_thread(void*)
             } else {
                 g_snapshot_state = 1;
                 g_snapshot_result = -1;
+                g_snapshot_requested.store(true);
                 pthread_cond_broadcast(&g_snapshot_cond);
                 while (g_running && g_snapshot_state != 3) {
                     if (pthread_cond_timedwait(&g_snapshot_cond,
@@ -485,20 +477,19 @@ static void* snapshot_server_thread(void*)
                 pthread_cond_broadcast(&g_snapshot_cond);
             }
             pthread_mutex_unlock(&g_snapshot_lock);
+            g_snapshot_requested.store(false);
         } else if (length == 10 && memcmp(command, "DISPLAY 1\n", 10) == 0) {
             set_display_requested(true);
-            if (init_display_output() == 0 && ensure_capture_started() == 0) {
+            if (init_display_output() == 0) {
                 dprintf(client, "OK display=enabled\n");
             } else {
+                set_display_requested(false);
                 dprintf(client, "ERROR display-start\n");
             }
         } else if (length == 10 && memcmp(command, "DISPLAY 0\n", 10) == 0) {
             set_display_requested(false);
             dprintf(client, "OK display=disabled\n");
         } else if (length == 7 && memcmp(command, "STATUS\n", 7) == 0) {
-            if (g_display_requested.load()) {
-                (void)ensure_capture_started();
-            }
             const uint64_t now_ms = get_timestamp_ms();
             const uint64_t last_frame_ms = g_last_frame_ms.load();
             const uint64_t frame_age_ms = last_frame_ms == 0
@@ -1025,6 +1016,43 @@ static int ensure_capture_started(void)
     return 0;
 }
 
+// Called only by the dedicated supervisor, never by control/snapshot/capture
+// workers. A single lifecycle owner prevents concurrent pthread_join/restart.
+static void stop_capture_if_idle(void)
+{
+    pthread_mutex_lock(&g_cap_mutex);
+    if (g_display_requested.load() || g_stream_requested.load() || g_snapshot_requested.load() ||
+        g_capture_stopping || !g_cap_thread) {
+        pthread_mutex_unlock(&g_cap_mutex);
+        return;
+    }
+    g_capture_stopping = true;
+    g_capture_started = false;
+    const pthread_t stopping_thread = g_cap_thread;
+    g_cap_thread = 0;
+    pthread_mutex_unlock(&g_cap_mutex);
+
+    pthread_join(stopping_thread, NULL);
+    // Preserve the vendor's release interval before another V4L2 STREAMON.
+    sleep(1);
+    pthread_mutex_lock(&g_cap_mutex);
+    g_last_frame_ms.store(0);
+    // An intentional idle stop is not a failed capture attempt; the next
+    // snapshot should not be delayed by the signal-recovery retry throttle.
+    g_last_capture_attempt_ms.store(0);
+    g_capture_stopping = false;
+    pthread_mutex_unlock(&g_cap_mutex);
+    kvm_log("[CAPTURE] no consumers; shared pipeline released\n");
+}
+
+static void* capture_supervisor_thread(void*)
+{
+    run_capture_supervisor(g_running, g_display_requested, g_stream_requested,
+                           g_snapshot_requested, ensure_capture_started,
+                           stop_capture_if_idle);
+    return NULL;
+}
+
 // Try to connect to ctrl socket only (for reconnection)
 static int connect_ctrl_socket(void)
 {
@@ -1127,6 +1155,7 @@ static void* control_thread(void* arg)
         int n = read(g_ctrl_fd, buffer, sizeof(buffer) - 1);
         if (n <= 0) {
             kvm_log("[CTRL] Ctrl socket closed, reconnecting...\n");
+            g_stream_requested.store(false);
             close(g_ctrl_fd);
             g_ctrl_fd = -1;
             continue;
@@ -1137,95 +1166,22 @@ static void* control_thread(void* arg)
 
         char action[64];
         if (parse_action(buffer, action, sizeof(action)) == 0) {
-            bool ensure_after_unlock = false;
-            pthread_mutex_lock(&g_cap_mutex);
-
+            // Publish demand only. The dedicated supervisor owns all capture
+            // lifecycle changes, including restarting after signal loss.
             if (strcmp(action, "start_video") == 0) {
-                kvm_log("[CTRL] CMD: start_video received\n");
-                g_stream_requested.store(true);
                 g_force_keyframe.store(true);
-
-                // If we are currently stopping, we must wait for it to finish completely
-                // before trying to start again. We check this while holding the mutex.
-                while (g_capture_stopping) {
-                    kvm_log("[CTRL] Capture is still stopping, waiting for it to finish...\n");
-                    // Release mutex, wait a bit, then re-acquire and check again
-                    pthread_mutex_unlock(&g_cap_mutex);
-                    usleep(200000); // 200ms
-                    pthread_mutex_lock(&g_cap_mutex);
-                }
-
-                // Now we are guaranteed that any previous stop_video has completely finished
-                // (including the 1-second V4L2 release delay).
-
-                // Re-connect socket if it was closed
-                if (g_video_socket_fd < 0) {
-                    kvm_log("[CTRL] Re-connecting video socket...\n");
-                    g_video_socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-                    if (g_video_socket_fd >= 0) {
-                        struct sockaddr_un addr;
-                        memset(&addr, 0, sizeof(addr));
-                        addr.sun_family = AF_UNIX;
-                        strncpy(addr.sun_path, VIDEO_SOCKET_PATH, sizeof(addr.sun_path) - 1);
-                        if (connect(g_video_socket_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-                            close(g_video_socket_fd);
-                            g_video_socket_fd = -1;
-                            kvm_log("[WARN] Failed to reconnect video socket: %s (errno=%d)\n", VIDEO_SOCKET_PATH, errno);
-                        }
-                    }
-                }
-
-                if (!g_capture_started.load()) {
-                    ensure_after_unlock = true;
-                } else {
-                    kvm_log("[CTRL] Capture already running\n");
-                }
+                g_stream_requested.store(true);
+                kvm_log("[CTRL] Stream requested\n");
             } else if (strcmp(action, "stop_video") == 0) {
-                kvm_log("[CTRL] CMD: stop_video received\n");
                 g_stream_requested.store(false);
-                if (g_capture_started && !g_display_requested.load()) {
-                    kvm_log("[CTRL] Stopping capture...\n");
-                    g_capture_stopping = true;
-                    g_capture_started = false;
-
-                    if (g_cap_thread) {
-                        kvm_log("[CTRL] Waiting for capture thread to join...\n");
-                        pthread_mutex_unlock(&g_cap_mutex);
-                        pthread_join(g_cap_thread, NULL);
-                        pthread_mutex_lock(&g_cap_mutex);
-                        g_cap_thread = 0;
-                        kvm_log("[CTRL] Capture thread joined\n");
-                    }
-                    // Wait a bit to ensure V4L2 device is completely released by kernel
-                    // Moving sleep OUTSIDE the mutex to avoid blocking start_video
-                    kvm_log("[CTRL] Sleeping 1s outside mutex to release V4L2...\n");
-                    pthread_mutex_unlock(&g_cap_mutex);
-                    sleep(1);
-                    pthread_mutex_lock(&g_cap_mutex);
-
-                    kvm_log("[CTRL] Sleep 1s done, V4L2 should be released now\n");
-                    g_last_capture_stop_time = time(NULL);
-                    g_capture_stopping = false;
-                    kvm_log("[CTRL] Capture stopped\n");
-                } else if (g_capture_started) {
-                    kvm_log("[CTRL] Keeping shared capture for local display\n");
-                } else {
-                    kvm_log("[CTRL] Capture not running\n");
-                }
-
-                // Keep the media socket connected. A later WebRTC session
-                // requests a fresh IDR without disturbing local display.
+                kvm_log("[CTRL] Stream released\n");
             } else {
                 kvm_log("[CTRL] Unknown action: %s\n", action);
-            }
-
-            pthread_mutex_unlock(&g_cap_mutex);
-            if (ensure_after_unlock) {
-                (void)ensure_capture_started();
             }
         }
     }
 
+    g_stream_requested.store(false);
     kvm_log("[CTRL] Control thread exiting\n");
     return NULL;
 }
@@ -1719,6 +1675,10 @@ int main(int argc, char* argv[])
             &g_snapshot_encode_thread, NULL, snapshot_encode_thread, NULL);
         if (snapshot_error == 0) {
             snapshot_error = pthread_create(
+                &g_capture_supervisor_thread, NULL, capture_supervisor_thread, NULL);
+        }
+        if (snapshot_error == 0) {
+            snapshot_error = pthread_create(
                 &g_snapshot_server_thread, NULL, snapshot_server_thread, NULL);
         }
         if (snapshot_error != 0) {
@@ -1737,9 +1697,8 @@ int main(int argc, char* argv[])
     if (g_running) {
         pthread_create(&ctrl_thread, NULL, control_thread, NULL);
 
-        // Local display is a first-class consumer. Start the single capture
-        // pipeline without waiting for a browser session.
-        (void)ensure_capture_started();
+        // The dedicated supervisor starts capture only for an explicit display,
+        // stream or one-shot snapshot request. Boot and STATUS stay idle.
 
         // Wait for control thread
         pthread_join(ctrl_thread, NULL);
@@ -1747,6 +1706,10 @@ int main(int argc, char* argv[])
 
     g_running = false;
     pthread_cond_broadcast(&g_snapshot_cond);
+    if (g_capture_supervisor_thread) {
+        pthread_join(g_capture_supervisor_thread, NULL);
+        g_capture_supervisor_thread = 0;
+    }
     if (g_snapshot_server_thread) {
         pthread_join(g_snapshot_server_thread, NULL);
         g_snapshot_server_thread = 0;

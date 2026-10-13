@@ -73,6 +73,16 @@ def macro(name, path):
     return '-D{}="{}"'.format(name, str(path))
 
 
+class CaptureSupervisorTests(unittest.TestCase):
+    def test_demand_overlap_idle_release_and_restart_during_stop(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            executable = Path(temporary) / "capture-supervisor"
+            run(["g++", "-std=c++11", "-Wall", "-Wextra", "-Werror", "-pthread",
+                 "-I" + str(REPO / "apps/ipkvm/video"),
+                 REPO / "tests/platform/test_capture_supervisor.cpp", "-o", executable])
+            subprocess.run([str(executable)], check=True, timeout=15)
+
+
 class CaptureServer:
     def __init__(self, socket_path, image_path):
         self.socket_path = socket_path
