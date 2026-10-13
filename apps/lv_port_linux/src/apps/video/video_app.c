@@ -5,6 +5,7 @@
 
 #include "video_app.h"
 #include "../../ui/theme/theme.h"
+#include "../../ui/ui_i18n.h"
 #include "../../system/app_manager.h"
 #include "../../middleware/middleware.h"
 #include "../../system/backend_types.h"
@@ -195,10 +196,10 @@ static void reset_auto_hide_timer(void) {
 
 static void set_current_video_text(const char *title, const char *status, bool is_error) {
     if (current_title_label) {
-        lv_label_set_text(current_title_label, title && title[0] ? title : "Choose a video");
+        lv_label_set_text(current_title_label, title && title[0] ? title : ui_tr(UI_STR_VIDEO_CHOOSE));
     }
     if (current_status_label) {
-        lv_label_set_text(current_status_label, status && status[0] ? status : "Ready");
+        lv_label_set_text(current_status_label, status && status[0] ? status : ui_tr(UI_STR_READY));
         lv_obj_set_style_text_color(current_status_label,
                                     is_error ? lv_color_hex(0xFF8A80) : COLOR_TEXT_MUTED, 0);
     }
@@ -435,18 +436,18 @@ static void create_playlist_header(const char *status_text) {
 
     lv_obj_t * row = lv_obj_create(title_box);
     lv_obj_remove_style_all(row);
-    lv_obj_set_size(row, lv_pct(100), 32);
+    lv_obj_set_size(row, lv_pct(100), 48);
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t * pl_title = lv_label_create(row);
-    lv_label_set_text(pl_title, "Video Library");
+    lv_label_set_text(pl_title, ui_tr(UI_STR_VIDEO_LIBRARY));
     lv_obj_set_style_text_font(pl_title, FONT_TITLE, 0);
     lv_obj_set_style_text_color(pl_title, COLOR_TEXT_PRIMARY, 0);
 
     playlist_refresh_btn = lv_obj_create(row);
     lv_obj_remove_style_all(playlist_refresh_btn);
-    lv_obj_set_size(playlist_refresh_btn, 72, 28);
+    lv_obj_set_size(playlist_refresh_btn, 96, 48);
     lv_obj_set_style_radius(playlist_refresh_btn, 6, 0);
     lv_obj_set_style_bg_color(playlist_refresh_btn, lv_color_hex(0x243044), 0);
     lv_obj_set_style_bg_opa(playlist_refresh_btn, LV_OPA_COVER, 0);
@@ -454,19 +455,19 @@ static void create_playlist_header(const char *status_text) {
     lv_obj_add_event_cb(playlist_refresh_btn, playlist_refresh_cb, LV_EVENT_CLICKED, NULL);
     {
         lv_obj_t * rl = lv_label_create(playlist_refresh_btn);
-        lv_label_set_text(rl, "Refresh");
+        lv_label_set_text(rl, ui_tr(UI_STR_REFRESH));
         lv_obj_set_style_text_font(rl, UI_TEXT_BODY_MD, 0);
         lv_obj_set_style_text_color(rl, COLOR_TEXT_PRIMARY, 0);
         lv_obj_center(rl);
     }
 
     playlist_count_label = lv_label_create(title_box);
-    lv_label_set_text(playlist_count_label, status_text ? status_text : "Scanning the microSD card...");
+    lv_label_set_text(playlist_count_label, status_text ? status_text : ui_tr(UI_STR_VIDEO_SCAN_HINT));
     lv_obj_set_style_text_font(playlist_count_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(playlist_count_label, COLOR_TEXT_MUTED, 0);
 
     lv_obj_t * hint = lv_label_create(title_box);
-    lv_label_set_text(hint, "Up to 4K@30 · Compatible videos first · Unsupported files skipped");
+    lv_label_set_text(hint, ui_tr(UI_STR_VIDEO_COMPAT_HINT));
     lv_obj_set_width(hint, lv_pct(100));
     lv_label_set_long_mode(hint, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(hint, UI_TEXT_BODY_MD, 0);
@@ -508,7 +509,7 @@ static void scan_video_files(void) {
         playlist_count_label = NULL;
         playlist_empty_label = NULL;
         playlist_refresh_btn = NULL;
-        create_playlist_header("Scanning for videos...");
+        create_playlist_header(ui_tr(UI_STR_VIDEO_SCAN_HINT));
     }
 
     /* Request backend to scan */
@@ -535,7 +536,7 @@ static void playlist_item_click_cb(lv_event_t * e) {
     printf("[Video] Playlist item clicked: %d unsupported=%u\n", ud->index, ud->unsupported);
     reset_auto_hide_timer();
     if (ud->unsupported) {
-        show_toast("Unable to Play This Video",
+        show_toast(ui_tr(UI_STR_VIDEO_UNABLE),
                    ud->reason[0] ? ud->reason : "Unsupported format or resolution (maximum 4K@30)",
                    4500);
         /* Keep list open so user can pick another */
@@ -593,7 +594,7 @@ static void rebuild_playlist_rows(void)
     if (video_count > 0)
         snprintf(header_status, sizeof(header_status), "%d video%s", video_count, video_count == 1 ? "" : "s");
     else
-        snprintf(header_status, sizeof(header_status), "No videos found");
+        snprintf(header_status, sizeof(header_status), "%s", ui_tr(UI_STR_VIDEO_EMPTY));
 
     lv_obj_clean(playlist_content);
     playlist_count_label = NULL;
@@ -609,8 +610,9 @@ static void rebuild_playlist_rows(void)
 
     if (playlist_cache_count == 0 && !playlist_empty_label) {
         playlist_empty_label = lv_label_create(playlist_content);
-        lv_label_set_text(playlist_empty_label,
-                          "No videos found\nAdd MP4 or MKV files to the microSD card.\nIt mounts automatically at startup.");
+        lv_label_set_text(playlist_empty_label, ui_i18n_is_zh()
+                          ? "没有找到视频\n请将 MP4 或 MKV 文件\n放入 microSD 卡"
+                          : "No videos found\nAdd MP4 or MKV files\nto the microSD card");
         lv_obj_set_width(playlist_empty_label, lv_pct(100));
         lv_obj_set_style_text_align(playlist_empty_label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_style_text_font(playlist_empty_label, UI_TEXT_BODY_LG, 0);
@@ -920,7 +922,7 @@ static void on_video_status(const mw_msg_t * msg) {
     if (is_error) {
         const char *title = status->current_file[0] ? status->current_file : "Unable to play";
         set_current_video_text(title, "Unable to play", true);
-        show_toast("Unable to Play This Video", status->status_text, 2800);
+        show_toast(ui_tr(UI_STR_VIDEO_UNABLE), status->status_text, 2800);
         set_video_plane_visible(false, 0, 0);
         update_progress_ui(0, 0, true);
     } else if (status->current_file[0] || has_frame) {
@@ -937,7 +939,7 @@ static void on_video_status(const mw_msg_t * msg) {
         update_progress_ui(status->current_sec, status->total_sec, false);
     } else {
         hide_toast();
-        set_current_video_text("Choose a video", "Ready", false);
+        set_current_video_text(ui_tr(UI_STR_VIDEO_CHOOSE), ui_tr(UI_STR_READY), false);
         set_video_plane_visible(false, 0, 0);
         update_progress_ui(0, 0, true);
     }
@@ -1062,7 +1064,7 @@ void video_app_init(void) {
 
     video_hint_card = lv_obj_create(overlay_layer);
     lv_obj_remove_style_all(video_hint_card);
-    lv_obj_set_size(video_hint_card, 420, 248);
+    lv_obj_set_size(video_hint_card, 460, LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(video_hint_card, lv_color_hex(0x111827), 0);
     lv_obj_set_style_bg_opa(video_hint_card, LV_OPA_80, 0);
     lv_obj_set_style_border_width(video_hint_card, 1, 0);
@@ -1082,16 +1084,29 @@ void video_app_init(void) {
     lv_image_set_src(hint_icon, &video);
 
     lv_obj_t * hint_title = lv_label_create(video_hint_card);
-    lv_label_set_text(hint_title, "Choose a Video");
+    lv_label_set_text(hint_title, ui_tr(UI_STR_VIDEO_CHOOSE));
     lv_obj_set_style_text_font(hint_title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(hint_title, COLOR_TEXT_PRIMARY, 0);
 
     lv_obj_t * hint_text = lv_label_create(video_hint_card);
-    lv_label_set_text(hint_text, "Choose a video from the microSD card list.\nPlayback supports up to 4K@30.");
+    lv_label_set_text(hint_text, ui_i18n_is_zh()
+                      ? "请从 microSD 卡列表中选择视频。\n最高支持 4K@30。"
+                      : "Choose a video from the microSD card list.\nPlayback supports up to 4K@30.");
     lv_obj_set_width(hint_text, lv_pct(100));
     lv_obj_set_style_text_align(hint_text, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_font(hint_text, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(hint_text, COLOR_TEXT_MUTED, 0);
+
+    lv_obj_t *library_btn = lv_button_create(video_hint_card);
+    lv_obj_set_size(library_btn, lv_pct(100), 52);
+    lv_obj_set_style_bg_color(library_btn, UI_COLOR_PRIMARY, 0);
+    lv_obj_set_style_shadow_width(library_btn, 0, 0);
+    lv_obj_add_event_cb(library_btn, list_event_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *library_label = lv_label_create(library_btn);
+    lv_label_set_text(library_label, ui_tr(UI_STR_VIDEO_LIBRARY));
+    lv_obj_set_style_text_font(library_label, UI_TEXT_BODY_LG, 0);
+    lv_obj_set_style_text_color(library_label, lv_color_white(), 0);
+    lv_obj_center(library_label);
 
     /* Center toast for unsupported / errors */
     toast_card = lv_obj_create(overlay_layer);
@@ -1115,7 +1130,7 @@ void video_app_init(void) {
     lv_obj_add_flag(toast_card, LV_OBJ_FLAG_CLICKABLE);
 
     toast_title = lv_label_create(toast_card);
-    lv_label_set_text(toast_title, "Unable to Play This Video");
+    lv_label_set_text(toast_title, ui_tr(UI_STR_VIDEO_UNABLE));
     lv_obj_set_style_text_font(toast_title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(toast_title, lv_color_hex(0xFFCDD2), 0);
 
@@ -1129,7 +1144,7 @@ void video_app_init(void) {
 
     {
         lv_obj_t * toast_hint = lv_label_create(toast_card);
-        lv_label_set_text(toast_hint, "Choose a video at 4K@30 or below");
+        lv_label_set_text(toast_hint, ui_tr(UI_STR_VIDEO_COMPAT_HINT));
         lv_obj_set_style_text_font(toast_hint, UI_TEXT_BODY_MD, 0);
         lv_obj_set_style_text_color(toast_hint, COLOR_TEXT_MUTED, 0);
     }
@@ -1153,13 +1168,13 @@ void video_app_init(void) {
 
     /* Title (Centered) */
     lv_obj_t * title = lv_label_create(header_cont);
-    lv_label_set_text(title, "Video Player");
+    lv_label_set_text(title, ui_tr(UI_STR_VIDEO_PLAYER));
     lv_obj_set_style_text_color(title, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(title, FONT_TITLE, 0);
     lv_obj_center(title);
 
     current_title_label = lv_label_create(header_cont);
-    lv_label_set_text(current_title_label, "Choose a video");
+    lv_label_set_text(current_title_label, ui_tr(UI_STR_VIDEO_CHOOSE));
     lv_obj_set_width(current_title_label, 320);
     lv_label_set_long_mode(current_title_label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(current_title_label, UI_TEXT_BODY_MD, 0);
@@ -1168,7 +1183,7 @@ void video_app_init(void) {
     lv_obj_align(current_title_label, LV_ALIGN_RIGHT_MID, -24, -10);
 
     current_status_label = lv_label_create(header_cont);
-    lv_label_set_text(current_status_label, "Ready");
+    lv_label_set_text(current_status_label, ui_tr(UI_STR_READY));
     lv_obj_set_width(current_status_label, 320);
     lv_label_set_long_mode(current_status_label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(current_status_label, UI_TEXT_BODY_MD, 0);
@@ -1311,7 +1326,7 @@ void video_app_init(void) {
     lv_obj_set_scroll_dir(playlist_content, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(playlist_content, LV_SCROLLBAR_MODE_AUTO);
     
-    create_playlist_header("Scanning for videos...");
+    create_playlist_header(ui_tr(UI_STR_VIDEO_SCAN_HINT));
 
     /* Populate Playlist */
     scan_video_files();

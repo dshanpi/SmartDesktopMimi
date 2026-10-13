@@ -7,5 +7,6 @@
 void ui_all_apps_create(lv_obj_t *parent);
 void ui_all_apps_show(void);
 void ui_all_apps_hide(void);
+bool ui_all_apps_is_visible(void);
 
 #endif /* DESKTOP_ALL_APPS_H */

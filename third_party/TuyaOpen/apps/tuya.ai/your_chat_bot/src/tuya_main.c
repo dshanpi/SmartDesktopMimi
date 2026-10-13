@@ -24,6 +24,7 @@
 #include "tuya_config.h"
 #include "tuya_iot.h"
 #include "tuya_iot_dp.h"
+#include "dp_schema.h"
 #include "netmgr.h"
 #include "tkl_output.h"
 #include "tal_cli.h"
@@ -63,8 +64,20 @@ tuya_iot_license_t license;
 #define PROJECT_VERSION "1.0.0"
 #endif
 
-#define DPID_POWER  1
-#define DPID_VOLUME 3
+#define DPID_POWER             1
+#define DPID_VOLUME            3
+#define DPID_SCREEN_BRIGHTNESS 101
+#define DPID_HDMI_PREVIEW      102
+#define DPID_BLUETOOTH         103
+#define DPID_LED_SWITCH        104
+#define DPID_LED_BRIGHTNESS    105
+#define DPID_TEMPERATURE       106
+#define DPID_HUMIDITY          107
+#define DPID_BUS_VOLTAGE       108
+#define DPID_BUS_CURRENT       109
+#define DPID_BUS_POWER         110
+#define DPID_ASSISTANT_STATE   111
+#define DPID_FREE_CHAT         112
 #define LICENSE_RETRY_INTERVAL_MS 5000
 
 /*
@@ -78,6 +91,33 @@ static const TIME_MS DP_ONLINE_RETRY_DELAYS_MS[] = {1000, 2000, 5000, 10000, 300
 static TIMER_ID      sg_dp_online_sync_timer = NULL;
 static BOOL_T        sg_mqtt_connected = FALSE;
 static uint8_t       sg_dp_online_retry_index = 0;
+static uint16_t      sg_last_schema_mask = UINT16_MAX;
+
+typedef struct {
+    uint8_t id;
+    dp_prop_tp_t type;
+    dp_mode_t mode;
+} ai_dp_contract_t;
+
+static const ai_dp_contract_t AI_DP_CONTRACT[] = {
+    {DPID_POWER, PROP_BOOL, M_RW},
+    {DPID_VOLUME, PROP_VALUE, M_RW},
+    {DPID_SCREEN_BRIGHTNESS, PROP_VALUE, M_RW},
+    {DPID_HDMI_PREVIEW, PROP_BOOL, M_RW},
+    {DPID_BLUETOOTH, PROP_BOOL, M_RW},
+    {DPID_LED_SWITCH, PROP_BOOL, M_RW},
+    {DPID_LED_BRIGHTNESS, PROP_VALUE, M_RW},
+    {DPID_TEMPERATURE, PROP_VALUE, M_RO},
+    {DPID_HUMIDITY, PROP_VALUE, M_RO},
+    {DPID_BUS_VOLTAGE, PROP_VALUE, M_RO},
+    {DPID_BUS_CURRENT, PROP_VALUE, M_RO},
+    {DPID_BUS_POWER, PROP_VALUE, M_RO},
+    {DPID_ASSISTANT_STATE, PROP_ENUM, M_RO},
+    {DPID_FREE_CHAT, PROP_BOOL, M_RW},
+};
+
+static OPERATE_RET ai_dp_report_result(OPERATE_RET ret,
+                                       uint16_t schema_valid_count);
 
 /**
  * @brief user defined log output api, in this demo, it will use uart0 as log-tx
@@ -122,23 +162,87 @@ void user_upgrade_notify_on(tuya_iot_client_t *client, cJSON *upgrade)
     PR_INFO("Version: %s", cJSON_IsString(version_item) ? version_item->valuestring : "N/A");
     PR_INFO("Size: %s", cJSON_IsString(size_item) ? size_item->valuestring : "N/A");
     PR_INFO("MD5: %s", cJSON_IsString(md5_item) ? md5_item->valuestring : "N/A");
-    PR_INFO("HMAC: %s", cJSON_IsString(hmac_item) ? hmac_item->valuestring : "N/A");
-    PR_INFO("URL: %s", cJSON_IsString(url_item) ? url_item->valuestring : "N/A");
-    PR_INFO("HTTPS URL: %s", cJSON_IsString(https_item) ? https_item->valuestring : "N/A");
+    PR_INFO("HMAC: %s", cJSON_IsString(hmac_item) ? "present" : "N/A");
+    PR_INFO("URL: %s", cJSON_IsString(url_item) ? "present" : "N/A");
+    PR_INFO("HTTPS URL: %s", cJSON_IsString(https_item) ? "present" : "N/A");
+}
+
+static BOOL_T ai_dp_write_is_supported(tuya_iot_client_t *client,
+                                       const dp_obj_recv_t *request,
+                                       const dp_obj_t *dp)
+{
+    char *devid;
+    dp_node_t *node;
+
+    if (NULL == client || NULL == request || NULL == dp) return FALSE;
+    devid = request->devid && request->devid[0] ? request->devid :
+                                                     client->activate.devid;
+    if (NULL == devid || devid[0] == '\0') return FALSE;
+    node = dp_node_find_by_devid(devid, dp->id);
+    return node && node->desc.type == T_OBJ &&
+           node->desc.prop_tp == dp->type && node->desc.mode != M_RO;
 }
 
 OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
 {
+    tuya_iot_client_t *client = tuya_iot_client_get();
+    OPERATE_RET result = OPRT_OK;
     uint32_t index = 0;
+
+    if (NULL == dpobj || NULL == client) return OPRT_INVALID_PARM;
+
     for (index = 0; index < dpobj->dpscnt; index++) {
         dp_obj_t *dp = dpobj->dps + index;
-        PR_DEBUG("idx:%d dpid:%d type:%d ts:%u", index, dp->id, dp->type, dp->time_stamp);
+        OPERATE_RET ret = OPRT_OK;
+
+        PR_DEBUG("idx:%d dpid:%d type:%d ts:%u", index, dp->id, dp->type,
+                 dp->time_stamp);
+        if (FALSE == ai_dp_write_is_supported(client, dpobj, dp)) {
+            PR_WARN("reject DP %u absent or incompatible with product schema",
+                    dp->id);
+            result = OPRT_NOT_SUPPORTED;
+            continue;
+        }
 
         switch (dp->id) {
+        case DPID_POWER:
+            if (dp->type != PROP_BOOL) {
+                ret = OPRT_INVALID_PARM;
+                break;
+            }
+            ret = app_chat_bot_set_assistant_enabled(dp->value.dp_bool);
+            if (OPRT_OK == ret) {
+                ret = app_chat_bot_main_ui_send_iot_dp(
+                          DPID_POWER, "bool", dp->value.dp_bool ? 1 : 0) == 0 ?
+                      OPRT_OK : OPRT_COM_ERROR;
+                if (OPRT_OK == ret) {
+                    dp->value.dp_bool = app_chat_bot_is_assistant_enabled();
+                    ret = ai_dp_report_result(
+                        tuya_iot_dp_obj_report(client, dpobj->devid, dp, 1, 0),
+                        1);
+                }
+            }
+            break;
         case DPID_VOLUME: {
-            uint8_t volume = dp->value.dp_value;
-            PR_DEBUG("volume:%d", volume);
-            ai_chat_set_volume(volume);
+            int volume;
+
+            if (dp->type != PROP_VALUE || dp->value.dp_value < 0 ||
+                dp->value.dp_value > 100) {
+                ret = OPRT_INVALID_PARM;
+                break;
+            }
+            volume = dp->value.dp_value;
+            ret = ai_chat_set_volume(volume);
+            if (OPRT_OK != ret) break;
+            ret = app_chat_bot_main_ui_send_iot_dp(
+                      DPID_VOLUME, "value", volume) == 0 ?
+                  OPRT_OK : OPRT_COM_ERROR;
+            if (OPRT_OK == ret) {
+                dp->value.dp_value = ai_chat_get_volume();
+                ret = ai_dp_report_result(
+                    tuya_iot_dp_obj_report(client, dpobj->devid, dp, 1, 0),
+                    1);
+            }
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
             char volume_str[20] = {0};
             snprintf(volume_str, sizeof(volume_str), "%s%d", VOLUME, volume);
@@ -146,43 +250,279 @@ OPERATE_RET audio_dp_obj_proc(dp_obj_recv_t *dpobj)
 #endif
             break;
         }
-        default:
+        case DPID_SCREEN_BRIGHTNESS:
+        case DPID_LED_BRIGHTNESS:
+            if (dp->type != PROP_VALUE || dp->value.dp_value < 0 ||
+                dp->value.dp_value > 100 ||
+                (dp->id == DPID_SCREEN_BRIGHTNESS && dp->value.dp_value < 20)) {
+                ret = OPRT_INVALID_PARM;
+                break;
+            }
+            ret = app_chat_bot_main_ui_send_iot_dp(dp->id, "value",
+                                                    dp->value.dp_value) == 0 ?
+                  OPRT_OK : OPRT_COM_ERROR;
             break;
+        case DPID_HDMI_PREVIEW:
+        case DPID_BLUETOOTH:
+        case DPID_LED_SWITCH:
+            if (dp->type != PROP_BOOL) {
+                ret = OPRT_INVALID_PARM;
+                break;
+            }
+            ret = app_chat_bot_main_ui_send_iot_dp(dp->id, "bool",
+                                                    dp->value.dp_bool ? 1 : 0) == 0 ?
+                  OPRT_OK : OPRT_COM_ERROR;
+            break;
+        case DPID_FREE_CHAT:
+            if (dp->type != PROP_BOOL) {
+                ret = OPRT_INVALID_PARM;
+                break;
+            }
+            ret = app_chat_bot_set_free_chat_enabled(dp->value.dp_bool);
+            if (OPRT_OK == ret) {
+                ret = app_chat_bot_main_ui_send_iot_dp(
+                          DPID_FREE_CHAT, "bool", dp->value.dp_bool ? 1 : 0) == 0 ?
+                      OPRT_OK : OPRT_COM_ERROR;
+                if (OPRT_OK == ret) {
+                    ret = ai_dp_report_result(
+                        tuya_iot_dp_obj_report(client, dpobj->devid, dp, 1, 0),
+                        1);
+                }
+            }
+            break;
+        case DPID_TEMPERATURE:
+        case DPID_HUMIDITY:
+        case DPID_BUS_VOLTAGE:
+        case DPID_BUS_CURRENT:
+        case DPID_BUS_POWER:
+        case DPID_ASSISTANT_STATE:
+            PR_WARN("reject write to read-only DP %u", dp->id);
+            ret = OPRT_NOT_SUPPORTED;
+            break;
+        default:
+            PR_WARN("ignore unsupported object DP %u", dp->id);
+            ret = OPRT_NOT_SUPPORTED;
+            break;
+        }
+
+        if (OPRT_OK != ret) {
+            PR_WARN("DP %u command rejected: %d", dp->id, ret);
+            result = ret;
         }
     }
 
-    return OPRT_OK;
+    return result;
+}
+
+static BOOL_T ai_dp_append_if_supported(dp_obj_t *out, uint16_t *count,
+                                        uint8_t id, dp_prop_tp_t type, int value)
+{
+    tuya_iot_client_t *client = tuya_iot_client_get();
+    dp_node_t *node;
+    dp_obj_t *dp;
+
+    if (NULL == out || NULL == count || NULL == client ||
+        client->activate.devid[0] == '\0') {
+        return FALSE;
+    }
+    node = dp_node_find_by_devid(client->activate.devid, id);
+    if (NULL == node || node->desc.type != T_OBJ || node->desc.prop_tp != type ||
+        node->desc.mode == M_WR) {
+        return FALSE;
+    }
+
+    dp = &out[*count];
+    memset(dp, 0, sizeof(*dp));
+    dp->id = id;
+    dp->type = type;
+    if (type == PROP_BOOL) {
+        dp->value.dp_bool = value ? true : false;
+    } else if (type == PROP_ENUM) {
+        dp->value.dp_enum = (uint32_t)value;
+    } else {
+        dp->value.dp_value = value;
+    }
+    (*count)++;
+    return TRUE;
+}
+
+static OPERATE_RET ai_dp_report_result(OPERATE_RET ret, uint16_t schema_valid_count)
+{
+    /* TuyaOpen filters unchanged values before publishing and currently
+     * returns OPRT_SVC_DP_ID_NOT_FOUND when that leaves no payload.  The DPs
+     * have already passed the live schema check above, so this is a successful
+     * no-op rather than a missing-schema failure. */
+    if (schema_valid_count > 0 && ret == OPRT_SVC_DP_ID_NOT_FOUND) {
+        PR_DEBUG("DP report skipped because schema-valid values are unchanged");
+        return OPRT_OK;
+    }
+    return ret;
+}
+
+static BOOL_T ai_dp_contract_is_supported(tuya_iot_client_t *client,
+                                           const ai_dp_contract_t *contract)
+{
+    dp_node_t *node;
+
+    if (NULL == client || NULL == contract || client->activate.devid[0] == '\0') {
+        return FALSE;
+    }
+    node = dp_node_find_by_devid(client->activate.devid, contract->id);
+    return node && node->desc.type == T_OBJ &&
+           node->desc.prop_tp == contract->type &&
+           node->desc.mode == contract->mode;
+}
+
+static void ai_dp_send_schema_status(BOOL_T force)
+{
+    tuya_iot_client_t *client = tuya_iot_client_get();
+    uint16_t mask = 0;
+    uint8_t supported = 0;
+    char missing[96] = {0};
+    size_t used = 0;
+    size_t i;
+
+    if (FALSE == sg_mqtt_connected || NULL == client ||
+        client->activate.devid[0] == '\0') {
+        return;
+    }
+
+    for (i = 0; i < CNTSOF(AI_DP_CONTRACT); i++) {
+        if (ai_dp_contract_is_supported(client, &AI_DP_CONTRACT[i])) {
+            mask |= (uint16_t)(1U << i);
+            supported++;
+        } else if (used < sizeof(missing)) {
+            int written = snprintf(missing + used, sizeof(missing) - used,
+                                   "%s%u", used ? "," : "",
+                                   (unsigned int)AI_DP_CONTRACT[i].id);
+            if (written > 0 && (size_t)written < sizeof(missing) - used) {
+                used += (size_t)written;
+            }
+        }
+    }
+
+    if (!force && mask == sg_last_schema_mask) return;
+    sg_last_schema_mask = mask;
+    app_chat_bot_main_ui_send_iot_schema(supported,
+                                         (uint8_t)CNTSOF(AI_DP_CONTRACT));
+    if (supported == CNTSOF(AI_DP_CONTRACT)) {
+        PR_INFO("Tuya product schema complete: supported=%u required=%u",
+                supported, (unsigned int)CNTSOF(AI_DP_CONTRACT));
+    } else {
+        PR_WARN("Tuya product schema incomplete: supported=%u required=%u missing=%s",
+                supported, (unsigned int)CNTSOF(AI_DP_CONTRACT),
+                missing[0] ? missing : "unknown");
+    }
+}
+
+static OPERATE_RET ai_dp_report_one(uint8_t id, dp_prop_tp_t type, int value)
+{
+    tuya_iot_client_t *client = tuya_iot_client_get();
+    dp_obj_t dp = {0};
+    uint16_t count = 0;
+
+    if (FALSE == sg_mqtt_connected || NULL == client) return OPRT_COM_ERROR;
+    if (FALSE == ai_dp_append_if_supported(&dp, &count, id, type, value)) {
+        return OPRT_NOT_SUPPORTED;
+    }
+    return ai_dp_report_result(
+        tuya_iot_dp_obj_report(client, client->activate.devid, &dp, 1, 0),
+        count);
+}
+
+static BOOL_T json_number(cJSON *root, const char *name, int *value)
+{
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(root, name);
+    if (!cJSON_IsNumber(item) || NULL == value) return FALSE;
+    *value = item->valueint;
+    return TRUE;
+}
+
+static BOOL_T json_boolean(cJSON *root, const char *name, int *value)
+{
+    cJSON *item = cJSON_GetObjectItemCaseSensitive(root, name);
+    if ((!cJSON_IsBool(item) && !cJSON_IsNumber(item)) || NULL == value) return FALSE;
+    *value = cJSON_IsBool(item) ? cJSON_IsTrue(item) : (item->valueint != 0);
+    return TRUE;
+}
+
+OPERATE_RET tuya_device_iot_state_update(const char *json)
+{
+    tuya_iot_client_t *client = tuya_iot_client_get();
+    dp_obj_t dps[CNTSOF(AI_DP_CONTRACT)];
+    uint16_t count = 0;
+    cJSON *root;
+    int value;
+    OPERATE_RET ret;
+
+    if (NULL == json || NULL == client) return OPRT_INVALID_PARM;
+    root = cJSON_Parse(json);
+    if (NULL == root) return OPRT_INVALID_PARM;
+
+    if (json_boolean(root, "assistant_enabled", &value)) {
+        ret = app_chat_bot_set_assistant_enabled(value ? TRUE : FALSE);
+        if (OPRT_OK == ret) {
+            ai_dp_append_if_supported(dps, &count, DPID_POWER, PROP_BOOL,
+                                      app_chat_bot_is_assistant_enabled());
+        }
+    }
+    if (json_number(root, "volume", &value) && value >= 0 && value <= 100) {
+        ai_chat_set_volume(value);
+        ai_dp_append_if_supported(dps, &count, DPID_VOLUME, PROP_VALUE,
+                                  ai_chat_get_volume());
+    }
+    if (json_number(root, "brightness", &value) && value >= 20 && value <= 100)
+        ai_dp_append_if_supported(dps, &count, DPID_SCREEN_BRIGHTNESS, PROP_VALUE, value);
+    if (json_boolean(root, "hdmi_enabled", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_HDMI_PREVIEW, PROP_BOOL, value);
+    if (json_boolean(root, "bluetooth_enabled", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_BLUETOOTH, PROP_BOOL, value);
+    if (json_boolean(root, "led_enabled", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_LED_SWITCH, PROP_BOOL, value);
+    if (json_number(root, "led_brightness", &value) && value >= 0 && value <= 100)
+        ai_dp_append_if_supported(dps, &count, DPID_LED_BRIGHTNESS, PROP_VALUE, value);
+    if (json_number(root, "temperature_tenths", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_TEMPERATURE, PROP_VALUE, value);
+    if (json_number(root, "humidity_tenths", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_HUMIDITY, PROP_VALUE, value);
+    if (json_number(root, "bus_voltage_mv", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_BUS_VOLTAGE, PROP_VALUE, value);
+    if (json_number(root, "bus_current_ma", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_BUS_CURRENT, PROP_VALUE, value);
+    if (json_number(root, "bus_power_mw", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_BUS_POWER, PROP_VALUE, value);
+    if (json_number(root, "assistant_state", &value) && value >= 0 && value <= 6)
+        ai_dp_append_if_supported(dps, &count, DPID_ASSISTANT_STATE, PROP_ENUM, value);
+    if (json_boolean(root, "free_chat", &value))
+        ai_dp_append_if_supported(dps, &count, DPID_FREE_CHAT, PROP_BOOL, value);
+
+    cJSON_Delete(root);
+    ai_dp_send_schema_status(FALSE);
+    if (count == 0) return OPRT_NOT_SUPPORTED;
+    if (FALSE == sg_mqtt_connected) return OPRT_COM_ERROR;
+
+    ret = ai_dp_report_result(
+        tuya_iot_dp_obj_report(client, client->activate.devid, dps, count, 0),
+        count);
+    PR_INFO("IoT state sync result=%d supported_dps=%u", ret, count);
+    return ret;
 }
 
 OPERATE_RET ai_audio_volume_upload(void)
 {
-    tuya_iot_client_t *client = tuya_iot_client_get();
-    dp_obj_t           dp_obj = {0};
-
     uint8_t volume = ai_chat_get_volume();
 
-    dp_obj.id             = DPID_VOLUME;
-    dp_obj.type           = PROP_VALUE;
-    dp_obj.value.dp_value = volume;
-
     PR_DEBUG("DP upload volume:%d", volume);
-
-    return tuya_iot_dp_obj_report(client, client->activate.devid, &dp_obj, 1, 0);
+    return ai_dp_report_one(DPID_VOLUME, PROP_VALUE, volume);
 }
 
 static OPERATE_RET ai_device_power_upload(void)
 {
-    tuya_iot_client_t *client = tuya_iot_client_get();
-    dp_obj_t dp_obj = {0};
-
     /* DP 1 is the product's master switch.  Leaving it at its schema default
      * false makes some Smart Life panels disable voice/persona controls even
      * though MQTT and the conversational channel are connected. */
-    dp_obj.id = DPID_POWER;
-    dp_obj.type = PROP_BOOL;
-    dp_obj.value.dp_bool = true;
-
-    return tuya_iot_dp_obj_report(client, client->activate.devid, &dp_obj, 1, 0);
+    return ai_dp_report_one(DPID_POWER, PROP_BOOL,
+                            app_chat_bot_is_assistant_enabled());
 }
 
 static void ai_device_online_schedule(void)
@@ -227,10 +567,13 @@ static void ai_device_online_sync_timer_cb(TIMER_ID timer_id, void *arg)
         return;
     }
 
+    ai_dp_send_schema_status(FALSE);
+
     /* Report separately: a product-schema mismatch on DP1 must not suppress
      * the valid volume state, and vice versa. */
     power_ret = ai_device_power_upload();
     volume_ret = ai_audio_volume_upload();
+    app_chat_bot_main_ui_request_iot_state();
 
     if (OPRT_OK == power_ret && OPRT_OK == volume_ret) {
         sg_dp_online_retry_index = 0;
@@ -289,10 +632,11 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
     /* MQTT with tuya cloud is connected, device online */
     case TUYA_EVENT_MQTT_CONNECTED:
         PR_INFO("Device MQTT Connected!");
-        app_chat_bot_main_ui_send_bound(TRUE);
-
         sg_mqtt_connected = TRUE;
         sg_dp_online_retry_index = 0;
+        sg_last_schema_mask = UINT16_MAX;
+        app_chat_bot_main_ui_send_bound(TRUE);
+        ai_dp_send_schema_status(TRUE);
 
 #if defined(ENABLE_CHAT_DISPLAY) && (ENABLE_CHAT_DISPLAY == 1)
         UI_WIFI_STATUS_E wifi_status = UI_WIFI_STATUS_GOOD;
@@ -306,6 +650,7 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
         PR_INFO("Device MQTT DisConnected!");
         sg_mqtt_connected = FALSE;
         sg_dp_online_retry_index = 0;
+        sg_last_schema_mask = UINT16_MAX;
         if (NULL != sg_dp_online_sync_timer &&
             tal_sw_timer_is_running(sg_dp_online_sync_timer)) {
             tal_sw_timer_stop(sg_dp_online_sync_timer);
@@ -327,8 +672,10 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
         tuya_reset_type_t reset_type = (tuya_reset_type_t)event->value.asInteger;
         PR_INFO("Device Reset:%d", reset_type);
 
-        // TUYA_RESET_TYPE_FACTORY, TUYA_RESET_TYPE_REMOTE_FACTORY, TUYA_RESET_TYPE_DATA_FACTORY
-        // Need remove the device application data from the kv store
+        /* The SDK clears its own binding/KV data. Ask the product backend to
+         * clear the device preferences controlled by the Tuya panel too. */
+        app_chat_bot_main_ui_send_bound(FALSE);
+        app_chat_bot_main_ui_send_iot_reset();
     } break;
     case TUYA_EVENT_RESET_COMPLETE: {
         PR_INFO("Device Reset Complete!");
@@ -347,8 +694,6 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
 
         audio_dp_obj_proc(dpobj);
 
-        tuya_iot_dp_obj_report(client, dpobj->devid, dpobj->dps, dpobj->dpscnt, 0);
-
     } break;
 
     /* RECV RAW DP */
@@ -359,14 +704,10 @@ void user_event_handler_on(tuya_iot_client_t *client, tuya_event_msg_t *event)
             PR_DEBUG("devid.%s", dpraw->devid);
         }
 
-        uint32_t  index = 0;
         dp_raw_t *dp    = &dpraw->dp;
-        PR_DEBUG("dpid:%d type:RAW len:%d data:", dp->id, dp->len);
-        for (index = 0; index < dp->len; index++) {
-            PR_DEBUG_RAW("%02x", dp->data[index]);
-        }
-
-        tuya_iot_dp_raw_report(client, dpraw->devid, &dpraw->dp, 3);
+        /* This product defines no RAW DP. Do not dump or echo opaque cloud
+         * payloads: they cannot be type/range validated and may be private. */
+        PR_WARN("reject unsupported RAW DP id=%u len=%u", dp->id, dp->len);
 
     } break;
 

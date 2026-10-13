@@ -5,6 +5,7 @@
 #include "../system/backend_types.h"
 
 void ui_init(void);
+void ui_rebuild_home(void);
 
 /* 处理后端上报的 HDMI 预览状态：同步顶栏开关、ack 后持久化、显示/隐藏 HDMI 透明屏。 */
 void hdmi_ui_handle_status(const hdmi_preview_status_t *status);

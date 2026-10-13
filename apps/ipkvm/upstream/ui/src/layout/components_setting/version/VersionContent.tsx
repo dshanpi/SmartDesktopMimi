@@ -1,3 +1,4 @@
+import DesktopUpdate from "./DesktopUpdate";
 import { CheckCircle } from "lucide-react";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -181,7 +182,9 @@ export default function SettingsVersion() {
             }
           />
 
-          {/* Online OTA has been disabled for 100ask commercial build */}
+          <DesktopUpdate />
+
+          {/* System OTA remains a separate platform operation. */}
           {/* <UpdateSourceSettings
             updateSource={updateSource}
             onUpdateSourceChange={applyUpdateSource}
@@ -302,10 +305,6 @@ function UpdateContent({
     [setModalView],
   );
 
-  useEffect(() => {
-    setVersionInfo(null);
-  }, [setModalView]);
-
   return (
     <div className="text-left">
       {modalView === "error" && (
@@ -383,8 +382,6 @@ function LoadingState({
 
   const progressBarRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    setProgressWidth("0%");
-
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 

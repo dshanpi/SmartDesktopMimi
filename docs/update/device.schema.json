@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "device",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "platform_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "soc_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "board_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "hardware_revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "variant": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "isa": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "bits": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "endian": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "abi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "libc": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "loader": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "ports_abi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        },
+        "ipc_contract": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 192
+        }
+      },
+      "required": [
+        "product_id",
+        "platform_id",
+        "soc_id",
+        "board_id",
+        "hardware_revision",
+        "variant",
+        "architecture",
+        "isa",
+        "bits",
+        "endian",
+        "abi",
+        "libc",
+        "loader",
+        "ports_abi",
+        "ipc_contract"
+      ]
+    },
+    "runtime": {
+      "type": "object",
+      "required": [
+        "system",
+        "provider",
+        "updater",
+        "libc"
+      ],
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$"
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 192
+      }
+    },
+    "data_schema": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "system_baseline": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 192
+    },
+    "enrollment_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 192
+    }
+  },
+  "required": [
+    "schema_version",
+    "identity",
+    "runtime",
+    "capabilities",
+    "data_schema",
+    "system_baseline",
+    "enrollment_id"
+  ]
+}

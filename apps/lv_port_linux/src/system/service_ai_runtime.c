@@ -1,10 +1,15 @@
 #include "service_ai.h"
 
 #include "../middleware/middleware.h"
+#include "backlight_control.h"
 #include "log/app_log.h"
 #include "service_bt.h"
+#include "service_hdmi_preview.h"
 #include "service_led.h"
+#include "service_sensor.h"
 #include "service_wifi.h"
+#include "settings.h"
+#include "volume_control.h"
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -31,6 +36,16 @@
 #define AI_PROCESS_RESTART_BACKOFF_MS 2000
 #define AI_BT_RESUME_RETRY_DELAY_MS 700
 #define AI_BT_RESUME_RETRY_COUNT 2
+#define TUYA_IOT_STATE_INTERVAL_MS 30000
+#define TUYA_IOT_SETTINGS_SAVE_DELAY_MS 800
+#define TUYA_DPID_POWER 1
+#define TUYA_DPID_VOLUME 3
+#define TUYA_DPID_SCREEN_BRIGHTNESS 101
+#define TUYA_DPID_HDMI_PREVIEW 102
+#define TUYA_DPID_BLUETOOTH 103
+#define TUYA_DPID_LED_SWITCH 104
+#define TUYA_DPID_LED_BRIGHTNESS 105
+#define TUYA_DPID_FREE_CHAT 112
 #define XIAOZHI_CONTROL_CENTER_BIN_DEFAULT "/mnt/UDISK/control_center"
 #define XIAOZHI_SOUND_APP_BIN_DEFAULT "/mnt/UDISK/sound_app"
 #define XIAOZHI_SHERPA_LIB_DIR_DEFAULT "/mnt/UDISK/sherpa-onnx-aarch64-shared-cpu/lib"
@@ -65,6 +80,9 @@ static struct {
     int64_t next_sound_app_restart_ms;
     int64_t next_tuya_restart_ms;
     int64_t next_bt_resume_retry_ms;
+    int64_t last_tuya_iot_sync_ms;
+    int64_t tuya_iot_settings_save_due_ms;
+    bool tuya_iot_settings_dirty;
     int bt_resume_retries_left;
     bool tuya_license_valid;
     bool tuya_license_state_known;
@@ -598,6 +616,9 @@ static bool status_equal(const ai_status_t *a, const ai_status_t *b)
            a->bt_paused_by_ai == b->bt_paused_by_ai &&
            a->tuya_bound == b->tuya_bound &&
            a->tuya_bind_qr_pending == b->tuya_bind_qr_pending &&
+           a->tuya_schema_known == b->tuya_schema_known &&
+           a->tuya_schema_supported_dps == b->tuya_schema_supported_dps &&
+           a->tuya_schema_required_dps == b->tuya_schema_required_dps &&
            a->last_error_code == b->last_error_code &&
            strcmp(a->emotion, b->emotion) == 0 &&
            strcmp(a->bind_url, b->bind_url) == 0;
@@ -612,7 +633,7 @@ static void log_status_if_needed(bool force)
 
     if (!force && !changed && !heartbeat) return;
 
-    APP_LOGI("ai", "state=%s mode=%d free=%d control=%s audio=%s bt_paused=%d bound=%d qr=%d err=%d emotion=%s",
+    APP_LOGI("ai", "state=%s mode=%d free=%d control=%s audio=%s bt_paused=%d bound=%d qr=%d schema=%u/%u err=%d emotion=%s",
              ai_state_name(g_ai.status.state),
              g_ai.status.chat_mode,
              g_ai.status.free_chat_active,
@@ -621,6 +642,8 @@ static void log_status_if_needed(bool force)
              g_ai.status.bt_paused_by_ai,
              g_ai.status.tuya_bound,
              g_ai.status.tuya_bind_qr_pending,
+             (unsigned int)g_ai.status.tuya_schema_supported_dps,
+             (unsigned int)g_ai.status.tuya_schema_required_dps,
              g_ai.status.last_error_code,
              g_ai.status.emotion[0] ? g_ai.status.emotion : "none");
 
@@ -853,6 +876,247 @@ static bool parse_json_bool_field(const char *buf, size_t len,
     return false;
 }
 
+static bool parse_json_int_field(const char *buf, size_t len,
+                                 const char *field, int *out)
+{
+    const char *p;
+    const char *end;
+    char *number_end;
+    long value;
+
+    if (!buf || !field || !out) return false;
+    p = find_json_field_value(buf, len, field);
+    if (!p) return false;
+    end = buf + len;
+    if (p >= end || (*p != '-' && (*p < '0' || *p > '9'))) return false;
+
+    errno = 0;
+    value = strtol(p, &number_end, 10);
+    if (errno != 0 || number_end == p || number_end > end ||
+        value < INT32_MIN || value > INT32_MAX) {
+        return false;
+    }
+    *out = (int)value;
+    return true;
+}
+
+static int send_tuya_iot_state(void)
+{
+    sys_settings_t *settings = sys_settings_get();
+    sensor_status_t sensor = {0};
+    char payload[768];
+    bool sensor_valid;
+    int volume;
+    int brightness;
+
+    if (!is_tuya_runtime() || !settings) return -1;
+
+    volume = settings->volume;
+    if (sys_volume_get_percent(&volume) != 0) volume = settings->volume;
+    brightness = settings->brightness;
+    if (sys_backlight_get_percent(&brightness) != 0) {
+        brightness = settings->brightness;
+    }
+    sensor_valid = service_sensor_get_status(&sensor);
+
+    if (sensor_valid && sensor.ina_valid) {
+        snprintf(payload, sizeof(payload),
+                 "{\"runtime\":\"aitvbox\",\"cmd\":\"iot_state\","
+                 "\"assistant_enabled\":%s,\"volume\":%d,\"brightness\":%d,"
+                 "\"hdmi_enabled\":%s,\"bluetooth_enabled\":%s,"
+                 "\"led_enabled\":%s,\"led_brightness\":%d,"
+                 "\"temperature_tenths\":%d,\"humidity_tenths\":%d,"
+                 "\"bus_voltage_mv\":%d,\"bus_current_ma\":%d,"
+                 "\"bus_power_mw\":%d,\"assistant_state\":%d,"
+                 "\"free_chat\":%s}",
+                 settings->tuya_ai_enabled ? "true" : "false",
+                 volume, brightness,
+                 service_hdmi_preview_is_enabled() ? "true" : "false",
+                 service_bt_is_enabled() ? "true" : "false",
+                 service_led_get_enabled() ? "true" : "false",
+                 service_led_get_brightness(),
+                 sensor.temp_mC / 100, sensor.humi_mpermil / 100,
+                 sensor.bus_mV, sensor.current_mA, sensor.power_uW / 1000,
+                 (int)g_ai.status.state,
+                 g_ai.status.free_chat_active ? "true" : "false");
+    } else if (sensor_valid) {
+        snprintf(payload, sizeof(payload),
+                 "{\"runtime\":\"aitvbox\",\"cmd\":\"iot_state\","
+                 "\"assistant_enabled\":%s,\"volume\":%d,\"brightness\":%d,"
+                 "\"hdmi_enabled\":%s,\"bluetooth_enabled\":%s,"
+                 "\"led_enabled\":%s,\"led_brightness\":%d,"
+                 "\"temperature_tenths\":%d,\"humidity_tenths\":%d,"
+                 "\"assistant_state\":%d,\"free_chat\":%s}",
+                 settings->tuya_ai_enabled ? "true" : "false",
+                 volume, brightness,
+                 service_hdmi_preview_is_enabled() ? "true" : "false",
+                 service_bt_is_enabled() ? "true" : "false",
+                 service_led_get_enabled() ? "true" : "false",
+                 service_led_get_brightness(),
+                 sensor.temp_mC / 100, sensor.humi_mpermil / 100,
+                 (int)g_ai.status.state,
+                 g_ai.status.free_chat_active ? "true" : "false");
+    } else {
+        snprintf(payload, sizeof(payload),
+                 "{\"runtime\":\"aitvbox\",\"cmd\":\"iot_state\","
+                 "\"assistant_enabled\":%s,\"volume\":%d,\"brightness\":%d,"
+                 "\"hdmi_enabled\":%s,\"bluetooth_enabled\":%s,"
+                 "\"led_enabled\":%s,\"led_brightness\":%d,"
+                 "\"assistant_state\":%d,\"free_chat\":%s}",
+                 settings->tuya_ai_enabled ? "true" : "false",
+                 volume, brightness,
+                 service_hdmi_preview_is_enabled() ? "true" : "false",
+                 service_bt_is_enabled() ? "true" : "false",
+                 service_led_get_enabled() ? "true" : "false",
+                 service_led_get_brightness(), (int)g_ai.status.state,
+                 g_ai.status.free_chat_active ? "true" : "false");
+    }
+
+    if (udp_send_json(payload) != 0) return -1;
+    g_ai.last_tuya_iot_sync_ms = now_ms();
+    return 0;
+}
+
+static void reset_tuya_iot_preferences(void)
+{
+    sys_settings_t *settings = sys_settings_get();
+
+    if (!settings) return;
+    settings->tuya_ai_enabled = true;
+    settings->volume = 50;
+    settings->brightness = 50;
+    settings->bluetooth_enabled = true;
+    settings->hdmi_enabled = true;
+    settings->led_enabled = true;
+    settings->led_brightness = 22;
+    sys_settings_save();
+    g_ai.tuya_iot_settings_dirty = false;
+    g_ai.tuya_iot_settings_save_due_ms = 0;
+
+    (void)sys_volume_set_percent(settings->volume);
+    (void)sys_backlight_set_percent(settings->brightness);
+    service_bt_enable(settings->bluetooth_enabled);
+    service_hdmi_preview_set_enabled(settings->hdmi_enabled);
+    service_led_set_enabled(settings->led_enabled);
+    service_led_set_brightness(settings->led_brightness);
+    APP_LOGI("ai", "Tuya IoT preferences reset to product defaults");
+}
+
+static bool handle_tuya_iot_event(const char *buf, size_t len)
+{
+    sys_settings_t *settings = sys_settings_get();
+    char event[32];
+    char type[16];
+    int dpid;
+    int value;
+    bool changed = false;
+
+    if (!parse_json_string_field(buf, len, "event", event, sizeof(event))) {
+        return false;
+    }
+    if (strcmp(event, "iot_state_request") == 0) {
+        send_tuya_iot_state();
+        return true;
+    }
+    if (strcmp(event, "iot_reset") == 0) {
+        reset_tuya_iot_preferences();
+        send_tuya_iot_state();
+        return true;
+    }
+    if (strcmp(event, "iot_schema") == 0) {
+        int supported;
+        int required;
+
+        if (!parse_json_int_field(buf, len, "supported", &supported) ||
+            !parse_json_int_field(buf, len, "required", &required) ||
+            supported < 0 || required <= 0 || supported > required ||
+            required > UINT8_MAX) {
+            APP_LOGW("ai", "rejected invalid Tuya IoT schema status");
+            return true;
+        }
+        g_ai.status.tuya_schema_known = true;
+        g_ai.status.tuya_schema_supported_dps = (uint8_t)supported;
+        g_ai.status.tuya_schema_required_dps = (uint8_t)required;
+        APP_LOGI("ai", "Tuya IoT product schema coverage=%d/%d", supported,
+                 required);
+        publish_status();
+        return true;
+    }
+    if (strcmp(event, "iot_dp") != 0 || !settings ||
+        !parse_json_int_field(buf, len, "dpid", &dpid) ||
+        !parse_json_int_field(buf, len, "value", &value) ||
+        !parse_json_string_field(buf, len, "type", type, sizeof(type))) {
+        return false;
+    }
+
+    switch (dpid) {
+        case TUYA_DPID_POWER:
+            if (strcmp(type, "bool") != 0 || (value != 0 && value != 1)) break;
+            settings->tuya_ai_enabled = value != 0;
+            changed = true;
+            break;
+        case TUYA_DPID_VOLUME:
+            if (strcmp(type, "value") != 0 || value < 0 || value > 100) break;
+            settings->volume = value;
+            (void)sys_volume_set_percent(value);
+            changed = true;
+            break;
+        case TUYA_DPID_SCREEN_BRIGHTNESS:
+            if (strcmp(type, "value") != 0 || value < 20 || value > 100) break;
+            settings->brightness = value;
+            (void)sys_backlight_set_percent(value);
+            changed = true;
+            break;
+        case TUYA_DPID_HDMI_PREVIEW:
+            if (strcmp(type, "bool") != 0 || (value != 0 && value != 1)) break;
+            settings->hdmi_enabled = value != 0;
+            service_hdmi_preview_set_enabled(settings->hdmi_enabled);
+            changed = true;
+            break;
+        case TUYA_DPID_BLUETOOTH:
+            if (strcmp(type, "bool") != 0 || (value != 0 && value != 1)) break;
+            settings->bluetooth_enabled = value != 0;
+            service_bt_enable(settings->bluetooth_enabled);
+            changed = true;
+            break;
+        case TUYA_DPID_LED_SWITCH:
+            if (strcmp(type, "bool") != 0 || (value != 0 && value != 1)) break;
+            settings->led_enabled = value != 0;
+            service_led_set_enabled(settings->led_enabled);
+            changed = true;
+            break;
+        case TUYA_DPID_LED_BRIGHTNESS:
+            if (strcmp(type, "value") != 0 || value < 0 || value > 100) break;
+            settings->led_brightness = value;
+            service_led_set_brightness(value);
+            changed = true;
+            break;
+        case TUYA_DPID_FREE_CHAT:
+            /* The Tuya process owns the chat-mode transition and emits a mode
+             * event. This bridge only triggers an authoritative state ack. */
+            changed = strcmp(type, "bool") == 0 && (value == 0 || value == 1);
+            break;
+        default:
+            break;
+    }
+
+    if (!changed) {
+        APP_LOGW("ai", "rejected Tuya IoT DP command id=%d type=%s value=%d",
+                 dpid, type, value);
+        return true;
+    }
+    if (dpid != TUYA_DPID_FREE_CHAT) {
+        /* Smart Life sliders may produce a burst of commands. Coalesce their
+         * fsyncs while applying hardware and cloud acknowledgements at once. */
+        g_ai.tuya_iot_settings_dirty = true;
+        g_ai.tuya_iot_settings_save_due_ms =
+            now_ms() + TUYA_IOT_SETTINGS_SAVE_DELAY_MS;
+    }
+    APP_LOGI("ai", "applied Tuya IoT DP id=%d", dpid);
+    send_tuya_iot_state();
+    return true;
+}
+
 static ai_state_t map_xiaozhi_state(int state)
 {
     enum {
@@ -899,6 +1163,7 @@ static ai_chat_mode_t map_tuya_mode(const char *mode)
     if (!mode) return g_ai.status.chat_mode;
     if (strcasecmp(mode, "free") == 0) return AI_CHAT_MODE_FREE;
     if (strcasecmp(mode, "wakeup") == 0) return AI_CHAT_MODE_WAKEUP;
+    if (strcasecmp(mode, "hold") == 0) return AI_CHAT_MODE_WAKEUP;
     return AI_CHAT_MODE_UNKNOWN;
 }
 
@@ -916,6 +1181,10 @@ static void handle_tuya_message(const char *buf, size_t len)
     g_ai.last_rx_ms = now_ms();
     g_ai.status.control_center_running = true;
 
+    if (handle_tuya_iot_event(buf, len)) {
+        return;
+    }
+
     if (parse_json_text(buf, len, text, sizeof(text))) {
         publish_text(text);
     }
@@ -926,6 +1195,7 @@ static void handle_tuya_message(const char *buf, size_t len)
         if (bound) {
             g_ai.status.bind_url[0] = '\0';
             g_ai.status.tuya_bind_qr_pending = false;
+            send_tuya_iot_state();
         }
         g_ai.status.last_error_code = 0;
         publish_needed = true;
@@ -1174,6 +1444,11 @@ void service_ai_deinit(void)
 {
     if (!g_ai.initialized) return;
 
+    if (g_ai.tuya_iot_settings_dirty) {
+        sys_settings_save();
+        g_ai.tuya_iot_settings_dirty = false;
+    }
+
     service_ai_stop_listen();
     stop_child_process(&g_ai.sound_app_pid, "sound_app");
     stop_child_process(&g_ai.control_center_pid, "control_center");
@@ -1190,6 +1465,12 @@ void service_ai_start_listen(void)
     if (!g_ai.initialized) return;
 
     if (is_tuya_runtime()) {
+        if (!sys_settings_get()->tuya_ai_enabled) {
+            publish_text("The Tuya assistant is disabled in the device panel.");
+            g_ai.status.last_error_code = -EACCES;
+            publish_status();
+            return;
+        }
         if (!g_ai.tuya_license_valid) {
             publish_text("Tuya credentials are missing. Complete factory provisioning first.");
             g_ai.status.state = AI_STATE_CONNECTING;
@@ -1292,6 +1573,13 @@ void service_ai_enter_free_chat(void)
 
     if (!is_tuya_runtime()) {
         service_ai_start_listen();
+        return;
+    }
+
+    if (!sys_settings_get()->tuya_ai_enabled) {
+        g_ai.status.last_error_code = -EACCES;
+        publish_text("Enable the Tuya assistant in the device panel first.");
+        publish_status();
         return;
     }
 
@@ -1403,7 +1691,18 @@ void service_ai_update(void)
     }
 
     now = now_ms();
+    if (g_ai.tuya_iot_settings_dirty &&
+        now >= g_ai.tuya_iot_settings_save_due_ms) {
+        sys_settings_save();
+        g_ai.tuya_iot_settings_dirty = false;
+        g_ai.tuya_iot_settings_save_due_ms = 0;
+    }
     service_ai_retry_bt_resume_if_needed(now);
+    if (is_tuya_runtime() && g_ai.status.tuya_bound &&
+        (g_ai.last_tuya_iot_sync_ms == 0 ||
+         now - g_ai.last_tuya_iot_sync_ms >= TUYA_IOT_STATE_INTERVAL_MS)) {
+        send_tuya_iot_state();
+    }
     if (!is_tuya_runtime() &&
         g_ai.status.control_center_running &&
         g_ai.last_rx_ms > 0 &&

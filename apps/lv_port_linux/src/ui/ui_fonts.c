@@ -1,6 +1,8 @@
 #include "ui_fonts.h"
 #include "lvgl/src/libs/tiny_ttf/lv_tiny_ttf.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 LV_FONT_DECLARE(lv_font_source_han_sans_sc_16_cjk)
 LV_FONT_DECLARE(font_inter_semibold_32)
@@ -39,6 +41,15 @@ static const char *const cjk_title_font_paths[] = {
 static lv_font_t *create_ttf_font_from_paths(const char *const *paths, size_t path_count, int32_t size)
 {
 #if LV_USE_TINY_TTF && LV_TINY_TTF_FILE_SUPPORT
+    const char *release = getenv("MIMI_RELEASE_DIR");
+    if (release && release[0] == '/' && path_count > 0) {
+        const char *name = strrchr(paths[0], '/');
+        char versioned_path[512];
+        if (name && snprintf(versioned_path, sizeof(versioned_path), "A:%s/fonts%s", release, name) < (int)sizeof(versioned_path)) {
+            lv_font_t *font = lv_tiny_ttf_create_file(versioned_path, size);
+            if (font) return font;
+        }
+    }
     for (size_t i = 0; i < path_count; i++) {
         lv_font_t *font = lv_tiny_ttf_create_file(paths[i], size);
         if (font) {

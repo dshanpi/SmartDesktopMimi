@@ -1,6 +1,8 @@
 #include "wifi_app.h"
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
+#include "../../ui/ui_i18n.h"
+#include "../../ui/mimi_ui.h"
 #include "../../system/backend_service.h"
 #include "../../system/app_manager.h"
 #include "../../system/settings.h"
@@ -28,7 +30,7 @@ static lv_obj_t * wlan_pending_label = NULL;
 #define WIFI_FONT_BODY       UI_TEXT_BODY_LG
 #define WIFI_FONT_META       UI_TEXT_BODY_MD
 
-#define WIFI_STATUS_CONNECTED "Connected"
+#define WIFI_STATUS_CONNECTED ui_tr(UI_STR_CONNECTED)
 
 /* Data Types */
 typedef struct {
@@ -46,11 +48,14 @@ static bool ignore_switch_event = false;
 static bool wifi_settings_dirty = false;
 static bool wlan_toggle_pending = false;
 static bool wlan_toggle_target_enabled = false;
+static bool runtime_status_received = false;
+static bool startup_scan_requested = false;
 
 /* Modal Components */
 static lv_obj_t * password_modal = NULL;
 static lv_obj_t * password_ta = NULL;
 static lv_obj_t * password_kb = NULL;
+static lv_obj_t * password_error_label = NULL;
 
 static void close_modal_cb(lv_event_t * e);
 static void connect_click_cb(lv_event_t * e);
@@ -80,7 +85,7 @@ static void wifi_spinner_show(void) {
     spinner = lv_spinner_create(wifi_screen);
     lv_obj_set_size(spinner, 100, 100);
     lv_obj_center(spinner);
-    lv_obj_set_style_arc_color(spinner, UI_COLOR_PRIMARY, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_color(spinner, mimi_ui_color(MIMI_TEAL), LV_PART_INDICATOR);
     lv_obj_move_foreground(spinner);
 }
 
@@ -100,6 +105,16 @@ static void wifi_status_handler(const mw_msg_t * msg) {
             // 隐藏 spinner，标记扫描完成
             wifi_spinner_delete();
             is_scanning = false;
+            if (wifi_list && lv_obj_get_child_count(wifi_list) == 0) {
+                lv_obj_t *empty = lv_label_create(wifi_list);
+                lv_label_set_text(empty, ui_tr(UI_STR_NO_NETWORKS));
+                lv_obj_set_width(empty, lv_pct(100));
+                lv_label_set_long_mode(empty, LV_LABEL_LONG_WRAP);
+                lv_obj_set_style_text_align(empty, LV_TEXT_ALIGN_CENTER, 0);
+                lv_obj_set_style_text_font(empty, WIFI_FONT_BODY, 0);
+                lv_obj_set_style_text_color(empty, mimi_ui_color(MIMI_MUTED), 0);
+                lv_obj_set_style_pad_top(empty, 48, 0);
+            }
             printf("[WiFi] Scan complete\n");
             return; // 不添加到列表
         }
@@ -254,7 +269,9 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
     if (!msg || msg->topic != TOPIC_WIFI_RUNTIME || msg->data_len != sizeof(wifi_runtime_status_t)) return;
     const wifi_runtime_status_t *runtime = (const wifi_runtime_status_t *)msg->data;
     sys_settings_t *settings = sys_settings_get();
+    bool first_runtime_status = !runtime_status_received;
 
+    runtime_status_received = true;
     is_wifi_enabled = runtime->enabled;
     is_scanning = runtime->scanning;
 
@@ -290,7 +307,7 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
             lv_obj_clear_state(sw_wlan, LV_STATE_DISABLED);
         }
         if (wlan_pending_label) {
-            lv_label_set_text(wlan_pending_label, "Failed");
+            lv_label_set_text(wlan_pending_label, ui_tr(UI_STR_FAILED));
         }
         printf("[WiFi] Runtime error: %d\n", runtime->last_error_code);
     } else if (wlan_toggle_pending && runtime->enabled == wlan_toggle_target_enabled) {
@@ -309,6 +326,14 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
         if (wlan_pending_label) {
             lv_label_set_text(wlan_pending_label, "");
         }
+    }
+
+    /* The persisted preference can lag behind a driver that recovered after
+     * boot. Once the page has the backend's authoritative state, restore the
+     * same one-shot scan the page normally performs on entry. */
+    if (first_runtime_status && runtime->enabled && !runtime->scanning &&
+        !startup_scan_requested) {
+        scan_click_cb(NULL);
     }
 }
 
@@ -348,6 +373,7 @@ static void close_modal_cb(lv_event_t * e) {
         password_modal = NULL;
         password_kb = NULL;
         password_ta = NULL;
+        password_error_label = NULL;
     }
 }
 
@@ -355,10 +381,19 @@ static void connect_click_cb(lv_event_t * e) {
     const char * ssid = (const char *)lv_event_get_user_data(e);
     if (password_ta) {
         const char * password = lv_textarea_get_text(password_ta);
+        if (strlen(password) < 8) {
+            if (password_error_label) {
+                lv_label_set_text(password_error_label,
+                                  ui_tr(UI_STR_WIFI_PASSWORD_SHORT));
+                lv_obj_set_style_text_color(password_error_label,
+                                            UI_COLOR_ERROR, 0);
+            }
+            return;
+        }
         printf("Connecting to %s\n", ssid);
         
         // 发送连接指令到后端
-        wifi_cmd_t cmd;
+        wifi_cmd_t cmd = {0};
         cmd.action = CMD_CONNECT;
         snprintf(cmd.ssid, sizeof(cmd.ssid), "%s", ssid);
         snprintf(cmd.password, sizeof(cmd.password), "%s", password);
@@ -373,17 +408,25 @@ static void keyboard_event_cb(lv_event_t * e) {
         const char * ssid = (const char *)lv_event_get_user_data(e);
         if (password_ta) {
             const char * password = lv_textarea_get_text(password_ta);
+            if (strlen(password) < 8) {
+                if (password_error_label) {
+                    lv_label_set_text(password_error_label,
+                                      ui_tr(UI_STR_WIFI_PASSWORD_SHORT));
+                    lv_obj_set_style_text_color(password_error_label,
+                                                UI_COLOR_ERROR, 0);
+                }
+                return;
+            }
             printf("Keyboard OK: Connecting to %s\n", ssid);
             
             // 发送连接指令到后端
-            wifi_cmd_t cmd;
+            wifi_cmd_t cmd = {0};
             cmd.action = CMD_CONNECT;
             snprintf(cmd.ssid, sizeof(cmd.ssid), "%s", ssid);
             snprintf(cmd.password, sizeof(cmd.password), "%s", password);
             mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
             
-            // 立即清空列表并显示转圈，模拟扫描效果
-            if (wifi_list) lv_obj_clean(wifi_list);
+            /* Keep the known list visible while the backend associates. */
             wifi_spinner_delete();
             wifi_spinner_show();
             is_scanning = true; // 复用扫描逻辑
@@ -439,6 +482,22 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
         return;
     }
 
+    if (!ap->encrypted) {
+        wifi_cmd_t cmd = {0};
+        cmd.action = CMD_CONNECT;
+        snprintf(cmd.ssid, sizeof(cmd.ssid), "%s", ap->ssid);
+        mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
+        if (right_cont) {
+            uint32_t count = lv_obj_get_child_count(right_cont);
+            for (uint32_t i = 0; i < count; i++) {
+                lv_obj_t *child = lv_obj_get_child(right_cont, i);
+                if (lv_obj_check_type(child, &lv_label_class))
+                    lv_label_set_text(child, ui_tr(UI_STR_CONNECTING));
+            }
+        }
+        return;
+    }
+
     // 否则（包括曾连接但现已断开的），允许弹出密码框重新连接
 
     // Create Full Screen Modal Overlay
@@ -459,25 +518,24 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     char * ssid_copy = strdup(ap->ssid);
     lv_obj_add_event_cb(password_modal, free_modal_data, LV_EVENT_DELETE, ssid_copy);
 
-    // Dialog Box
-    lv_obj_t * dialog = lv_obj_create(password_modal);
-    lv_obj_set_size(dialog, 500, 280);
+    lv_obj_t *dialog = lv_obj_create(password_modal);
+    mimi_ui_surface(dialog, 18);
+    int32_t screen_w = lv_display_get_horizontal_resolution(NULL);
+    int32_t screen_h = lv_display_get_vertical_resolution(NULL);
+    lv_obj_set_size(dialog, LV_MIN(820, screen_w - 48), screen_h - 48);
     lv_obj_center(dialog);
-    lv_obj_set_style_bg_color(dialog, UI_BG_CARD, 0);
-    lv_obj_set_style_radius(dialog, 20, 0);
-    lv_obj_set_style_shadow_width(dialog, 20, 0);
-    lv_obj_set_style_shadow_color(dialog, lv_color_black(), 0);
-    lv_obj_set_style_shadow_opa(dialog, LV_OPA_30, 0);
+    lv_obj_set_style_pad_all(dialog, 24, 0);
+    lv_obj_set_style_pad_row(dialog, 12, 0);
     lv_obj_set_flex_flow(dialog, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_all(dialog, 20, 0);
-    lv_obj_set_style_pad_gap(dialog, 15, 0);
 
     // Title
     lv_obj_t * title = lv_label_create(dialog);
-    lv_label_set_text_fmt(title, "Connect to %s", ssid_copy);
+    lv_label_set_text_fmt(title,
+                          ui_i18n_is_zh() ? "连接到 %s" : "Connect to %s",
+                          ssid_copy);
     lv_label_set_long_mode(title, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(title, WIFI_FONT_SECTION, 0);
-    lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_color(title, mimi_ui_color(MIMI_TEXT), 0);
     lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(title, LV_PCT(100));
 
@@ -486,19 +544,33 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     lv_textarea_set_password_mode(password_ta, true);
     lv_textarea_set_password_bullet(password_ta, "*"); // Use asterisk if bullet is missing
     lv_textarea_set_one_line(password_ta, true);
+    lv_textarea_set_placeholder_text(password_ta, ui_tr(UI_STR_WIFI_PASSWORD));
+    lv_textarea_set_max_length(password_ta, 63);
     lv_obj_set_width(password_ta, LV_PCT(100));
+    lv_obj_set_style_bg_color(password_ta, mimi_ui_color(MIMI_SURFACE_ALT), 0);
+    lv_obj_set_style_text_color(password_ta, mimi_ui_color(MIMI_TEXT), 0);
+    lv_obj_set_style_text_color(password_ta, mimi_ui_color(MIMI_MUTED), LV_PART_TEXTAREA_PLACEHOLDER);
+    lv_obj_set_style_border_color(password_ta, mimi_ui_color(MIMI_BORDER), 0);
     lv_obj_set_height(password_ta, 60);
     lv_obj_set_style_text_font(password_ta, WIFI_FONT_BODY, 0);
     lv_obj_set_style_radius(password_ta, 12, 0);
 
     // Show Password Checkbox
     lv_obj_t * cb_show_pass = lv_checkbox_create(dialog);
-    lv_checkbox_set_text(cb_show_pass, "Show password");
+    lv_obj_set_style_min_height(cb_show_pass, 48, 0);
+    lv_obj_set_style_pad_ver(cb_show_pass, 10, 0);
+    lv_checkbox_set_text(cb_show_pass, ui_tr(UI_STR_SHOW_PASSWORD));
     lv_obj_set_style_text_font(cb_show_pass, WIFI_FONT_META, 0);
-    lv_obj_set_style_text_color(cb_show_pass, UI_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_color(cb_show_pass, mimi_ui_color(MIMI_MUTED), 0);
     // Apply theme color to indicator
-    lv_obj_set_style_bg_color(cb_show_pass, UI_COLOR_PRIMARY, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(cb_show_pass, mimi_ui_color(MIMI_TEAL), LV_PART_INDICATOR | LV_STATE_CHECKED);
     lv_obj_add_event_cb(cb_show_pass, show_password_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
+
+    password_error_label = lv_label_create(dialog);
+    lv_label_set_text(password_error_label, "");
+    lv_obj_set_height(password_error_label, 28);
+    lv_obj_set_width(password_error_label, lv_pct(100));
+    lv_obj_set_style_text_font(password_error_label, WIFI_FONT_META, 0);
 
     // Buttons Container
     lv_obj_t * btn_cont = lv_obj_create(dialog);
@@ -512,50 +584,49 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
 
     // Cancel Button
     lv_obj_t * btn_cancel = lv_button_create(btn_cont);
-    lv_obj_set_size(btn_cancel, 200, 50);
-    lv_obj_set_style_bg_color(btn_cancel, lv_color_hex(0x666666), 0);
+    lv_obj_set_size(btn_cancel, 200, 52);
+    mimi_ui_button_style(btn_cancel, false);
     lv_obj_add_event_cb(btn_cancel, close_modal_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_t * lbl_cancel = lv_label_create(btn_cancel);
-    lv_label_set_text(lbl_cancel, "Cancel");
+    lv_label_set_text(lbl_cancel, ui_tr(UI_STR_CANCEL));
     lv_obj_set_style_text_font(lbl_cancel, WIFI_FONT_BODY, 0);
     lv_obj_center(lbl_cancel);
 
     // Connect Button
     lv_obj_t * btn_connect = lv_button_create(btn_cont);
-    lv_obj_set_size(btn_connect, 200, 50);
-    lv_obj_set_style_bg_color(btn_connect, UI_COLOR_PRIMARY, 0);
+    lv_obj_set_size(btn_connect, 200, 52);
+    mimi_ui_button_style(btn_connect, true);
     lv_obj_add_event_cb(btn_connect, connect_click_cb, LV_EVENT_CLICKED, (void*)ssid_copy);
     lv_obj_t * lbl_connect = lv_label_create(btn_connect);
-    lv_label_set_text(lbl_connect, "Connect");
+    lv_label_set_text(lbl_connect, ui_tr(UI_STR_CONNECT));
     lv_obj_set_style_text_font(lbl_connect, WIFI_FONT_BODY, 0);
     lv_obj_center(lbl_connect);
 
-    // Keyboard
-    password_kb = lv_keyboard_create(password_modal);
+    password_kb = lv_keyboard_create(dialog);
+    mimi_ui_keyboard_style(password_kb);
+    lv_obj_set_width(password_kb, lv_pct(100));
+    lv_obj_set_height(password_kb, 1);
+    lv_obj_set_flex_grow(password_kb, 1);
+    lv_keyboard_set_mode(password_kb, LV_KEYBOARD_MODE_TEXT_LOWER);
     lv_keyboard_set_textarea(password_kb, password_ta);
-    lv_obj_align(password_kb, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_add_event_cb(password_kb, keyboard_event_cb, LV_EVENT_ALL, (void*)ssid_copy);
-    
-    // Move dialog up when keyboard is visible to avoid occlusion
-    // Keyboard height is typically around 40-50% of screen height
-    lv_obj_align(dialog, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_add_event_cb(password_kb, keyboard_event_cb, LV_EVENT_ALL, (void *)ssid_copy);
+
 }
 
 static void scan_click_cb(lv_event_t * e) {
     LV_UNUSED(e);
     if (!wifi_app_active || !wifi_list || is_scanning || !is_wifi_enabled) return; // Don't scan if WiFi is off
 
-    // Clear existing list - IMPORTANT: This fixes duplication
-    lv_obj_clean(wifi_list);
-    
-    // Show Loading Spinner
+    startup_scan_requested = true;
+
+    /* Keep known networks visible while the backend refreshes them in place. */
     wifi_spinner_delete();
     wifi_spinner_show();
     
     is_scanning = true;
 
     // Send Scan Command via Middleware
-    wifi_cmd_t cmd;
+    wifi_cmd_t cmd = {0};
     cmd.action = CMD_SCAN;
     mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
 }
@@ -573,7 +644,7 @@ static void wlan_switch_event_cb(lv_event_t * e) {
         lv_obj_add_state(sw_wlan, LV_STATE_DISABLED);
     }
     if (wlan_pending_label) {
-        lv_label_set_text(wlan_pending_label, "Connecting...");
+        lv_label_set_text(wlan_pending_label, ui_tr(UI_STR_CONNECTING));
     }
     
     if (is_wifi_enabled) {
@@ -607,17 +678,20 @@ static void back_event_handler(lv_event_t * e) {
 lv_obj_t * wifi_item_create(lv_obj_t * parent, const char * name, const char * status, bool locked) {
     lv_obj_t * item = lv_obj_create(parent);
     lv_obj_set_width(item, lv_pct(100));
-    lv_obj_set_height(item, 100);
-    lv_obj_set_style_bg_color(item, UI_BG_CARD, 0);
-    lv_obj_set_style_radius(item, 16, 0);
-    lv_obj_set_style_border_width(item, 0, 0);
+    mimi_ui_surface(item, 0);
+    lv_obj_set_height(item, 90);
+    lv_obj_set_style_border_side(item, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_bg_color(item, mimi_ui_color(MIMI_SURFACE), 0);
+    lv_obj_set_style_radius(item, 0, 0);
+    lv_obj_set_style_border_width(item, 1, 0);
     // 移除 item 这一层的 Flex 布局，改用手动管理子容器
     // lv_obj_set_flex_flow(item, LV_FLEX_FLOW_ROW); // 移除
     // lv_obj_set_flex_align(item, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER); // 移除
     
     // Left Container (safe inset + reserved right column)
     lv_obj_t * left_cont = lv_obj_create(item);
-    lv_obj_set_width(left_cont, lv_pct(56));
+    lv_obj_clear_flag(left_cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_width(left_cont, lv_pct(54));
     lv_obj_set_height(left_cont, lv_pct(100));
     lv_obj_align(left_cont, LV_ALIGN_LEFT_MID, 24, 0);
     lv_obj_set_style_bg_opa(left_cont, LV_OPA_TRANSP, 0);
@@ -630,13 +704,14 @@ lv_obj_t * wifi_item_create(lv_obj_t * parent, const char * name, const char * s
     // Left: WiFi Name (Inside Left Container)
     lv_obj_t * lbl_name = lv_label_create(left_cont);
     lv_label_set_text(lbl_name, name);
-    lv_obj_set_style_text_color(lbl_name, UI_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(lbl_name, WIFI_FONT_SECTION, 0);
+    lv_obj_set_style_text_color(lbl_name, mimi_ui_color(MIMI_TEXT), 0);
+    lv_obj_set_style_text_font(lbl_name, WIFI_FONT_BODY, 0);
     lv_obj_set_width(lbl_name, lv_pct(100)); // Fill left container
     lv_label_set_long_mode(lbl_name, LV_LABEL_LONG_DOT); // 名字太长则省略
 
     // Right Container (safe inset)
     lv_obj_t * right = lv_obj_create(item);
+    lv_obj_clear_flag(right, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_width(right, lv_pct(36));
     lv_obj_set_height(right, lv_pct(100));
     lv_obj_align(right, LV_ALIGN_RIGHT_MID, -24, 0);
@@ -652,8 +727,10 @@ lv_obj_t * wifi_item_create(lv_obj_t * parent, const char * name, const char * s
     // 调整顺序：先创建 Status Label，再创建 Lock Icon
     // 这样 Lock Icon 会显示在最右侧，避免被 Status 文字挤压或覆盖
     lv_obj_t * lbl_status = lv_label_create(right);
-    lv_obj_set_style_text_color(lbl_status, UI_COLOR_PRIMARY, 0);
+    lv_obj_set_style_text_color(lbl_status, mimi_ui_color(MIMI_TEAL), 0);
     lv_obj_set_style_text_font(lbl_status, WIFI_FONT_BODY, 0);
+    lv_obj_set_width(lbl_status, lv_pct(76));
+    lv_label_set_long_mode(lbl_status, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(lbl_status, LV_TEXT_ALIGN_RIGHT, 0);
     // 不再需要 min_width，因为容器宽度固定且隔离
     
@@ -698,59 +775,71 @@ void wifi_app_init(void) {
     password_kb = NULL;
     password_modal = NULL;
     password_ta = NULL;
+    password_error_label = NULL;
     is_scanning = false;
     wlan_toggle_pending = false;
+    runtime_status_received = false;
+    startup_scan_requested = false;
     is_wifi_enabled = sys_settings_get()->wifi_enabled;
 
-    int32_t screen_h = lv_display_get_vertical_resolution(NULL);
-    if (screen_h <= 0) screen_h = 768;
-
-    /* Create Screen */
-    lv_obj_t * scr = lv_obj_create(NULL);
+    lv_obj_t *scr = lv_obj_create(NULL);
     wifi_screen = scr;
-    lv_obj_set_style_bg_color(scr, UI_BG_DEFAULT, 0); // Theme background
-    lv_obj_set_style_text_color(scr, UI_TEXT_PRIMARY, 0);
-    lv_obj_set_style_pad_all(scr, 0, 0);
-    lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-
-    ui_create_app_header(scr, "Wi-Fi", back_event_handler, false, NULL);
-
-    /* Main Container (800px width centered) -> Matched to Setting App: 1024x768 container with padding */
-    lv_obj_t * cont = lv_obj_create(scr);
-    lv_obj_set_size(cont, lv_pct(100), LV_MAX(1, screen_h - UI_APP_HEADER_H));
-    lv_obj_set_pos(cont, 0, UI_APP_HEADER_H);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cont, 0, 0);
-    lv_obj_set_style_pad_top(cont, UI_SPACE_XL, 0);
-    lv_obj_set_style_pad_hor(cont, 64, 0); 
+    mimi_ui_header(scr, ui_tr(UI_STR_APP_WIFI), back_event_handler);
+    lv_obj_t *body = mimi_ui_body(scr);
+    lv_obj_update_layout(body);
+    int32_t width = lv_obj_get_width(body);
+    int32_t height = lv_obj_get_height(body);
+    lv_obj_t *intro = lv_obj_create(body);
+    mimi_ui_surface(intro, 16);
+    lv_obj_set_size(intro, 278, height);
+    lv_obj_set_style_pad_all(intro, 22, 0);
+    lv_obj_t *heading = mimi_ui_text(intro,
+        ui_i18n_is_zh() ? "保持连接" : "Stay connected", ui_font_h2(), MIMI_TEXT);
+    lv_obj_set_width(heading, lv_pct(100));
+    lv_obj_t *hint = mimi_ui_text(intro, ui_i18n_is_zh() ?
+        "设备会优先连接已保存的网络。" : "Mimi prefers saved networks automatically.",
+        ui_font_body_md(), MIMI_MUTED);
+    lv_obj_set_pos(hint, 0, 72);
+    lv_obj_set_width(hint, lv_pct(100));
+    lv_obj_t *symbol = mimi_ui_text(intro, LV_SYMBOL_WIFI, &lv_font_montserrat_48, MIMI_TEAL);
+    lv_obj_center(symbol);
+    lv_obj_t *cont = lv_obj_create(body);
+    mimi_ui_surface(cont, 16);
+    lv_obj_set_pos(cont, 296, 0);
+    lv_obj_set_size(cont, width - 296, height);
+    lv_obj_set_style_pad_all(cont, 18, 0);
+    lv_obj_set_style_pad_row(cont, 16, 0);
     lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER); 
-    lv_obj_set_style_pad_row(cont, UI_SPACE_LG, 0);
-    lv_obj_clear_flag(cont, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_clear_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
-    
+
     /* WLAN Switch Container */
-    lv_obj_t * wlan_cont = lv_obj_create(cont);
+    lv_obj_t * wlan_cont = lv_obj_create(intro);
     lv_obj_set_width(wlan_cont, lv_pct(100));
-    lv_obj_set_height(wlan_cont, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_color(wlan_cont, UI_BG_CARD, 0);
+    lv_obj_set_height(wlan_cont, 110);
+    lv_obj_align(wlan_cont, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_set_style_bg_color(wlan_cont, mimi_ui_color(MIMI_SURFACE), 0);
     lv_obj_set_style_radius(wlan_cont, 16, 0);
-    lv_obj_set_style_pad_all(wlan_cont, 20, 0);
-    lv_obj_set_flex_flow(wlan_cont, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(wlan_cont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(wlan_cont, 0, 0);
+    lv_obj_set_layout(wlan_cont, LV_LAYOUT_NONE);
+    lv_obj_clear_flag(wlan_cont, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_width(wlan_cont, 0, 0);
     
     lv_obj_t * lbl_wlan = lv_label_create(wlan_cont);
-    lv_label_set_text(lbl_wlan, "Wi-Fi");
+    lv_label_set_text(lbl_wlan, ui_tr(UI_STR_APP_WIFI));
+    lv_obj_align(lbl_wlan, LV_ALIGN_TOP_LEFT, 0, 12);
     lv_obj_set_style_text_font(lbl_wlan, WIFI_FONT_SECTION, 0);
-    lv_obj_set_style_text_color(lbl_wlan, UI_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_color(lbl_wlan, mimi_ui_color(MIMI_TEXT), 0);
     wlan_pending_label = lv_label_create(wlan_cont);
     lv_label_set_text(wlan_pending_label, "");
+    lv_obj_align(wlan_pending_label, LV_ALIGN_BOTTOM_LEFT, 0, -12);
+    lv_obj_set_width(wlan_pending_label, lv_pct(100));
     lv_obj_set_style_text_font(wlan_pending_label, WIFI_FONT_META, 0);
-    lv_obj_set_style_text_color(wlan_pending_label, UI_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_color(wlan_pending_label, mimi_ui_color(MIMI_MUTED), 0);
     
     sw_wlan = lv_switch_create(wlan_cont);
-    lv_obj_set_style_bg_color(sw_wlan, UI_COLOR_PRIMARY, LV_PART_INDICATOR | LV_STATE_CHECKED);
+    lv_obj_set_size(sw_wlan, 52, 30);
+    lv_obj_align(sw_wlan, LV_ALIGN_TOP_RIGHT, 0, 12);
+    lv_obj_set_ext_click_area(sw_wlan, 9);
+    lv_obj_set_style_bg_color(sw_wlan, mimi_ui_color(MIMI_TEAL), LV_PART_INDICATOR | LV_STATE_CHECKED);
     if (is_wifi_enabled) lv_obj_add_state(sw_wlan, LV_STATE_CHECKED);
     lv_obj_add_event_cb(sw_wlan, wlan_switch_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
@@ -768,9 +857,9 @@ void wifi_app_init(void) {
 
     /* Separator Label */
     lv_obj_t * lbl_sep = lv_label_create(scan_info_cont);
-    lv_label_set_text(lbl_sep, "Available Networks");
+    lv_label_set_text(lbl_sep, ui_tr(UI_STR_AVAILABLE_NETWORKS));
     lv_obj_set_style_text_font(lbl_sep, WIFI_FONT_META, 0);
-    lv_obj_set_style_text_color(lbl_sep, lv_color_hex(0x999999), 0); // Light Gray
+    lv_obj_set_style_text_color(lbl_sep, mimi_ui_color(MIMI_MUTED), 0); // Light Gray
     lv_obj_set_style_pad_left(lbl_sep, 20, 0); // Align with card padding
 
     /* Refresh Button - Moved inside container */
@@ -782,9 +871,9 @@ void wifi_app_init(void) {
     lv_obj_add_event_cb(btn_refresh, scan_click_cb, LV_EVENT_CLICKED, NULL);
     
     lv_obj_t * lbl_refresh = lv_label_create(btn_refresh);
-    lv_label_set_text(lbl_refresh, "Refresh");
+    lv_label_set_text(lbl_refresh, ui_tr(UI_STR_REFRESH));
     lv_obj_set_style_text_font(lbl_refresh, WIFI_FONT_META, 0);
-    lv_obj_set_style_text_color(lbl_refresh, UI_COLOR_PRIMARY, 0); // Theme Primary Color
+    lv_obj_set_style_text_color(lbl_refresh, mimi_ui_color(MIMI_TEAL), 0); // Theme Primary Color
     lv_obj_center(lbl_refresh);
 
     /* === Content (List) === */
@@ -795,9 +884,9 @@ void wifi_app_init(void) {
     lv_obj_set_style_border_width(wifi_list, 0, 0);
     lv_obj_set_style_pad_all(wifi_list, 0, 0);
     // lv_obj_set_style_pad_right(wifi_list, 15, 0); // Removed padding to align with WLAN container
-    lv_obj_set_scrollbar_mode(wifi_list, LV_SCROLLBAR_MODE_OFF); // Hide scrollbar
+    lv_obj_set_scrollbar_mode(wifi_list, LV_SCROLLBAR_MODE_AUTO); // Indicate additional networks
     lv_obj_set_flex_flow(wifi_list, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(wifi_list, 20, 0); // 20px vertical gap
+    lv_obj_set_style_pad_row(wifi_list, 0, 0); // 20px vertical gap
 
     // Initial Scan
     // scan_click_cb(NULL); // Call manually or wait for user
@@ -807,6 +896,12 @@ void wifi_app_init(void) {
     // Register IPC Listener after UI widgets are ready
     mw_subscribe(TOPIC_WIFI_STATUS, wifi_status_handler);
     mw_subscribe(TOPIC_WIFI_RUNTIME, wifi_runtime_handler);
+
+    /* Do not trust only the persisted toggle: Wi-Fi may have recovered after
+     * a deferred driver probe while this app was closed. */
+    wifi_cmd_t runtime_cmd = { .action = CMD_GET_RUNTIME };
+    mw_publish(TOPIC_WIFI_COMMAND, &runtime_cmd, sizeof(runtime_cmd),
+               MW_DIR_UI_TO_BACKEND);
 
     // Auto-scan on open if enabled
     if (is_wifi_enabled) {
@@ -837,9 +932,12 @@ void wifi_app_close(void) {
     sw_wlan = NULL;
     wlan_pending_label = NULL;
     wlan_toggle_pending = false;
+    runtime_status_received = false;
+    startup_scan_requested = false;
     password_kb = NULL;
     password_modal = NULL;
     password_ta = NULL;
+    password_error_label = NULL;
 }
 
 AppDescriptor app_wifi = {

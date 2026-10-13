@@ -21,10 +21,12 @@
  */
 
 #include "service_ota.h"
+#include "ota_slot.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -33,6 +35,7 @@
 #include <strings.h>
 #include <sys/prctl.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -127,6 +130,9 @@ static struct {
     /* 后台线程 */
     pthread_t worker;
     bool worker_running;
+    pid_t signed_worker_pid;
+    bool signed_worker_cancelable;
+    bool cancel_requested;
     /* 进程内状态监听器（service_cloud 注册，联动上报云端 ota/status） */
     void (*status_listener)(const ota_status_t *st);
 } g_ota;
@@ -323,24 +329,8 @@ static char actual_slot_from_cmdline(void)
     if (n <= 0) {
         return 0;
     }
-    const char *p = strstr(buf, "root=");
-    if (!p) {
-        return 0;
-    }
-    p += 5;  /* 跳过 "root="，指向 root 设备路径 */
-    /* 截取到下一个空白为止，避免被后面的 partitions= 里的分区名干扰。 */
-    char tok[128] = {0};
-    size_t i = 0;
-    while (*p && *p != ' ' && *p != '\t' && *p != '\n' && i < sizeof(tok) - 1) {
-        tok[i++] = *p++;
-    }
-    if (strstr(tok, "mmcblk0p4")) {
-        return 'A';
-    }
-    if (strstr(tok, "mmcblk0p6")) {
-        return 'B';
-    }
-    return 0;
+    if ((size_t)n == sizeof(buf) - 1) return 0; /* Refuse truncated boot arguments. */
+    return ota_slot_from_cmdline(buf);
 }
 
 /* 暴露当前启动槽给云上报用（读 /proc/cmdline 的 root=）。返回 'A'/'B'/0。 */
@@ -441,8 +431,8 @@ static const char *direction_for_current_slot(void)
 
     char actual = actual_slot_from_cmdline();
     if (actual == 0) {
-        APP_LOGW(OTA_MODULE, "cannot determine actual slot from cmdline, trust env (%c)", env_slot);
-        return dir;
+        APP_LOGE(OTA_MODULE, "cannot determine actual slot; refuse APPLY");
+        return NULL;
     }
     if (actual != env_slot) {
         APP_LOGE(OTA_MODULE,
@@ -453,12 +443,85 @@ static const char *direction_for_current_slot(void)
     return dir;
 }
 
+/* The signed updater owns compatibility, trust, download and the shared
+ * transaction lock. This bridge only translates its bounded progress records
+ * into the existing UI protocol; cloud URLs cannot override its repository. */
+static bool signed_system_enabled(void)
+{
+    return access("/etc/smartdesktopmimi/updater.json", F_OK) == 0;
+}
+
+static int signed_system_operation(const char *operation, bool cancelable)
+{
+    int output[2];
+    if (pipe(output) != 0) return -1;
+    pid_t child = fork();
+    if (child < 0) { close(output[0]); close(output[1]); return -1; }
+    if (child == 0) {
+        close(output[0]);
+        setpgid(0, 0);
+        prctl(PR_SET_PDEATHSIG, SIGTERM);
+        if (getppid() == 1) _exit(1);
+        redirect_child_output(OTA_STDIO_LOG);
+        dup2(output[1], STDOUT_FILENO);
+        close(output[1]);
+        execl("/usr/bin/mimi-update", "mimi-update", operation, (char *)NULL);
+        _exit(127);
+    }
+    close(output[1]);
+    pthread_mutex_lock(&g_ota.lock);
+    g_ota.signed_worker_pid = child;
+    g_ota.signed_worker_cancelable = cancelable;
+    pthread_mutex_unlock(&g_ota.lock);
+    FILE *stream = fdopen(output[0], "r");
+    if (!stream) { close(output[0]); kill(child, SIGTERM); }
+    char line[1024];
+    while (stream && fgets(line, sizeof(line), stream)) {
+        char phase[48] = {0}, version[64] = {0};
+        if (json_extract_string(line, "phase", phase, sizeof(phase)) != 0) continue;
+        json_extract_string(line, "version", version, sizeof(version));
+        const char *field = strstr(line, "\"progress\":");
+        int progress = field ? atoi(field + 11) : 0;
+        if (progress < 0) progress = 0;
+        if (progress > 100) progress = 100;
+        pthread_mutex_lock(&g_ota.lock);
+        if (strcmp(phase, "checking") == 0 || strcmp(phase, "up-to-date") == 0)
+            snprintf(g_ota.status.version_local, sizeof(g_ota.status.version_local), "%s", version);
+        else if (version[0])
+            snprintf(g_ota.status.version_remote, sizeof(g_ota.status.version_remote), "%s", version);
+        if (strcmp(phase, "available") == 0) g_ota.status.update_available = true;
+        if (strcmp(phase, "up-to-date") == 0) g_ota.status.update_available = false;
+        pthread_mutex_unlock(&g_ota.lock);
+        if (strcmp(phase, "checking") == 0) set_state(OTA_STATE_CHECKING, 0, 0);
+        else if (strcmp(phase, "available") == 0) set_state(OTA_STATE_UPDATE_AVAILABLE, 0, 0);
+        else if (strcmp(phase, "up-to-date") == 0) set_state(OTA_STATE_UP_TO_DATE, 0, 100);
+        else if (strcmp(phase, "downloading") == 0) set_state(OTA_STATE_DOWNLOADING, 0, progress);
+        else if (strcmp(phase, "downloaded") == 0) set_state(OTA_STATE_DOWNLOAD_DONE, 0, 100);
+        else if (strcmp(phase, "applying") == 0) set_state(OTA_STATE_APPLYING, 0, progress);
+    }
+    if (stream) fclose(stream);
+    int status = 0;
+    pid_t waited;
+    do { waited = waitpid(child, &status, 0); } while (waited < 0 && errno == EINTR);
+    pthread_mutex_lock(&g_ota.lock);
+    g_ota.signed_worker_pid = 0;
+    g_ota.signed_worker_cancelable = false;
+    bool cancelled = g_ota.cancel_requested && cancelable;
+    pthread_mutex_unlock(&g_ota.lock);
+    if (cancelled) return -2;
+    return waited == child && WIFEXITED(status) && WEXITSTATUS(status) == 0 ? 0 : -1;
+}
+
 /* ---------- 后台工作线程：CHECK ---------- */
 static void *worker_check(void *arg)
 {
     (void)arg;
     const char *url = g_ota.check_url[0] ? g_ota.check_url : OTA_CHECK_URL_DEFAULT;
     set_state(OTA_STATE_CHECKING, 0, 0);
+    if (signed_system_enabled()) {
+        if (signed_system_operation("system-check", true) != 0) set_state(OTA_STATE_ERROR, 11, 0);
+        goto done;
+    }
 
     char json[1024];
     int n = wget_to_memory(url, json, sizeof(json));
@@ -527,6 +590,10 @@ static int curl_progress_cb(void *userdata, curl_off_t dltotal, curl_off_t dlnow
                             curl_off_t ultotal, curl_off_t ulnow)
 {
     (void)ultotal; (void)ulnow;
+    pthread_mutex_lock(&g_ota.lock);
+    bool cancelled = g_ota.cancel_requested;
+    pthread_mutex_unlock(&g_ota.lock);
+    if (cancelled) return 1;
     int *last_pct = (int *)userdata;
     if (dltotal <= 0) return 0;
     int pct = (int)((dlnow * 100) / dltotal);
@@ -592,6 +659,12 @@ static void *worker_download(void *arg)
 {
     (void)arg;
     set_state(OTA_STATE_DOWNLOADING, 0, 0);
+    if (signed_system_enabled()) {
+        int result = signed_system_operation("system-download", true);
+        if (result == -2) set_state(OTA_STATE_IDLE, 0, 0);
+        else if (result != 0) set_state(OTA_STATE_ERROR, 11, 0);
+        goto done;
+    }
 
     mkdir(UDISK_DIR, 0755);
     const char *url = g_ota.remote_url;
@@ -604,7 +677,11 @@ static void *worker_download(void *arg)
     /* libcurl 下载（支持 HTTPS，设备 busybox wget 不支持 SSL）。
      * 下载中按整百分点经 curl_progress_cb 上报进度。 */
     if (curl_download(url, SWU_DOWNLOAD_TMP) != 0) {
-        set_state(OTA_STATE_ERROR, 4, 0);
+        unlink(SWU_DOWNLOAD_TMP);
+        pthread_mutex_lock(&g_ota.lock);
+        bool cancelled = g_ota.cancel_requested;
+        pthread_mutex_unlock(&g_ota.lock);
+        set_state(cancelled ? OTA_STATE_IDLE : OTA_STATE_ERROR, cancelled ? 0 : 4, 0);
         goto done;
     }
     /* sha256 校验：若命令带了 remote_sha256，下完比对，不符则删包报错（不进 DOWNLOAD_DONE）。
@@ -648,6 +725,31 @@ done:
 static void *worker_apply(void *arg)
 {
     (void)arg;
+    int update_lock = -1;
+    if (signed_system_enabled()) {
+        set_state(OTA_STATE_APPLYING, 0, 0);
+        if (signed_system_operation("system-install", false) != 0) {
+            set_state(OTA_STATE_ERROR, 11, 0);
+        } else {
+            set_state(OTA_STATE_REBOOTING, 0, 100);
+            sync();
+            if (run_cmd_sync(REBOOT_BIN, "-f", NULL, NULL, NULL, NULL) != 0)
+                set_state(OTA_STATE_ERROR, 13, 100);
+        }
+        goto done;
+    }
+    update_lock = open("/run/smartdesktopmimi-update.lock", O_CREAT | O_RDWR | O_CLOEXEC, 0600);
+    if (update_lock < 0 || flock(update_lock, LOCK_EX | LOCK_NB) != 0) {
+        set_state(OTA_STATE_ERROR, 10, 0);
+        goto done;
+    }
+    /* The legacy endpoint carries no board/ABI manifest. Once application
+     * updates are enrolled, never let it bypass the new system admission gate. */
+    if (access("/etc/smartdesktopmimi/updater.json", F_OK) == 0) {
+        APP_LOGE(OTA_MODULE, "system OTA requires a signed target manifest; legacy package rejected");
+        set_state(OTA_STATE_ERROR, 11, 0);
+        goto done;
+    }
     /* 分段进度：10=准备，30=写入中，80=写完待重启，100=REBOOTING。
      * 真实 swupdate 百分比需起进度 socket，本期用阶段档位配 spinner 足够。 */
     set_state(OTA_STATE_APPLYING, 0, 10);
@@ -707,6 +809,7 @@ static void *worker_apply(void *arg)
     run_cmd_sync(REBOOT_BIN, "-f", NULL, NULL, NULL, NULL);
 
 done:
+    if (update_lock >= 0) close(update_lock);
     pthread_mutex_lock(&g_ota.lock);
     g_ota.worker_running = false;
     pthread_mutex_unlock(&g_ota.lock);
@@ -719,6 +822,18 @@ static void *worker_commit(void *arg)
     (void)arg;
     set_state(OTA_STATE_COMMITTING, 0, 0);
 
+    /* An enrolled platform must prove UI/backend readiness and app/system
+     * compatibility before confirming the new rootfs. PID survival is insufficient. */
+    if (access("/etc/smartdesktopmimi/updater.json", F_OK) == 0) {
+        int admitted = run_cmd_sync("/usr/bin/mimi-update", "system-commit", NULL, NULL, NULL, NULL);
+        if (admitted != 0) {
+            APP_LOGE(OTA_MODULE, "commit: application/platform health gate not passed");
+            set_state(OTA_STATE_ERROR, 12, 0);
+        } else {
+            set_state(OTA_STATE_IDLE, 0, 0);
+        }
+        goto done;
+    }
     char avail[16] = {0};
     if (fw_getenv("upgrade_available", avail, sizeof(avail)) < 0 ||
         strcmp(avail, "1") != 0) {
@@ -728,9 +843,6 @@ static void *worker_commit(void *arg)
         goto done;
     }
 
-    /* Health check：backend 自身已起来（能跑这段说明系统基本正常）。
-     * 进一步可检查 socket/关键服务；此处以 backend 存活为最低判据。
-     * 通过则清 upgrade_available，停止 bootcount 计数。 */
     int rc = run_cmd_sync(FW_SETENV_BIN, "upgrade_available", "0",
                           NULL, NULL, NULL);
     if (rc != 0) {
@@ -757,6 +869,7 @@ static bool start_worker(void *(*fn)(void *))
     pthread_mutex_lock(&g_ota.lock);
     if (!g_ota.worker_running) {
         g_ota.worker_running = true;
+        g_ota.cancel_requested = false;
         ok = true;
     }
     pthread_mutex_unlock(&g_ota.lock);
@@ -809,8 +922,13 @@ void service_ota_handle_command(const ota_cmd_t *cmd)
         publish_status();
         break;
     case OTA_CMD_CANCEL:
-        /* Phase 1：取消未实现（需 kill 下载进程），留 TODO。 */
-        APP_LOGW(OTA_MODULE, "CANCEL not implemented in Phase 1");
+        pthread_mutex_lock(&g_ota.lock);
+        if (g_ota.status.state == OTA_STATE_DOWNLOADING || g_ota.signed_worker_cancelable) {
+            g_ota.cancel_requested = true;
+            if (g_ota.signed_worker_pid > 0 && g_ota.signed_worker_cancelable)
+                kill(g_ota.signed_worker_pid, SIGTERM);
+        }
+        pthread_mutex_unlock(&g_ota.lock);
         break;
     default:
         break;
@@ -833,9 +951,9 @@ void service_ota_init(void)
      * health check 通过则清 upgrade_available，停止 bootcount 计数；
      * 失败不主动回滚，交 U-Boot bootlimit。 */
     char avail[16] = {0};
-    if (fw_getenv("upgrade_available", avail, sizeof(avail)) == 0 &&
-        strcmp(avail, "1") == 0) {
-        APP_LOGI(OTA_MODULE, "init: upgrade_available=1, auto-commit");
+    if (signed_system_enabled() || (fw_getenv("upgrade_available", avail, sizeof(avail)) == 0 &&
+        strcmp(avail, "1") == 0)) {
+        APP_LOGI(OTA_MODULE, "init: verify system health and recover commit journal");
         start_worker(worker_commit);
     }
 }

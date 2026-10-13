@@ -23,8 +23,14 @@
 
 #include "lvgl/lvgl.h"
 #if LV_USE_EVDEV
+#include <fcntl.h>
+#include <linux/input.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include "lvgl/src/core/lv_global.h"
 #include "../backends.h"
+#include "../../ui/lockscreen.h"
 
 /* Product-level navigation hook implemented by src/system/app_manager.c. */
 void app_manager_back_home(void);
@@ -50,6 +56,77 @@ static void navigation_key_cb(lv_event_t * event);
  **********************/
 
 static char * backend_name = "EVDEV";
+
+/* Some gt9xx kernels return success with a zero range for unsupported ABS_X/Y.
+ * Only a nonempty range is usable; otherwise read the multitouch axis. */
+static bool read_pointer_range(int fd, unsigned int axis, unsigned int mt_axis,
+                               struct input_absinfo *range)
+{
+    if(ioctl(fd, EVIOCGABS(axis), range) == 0 &&
+       range->maximum > range->minimum) return true;
+    return ioctl(fd, EVIOCGABS(mt_axis), range) == 0 &&
+           range->maximum > range->minimum;
+}
+
+/* The Tina gt9xx driver can advertise its built-in 1920x1200 config even
+ * when the controller retains a different panel config. Only use the live
+ * controller section, and only for a panel whose orientation matches LVGL. */
+static bool read_gt9xx_panel_range(const char *config, int32_t width, int32_t height,
+                                    struct input_absinfo *x, struct input_absinfo *y)
+{
+    const char *header = "==== GT9XX config real value====";
+    const char *values = strstr(config, header);
+    if(!values) return false;
+    unsigned int version, lo_x, hi_x, lo_y, hi_y;
+    if(sscanf(values + strlen(header), "%x %x %x %x %x",
+              &version, &lo_x, &hi_x, &lo_y, &hi_y) != 5) return false;
+    if(version > 255 || lo_x > 255 || hi_x > 255 || lo_y > 255 || hi_y > 255)
+        return false;
+    unsigned int panel_w = lo_x | (hi_x << 8);
+    unsigned int panel_h = lo_y | (hi_y << 8);
+    if(width < 2 || height < 2 || panel_w != (unsigned int)width ||
+       panel_h != (unsigned int)height) return false;
+    x->minimum = y->minimum = 0;
+    x->maximum = width - 1;
+    y->maximum = height - 1;
+    return true;
+}
+
+static void calibrate_pointer(lv_indev_t *pointer, const char *path)
+{
+    int fd = open(path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    if(fd < 0) return;
+    struct input_absinfo x, y;
+    if(read_pointer_range(fd, ABS_X, ABS_MT_POSITION_X, &x) &&
+       read_pointer_range(fd, ABS_Y, ABS_MT_POSITION_Y, &y)) {
+        char name[128] = {0};
+        if(ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 &&
+           strcmp(name, "gt9xxnew_ts") == 0) {
+            int config_fd = open("/proc/gt9xx_config", O_RDONLY | O_CLOEXEC);
+            lv_display_t *display = lv_indev_get_display(pointer);
+            if(config_fd >= 0) {
+                /* This vendor proc reader ignores count and writes its entire
+                 * ~2.6KB dump. A stdio buffer may be only 1KB: read once into
+                 * an explicitly large buffer, then parse the memory safely. */
+                char config[8192];
+                ssize_t count = read(config_fd, config, sizeof(config) - 1);
+                if(count > 0 && count < (ssize_t)sizeof(config)) {
+                    config[count] = '\0';
+                    if(read_gt9xx_panel_range(config,
+                                             lv_display_get_horizontal_resolution(display),
+                                             lv_display_get_vertical_resolution(display), &x, &y))
+                        printf("[Input] Using live GT9XX panel coordinates\n");
+                }
+                close(config_fd);
+            }
+        }
+        lv_evdev_set_calibration(pointer, x.minimum, y.minimum,
+                                x.maximum, y.maximum);
+        printf("[Input] Calibrated %s: x=%d..%d y=%d..%d\n", path,
+               x.minimum, x.maximum, y.minimum, y.maximum);
+    }
+    close(fd);
+}
 
 /**********************
  *      MACROS
@@ -173,6 +250,7 @@ static lv_indev_t * init_pointer_evdev(lv_display_t * display)
         pointer = lv_evdev_create(LV_INDEV_TYPE_POINTER, input_device);
         if(pointer != NULL) {
             lv_indev_set_display(pointer, display);
+            calibrate_pointer(pointer, input_device);
         }
     }
 
@@ -208,6 +286,7 @@ static void navigation_key_cb(lv_event_t * event)
     uint32_t key;
 
     if(lv_indev_get_state(indev) != LV_INDEV_STATE_PRESSED) return;
+    if(ui_lockscreen_handle_key(indev)) return;
     key = lv_indev_get_key(indev);
     if(key == LV_KEY_ESC || key == LV_KEY_HOME) {
         app_manager_back_home();

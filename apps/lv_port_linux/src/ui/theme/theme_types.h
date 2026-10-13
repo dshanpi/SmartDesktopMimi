@@ -37,6 +37,8 @@ typedef struct {
     lv_color_t bg_card;
     lv_color_t bg_inverse;
     lv_color_t bg_desktop;
+    lv_color_t bg_elevated;
+    lv_color_t bg_scrim;
     
     /* Text */
     lv_color_t text_primary;
@@ -51,6 +53,9 @@ typedef struct {
     /* Status */
     lv_color_t color_primary;
     lv_color_t color_secondary;
+    lv_color_t color_success;
+    lv_color_t color_warning;
+    lv_color_t color_error;
     
     /* Shadows */
     lv_color_t shadow_default;

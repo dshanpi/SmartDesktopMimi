@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "contract": "legacy-v1-with-read-only-video-status",
+  "notes": "Append-only VIDEO_CMD_GET_STATUS = 9. Existing command IDs/layouts retain their semantics. Changes require explicit contract review.",
+  "headers": {
+    "apps/lv_port_linux/src/system/backend_types.h": "1deb1d5c4c0d0b9d4dd1795d80cf2d487ccfe8b669afbb250d222674cb22a085",
+    "apps/lv_port_linux/src/middleware/middleware.h": "28901cd87e233af0882bae6df2c7fb411bebb0940794e297a8aa24a7b9bc21ee",
+    "apps/lv_port_linux/src/ipc/ipc_socket.h": "43bf645d440b2688f72c99c0efbc30caf49484c819f1ac9f4b16608f58b86f3f",
+    "core/ports/aitvbox_ports.h": "dfaaf4b964b63809065af14c5df960b8a1f7f9b22517a4514e19c5117ea25f55"
+  },
+  "contract_id": "mimi-ipc-v1.1"
+}

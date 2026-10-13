@@ -1,0 +1,30 @@
+name: Application update gates
+on:
+  pull_request:
+  push:
+    branches: [main, 'feature/a133-smart-desktop-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  host-gates:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: services/mimi-update/go.mod
+          cache: false
+      - name: Signed package and transaction fault tests
+        working-directory: services/mimi-update
+        run: |
+          go vet ./...
+          go test -race -count=1 ./...
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o "$RUNNER_TEMP/mimi-update-a133" ./cmd/mimi-update
+      - name: UI coverage inventory
+        run: |
+          python3 tools/update/ui_catalog.py
+          python3 tools/update/check_contracts.py
+      - name: Release gate regression tests
+        run: python3 -m unittest discover -s tests/update -p 'test_*.py'

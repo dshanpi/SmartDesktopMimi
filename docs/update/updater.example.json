@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "root": "/overlay/smartdesktopmimi",
+  "factory": "/usr/lib/smartdesktopmimi/factory",
+  "lock": "/run/smartdesktopmimi-update.lock",
+  "socket": "/run/smartdesktopmimi/update.sock",
+  "device_file": "/etc/smartdesktopmimi/device.json",
+  "enrollment_file": "/overlay/smartdesktopmimi-platform/enrollment.json",
+  "trust_file": "/etc/smartdesktopmimi/trust.json",
+  "provider": "/usr/libexec/mimi-platform-provider",
+  "repository": "dshanpi/SmartDesktopMimi",
+  "channel": "stable",
+  "auto_download": false,
+  "install_when_idle": false
+}

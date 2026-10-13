@@ -1,0 +1,46 @@
+name: Gated application and system publication
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Prepared release tag: vX.Y.Z or system-a133-vX.Y.Z
+        required: true
+        type: string
+      stage:
+        description: Upload draft or promote a verified draft
+        required: true
+        default: draft
+        type: choice
+        options: [draft, prerelease, stable]
+permissions:
+  contents: read
+concurrency:
+  group: mimi-unified-publication
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.repository == 'dshanpi/SmartDesktopMimi' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, mimi-release]
+    environment: mimi-${{ inputs.stage }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version-file: services/mimi-update/go.mod
+          cache: false
+      - name: Build trusted admission checker
+        working-directory: services/mimi-update
+        run: go build -trimpath -o "$RUNNER_TEMP/mimi-release-checker" ./cmd/mimi-update
+      - name: Verify candidate and execute selected release stage
+        env:
+          MIMI_RELEASE_TAG: ${{ inputs.tag }}
+          MIMI_RELEASE_STAGE: ${{ inputs.stage }}
+          GITHUB_TOKEN: ${{ secrets.MIMI_RELEASE_TOKEN }}
+        run: |
+          python3 tools/update/release_workflow.py \
+            --root /srv/mimi-release/candidates \
+            --checker "$RUNNER_TEMP/mimi-release-checker" \
+            --trust /etc/mimi-release/trust.json

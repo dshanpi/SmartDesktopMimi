@@ -1,0 +1,35 @@
+include $(TOPDIR)/rules.mk
+PKG_NAME:=aitvbox-mimi-update
+PKG_VERSION:=1.0.0
+PKG_RELEASE:=1
+include $(INCLUDE_DIR)/package.mk
+ifeq ($(origin AITVBOX_PRODUCT_BUILD),undefined)
+$(error AITVBOX_PRODUCT_BUILD is required)
+endif
+PRODUCT_ROOT:=$(abspath $(AITVBOX_PRODUCT_BUILD))
+define Package/aitvbox-mimi-update
+  SECTION:=utils
+  CATEGORY:=Allwinner
+  TITLE:=SmartDesktopMimi independent application updater
+  DEPENDS:=+ca-bundle
+endef
+define Build/Prepare
+endef
+define Build/Configure
+endef
+define Build/Compile
+endef
+define Package/aitvbox-mimi-update/install
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/etc/smartdesktopmimi $(1)/usr/libexec
+	$(INSTALL_BIN) $(PRODUCT_ROOT)/build/mimi-update/mimi-update $(1)/usr/bin/mimi-update
+	$(INSTALL_BIN) ./files/mimi-update.init $(1)/etc/init.d/mimi-update
+	$(INSTALL_BIN) ./files/mimi-desktop.init $(1)/etc/init.d/mimi-desktop
+	$(INSTALL_BIN) ./files/mimi-platform-provider $(1)/usr/libexec/mimi-platform-provider
+	if [ -d "$(PRODUCT_ROOT)/build/mimi-baseline" ]; then \
+		python3 "$(PRODUCT_ROOT)/tools/update/baseline.py" verify --output "$(PRODUCT_ROOT)/build/mimi-baseline" && \
+		$(CP) "$(PRODUCT_ROOT)/build/mimi-baseline/rootfs/." "$(1)/"; \
+	fi
+	# Enrollment, trust, signed factory tree and provider are platform release inputs.
+	# Never ship a wildcard identity or development signing key to make this start.
+endef
+$(eval $(call BuildPackage,aitvbox-mimi-update))

@@ -83,6 +83,28 @@ native APP 的按钮使用 `app.invoke`。纯声明式 APP 当前只可直接使
 `capture.snapshot` action，且必须同时列在 manifest 的 `permissions` 中；需要
 键鼠参数或其他业务逻辑时使用 schema 2 SDK。系统始终在 APP 内容区外保留返回栏。
 
+### 3.1 中英文界面
+
+应用可以在 `manifest.json` 中提供简体中文和英文名称及 UI 入口。系统会跟随
+“设置 → 外观与语言”即时选择对应资源；没有对应语言时回退到顶层 `name` 和
+`ui.entry`。本地化入口仍必须位于应用包的 `ui/` 目录，且会经过与默认入口相同的
+结构、权限和路径校验。
+
+```json
+{
+  "name": "My App",
+  "ui": {"entry": "ui/main.json", "presentation": "embedded"},
+  "localizations": {
+    "zh-CN": {"name": "我的应用", "uiEntry": "ui/main.zh-CN.json"},
+    "en-US": {"name": "My App", "uiEntry": "ui/main.en-US.json"}
+  }
+}
+```
+
+`localizations` 可只提供一种语言；每个语言项必须同时包含 `name` 和 `uiEntry`。
+界面文件中的文案由应用自行本地化，系统外壳（返回栏、错误提示等）由系统语言包
+负责。切换系统语言后重新打开用户应用即可加载对应入口。
+
 ## 4. 编写 native 逻辑
 
 `src/main.c` 每次只处理一个短动作：

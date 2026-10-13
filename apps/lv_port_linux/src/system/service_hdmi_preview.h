@@ -13,4 +13,7 @@ void service_hdmi_preview_set_enabled(bool enable);
 /* 重发一帧当前状态快照（响应 GET_STATUS）。 */
 void service_hdmi_preview_send_status(void);
 
+/* Current desired/runtime switch state (thread-safe). */
+bool service_hdmi_preview_is_enabled(void);
+
 #endif /* SERVICE_HDMI_PREVIEW_H */

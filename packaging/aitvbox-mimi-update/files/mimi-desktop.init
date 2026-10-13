@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+START=100
+STOP=9
+start() {
+    [ -f /etc/smartdesktopmimi/updater.json ] || return 0
+    [ -f /overlay/smartdesktopmimi-platform/enrollment.json ] || return 0
+    /usr/bin/mimi-update start-selected
+}
+stop() {
+    ubus call service delete '{"name":"mimi-desktop"}'
+}

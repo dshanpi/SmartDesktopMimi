@@ -523,5 +523,19 @@
   "3bbbad6310": "Log In",
   "8458bad978": "Forgot password?",
   "cba0b20662": "Invalid password",
-  "ffcf237ecb": "An error occurred while logging in"
+  "ffcf237ecb": "An error occurred while logging in",
+  "64e590319c": "Desktop application update",
+  "bdb7b35bb3": "Desktop updater unavailable",
+  "7276c3f161": "Updates desktop pages and resources. System firmware is managed separately.",
+  "eb1b4bb366": "Check for updates",
+  "801ab24683": "Download",
+  "4489f9edae": "Install and restart desktop",
+  "03604974f7": "Cancel download",
+  "650e7293e8": "Update history",
+  "224518815c": "Update channel",
+  "fa3aff3c18": "Stable",
+  "fa6a5a3224": "Testing",
+  "8e8842b94d": "Automatically download updates",
+  "c451591ce6": "Install when the device is idle",
+  "18a0a29d44": "Idle installation restarts the desktop after voice, media and device control tasks finish."
 }

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.11)
 project(lvgl)
 
+option(MIMI_APPLICATION_ONLY "Configure only the independently released desktop" OFF)
+
 option(LV_USE_SUNXI_G2D "Allwinner sunxi-g2d draw unit (FILL acceleration, RGB565)" OFF)
 option(AITVBOX_ENABLE_100ASK_CLOUD
     "Build the optional 100ask cloud provider (requires a private SDK checkout)"
@@ -511,11 +513,16 @@ target_link_libraries(lvgl PUBLIC ${PKG_CONFIG_LIB} m pthread)
 file(GLOB_RECURSE UI_SOURCES CONFIGURE_DEPENDS "src/ui/*.c")
 file(GLOB_RECURSE UI_CPP_SOURCES "src/ui/*.cpp")
 file(GLOB_RECURSE UI_HPP_SOURCES "src/ui/*.hpp")
+# The product's cat/lock-screen experiment was cancelled. Keep existing call
+# sites as no-ops, and never pull its separate renderer into application builds.
+list(FILTER UI_SOURCES EXCLUDE REGEX "/lockscreen(_3d)?\\.c$")
+list(FILTER UI_SOURCES EXCLUDE REGEX "/images/sleeping_cat\\.c$")
 file(GLOB_RECURSE SYSTEM_SOURCES "src/system/*.c")
 file(GLOB_RECURSE MIDDLEWARE_SOURCES "src/middleware/*.c")
 file(GLOB_RECURSE IPC_SOURCES "src/ipc/*.c")
 file(GLOB_RECURSE FONT_SOURCES "src/ui/font/*.c")
 file(GLOB_RECURSE IMG_SOURCES "src/ui/images/*.c")
+list(FILTER IMG_SOURCES EXCLUDE REGEX "/sleeping_cat\\.c$")
 file(GLOB_RECURSE THEME_SOURCES "src/ui/theme/*.c")
 
 # Exclude backend-only sources from generic globs
@@ -531,6 +538,7 @@ list(FILTER APP_SOURCES EXCLUDE REGEX "src/apps/video/tplayer_wrapper\\.c$")
 # -----------------------------------------------------------------------------
 # TPlayer Support
 # -----------------------------------------------------------------------------
+if(NOT MIMI_APPLICATION_ONLY)
 # TPlayer dependencies: libtplayer, libcedarx (cdx_base), librt, libstdc++
 find_library(TPLAYER_LIB NAMES tplayer)
 find_library(CDX_BASE_LIB NAMES cdx_base)
@@ -684,6 +692,9 @@ endif()
 # Build UI Process (lvglsim)
 # -----------------------------------------------------------------------------
 # UI 进程，负责界面显示和用户交互
+endif() # NOT MIMI_APPLICATION_ONLY
+find_library(ASOUND_LIB NAMES asound)
+find_library(JSONC_LIB NAMES json-c)
 add_executable(lvglsim
     src/main.c
     ${UI_SOURCES}

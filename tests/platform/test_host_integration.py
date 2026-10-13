@@ -398,9 +398,155 @@ class PlatformHostTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('PR_INFO("DP cloud sync result: %d", result);', dp_source)
 
-    def test_shipping_lvgl_ui_is_en_us(self):
+    def test_tuya_iot_dps_are_schema_gated_and_applied_by_backend(self):
+        tuya = (
+            REPO / "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c"
+        ).read_text(encoding="utf-8")
+        bridge = (
+            REPO / "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c"
+        ).read_text(encoding="utf-8")
+        backend = (
+            REPO / "apps/lv_port_linux/src/system/service_ai_runtime.c"
+        ).read_text(encoding="utf-8")
+        settings = (
+            REPO / "apps/lv_port_linux/src/system/settings.c"
+        ).read_text(encoding="utf-8")
+
+        for symbol in (
+            "DPID_SCREEN_BRIGHTNESS",
+            "DPID_HDMI_PREVIEW",
+            "DPID_BLUETOOTH",
+            "DPID_LED_SWITCH",
+            "DPID_LED_BRIGHTNESS",
+            "DPID_TEMPERATURE",
+            "DPID_HUMIDITY",
+            "DPID_BUS_VOLTAGE",
+            "DPID_BUS_CURRENT",
+            "DPID_BUS_POWER",
+            "DPID_ASSISTANT_STATE",
+            "DPID_FREE_CHAT",
+        ):
+            self.assertIn(symbol, tuya)
+        self.assertIn("dp_node_find_by_devid", tuya)
+        self.assertIn("AI_DP_CONTRACT", tuya)
+        self.assertIn("Tuya product schema incomplete:", tuya)
+        self.assertIn("OPRT_SVC_DP_ID_NOT_FOUND", tuya)
+        self.assertIn("schema-valid values are unchanged", tuya)
+        self.assertIn("dps[CNTSOF(AI_DP_CONTRACT)]", tuya)
+        self.assertIn("node->desc.prop_tp != type", tuya)
+        self.assertIn("node->desc.mode != M_RO", tuya)
+        self.assertIn("reject write to read-only DP", tuya)
+        self.assertIn("reject unsupported RAW DP", tuya)
+        self.assertNotIn("PR_DEBUG_RAW", tuya)
+        self.assertNotIn("tuya_iot_dp_raw_report", tuya)
+        self.assertNotIn(
+            "tuya_iot_dp_obj_report(client, dpobj->devid, dpobj->dps",
+            tuya,
+        )
+
+        self.assertIn("app_chat_bot_main_ui_send_iot_dp", bridge)
+        self.assertIn("app_chat_bot_main_ui_send_iot_schema", bridge)
+        self.assertIn('strcmp(cmd->valuestring, "iot_state")', bridge)
+        self.assertIn("app_chat_bot_set_assistant_enabled", bridge)
+        self.assertIn("char buf[1024]", bridge)
+
+        for call in (
+            "sys_backlight_set_percent",
+            "sys_volume_set_percent",
+            "service_hdmi_preview_set_enabled",
+            "service_bt_enable",
+            "service_led_set_enabled",
+            "service_led_set_brightness",
+        ):
+            self.assertIn(call, backend)
+        self.assertIn("TUYA_IOT_STATE_INTERVAL_MS 30000", backend)
+        self.assertIn("TUYA_IOT_SETTINGS_SAVE_DELAY_MS 800", backend)
+        self.assertIn("temperature_tenths", backend)
+        self.assertIn("bus_power_mw", backend)
+        self.assertIn('strcmp(event, "iot_schema") == 0', backend)
+        self.assertIn("tuya_schema_supported_dps", backend)
+        self.assertIn("SETTINGS_VERSION 8", settings)
+        self.assertIn("Settings v7 loaded and migrated", settings)
+        self.assertIn("Settings v6 loaded and migrated", settings)
+        self.assertIn("merge_local_settings_changes", settings)
+        self.assertIn("flock(fd, LOCK_EX)", settings)
+
+        dp_doc = (
+            REPO / "docs/tuya-iot-dp-schema.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("UUID/AuthKey", dp_doc)
+        self.assertIn("DP111", dp_doc)
+        self.assertIn("RAW DP", dp_doc)
+
+        schema_manifest = (
+            REPO / "integrations/tuyaopen/config/aitvbox-tuya-dp-schema.json"
+        )
+        validator = REPO / "scripts/validate_tuya_dp_schema.py"
+        manifest = json.loads(schema_manifest.read_text(encoding="utf-8"))
+        self.assertEqual([dp["id"] for dp in manifest["dps"]],
+                         [1, 3, *range(101, 113)])
+        result = run([sys.executable, validator, schema_manifest])
+        self.assertIn(b"PASS", result.stdout)
+
+    def test_settings_save_merges_stale_cross_process_fields(self):
+        settings_dir = REPO / "apps/lv_port_linux/src/system"
+        helper_source = r'''
+#include "settings.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+int main(int argc, char **argv) {
+    sys_settings_t *settings;
+    if (argc != 2) return 2;
+    sys_settings_init();
+    settings = sys_settings_get();
+    if (strcmp(argv[1], "slow-brightness") == 0) {
+        usleep(300000);
+        settings->brightness = 80;
+        sys_settings_save();
+    } else if (strcmp(argv[1], "bluetooth-off") == 0) {
+        settings->bluetooth_enabled = false;
+        sys_settings_save();
+    } else if (strcmp(argv[1], "read") == 0) {
+        printf("%d %d\n", settings->brightness,
+               settings->bluetooth_enabled ? 1 : 0);
+    } else {
+        return 3;
+    }
+    return 0;
+}
+'''
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            source = temp / "settings_merge_helper.c"
+            binary = temp / "settings_merge_helper"
+            settings_file = temp / "settings.bin"
+            source.write_text(helper_source, encoding="utf-8")
+            run([
+                "gcc", "-std=gnu11", "-O2", "-Wall", "-Wextra", "-Werror",
+                "-I", settings_dir,
+                source, settings_dir / "settings.c", "-o", binary,
+            ])
+            env = os.environ.copy()
+            env["LV_SETTINGS_FILE"] = str(settings_file)
+            run([binary, "read"], env=env)
+
+            slow = subprocess.Popen(
+                [str(binary), "slow-brightness"], env=env,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            threading.Event().wait(0.1)
+            run([binary, "bluetooth-off"], env=env)
+            stdout, stderr = slow.communicate(timeout=5)
+            self.assertEqual(0, slow.returncode, (stdout, stderr))
+
+            result = run([binary, "read"], env=env)
+            self.assertIn(b"80 0", result.stdout)
+
+    def test_shipping_lvgl_ui_is_bilingual_and_voice_sdk_stays_english(self):
         result = run([sys.executable, REPO / "scripts/audit_english_ui.py"])
-        self.assertIn(b"English UI audit: PASS", result.stdout)
+        self.assertIn(b"Bilingual UI audit: PASS", result.stdout)
 
         tuya_config = (
             REPO / "integrations/tuyaopen/config/A133_B6.config"
@@ -550,6 +696,17 @@ class PlatformHostTests(unittest.TestCase):
         self.assertIn("case KEY_PLAYPAUSE:", evdev_patch)
         self.assertIn("case KEY_MENU:", evdev_patch)
 
+    def test_ui_launcher_uses_busybox_compatible_sleep_intervals(self):
+        launcher = (
+            REPO / "packaging/aitvbox-suite/files/start-ui.sh"
+        ).read_text(encoding="utf-8")
+
+        self.assertNotIn("sleep 0.1", launcher)
+        self.assertIn('while [ "$i" -lt 30 ]', launcher)
+        self.assertIn("wait_boot_play_gone 8", launcher)
+        self.assertIn("wait_boot_play_gone 2", launcher)
+        self.assertIn("wait_boot_play_gone 1", launcher)
+
     def test_hdmi_snapshot_providers_have_exclusive_socket_ownership(self):
         preview = (
             REPO / "apps/hdmi_preview/src/main.cpp"
@@ -579,7 +736,11 @@ class PlatformHostTests(unittest.TestCase):
 
         self.assertIn('memcmp(command, "DISPLAY 1\\n", 10)', capture)
         self.assertIn('memcmp(command, "STATUS\\n", 7)', capture)
-        self.assertIn("present_local_frame();", capture)
+        self.assertIn("LOCAL_DISPLAY_FPS 15", capture)
+        self.assertIn("DISPLAY_BUFFER_COUNT 2", capture)
+        self.assertIn("gDisplayMem[next_buffer]", capture)
+        self.assertIn("present_local_frame((uint64_t)frame_count);", capture)
+        self.assertNotIn("if (!enabled && g_display_port", capture)
         self.assertIn("g_stream_requested.load()", capture)
         self.assertIn("AITVBOX_SHARED_CAPTURE", preview_service)
         self.assertIn("shared_capture_set_display", preview_service)
@@ -608,7 +769,9 @@ class PlatformHostTests(unittest.TestCase):
             "queue_snapshot_frame((const unsigned char*)gIonMem.vir);",
             encode_at,
         )
-        display_at = capture.index("present_local_frame();", snapshot_at)
+        display_at = capture.index(
+            "present_local_frame((uint64_t)frame_count);", snapshot_at
+        )
         self.assertLess(encode_at, snapshot_at)
         self.assertLess(snapshot_at, display_at)
         self.assertIn("const videoSampleQueueSize = 6", webrtc)

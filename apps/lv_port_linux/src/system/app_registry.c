@@ -1,5 +1,5 @@
 #include "app_registry.h"
-#include "../ui/locale_en_us.h"
+#include "../ui/ui_i18n.h"
 #include "../apps/ai/ai_app.h"
 #include "../apps/bt/bt_app.h"
 #include "../apps/ota/ota_app.h"
@@ -18,7 +18,8 @@ LV_IMAGE_DECLARE(bt_speaker);
 static const app_registry_entry_t app_registry[] = {
     {
         .id = APP_ID_VIDEO,
-        .name = UI_APP_VIDEO,
+        .name = "Video Player",
+        .name_id = UI_STR_APP_VIDEO,
         .icon_type = APP_ICON_BUILTIN,
         .icon_src = &video_app,
         .accent_color = 0xE85D75,
@@ -27,7 +28,8 @@ static const app_registry_entry_t app_registry[] = {
     },
     {
         .id = APP_ID_WIFI,
-        .name = UI_APP_WIFI,
+        .name = "Wi-Fi",
+        .name_id = UI_STR_APP_WIFI,
         .icon_type = APP_ICON_BUILTIN,
         .icon_src = &wifi_app,
         .accent_color = 0x16A6E8,
@@ -36,7 +38,8 @@ static const app_registry_entry_t app_registry[] = {
     },
     {
         .id = APP_ID_SETTING,
-        .name = UI_APP_SETTINGS,
+        .name = "Settings",
+        .name_id = UI_STR_APP_SETTINGS,
         .icon_type = APP_ICON_BUILTIN,
         .icon_src = &setting_app,
         .accent_color = 0x7C63FF,
@@ -45,7 +48,8 @@ static const app_registry_entry_t app_registry[] = {
     },
     {
         .id = APP_ID_AI,
-        .name = UI_APP_AI,
+        .name = "Tuya Assistant",
+        .name_id = UI_STR_APP_AI,
         .icon_type = APP_ICON_BUILTIN,
         .icon_src = &aibot_app,
         .accent_color = 0x30B27A,
@@ -54,7 +58,8 @@ static const app_registry_entry_t app_registry[] = {
     },
     {
         .id = APP_ID_BT,
-        .name = UI_APP_BLUETOOTH,
+        .name = "Bluetooth Audio",
+        .name_id = UI_STR_APP_BLUETOOTH,
         .icon_type = APP_ICON_BUILTIN,
         .icon_src = &bt_speaker,
         .accent_color = 0x2E7DFF,
@@ -63,7 +68,8 @@ static const app_registry_entry_t app_registry[] = {
     },
     {
         .id = APP_ID_OTA,
-        .name = UI_APP_OTA,
+        .name = "System Update",
+        .name_id = UI_STR_APP_OTA,
         .icon_type = APP_ICON_BUILTIN,
         .icon_src = NULL,
         .accent_color = 0x2E7DFF,
@@ -72,7 +78,8 @@ static const app_registry_entry_t app_registry[] = {
     },
     {
         .id = APP_ID_USER_APPS,
-        .name = UI_APP_USER,
+        .name = "User Apps",
+        .name_id = UI_STR_APP_USER,
         .icon_type = APP_ICON_GENERATED,
         .icon_src = NULL,
         .accent_color = 0x00897B,
@@ -82,6 +89,7 @@ static const app_registry_entry_t app_registry[] = {
     {
         .id = APP_ID_HDMI_MCP,
         .name = "HDMI MCP",
+        .name_id = UI_STR_APP_HDMI_MCP,
         .icon_type = APP_ICON_GENERATED,
         .icon_src = NULL,
         .accent_color = 0x4868F2,

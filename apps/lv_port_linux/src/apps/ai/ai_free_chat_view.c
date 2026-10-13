@@ -1,9 +1,12 @@
 #include "ai_free_chat_view.h"
+#include "../../ui/ui_i18n.h"
 
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_fonts.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 
 #define EMOTE_DIR "/usr/share/aitvbox/emotions"
@@ -169,12 +172,25 @@ static const char *emote_for_status(const ai_status_t *status)
     }
 }
 
+static const char *release_emote_path(const char *source)
+{
+    static char path[512];
+    const char *release = getenv("MIMI_RELEASE_DIR");
+    const char *name = strrchr(source, '/');
+    if (release && release[0] == '/' && name) {
+        int length = snprintf(path, sizeof(path), "%s/resources/emotions/%s", release, name + 1);
+        if (length > 0 && (size_t)length < sizeof(path) && access(path, R_OK) == 0) return path;
+    }
+    return source;
+}
+
 static void request_exit(void)
 {
     if (exit_requested) return;
 
     exit_requested = true;
-    if (speech_label) lv_label_set_text(speech_label, "Exiting");
+    if (speech_label) lv_label_set_text(speech_label,
+                                        ui_i18n_is_zh() ? "正在退出" : "Exiting");
 
     if (exit_requested_cb) {
         exit_requested_cb(exit_requested_user_data);
@@ -232,7 +248,7 @@ static void load_emote_src(const char *src)
     lv_lottie_set_buffer(lottie_view, FREE_CHAT_LOTTIE_SIZE, FREE_CHAT_LOTTIE_SIZE, lottie_buf);
     lv_obj_align(lottie_view, LV_ALIGN_CENTER, 0, -28);
     add_bubble(lottie_view);
-    lv_lottie_set_src_file(lottie_view, src);
+    lv_lottie_set_src_file(lottie_view, release_emote_path(src));
     apply_lottie_speed(src);
 #else
     LV_UNUSED(src);

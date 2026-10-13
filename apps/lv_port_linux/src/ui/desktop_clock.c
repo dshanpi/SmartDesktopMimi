@@ -3,12 +3,18 @@
 #include "desktop_home_tokens.h"
 #include "theme/theme.h"
 #include "ui_fonts.h"
+#include "ui_i18n.h"
 #include "../system/app_manager.h"
 #include "../apps/app.h"
 
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
+
+#define CLOCK_SYNC_RETRY_MS 1000U
+#define CLOCK_MIN_VALID_YEAR 2024
+#define CLOCK_MAX_VALID_YEAR 2099
 
 typedef enum {
     HOME_ACTION_AI = 1,
@@ -28,6 +34,8 @@ static lv_obj_t *ai_orb_glow;
 static lv_obj_t *ai_action_button;
 static lv_obj_t *hdmi_action_button;
 static lv_timer_t *clock_timer;
+
+static void clock_timer_cb(lv_timer_t *timer);
 
 static void make_noninteractive(lv_obj_t *obj)
 {
@@ -53,9 +61,9 @@ static void style_surface(lv_obj_t *obj, lv_coord_t radius)
     lv_obj_set_style_border_color(obj, HOME_BORDER, 0);
     lv_obj_set_style_border_opa(obj, LV_OPA_COVER, 0);
     lv_obj_set_style_shadow_color(obj, lv_color_black(), 0);
-    lv_obj_set_style_shadow_opa(obj, LV_OPA_30, 0);
-    lv_obj_set_style_shadow_width(obj, 12, 0);
-    lv_obj_set_style_shadow_offset_y(obj, 5, 0);
+    lv_obj_set_style_shadow_opa(obj, LV_OPA_10, 0);
+    lv_obj_set_style_shadow_width(obj, 0, 0);
+    lv_obj_set_style_shadow_offset_y(obj, 4, 0);
     lv_obj_set_style_pad_all(obj, 0, 0);
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
 }
@@ -103,27 +111,18 @@ static void home_action_event(lv_event_t *event)
 
 static lv_obj_t *create_action_button(lv_obj_t *parent, const char *symbol,
                                       const char *text, lv_color_t color,
-                                      home_action_t action)
+                                      lv_coord_t width, home_action_t action)
 {
     lv_obj_t *button = lv_obj_create(parent);
-    lv_obj_set_size(button, 424, 64);
-    lv_obj_set_style_radius(button, 20, 0);
+    lv_obj_set_size(button, width, 56);
+    lv_obj_set_style_radius(button, 17, 0);
     lv_obj_set_style_bg_color(button, color, 0);
-    lv_obj_set_style_bg_grad_color(button,
-                                   lv_color_mix(color, HOME_VIOLET, 172), 0);
-    lv_obj_set_style_bg_grad_dir(button, LV_GRAD_DIR_HOR, 0);
     lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(button,
                               lv_color_mix(color, lv_color_black(), 190),
                               LV_STATE_PRESSED);
-    lv_obj_set_style_border_width(button, 1, 0);
-    lv_obj_set_style_border_color(button,
-                                  lv_color_mix(color, lv_color_white(), 170),
-                                  0);
-    lv_obj_set_style_border_opa(button, LV_OPA_60, 0);
-    lv_obj_set_style_shadow_color(button, color, 0);
-    lv_obj_set_style_shadow_opa(button, LV_OPA_20, 0);
-    lv_obj_set_style_shadow_width(button, 12, 0);
+    lv_obj_set_style_border_width(button, 0, 0);
+    lv_obj_set_style_shadow_width(button, 0, 0);
     lv_obj_set_style_pad_hor(button, 22, 0);
     lv_obj_set_style_pad_ver(button, 0, 0);
     lv_obj_set_style_pad_column(button, 14, 0);
@@ -135,8 +134,8 @@ static lv_obj_t *create_action_button(lv_obj_t *parent, const char *symbol,
     lv_obj_add_event_cb(button, home_action_event, LV_EVENT_CLICKED,
                         (void *)(intptr_t)action);
 
-    create_text(button, symbol, &lv_font_montserrat_28, HOME_TEXT);
-    lv_obj_t *label = create_text(button, text, ui_font_h3(), HOME_TEXT);
+    create_text(button, symbol, &lv_font_montserrat_24, HOME_TEXT_INVERSE);
+    lv_obj_t *label = create_text(button, text, ui_font_body_lg(), HOME_TEXT_INVERSE);
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
     return button;
 }
@@ -151,6 +150,9 @@ static void orb_pulse_exec(void *obj, int32_t value)
 static void start_orb_animation(void)
 {
     if (!ai_orb_glow) return;
+    /* Re-entering Home must not stack another animation on the persistent
+     * desktop object. */
+    lv_anim_delete(ai_orb_glow, orb_pulse_exec);
     lv_anim_t anim;
     lv_anim_init(&anim);
     lv_anim_set_var(&anim, ai_orb_glow);
@@ -163,17 +165,45 @@ static void start_orb_animation(void)
     lv_anim_start(&anim);
 }
 
+static void stop_orb_animation(void)
+{
+    if (!ai_orb_glow || !lv_obj_is_valid(ai_orb_glow)) return;
+    lv_anim_delete(ai_orb_glow, orb_pulse_exec);
+    lv_obj_set_style_transform_scale(ai_orb_glow, LV_SCALE_NONE, 0);
+    lv_obj_set_style_opa(ai_orb_glow, LV_OPA_50, 0);
+}
+
+static void home_screen_event_cb(lv_event_t *event)
+{
+    lv_event_code_t code = lv_event_get_code(event);
+    if (code == LV_EVENT_SCREEN_UNLOADED) {
+        stop_orb_animation();
+        if (clock_timer) lv_timer_pause(clock_timer);
+        return;
+    }
+    if (code != LV_EVENT_SCREEN_LOADED) return;
+
+    start_orb_animation();
+    if (clock_timer) {
+        lv_timer_resume(clock_timer);
+        /* Time may have been synchronized while another screen was active. */
+        lv_timer_ready(clock_timer);
+    } else {
+        clock_timer_cb(NULL);
+    }
+}
+
 static void create_ai_orb(lv_obj_t *parent)
 {
     lv_obj_t *stage = lv_obj_create(parent);
-    lv_obj_set_size(stage, 170, 170);
-    lv_obj_set_pos(stage, 155, 50);
+    lv_obj_set_size(stage, 164, 164);
+    lv_obj_set_pos(stage, 328, 70);
     style_clear_container(stage);
     lv_obj_set_style_clip_corner(stage, false, 0);
     lv_obj_add_flag(stage, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
 
     ai_orb_glow = lv_obj_create(stage);
-    lv_obj_set_size(ai_orb_glow, 154, 154);
+    lv_obj_set_size(ai_orb_glow, 148, 148);
     lv_obj_center(ai_orb_glow);
     lv_obj_set_style_radius(ai_orb_glow, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(ai_orb_glow, HOME_CORAL, 0);
@@ -189,7 +219,7 @@ static void create_ai_orb(lv_obj_t *parent)
     make_noninteractive(ai_orb_glow);
 
     ai_orb_core = lv_obj_create(stage);
-    lv_obj_set_size(ai_orb_core, 118, 118);
+    lv_obj_set_size(ai_orb_core, 112, 112);
     lv_obj_center(ai_orb_core);
     lv_obj_set_style_radius(ai_orb_core, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(ai_orb_core, lv_color_hex(0x30316D), 0);
@@ -219,46 +249,49 @@ static void create_ai_orb(lv_obj_t *parent)
 static lv_obj_t *create_ai_card(lv_obj_t *parent)
 {
     lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, 480, 370);
+    lv_obj_set_size(card, 566, 414);
     style_surface(card, HOME_RADIUS);
-    lv_obj_set_style_bg_color(card, lv_color_hex(0x171C2A), 0);
-    lv_obj_set_style_bg_grad_color(card, lv_color_hex(0x121724), 0);
+    lv_obj_set_style_bg_color(card,
+                              lv_color_mix(HOME_SURFACE, HOME_CORAL, 232), 0);
+    lv_obj_set_style_bg_grad_color(card, HOME_SURFACE, 0);
     lv_obj_set_style_bg_grad_dir(card, LV_GRAD_DIR_VER, 0);
     lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(card, home_action_event, LV_EVENT_CLICKED,
                         (void *)(intptr_t)HOME_ACTION_AI);
 
-    lv_obj_t *title = create_text(card, "AI Assistant", ui_font_h3(), HOME_TEXT);
-    lv_obj_set_pos(title, 22, 18);
+    lv_obj_t *title = create_text(card, ui_tr(UI_STR_HOME_AI_ASSISTANT),
+                                  ui_font_h2(), HOME_TEXT);
+    lv_obj_set_pos(title, 24, 22);
 
     sensor_label = create_text(card, "Environment  --°  --%",
                                ui_font_body_md(), HOME_TEXT_MUTED);
-    lv_obj_align(sensor_label, LV_ALIGN_TOP_RIGHT, -22, 21);
+    lv_obj_set_pos(sensor_label, 32, 300);
 
     create_ai_orb(card);
 
-    greeting_label = create_text(card, "Good morning", ui_font_h1(), HOME_TEXT);
-    lv_obj_set_width(greeting_label, 436);
-    lv_obj_set_style_text_align(greeting_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_pos(greeting_label, 22, 222);
+    greeting_label = create_text(card, ui_tr(UI_STR_HOME_GREETING_MORNING),
+                                 ui_font_h1(), HOME_TEXT);
+    lv_obj_set_width(greeting_label, 354);
+    lv_obj_set_style_text_align(greeting_label, LV_TEXT_ALIGN_LEFT, 0);
+    lv_obj_set_pos(greeting_label, 32, 230);
 
-    lv_obj_t *prompt = create_text(card, "What can I help with?",
+    lv_obj_t *prompt = create_text(card, ui_tr(UI_STR_HOME_HELP_PROMPT),
                                    ui_font_body_lg(), HOME_TEXT_MUTED);
-    lv_obj_set_width(prompt, 436);
-    lv_obj_set_style_text_align(prompt, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_pos(prompt, 22, 263);
+    lv_obj_set_width(prompt, 354);
+    lv_obj_set_style_text_align(prompt, LV_TEXT_ALIGN_LEFT, 0);
+    lv_obj_set_pos(prompt, 32, 276);
 
     ai_action_button = create_action_button(card, LV_SYMBOL_AUDIO,
-                                             "Talk to Mimi", HOME_CORAL,
-                                             HOME_ACTION_AI);
-    lv_obj_align(ai_action_button, LV_ALIGN_BOTTOM_MID, 0, -18);
+                                             ui_tr(UI_STR_HOME_TALK_MIMI), HOME_CORAL,
+                                             246, HOME_ACTION_AI);
+    lv_obj_align(ai_action_button, LV_ALIGN_BOTTOM_LEFT, 32, -20);
     return card;
 }
 
 static void create_monitor_preview(lv_obj_t *parent)
 {
     lv_obj_t *preview = lv_obj_create(parent);
-    lv_obj_set_size(preview, 432, 206);
+    lv_obj_set_size(preview, 282, 232);
     lv_obj_set_pos(preview, 24, 65);
     lv_obj_set_style_radius(preview, 16, 0);
     lv_obj_set_style_bg_color(preview, lv_color_hex(0x0C1830), 0);
@@ -292,24 +325,24 @@ static void create_monitor_preview(lv_obj_t *parent)
     lv_obj_set_style_pad_all(stand, 0, 0);
     make_noninteractive(stand);
 
-    lv_obj_t *ready = create_text(preview, "Ready to control",
-                                  ui_font_h2(), HOME_TEXT);
+    lv_obj_t *ready = create_text(preview, ui_tr(UI_STR_HOME_READY_CONTROL),
+                                  ui_font_h2(), HOME_DARK_TEXT);
     lv_obj_align(ready, LV_ALIGN_BOTTOM_MID, 0, -47);
-    lv_obj_t *hint = create_text(preview, "Secure HDMI workspace",
-                                 ui_font_body_md(), HOME_TEXT_MUTED);
+    lv_obj_t *hint = create_text(preview, ui_tr(UI_STR_HOME_SECURE_HDMI),
+                                 ui_font_body_md(), HOME_DARK_TEXT_MUTED);
     lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -20);
 }
 
 static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
 {
     lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, 480, 370);
+    lv_obj_set_size(card, 330, 414);
     style_surface(card, HOME_RADIUS);
     lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(card, home_action_event, LV_EVENT_CLICKED,
                         (void *)(intptr_t)HOME_ACTION_HDMI);
 
-    lv_obj_t *title = create_text(card, "HDMI Live", ui_font_h2(), HOME_TEXT);
+    lv_obj_t *title = create_text(card, ui_tr(UI_STR_HOME_HDMI_LIVE), ui_font_h2(), HOME_TEXT);
     lv_obj_set_pos(title, 24, 20);
 
     lv_obj_t *live_dot = lv_obj_create(card);
@@ -325,14 +358,15 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
     lv_obj_set_style_pad_all(live_dot, 0, 0);
     make_noninteractive(live_dot);
 
-    lv_obj_t *live = create_text(card, "LIVE", ui_font_body_md(), HOME_CYAN);
+    lv_obj_t *live = create_text(card, ui_tr(UI_STR_READY),
+                                 ui_font_body_md(), HOME_CYAN);
     lv_obj_align(live, LV_ALIGN_TOP_RIGHT, -22, 22);
 
     create_monitor_preview(card);
     hdmi_action_button = create_action_button(card, LV_SYMBOL_VIDEO,
-                                               "Open KVM", HOME_BLUE,
-                                               HOME_ACTION_HDMI);
-    lv_obj_align(hdmi_action_button, LV_ALIGN_BOTTOM_MID, 0, -18);
+                                               ui_tr(UI_STR_HOME_OPEN_KVM), HOME_BLUE,
+                                               282, HOME_ACTION_HDMI);
+    lv_obj_align(hdmi_action_button, LV_ALIGN_BOTTOM_MID, 0, -20);
     return card;
 }
 
@@ -341,19 +375,19 @@ static lv_obj_t *create_quick_tile(lv_obj_t *parent, const char *symbol,
                                    lv_color_t accent, home_action_t action)
 {
     lv_obj_t *tile = lv_obj_create(parent);
-    lv_obj_set_size(tile, 232, 164);
-    style_surface(tile, HOME_RADIUS_SM);
-    lv_obj_set_style_bg_color(tile, HOME_SURFACE_RAISED, 0);
+    lv_obj_set_size(tile, 215, 124);
+    style_clear_container(tile);
     lv_obj_set_style_bg_color(tile, HOME_SURFACE_PRESSED, LV_STATE_PRESSED);
-    lv_obj_set_style_shadow_width(tile, 0, 0);
+    lv_obj_set_style_bg_opa(tile, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_radius(tile, HOME_RADIUS_SM, LV_STATE_PRESSED);
     lv_obj_add_flag(tile, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_CLICK_FOCUSABLE);
     lv_obj_add_event_cb(tile, home_action_event, LV_EVENT_CLICKED,
                         (void *)(intptr_t)action);
 
     lv_obj_t *icon_plate = lv_obj_create(tile);
-    lv_obj_set_size(icon_plate, 52, 52);
-    lv_obj_set_pos(icon_plate, 18, 18);
-    lv_obj_set_style_radius(icon_plate, 15, 0);
+    lv_obj_set_size(icon_plate, 38, 38);
+    lv_obj_set_pos(icon_plate, 14, 40);
+    lv_obj_set_style_radius(icon_plate, 14, 0);
     lv_obj_set_style_bg_color(icon_plate, accent, 0);
     lv_obj_set_style_bg_opa(icon_plate, LV_OPA_20, 0);
     lv_obj_set_style_border_width(icon_plate, 1, 0);
@@ -366,59 +400,84 @@ static lv_obj_t *create_quick_tile(lv_obj_t *parent, const char *symbol,
                                  &lv_font_montserrat_28, accent);
     lv_obj_center(icon);
 
-    lv_obj_t *name = create_text(tile, title, ui_font_h3(), HOME_TEXT);
-    lv_obj_set_pos(name, 18, 88);
+    lv_obj_t *name = create_text(tile, title, ui_font_body_lg(), HOME_TEXT);
+    lv_obj_set_pos(name, 64, 36);
+    lv_obj_set_width(name, 148);
+    lv_label_set_long_mode(name, LV_LABEL_LONG_DOT);
     lv_obj_t *meta = create_text(tile, detail, ui_font_body_md(), HOME_TEXT_MUTED);
-    lv_obj_set_pos(meta, 18, 121);
+    lv_obj_set_pos(meta, 64, 70);
+    lv_obj_set_width(meta, 148);
+    lv_label_set_long_mode(meta, LV_LABEL_LONG_WRAP);
 
-    lv_obj_t *chevron = create_text(tile, LV_SYMBOL_RIGHT,
-                                    &lv_font_montserrat_20, HOME_TEXT_MUTED);
-    lv_obj_align(chevron, LV_ALIGN_BOTTOM_RIGHT, -18, -22);
     return tile;
 }
 
-static uint32_t next_clock_tick_ms(void)
+static bool local_time_is_plausible(const struct tm *local_tm)
 {
+    if (!local_tm) return false;
+    int year = local_tm->tm_year + 1900;
+    return year >= CLOCK_MIN_VALID_YEAR && year <= CLOCK_MAX_VALID_YEAR;
+}
+
+static void label_set_text_if_changed(lv_obj_t *label, const char *text)
+{
+    if (!label || !lv_obj_is_valid(label) || !text) return;
+    const char *current = lv_label_get_text(label);
+    if (!current || strcmp(current, text) != 0) {
+        lv_label_set_text(label, text);
+    }
+}
+
+static uint32_t next_clock_tick_ms(bool time_valid)
+{
+    if (!time_valid) return CLOCK_SYNC_RETRY_MS;
+
     struct timespec ts;
-    if (clock_gettime(CLOCK_REALTIME, &ts) != 0) return 1000;
-    uint32_t elapsed = (uint32_t)(ts.tv_nsec / 1000000L);
-    return elapsed < 1000U ? 1000U - elapsed : 1000U;
+    if (clock_gettime(CLOCK_REALTIME, &ts) != 0) return CLOCK_SYNC_RETRY_MS;
+    uint32_t elapsed = (uint32_t)(ts.tv_sec % 60) * 1000U +
+                       (uint32_t)(ts.tv_nsec / 1000000L);
+    return elapsed < 60000U ? 60000U - elapsed : 1U;
 }
 
 static void clock_timer_cb(lv_timer_t *timer)
 {
     time_t now = time(NULL);
     struct tm local_tm;
-    if (localtime_r(&now, &local_tm) == NULL) return;
+    bool time_valid = localtime_r(&now, &local_tm) != NULL &&
+                      local_time_is_plausible(&local_tm);
+
+    if (!time_valid) {
+        label_set_text_if_changed(time_label, "--:--");
+        label_set_text_if_changed(date_label, ui_tr(UI_STR_TIME_NOT_SET));
+        label_set_text_if_changed(greeting_label, ui_tr(UI_STR_WELCOME_MIMI));
+        if (timer) lv_timer_set_period(timer, next_clock_tick_ms(false));
+        return;
+    }
 
     if (time_label) {
-        lv_label_set_text_fmt(time_label, "%02d:%02d",
-                              local_tm.tm_hour, local_tm.tm_min);
+        char value[8];
+        snprintf(value, sizeof(value), "%02d:%02d",
+                 local_tm.tm_hour, local_tm.tm_min);
+        label_set_text_if_changed(time_label, value);
     }
     if (date_label) {
-        static const char *days[] = {
-            "Sunday", "Monday", "Tuesday", "Wednesday",
-            "Thursday", "Friday", "Saturday"
-        };
-        static const char *months[] = {
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        };
         int day = local_tm.tm_wday >= 0 && local_tm.tm_wday < 7
                     ? local_tm.tm_wday : 0;
         int month = local_tm.tm_mon >= 0 && local_tm.tm_mon < 12
-                    ? local_tm.tm_mon : 0;
-        lv_label_set_text_fmt(date_label, "%s  %s %d",
-                              days[day], months[month], local_tm.tm_mday);
+                    ? local_tm.tm_mon + 1 : 1;
+        char value[80];
+        ui_i18n_format_date(value, sizeof(value), local_tm.tm_year + 1900,
+                            month, local_tm.tm_mday, day);
+        label_set_text_if_changed(date_label, value);
     }
     if (greeting_label) {
-        const char *greeting = local_tm.tm_hour < 5 ? "Hello, night owl"
-                              : local_tm.tm_hour < 12 ? "Good morning"
-                              : local_tm.tm_hour < 18 ? "Good afternoon"
-                              : "Good evening";
-        lv_label_set_text(greeting_label, greeting);
+        const char *greeting = local_tm.tm_hour < 5 ? ui_tr(UI_STR_HOME_GREETING_NIGHT)
+                              : local_tm.tm_hour < 12 ? ui_tr(UI_STR_HOME_GREETING_MORNING)
+                              : local_tm.tm_hour < 18 ? ui_tr(UI_STR_HOME_GREETING_AFTERNOON)
+                              : ui_tr(UI_STR_HOME_GREETING_EVENING);
+        label_set_text_if_changed(greeting_label, greeting);
     }
-    if (timer) lv_timer_set_period(timer, next_clock_tick_ms());
+    if (timer) lv_timer_set_period(timer, next_clock_tick_ms(true));
 }
 
 void ui_clock_apply_theme(void)
@@ -440,11 +499,12 @@ void ui_clock_set_sensor(bool valid, int temp_c, int humi_pct)
 {
     if (!sensor_label) return;
     if (!valid) {
-        lv_label_set_text(sensor_label, "Environment  offline");
+        lv_label_set_text(sensor_label, ui_tr(UI_STR_ENVIRONMENT_OFFLINE));
         lv_obj_set_style_text_color(sensor_label, HOME_TEXT_MUTED, 0);
         return;
     }
-    lv_label_set_text_fmt(sensor_label, "Environment  %d°  %d%%",
+    lv_label_set_text_fmt(sensor_label,
+                          ui_i18n_is_zh() ? "环境  %d°  %d%%" : "Environment  %d°  %d%%",
                           temp_c, humi_pct);
     bool warning = temp_c < 16 || temp_c > 28 ||
                    humi_pct < 30 || humi_pct > 70;
@@ -454,9 +514,18 @@ void ui_clock_set_sensor(bool valid, int temp_c, int humi_pct)
 
 void ui_clock_create(lv_obj_t *parent)
 {
+    lv_obj_t *home_screen = lv_obj_get_screen(parent);
+    if (home_screen) {
+        lv_obj_add_event_cb(home_screen, home_screen_event_cb,
+                            LV_EVENT_SCREEN_UNLOADED, NULL);
+        lv_obj_add_event_cb(home_screen, home_screen_event_cb,
+                            LV_EVENT_SCREEN_LOADED, NULL);
+    }
+
     lv_obj_t *dashboard = lv_obj_create(parent);
     lv_obj_set_size(dashboard, HOME_CONTENT_W, HOME_DASHBOARD_H);
     style_clear_container(dashboard);
+    lv_obj_set_pos(dashboard, HOME_CONTENT_X, HOME_DASHBOARD_Y);
     lv_obj_set_flex_flow(dashboard, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(dashboard, LV_FLEX_ALIGN_START,
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -464,7 +533,7 @@ void ui_clock_create(lv_obj_t *parent)
     lv_obj_add_flag(dashboard, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
 
     lv_obj_t *hero_row = lv_obj_create(dashboard);
-    lv_obj_set_size(hero_row, HOME_CONTENT_W, 370);
+    lv_obj_set_size(hero_row, HOME_CONTENT_W, 414);
     style_clear_container(hero_row);
     lv_obj_set_flex_flow(hero_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(hero_row, LV_FLEX_ALIGN_START,
@@ -475,33 +544,46 @@ void ui_clock_create(lv_obj_t *parent)
     create_hdmi_card(hero_row);
 
     lv_obj_t *quick_row = lv_obj_create(dashboard);
-    lv_obj_set_size(quick_row, HOME_CONTENT_W, 164);
-    style_clear_container(quick_row);
+    lv_obj_set_size(quick_row, HOME_CONTENT_W, 146);
+    style_surface(quick_row, HOME_RADIUS_SM);
+    lv_obj_set_style_shadow_width(quick_row, 0, 0);
+    lv_obj_set_style_pad_hor(quick_row, 0, 0);
+    lv_obj_set_style_pad_ver(quick_row, 11, 0);
     lv_obj_set_flex_flow(quick_row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(quick_row, LV_FLEX_ALIGN_START,
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(quick_row, 16, 0);
-    create_quick_tile(quick_row, LV_SYMBOL_LIST, "Apps", "Browse library",
+    create_quick_tile(quick_row, LV_SYMBOL_LIST, ui_tr(UI_STR_HOME_APPS), ui_tr(UI_STR_HOME_BROWSE_APPS),
                       HOME_BLUE, HOME_ACTION_APPS);
-    create_quick_tile(quick_row, LV_SYMBOL_WIFI, "Devices", "Wi-Fi & Bluetooth",
+    create_quick_tile(quick_row, LV_SYMBOL_WIFI, ui_tr(UI_STR_APP_WIFI), ui_tr(UI_STR_HOME_SCAN_CONNECT),
                       HOME_CYAN, HOME_ACTION_DEVICES);
-    create_quick_tile(quick_row, LV_SYMBOL_DOWNLOAD, "Updates", "System software",
+    create_quick_tile(quick_row, LV_SYMBOL_DOWNLOAD, ui_tr(UI_STR_HOME_UPDATES), ui_tr(UI_STR_HOME_SYSTEM_SOFTWARE),
                       HOME_GREEN, HOME_ACTION_UPDATES);
-    create_quick_tile(quick_row, LV_SYMBOL_SETTINGS, "Settings", "Display & sound",
+    create_quick_tile(quick_row, LV_SYMBOL_SETTINGS, ui_tr(UI_STR_APP_SETTINGS), ui_tr(UI_STR_HOME_DISPLAY_SOUND),
                       HOME_VIOLET, HOME_ACTION_SETTINGS);
 
-    /* Time remains visible without reclaiming the functional power readout in
-     * the status bar: a compact overlay sits above the card grid. */
-    time_label = create_text(dashboard, "--:--", ui_font_h2(), HOME_TEXT);
+    /* Draw the clock above the previously-created status bar. It is a child
+     * of the desktop root (not the dashboard), so it cannot be clipped by a
+     * negative flex offset as the earlier implementation was. */
+    time_label = create_text(parent, "--:--", ui_font_h3(), HOME_TEXT);
     lv_obj_add_flag(time_label, LV_OBJ_FLAG_FLOATING | LV_OBJ_FLAG_IGNORE_LAYOUT);
-    lv_obj_align(time_label, LV_ALIGN_TOP_MID, -50, -58);
-    date_label = create_text(dashboard, "Monday  Sep 21",
+    lv_obj_set_width(time_label, 86);
+    lv_obj_set_style_text_align(time_label, LV_TEXT_ALIGN_RIGHT, 0);
+    lv_obj_set_pos(time_label, 350, 19);
+    date_label = create_text(parent, "Monday  Sep 21",
                              ui_font_body_md(), HOME_TEXT_MUTED);
     lv_obj_add_flag(date_label, LV_OBJ_FLAG_FLOATING | LV_OBJ_FLAG_IGNORE_LAYOUT);
-    lv_obj_align(date_label, LV_ALIGN_TOP_MID, 82, -58);
+    lv_obj_set_width(date_label, 280);
+    lv_obj_set_style_text_align(date_label, LV_TEXT_ALIGN_LEFT, 0);
+    lv_obj_set_pos(date_label, 448, 22);
 
     clock_timer_cb(NULL);
     if (!clock_timer) {
-        clock_timer = lv_timer_create(clock_timer_cb, next_clock_tick_ms(), NULL);
+        time_t now = time(NULL);
+        struct tm local_tm;
+        bool time_valid = localtime_r(&now, &local_tm) != NULL &&
+                          local_time_is_plausible(&local_tm);
+        clock_timer = lv_timer_create(clock_timer_cb,
+                                      next_clock_tick_ms(time_valid), NULL);
     }
 }

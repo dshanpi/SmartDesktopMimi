@@ -13,6 +13,7 @@
 
 #include "cloud_ota_modal.h"
 #include "theme/theme.h"
+#include "ui_i18n.h"
 #include "../middleware/middleware.h"
 #include "../system/backend_types.h"
 #include "../system/app_manager.h"
@@ -153,15 +154,16 @@ static void build_prompt(lv_obj_t *card, const char *version, bool mandatory)
 
     /* 标题 */
     lv_obj_t *title = lv_label_create(prompt_body);
-    lv_label_set_text(title, "Update Available");
+    lv_label_set_text(title, ui_tr(UI_STR_OTA_AVAILABLE));
     lv_obj_set_style_text_font(title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
 
     /* 版本号 */
     lv_obj_t *ver = lv_label_create(prompt_body);
     char ver_buf[96];
-    snprintf(ver_buf, sizeof(ver_buf), "New version v%s",
-             (version && version[0]) ? version : "Unknown");
+    snprintf(ver_buf, sizeof(ver_buf),
+             ui_i18n_is_zh() ? "新版本 v%s" : "New version v%s",
+             (version && version[0]) ? version : ui_tr(UI_STR_UNKNOWN));
     lv_label_set_text(ver, ver_buf);
     lv_obj_set_style_text_font(ver, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(ver, UI_COLOR_PRIMARY, 0);
@@ -169,8 +171,8 @@ static void build_prompt(lv_obj_t *card, const char *version, bool mandatory)
     /* 提示 */
     lv_obj_t *hint = lv_label_create(prompt_body);
     lv_label_set_text(hint, mandatory
-        ? "The firmware is ready and must be installed now.\nInstallation takes 1–2 minutes. Keep power connected."
-        : "The firmware is ready. Install it now?\nInstallation takes 1–2 minutes. Keep power connected.");
+        ? (ui_i18n_is_zh() ? "固件已经准备好，必须立即安装。\n安装约需 1–2 分钟，请保持电源连接。" : "The firmware is ready and must be installed now.\nInstallation takes 1–2 minutes. Keep power connected.")
+        : (ui_i18n_is_zh() ? "固件已经准备好，是否立即安装？\n安装约需 1–2 分钟，请保持电源连接。" : "The firmware is ready. Install it now?\nInstallation takes 1–2 minutes. Keep power connected."));
     lv_obj_set_style_text_font(hint, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(hint, UI_TEXT_SECONDARY, 0);
     lv_label_set_long_mode(hint, LV_LABEL_LONG_WRAP);
@@ -187,9 +189,9 @@ static void build_prompt(lv_obj_t *card, const char *version, bool mandatory)
     lv_obj_clear_flag(actions, LV_OBJ_FLAG_SCROLLABLE);
 
     if (!mandatory) {
-        create_button(actions, "Later", lv_color_hex(0xA8B2C3), on_later_clicked);
+        create_button(actions, ui_i18n_is_zh() ? "稍后" : "Later", UI_TEXT_SECONDARY, on_later_clicked);
     }
-    create_button(actions, "Install Now", UI_COLOR_PRIMARY, on_install_clicked);
+    create_button(actions, ui_tr(UI_STR_OTA_INSTALL), UI_COLOR_PRIMARY, on_install_clicked);
 }
 
 /* 清掉 PROMPT 态内容（切 INSTALLING 前调）。 */
@@ -222,13 +224,17 @@ static void build_installing(lv_obj_t *card)
 
     /* 主文案 */
     lv_obj_t *title = lv_label_create(install_body);
-    lv_label_set_text(title, "Installing... Keep Power Connected");
+    lv_label_set_text(title, ui_i18n_is_zh()
+                             ? "正在安装，请保持电源连接"
+                             : "Installing… Keep Power Connected");
     lv_obj_set_style_text_font(title, UI_TEXT_H3, 0);
     lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
 
     /* 副文案 */
     lv_obj_t *sub = lv_label_create(install_body);
-    lv_label_set_text(sub, "The device will restart automatically.");
+    lv_label_set_text(sub, ui_i18n_is_zh()
+                           ? "设备将在完成后自动重启。"
+                           : "The device will restart automatically.");
     lv_obj_set_style_text_font(sub, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(sub, UI_TEXT_SECONDARY, 0);
 }

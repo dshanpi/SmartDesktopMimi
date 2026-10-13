@@ -10,6 +10,7 @@
 #include "../system/service_time.h"
 #include "../system/service_video.h"
 #include "../system/service_wifi.h"
+#include "../system/settings.h"
 
 static bool g_runtime_started;
 
@@ -21,6 +22,8 @@ int backend_runtime_start(const backend_runtime_options_t *options)
     /* Preserve the established order: LED owns its device before clients can
      * request scenes, while cloud starts after OTA and sensor listeners. */
     service_led_init();
+    service_led_set_enabled(sys_settings_get()->led_enabled);
+    service_led_set_brightness(sys_settings_get()->led_brightness);
     service_time_init();
     service_wifi_init();
     service_video_init();

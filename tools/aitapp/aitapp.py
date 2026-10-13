@@ -62,8 +62,8 @@ def utf8_length(value):
     return len(value.encode("utf-8"))
 
 
-def validate_ui(root, manifest):
-    entry = root / manifest["ui"]["entry"]
+def validate_ui(root, manifest, entry_name=None):
+    entry = root / (entry_name or manifest["ui"]["entry"])
     page = read_json(entry, "UI entry")
     if not isinstance(page, dict) or set(page) != {"schema", "title", "layout"}:
         fail("UI entry fields do not match schema version 1")
@@ -132,7 +132,8 @@ def load_manifest(root):
         fail("manifest schema must be 1 or 2")
     if data["schema"] == 2:
         required.add("runtime")
-    if set(data) != required:
+    allowed = required | {"localizations"}
+    if set(data) - allowed or not required <= set(data):
         fail("manifest fields do not match schema version")
     if not isinstance(data["id"], str) or \
             not APP_ID.fullmatch(data["id"]) or len(data["id"]) > 96:
@@ -145,6 +146,24 @@ def load_manifest(root):
     if not isinstance(data["name"], str) or \
             not 1 <= utf8_length(data["name"]) <= 48:
         fail("name length must be 1..48")
+    localizations = data.get("localizations", {})
+    if not isinstance(localizations, dict) or \
+            not set(localizations) <= {"zh-CN", "en-US"} or \
+            ("localizations" in data and not localizations):
+        fail("localizations must contain zh-CN and/or en-US")
+    for locale, localized in localizations.items():
+        if not isinstance(localized, dict) or \
+                set(localized) != {"name", "uiEntry"}:
+            fail("invalid {} localization".format(locale))
+        if not isinstance(localized["name"], str) or \
+                not 1 <= utf8_length(localized["name"]) <= 48:
+            fail("localized name length must be 1..48")
+        entry_name = localized["uiEntry"]
+        if not isinstance(entry_name, str) or \
+                not re.fullmatch(r"ui/[A-Za-z0-9._/-]+\.json", entry_name) or \
+                len(entry_name.encode("ascii")) > 192 or \
+                any(part in {"", ".", ".."} for part in entry_name.split("/")):
+            fail("invalid localized UI entry")
     if not isinstance(data["publisher"], str) or \
             not re.fullmatch(r"[A-Za-z0-9._-]{1,64}", data["publisher"]):
         fail("invalid publisher")
@@ -181,6 +200,12 @@ def load_manifest(root):
     if root.resolve() not in entry.parents or not entry.is_file():
         fail("UI entry is missing or escapes app directory")
     validate_ui(root, data)
+    for localized in localizations.values():
+        localized_entry = (root / localized["uiEntry"]).resolve()
+        if root.resolve() not in localized_entry.parents or \
+                not localized_entry.is_file():
+            fail("localized UI entry is missing or escapes app directory")
+        validate_ui(root, data, localized["uiEntry"])
     return data
 
 

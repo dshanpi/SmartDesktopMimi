@@ -1013,6 +1013,16 @@ void service_bt_enable(bool enable) {
     }
 }
 
+bool service_bt_is_enabled(void)
+{
+    bool enabled;
+
+    pthread_mutex_lock(&bt_state_lock);
+    enabled = bt_state.enabled;
+    pthread_mutex_unlock(&bt_state_lock);
+    return enabled;
+}
+
 void service_bt_disconnect_device(const char *bd_addr) {
     bool initialized;
     pthread_mutex_lock(&bt_state_lock);

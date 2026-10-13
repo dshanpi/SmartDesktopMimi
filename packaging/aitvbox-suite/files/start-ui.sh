@@ -51,7 +51,9 @@ wait_boot_play_gone() {
 		if ! boot_play_running; then
 			return 0
 		fi
-		sleep 0.1
+		# Tina's BusyBox sleep accepts only whole seconds.  Keep this retry
+		# portable instead of flooding the boot log with "invalid number".
+		sleep 1
 		i=$((i + 1))
 	done
 	return 1
@@ -74,11 +76,11 @@ stop_ui_child() {
 }
 
 i=0
-while [ "$i" -lt 300 ]; do
+while [ "$i" -lt 30 ]; do
 	if [ -S "$BACKEND_SOCKET" ] && pidof lv_backend >/dev/null 2>&1; then
 		break
 	fi
-	sleep 0.1
+	sleep 1
 	i=$((i + 1))
 done
 
@@ -99,14 +101,14 @@ if [ ! -c /dev/fb0 ]; then
 fi
 
 echo 100 > "$BOOT_PROGRESS_FILE"
-if ! wait_boot_play_gone 80; then
+if ! wait_boot_play_gone 8; then
 	killall boot-play 2>/dev/null
-	wait_boot_play_gone 20
+	wait_boot_play_gone 2
 fi
 
 if boot_play_running; then
 	killall -9 boot-play 2>/dev/null
-	wait_boot_play_gone 10
+	wait_boot_play_gone 1
 fi
 
 if boot_play_running; then
@@ -150,7 +152,18 @@ cd /tmp || {
 
 log_ui "backend ready; starting lvglsim"
 trap stop_ui_child TERM INT
-/usr/bin/lvglsim >>"$UI_LOG" 2>&1 &
+UI_BINARY=/usr/bin/lvglsim
+if [ -n "${MIMI_RELEASE_DIR:-}" ]; then
+    # The root-owned platform launcher supplies a previously verified directory.
+    UI_BINARY="$MIMI_RELEASE_DIR/bin/lvglsim"
+    export LD_LIBRARY_PATH="$MIMI_RELEASE_DIR/lib:/usr/lib"
+elif [ -f /etc/smartdesktopmimi/updater.json ] && [ -f /overlay/smartdesktopmimi-platform/enrollment.json ]; then
+    MIMI_RELEASE_DIR=$(/usr/bin/mimi-update select) || exit 1
+    export MIMI_RELEASE_DIR
+    UI_BINARY="$MIMI_RELEASE_DIR/bin/lvglsim"
+    export LD_LIBRARY_PATH="$MIMI_RELEASE_DIR/lib:/usr/lib"
+fi
+"$UI_BINARY" >>"$UI_LOG" 2>&1 &
 UI_PID=$!
 wait "$UI_PID"
 ui_status=$?

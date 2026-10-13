@@ -1,0 +1,37 @@
+name: Build independent desktop application
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_id:
+        description: Installed, reviewed application SDK identifier
+        required: true
+        type: string
+      sdk_sha256:
+        description: Externally recorded SHA256 of the selected sdk-lock.json
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: mimi-application-builder
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.repository == 'dshanpi/SmartDesktopMimi' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, mimi-build]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+      - name: Build locally with a pinned application SDK
+        env:
+          MIMI_SDK_ID: ${{ inputs.sdk_id }}
+          MIMI_SDK_SHA256: ${{ inputs.sdk_sha256 }}
+        run: |
+          python3 tools/update/build_application.py \
+            --sdk-root /srv/mimi-sdks \
+            --sdk-id "$MIMI_SDK_ID" \
+            --expected-sdk-sha256 "$MIMI_SDK_SHA256" \
+            --output "/srv/mimi-builds/$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"

@@ -389,6 +389,8 @@ VERSION_DATE=$(date +%Y%m%d%H%M 2>/dev/null || echo "nodate")
 echo "==> version: ${BUILD_OUT}/aitvbox-version (AITVBOX_VERSION=${AITVBOX_VERSION}, git=${VERSION_GIT})"
 
 echo
+"${SELF_DIR}/build_mimi_updater.sh"
+
 echo "Product app build complete. Artifacts under: ${BUILD_OUT}"
 ls -l "${BUILD_OUT}/lv_port_linux/" "${BUILD_OUT}/hdmi_preview/" \
     "${BUILD_OUT}/platform/" "${BUILD_OUT}/ipkvm/" "${BUILD_OUT}/tuyaopen/"

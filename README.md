@@ -48,6 +48,10 @@ Mermaid 源码、SVG 和高清 PNG。
 
 ## 核心原则：SDK 是 SDK，产品代码是产品代码
 
+上层应用独立发版、底层按平台适配，以及 A133 / 后续 T527、RK3576 的版本配对要求，
+统一记录在 [分层、版本配对与发布门禁](docs/application-update-policy.md)。
+该规范已确认；独立桌面更新器与自动兼容门禁尚待实现。
+
 - 产品源码（`apps/`、TuyaOpen、vendor 库）**永远只在产品仓库**，不拷进 SDK。
 - 应用在产品仓库内 **out-of-tree 构建**，只借用 SDK 的交叉工具链 + staging_dir。
 - SDK 侧只保留四个薄包：`aitvbox-suite`、`aitvbox-platform`、
@@ -92,6 +96,10 @@ Mermaid 源码、SVG 和高清 PNG。
   [docs/ipkvm-user-guide.md](docs/ipkvm-user-guide.md)
 - 平台已实现模块、用户流程和安全边界：
   [docs/platform-feature-overview.md](docs/platform-feature-overview.md)
+- 最新 A133 固件烧录、恢复、冷启动和整机实测记录：
+  [docs/validation/implementation-20260925.md](docs/validation/implementation-20260925.md)
+- T527 移植交接、开发记录模板和强制门禁：
+  [docs/porting/t527/README.md](docs/porting/t527/README.md)
 - 系统启动、角色、信任链、APP/MCP 状态机和量产流程：
   [docs/platform-business-logic.md](docs/platform-business-logic.md)
 - 本分支架构决策、缺陷修复、验证和遗留事项：

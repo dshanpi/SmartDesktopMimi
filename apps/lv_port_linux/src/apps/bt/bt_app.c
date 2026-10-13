@@ -19,6 +19,7 @@
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
 #include "../../ui/ui_fonts.h"
+#include "../../ui/ui_i18n.h"
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -121,7 +122,7 @@ static void get_bt_layout(bt_layout_t *layout) {
     layout->compact = layout->screen_w < 900 || layout->screen_h < 620;
     layout->header_h = layout->compact ? UI_APP_HEADER_H_COMPACT : UI_APP_HEADER_H;
     layout->content_h = LV_MAX(1, layout->screen_h - layout->header_h);
-    layout->page_pad = clamp_i32(layout->screen_w / 36, 16, 32);
+    layout->page_pad = layout->compact ? 24 : LV_MAX(24, (layout->screen_w - 912) / 2);
     layout->card_pad = layout->compact ? 16 : 22;
     layout->gap = layout->compact ? 10 : 14;
     layout->left_col_w = clamp_i32((layout->screen_w - layout->page_pad * 2 - layout->gap) * 55 / 100,
@@ -395,7 +396,6 @@ static void show_name_edit_modal(lv_event_t *e)
     const char *current;
     int32_t screen_h;
     int32_t dialog_w;
-    int32_t btn_w;
 
     LV_UNUSED(e);
     if (name_edit_modal) return;
@@ -414,12 +414,10 @@ static void show_name_edit_modal(lv_event_t *e)
 
     screen_h = lv_display_get_vertical_resolution(NULL);
     if (screen_h <= 0) screen_h = 768;
-    dialog_w = screen_h < 620 ? 480 : 540;
-    btn_w = screen_h < 620 ? 120 : 140;
+    dialog_w = LV_MIN(lv_display_get_horizontal_resolution(NULL) - 48, screen_h < 620 ? 480 : 640);
 
     /*
-     * 键盘约占半屏高度。对话框贴顶 + 内容高度自适应，
-     * 避免矮屏上键盘盖住底部「取消/保存」按钮。
+     * 内容自适应高度，布局完成后居中放置在键盘上方。
      */
     dialog = lv_obj_create(name_edit_modal);
     lv_obj_set_width(dialog, dialog_w);
@@ -432,8 +430,8 @@ static void show_name_edit_modal(lv_event_t *e)
     lv_obj_set_style_shadow_width(dialog, 24, 0);
     lv_obj_set_style_shadow_color(dialog, lv_color_black(), 0);
     lv_obj_set_style_shadow_opa(dialog, LV_OPA_40, 0);
-    lv_obj_set_style_pad_left(dialog, 18, 0);
-    lv_obj_set_style_pad_right(dialog, 18, 0);
+    lv_obj_set_style_pad_left(dialog, 24, 0);
+    lv_obj_set_style_pad_right(dialog, 24, 0);
     lv_obj_set_style_pad_top(dialog, 16, 0);
     lv_obj_set_style_pad_bottom(dialog, 16, 0);
     lv_obj_set_style_pad_row(dialog, 10, 0);
@@ -441,14 +439,15 @@ static void show_name_edit_modal(lv_event_t *e)
     lv_obj_clear_flag(dialog, LV_OBJ_FLAG_SCROLLABLE);
 
     title = lv_label_create(dialog);
-    lv_label_set_text(title, "Rename Bluetooth Device");
+    lv_label_set_text(title, ui_tr(UI_STR_BT_RENAME));
     lv_obj_set_style_text_font(title, ui_font_h2(), 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0xF8FAFC), 0);
 
     hint = lv_label_create(dialog);
     label_name_edit_hint = hint;
-    lv_label_set_text(hint,
-                      "This name appears in your phone's Bluetooth list. "
+    lv_label_set_text(hint, ui_i18n_is_zh()
+                      ? "此名称会显示在手机的蓝牙列表中。选择自动命名，可使用产品名和 MAC 地址末四位。"
+                      : "This name appears in your phone's Bluetooth list. "
                       "Choose Auto Name to use the product name and last four MAC digits.");
     lv_obj_set_width(hint, lv_pct(100));
     lv_label_set_long_mode(hint, LV_LABEL_LONG_WRAP);
@@ -489,7 +488,7 @@ static void show_name_edit_modal(lv_event_t *e)
     current = (settings && settings->bluetooth_name[0]) ?
               settings->bluetooth_name : display_adapter_name();
     lv_textarea_set_text(name_edit_ta, current ? current : "");
-    lv_textarea_set_placeholder_text(name_edit_ta, "Example: Living Room Speaker");
+    lv_textarea_set_placeholder_text(name_edit_ta, ui_tr(UI_STR_BT_NAME_PLACEHOLDER));
     lv_textarea_set_cursor_pos(name_edit_ta, LV_TEXTAREA_CURSOR_LAST);
 
     btn_row = lv_obj_create(dialog);
@@ -505,32 +504,35 @@ static void show_name_edit_modal(lv_event_t *e)
     lv_obj_clear_flag(btn_row, LV_OBJ_FLAG_SCROLLABLE);
 
     btn = lv_button_create(btn_row);
-    lv_obj_set_size(btn, btn_w, 44);
+    lv_obj_set_size(btn, 1, 52);
+    lv_obj_set_flex_grow(btn, 1);
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x334155), 0);
     lv_obj_set_style_shadow_width(btn, 0, 0);
     lv_obj_add_event_cb(btn, name_edit_cancel_cb, LV_EVENT_CLICKED, NULL);
     lbl = lv_label_create(btn);
-    lv_label_set_text(lbl, "Cancel");
+    lv_label_set_text(lbl, ui_tr(UI_STR_CANCEL));
     lv_obj_set_style_text_font(lbl, ui_font_body_lg(), 0);
     lv_obj_center(lbl);
 
     btn = lv_button_create(btn_row);
-    lv_obj_set_size(btn, btn_w, 44);
+    lv_obj_set_size(btn, 1, 52);
+    lv_obj_set_flex_grow(btn, 1);
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x475569), 0);
     lv_obj_set_style_shadow_width(btn, 0, 0);
     lv_obj_add_event_cb(btn, name_edit_reset_cb, LV_EVENT_CLICKED, NULL);
     lbl = lv_label_create(btn);
-    lv_label_set_text(lbl, "Auto Name");
+    lv_label_set_text(lbl, ui_tr(UI_STR_BT_AUTO_NAME));
     lv_obj_set_style_text_font(lbl, ui_font_body_lg(), 0);
     lv_obj_center(lbl);
 
     btn = lv_button_create(btn_row);
-    lv_obj_set_size(btn, btn_w, 44);
+    lv_obj_set_size(btn, 1, 52);
+    lv_obj_set_flex_grow(btn, 1);
     lv_obj_set_style_bg_color(btn, UI_COLOR_PRIMARY, 0);
     lv_obj_set_style_shadow_width(btn, 0, 0);
     lv_obj_add_event_cb(btn, name_edit_save_cb, LV_EVENT_CLICKED, NULL);
     lbl = lv_label_create(btn);
-    lv_label_set_text(lbl, "Save");
+    lv_label_set_text(lbl, ui_tr(UI_STR_SAVE));
     lv_obj_set_style_text_font(lbl, ui_font_body_lg(), 0);
     lv_obj_center(lbl);
 
@@ -540,6 +542,11 @@ static void show_name_edit_modal(lv_event_t *e)
     lv_obj_set_size(name_edit_kb, LV_PCT(100),
                     screen_h < 620 ? LV_PCT(42) : LV_PCT(40));
     lv_obj_align(name_edit_kb, LV_ALIGN_BOTTOM_MID, 0, 0);
+    /* Built-in font includes the keyboard backspace, enter and arrow glyphs. */
+    lv_obj_set_style_text_font(name_edit_kb, &lv_font_montserrat_20, LV_PART_ITEMS);
+    lv_obj_update_layout(name_edit_modal);
+    int32_t available_h = screen_h - lv_obj_get_height(name_edit_kb);
+    lv_obj_align(dialog, LV_ALIGN_TOP_MID, 0, LV_MAX(12, (available_h - lv_obj_get_height(dialog)) / 2));
     lv_obj_add_event_cb(name_edit_kb, name_edit_keyboard_cb, LV_EVENT_ALL, NULL);
 
     /* keyboard_set_textarea 会设 FOCUSED；再强调一次，确保光标动画启动。 */
@@ -601,23 +608,32 @@ static void update_playback_details(void) {
     if (total > 0 && pos > total) pos = total;
 
     if (label_track_album) {
-        const char *album = connected ? "Album  Not available" : "Album  Waiting for metadata";
+        const char *album = connected
+            ? (ui_i18n_is_zh() ? "专辑  暂无信息" : "Album  Not available")
+            : (ui_i18n_is_zh() ? "专辑  等待元数据" : "Album  Waiting for metadata");
         char album_buf[128];
         if (connected && cached_avrcp.album[0]) album = cached_avrcp.album;
         if (connected && cached_avrcp.album[0]) {
-            snprintf(album_buf, sizeof(album_buf), "Album  %s", album);
+            snprintf(album_buf, sizeof(album_buf),
+                     ui_i18n_is_zh() ? "专辑  %s" : "Album  %s", album);
             album = album_buf;
         }
         lv_label_set_text(label_track_album, album);
     }
     if (label_track_genre) {
         char meta_buf[192];
-        const char *artist = connected && cached_avrcp.artist[0] ? cached_avrcp.artist : "Not available";
-        const char *genre = connected && cached_avrcp.genre[0] ? cached_avrcp.genre : "Not available";
+        const char *artist = connected && cached_avrcp.artist[0] ? cached_avrcp.artist :
+                             (ui_i18n_is_zh() ? "暂无信息" : "Not available");
+        const char *genre = connected && cached_avrcp.genre[0] ? cached_avrcp.genre :
+                            (ui_i18n_is_zh() ? "暂无信息" : "Not available");
         if (!connected) {
-            lv_label_set_text(label_track_genre, "Artist  Waiting for metadata");
+            lv_label_set_text(label_track_genre, ui_i18n_is_zh()
+                              ? "歌手  等待元数据"
+                              : "Artist  Waiting for metadata");
         } else {
-            snprintf(meta_buf, sizeof(meta_buf), "Artist  %s  Genre  %s", artist, genre);
+            snprintf(meta_buf, sizeof(meta_buf), ui_i18n_is_zh()
+                     ? "歌手  %s  流派  %s" : "Artist  %s  Genre  %s",
+                     artist, genre);
             lv_label_set_text(label_track_genre, meta_buf);
         }
     }
@@ -669,20 +685,22 @@ static void update_cover_card_text(void) {
     bool active = playback_is_active();
 
     if (label_cover_status) {
-        lv_label_set_text(label_cover_status, active ? "SPINNING" : "VINYL DECK");
+        lv_label_set_text(label_cover_status,
+                          active ? (ui_i18n_is_zh() ? "正在播放" : "SPINNING")
+                                 : (ui_i18n_is_zh() ? "黑胶唱盘" : "VINYL DECK"));
         lv_obj_set_style_text_color(label_cover_status,
                                     active ? UI_COLOR_PRIMARY : lv_color_hex(0x94A3B8),
                                     0);
     }
 
     if (label_cover_title) {
-        const char *line = "Start music on your phone";
+        const char *line = ui_i18n_is_zh() ? "在手机上开始播放音乐" : "Start music on your phone";
         if (!cached_runtime.enabled) {
-            line = "Bluetooth is off";
+            line = ui_i18n_is_zh() ? "蓝牙已关闭" : "Bluetooth is off";
         } else if (active) {
-            line = (has_avrcp && cached_avrcp.title[0]) ? cached_avrcp.title : "Bluetooth Audio";
+            line = (has_avrcp && cached_avrcp.title[0]) ? cached_avrcp.title : ui_tr(UI_STR_BT_AUDIO);
         } else if (cached_runtime.a2dp_connected) {
-            line = "Start music on your phone";
+            line = ui_i18n_is_zh() ? "在手机上开始播放音乐" : "Start music on your phone";
         }
         lv_label_set_text(label_cover_title, line);
     }
@@ -732,7 +750,8 @@ static void update_ui_from_runtime(void) {
     /* 适配器信息 */
     if (label_adapter_name) {
         lv_label_set_text(label_adapter_name,
-            cached_runtime.adapter_name[0] ? cached_runtime.adapter_name : "Not initialized");
+            cached_runtime.adapter_name[0] ? cached_runtime.adapter_name :
+            (ui_i18n_is_zh() ? "尚未初始化" : "Not initialized"));
     }
     if (label_adapter_addr) {
         lv_label_set_text(label_adapter_addr,
@@ -746,38 +765,48 @@ static void update_ui_from_runtime(void) {
         if (label_conn_device) {
             lv_label_set_text(label_conn_device,
                               cached_runtime.connected_device_name[0] ?
-                              cached_runtime.connected_device_name : "Connected device");
+                              cached_runtime.connected_device_name :
+                              (ui_i18n_is_zh() ? "已连接设备" : "Connected device"));
         }
         if (label_source) {
             char source[128];
             snprintf(source, sizeof(source), "%.96s  ·  Bluetooth",
                      cached_runtime.connected_device_name[0] ?
-                     cached_runtime.connected_device_name : "Connected device");
+                     cached_runtime.connected_device_name :
+                     (ui_i18n_is_zh() ? "已连接设备" : "Connected device"));
             lv_label_set_text(label_source, source);
         }
         if (label_connection_hint) {
             lv_label_set_text(label_connection_hint,
-                              !player_available ? "Open a music player on your phone" :
-                              (active ? "Audio from the connected phone" : "Paused"));
+                              !player_available ? ui_tr(UI_STR_BT_OPEN_PLAYER_HINT) :
+                              (active ? (ui_i18n_is_zh() ? "正在播放手机音频" : "Audio from the connected phone")
+                                      : (ui_i18n_is_zh() ? "已暂停" : "Paused")));
         }
-        const char *title = !player_available ? "Phone player is not open" :
-                            (avrcp_metadata_unavailable ? "Playback information unavailable" : "Connected · Ready to play");
+        const char *title = !player_available ? ui_tr(UI_STR_BT_PHONE_PLAYER_CLOSED) :
+                            (avrcp_metadata_unavailable
+                             ? (ui_i18n_is_zh() ? "无法获取播放信息" : "Playback information unavailable")
+                             : (ui_i18n_is_zh() ? "已连接，可以播放" : "Connected · Ready to play"));
         if (player_available && has_avrcp && cached_avrcp.title[0])
             title = cached_avrcp.title;
         else if (player_available && !avrcp_metadata_unavailable && active)
-            title = "Playing Bluetooth audio";
+            title = ui_i18n_is_zh() ? "正在播放蓝牙音频" : "Playing Bluetooth audio";
         if (label_track_title) {
             lv_label_set_text(label_track_title, title);
         }
         if (label_cover_title) lv_label_set_text(label_cover_title, title);
         if (label_track_artist) {
-            const char *artist = !player_available ? "Open music on your phone to enable controls" :
-                                 (avrcp_metadata_unavailable ? "Artist unavailable" : "Bluetooth Audio");
+            const char *artist = !player_available
+                ? (ui_i18n_is_zh() ? "在手机上打开音乐以启用控制" : "Open music on your phone to enable controls")
+                : (avrcp_metadata_unavailable
+                   ? (ui_i18n_is_zh() ? "无法获取歌手信息" : "Artist unavailable")
+                   : ui_tr(UI_STR_BT_AUDIO));
             if (player_available && has_avrcp && cached_avrcp.artist[0])
                 artist = cached_avrcp.artist;
             lv_label_set_text(label_track_artist, artist);
         }
-        set_audio_status(active ? "Playing" : (player_available ? "Paused" : "Connected"),
+        set_audio_status(active ? (ui_i18n_is_zh() ? "正在播放" : "Playing")
+                                : (player_available ? (ui_i18n_is_zh() ? "已暂停" : "Paused")
+                                                    : ui_tr(UI_STR_CONNECTED)),
                          active ? UI_COLOR_PRIMARY :
                          (player_available ? UI_TEXT_SECONDARY : lv_color_hex(0x16A34A)));
     } else {
@@ -787,30 +816,35 @@ static void update_ui_from_runtime(void) {
         memset(&cached_avrcp, 0, sizeof(cached_avrcp));
         if (section_connected) lv_obj_clear_flag(section_connected, LV_OBJ_FLAG_HIDDEN);
         if (btn_disconnect)    lv_obj_add_flag(btn_disconnect, LV_OBJ_FLAG_HIDDEN);
-        if (label_conn_device) lv_label_set_text(label_conn_device, "Bluetooth audio input");
+        if (label_conn_device) lv_label_set_text(label_conn_device, ui_tr(UI_STR_BT_AUDIO));
         if (label_source) {
             char source[96];
-            snprintf(source, sizeof(source), "%s  ·  Waiting for connection", display_adapter_name());
+            snprintf(source, sizeof(source), ui_i18n_is_zh()
+                     ? "%s  ·  等待连接" : "%s  ·  Waiting for connection",
+                     display_adapter_name());
             lv_label_set_text(label_source, source);
         }
         if (label_connection_hint) {
             if (cached_runtime.enabled) {
                 char hint[128];
-                snprintf(hint, sizeof(hint), "Select %s in your phone's Bluetooth settings",
+                snprintf(hint, sizeof(hint), ui_i18n_is_zh()
+                         ? "请在手机蓝牙设置中选择 %s"
+                         : "Select %s in your phone's Bluetooth settings",
                          display_adapter_name());
                 lv_label_set_text(label_connection_hint, hint);
             } else {
-                lv_label_set_text(label_connection_hint, "Turn on Bluetooth to connect a phone");
+                lv_label_set_text(label_connection_hint, ui_tr(UI_STR_BT_TURN_ON_HINT));
             }
         }
-        set_audio_status(cached_runtime.enabled ? "Waiting for connection" : "Off",
+        set_audio_status(cached_runtime.enabled ? ui_tr(UI_STR_BT_WAITING) : ui_tr(UI_STR_OFF),
                          cached_runtime.enabled ? UI_COLOR_PRIMARY : UI_TEXT_SECONDARY);
         if (label_track_title) {
-            lv_label_set_text(label_track_title, "Bluetooth Audio");
+            lv_label_set_text(label_track_title, ui_tr(UI_STR_BT_AUDIO));
         }
         if (label_track_artist) {
             lv_label_set_text(label_track_artist,
-                cached_runtime.enabled ? "A2DP Sink" : "Bluetooth is off");
+                cached_runtime.enabled ? "A2DP Sink" :
+                (ui_i18n_is_zh() ? "蓝牙已关闭" : "Bluetooth is off"));
         }
     }
     update_playback_details();
@@ -835,10 +869,10 @@ static void update_ui_from_runtime(void) {
 
 static void update_ui_from_avrcp(void) {
     if (!cached_runtime.a2dp_connected) {
-        if (label_conn_device) lv_label_set_text(label_conn_device, "Bluetooth audio input");
-        if (label_track_title)  lv_label_set_text(label_track_title, "Bluetooth Audio");
+        if (label_conn_device) lv_label_set_text(label_conn_device, ui_tr(UI_STR_BT_AUDIO));
+        if (label_track_title)  lv_label_set_text(label_track_title, ui_tr(UI_STR_BT_AUDIO));
         if (label_track_artist) lv_label_set_text(label_track_artist, "A2DP Sink");
-        set_audio_status("Waiting for connection", UI_COLOR_PRIMARY);
+        set_audio_status(ui_tr(UI_STR_BT_WAITING), UI_COLOR_PRIMARY);
         set_transport_controls_enabled(false);
         update_transport_icon();
         return;
@@ -847,36 +881,45 @@ static void update_ui_from_avrcp(void) {
     if (!cached_avrcp.player_available) {
         has_avrcp = false;
         avrcp_metadata_unavailable = false;
-        if (label_track_title) lv_label_set_text(label_track_title, "Phone player is not open");
-        if (label_cover_title) lv_label_set_text(label_cover_title, "Phone player is not open");
-        if (label_track_artist) lv_label_set_text(label_track_artist, "Open music on your phone to enable controls");
-        if (label_connection_hint) lv_label_set_text(label_connection_hint, "Open a music player on your phone");
+        if (label_track_title) lv_label_set_text(label_track_title, ui_tr(UI_STR_BT_PHONE_PLAYER_CLOSED));
+        if (label_cover_title) lv_label_set_text(label_cover_title, ui_tr(UI_STR_BT_PHONE_PLAYER_CLOSED));
+        if (label_track_artist) lv_label_set_text(label_track_artist, ui_tr(UI_STR_BT_OPEN_PLAYER_HINT));
+        if (label_connection_hint) lv_label_set_text(label_connection_hint, ui_tr(UI_STR_BT_OPEN_PLAYER_HINT));
         update_transport_icon();
-        set_audio_status("Connected", lv_color_hex(0x16A34A));
+        set_audio_status(ui_tr(UI_STR_CONNECTED), UI_COLOR_SUCCESS);
         update_playback_details();
         set_transport_controls_enabled(false);
         return;
     }
 
     const char *title = cached_avrcp.title[0] ? cached_avrcp.title :
-        (avrcp_metadata_unavailable ? "Playback information unavailable" :
-         (cached_avrcp.is_playing ? "Playing Bluetooth audio" : "Connected · Ready to play"));
+        (avrcp_metadata_unavailable
+         ? (ui_i18n_is_zh() ? "无法获取播放信息" : "Playback information unavailable")
+         : (cached_avrcp.is_playing
+            ? (ui_i18n_is_zh() ? "正在播放蓝牙音频" : "Playing Bluetooth audio")
+            : (ui_i18n_is_zh() ? "已连接，可以播放" : "Connected · Ready to play")));
     if (label_track_title) {
         lv_label_set_text(label_track_title, title);
     }
     if (label_cover_title) lv_label_set_text(label_cover_title, title);
     if (label_track_artist) {
         const char *artist = cached_avrcp.artist[0] ? cached_avrcp.artist :
-            (avrcp_metadata_unavailable ? "Artist unavailable" : "From connected phone");
+            (avrcp_metadata_unavailable
+             ? (ui_i18n_is_zh() ? "无法获取歌手信息" : "Artist unavailable")
+             : (ui_i18n_is_zh() ? "来自已连接手机" : "From connected phone"));
         lv_label_set_text(label_track_artist, artist);
     }
     if (label_connection_hint) {
         lv_label_set_text(label_connection_hint,
-                          cached_avrcp.is_playing ? "Audio from the connected phone" : "Paused");
+                          cached_avrcp.is_playing
+                          ? (ui_i18n_is_zh() ? "正在播放手机音频" : "Audio from the connected phone")
+                          : (ui_i18n_is_zh() ? "已暂停" : "Paused"));
     }
     /* 图标是用户最先感知的反馈，优先于卡片色彩和唱片状态刷新。 */
     update_transport_icon();
-    set_audio_status(cached_avrcp.is_playing ? "Playing" : "Paused",
+    set_audio_status(cached_avrcp.is_playing
+                     ? (ui_i18n_is_zh() ? "正在播放" : "Playing")
+                     : (ui_i18n_is_zh() ? "已暂停" : "Paused"),
                      cached_avrcp.is_playing ? UI_COLOR_PRIMARY : UI_TEXT_SECONDARY);
     update_playback_details();
     set_transport_controls_enabled(player_controls_available());
@@ -1171,20 +1214,21 @@ void bt_app_init(void) {
 
     lv_obj_t *brand = lv_obj_create(header);
     clear_panel_style(brand);
-    lv_obj_set_size(brand, 310, 52);
+    lv_obj_set_size(brand, 400, 52);
     lv_obj_set_pos(brand, layout.page_pad + 68, (header_h - 52) / 2);
     lv_obj_set_flex_flow(brand, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(brand, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_gap(brand, 0, 0);
 
     lv_obj_t *brand_title = lv_label_create(brand);
-    lv_label_set_text(brand_title, "BLUETOOTH HI-FI");
-    lv_obj_set_style_text_font(brand_title, ui_font_body_lg(), 0);
+    lv_label_set_text(brand_title, ui_i18n_is_zh() ? "Mimi 蓝牙音响" : "Mimi Bluetooth Hi-Fi");
+    lv_obj_set_style_text_font(brand_title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(brand_title, lv_color_hex(0xF8FAFC), 0);
-    lv_obj_set_style_text_letter_space(brand_title, 2, 0);
+    lv_obj_set_style_text_letter_space(brand_title, 0, 0);
 
     lv_obj_t *brand_subtitle = lv_label_create(brand);
-    lv_label_set_text(brand_subtitle, "AITVBox Sound System");
+    lv_label_set_text(brand_subtitle, ui_i18n_is_zh()
+                      ? "AITVBox 声音系统" : "AITVBox Sound System");
     lv_obj_set_style_text_font(brand_subtitle, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(brand_subtitle, lv_color_hex(0x64748B), 0);
 
@@ -1204,7 +1248,7 @@ void bt_app_init(void) {
     lv_obj_clear_flag(audio_status_badge, LV_OBJ_FLAG_SCROLLABLE);
 
     label_audio_status = lv_label_create(audio_status_badge);
-    lv_label_set_text(label_audio_status, "Waiting for connection");
+    lv_label_set_text(label_audio_status, ui_tr(UI_STR_BT_WAITING));
     lv_obj_set_style_text_font(label_audio_status, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(label_audio_status, lv_color_hex(0xF8FAFC), 0);
     lv_obj_center(label_audio_status);
@@ -1224,7 +1268,7 @@ void bt_app_init(void) {
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     const int32_t slider_track_h = 10;
-    const int32_t stage_w = layout.compact ? layout.screen_w - layout.page_pad * 2 : 470;
+    const int32_t stage_w = layout.compact ? layout.screen_w - layout.page_pad * 2 : 402;
 
     /* --- 左侧：单一 Hi-Fi 舞台 --- */
     section_connected = lv_obj_create(content);
@@ -1251,7 +1295,7 @@ void bt_app_init(void) {
     player_visual = section_connected;
 
     label_cover_status = lv_label_create(section_connected);
-    lv_label_set_text(label_cover_status, "VINYL DECK");
+    lv_label_set_text(label_cover_status, ui_i18n_is_zh() ? "黑胶唱盘" : "VINYL DECK");
     lv_obj_set_style_text_font(label_cover_status, ui_font_body_lg(), 0);
     lv_obj_set_style_text_color(label_cover_status, lv_color_hex(0x94A3B8), 0);
     lv_obj_set_style_text_letter_space(label_cover_status, 3, 0);
@@ -1312,7 +1356,9 @@ void bt_app_init(void) {
     label_source = lv_label_create(right_col);
     {
         char source[96];
-        snprintf(source, sizeof(source), "%s  ·  Waiting for connection", APP_DEVICE_NAME);
+        snprintf(source, sizeof(source), ui_i18n_is_zh()
+                 ? "%s  ·  等待连接" : "%s  ·  Waiting for connection",
+                 APP_DEVICE_NAME);
         lv_label_set_text(label_source, source);
     }
     lv_obj_set_style_text_font(label_source, ui_font_body_lg(), 0);
@@ -1320,7 +1366,7 @@ void bt_app_init(void) {
     prepare_single_line_label(label_source);
 
     label_track_title = lv_label_create(right_col);
-    lv_label_set_text(label_track_title, "Bluetooth Audio");
+    lv_label_set_text(label_track_title, ui_tr(UI_STR_BT_AUDIO));
     lv_obj_set_size(label_track_title, lv_pct(100), layout.compact ? 58 : 86);
     lv_label_set_long_mode(label_track_title, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(label_track_title, ui_font_clock_meta(), 0);
@@ -1330,7 +1376,7 @@ void bt_app_init(void) {
     label_cover_title = NULL;
 
     label_track_artist = lv_label_create(right_col);
-    lv_label_set_text(label_track_artist, "Waiting for phone");
+    lv_label_set_text(label_track_artist, ui_tr(UI_STR_BT_WAITING));
     lv_obj_set_style_text_font(label_track_artist, ui_font_h2(), 0);
     lv_obj_set_style_text_color(label_track_artist, lv_color_hex(0xCBD5E1), 0);
     prepare_single_line_label(label_track_artist);
@@ -1338,7 +1384,10 @@ void bt_app_init(void) {
     label_connection_hint = lv_label_create(right_col);
     {
         char hint[128];
-        snprintf(hint, sizeof(hint), "Select %s in your phone's Bluetooth settings", APP_DEVICE_NAME);
+        snprintf(hint, sizeof(hint), ui_i18n_is_zh()
+                 ? "请在手机蓝牙设置中选择 %s"
+                 : "Select %s in your phone's Bluetooth settings",
+                 APP_DEVICE_NAME);
         lv_label_set_text(label_connection_hint, hint);
     }
     lv_obj_set_style_text_font(label_connection_hint, ui_font_body_md(), 0);
@@ -1346,7 +1395,8 @@ void bt_app_init(void) {
     prepare_single_line_label(label_connection_hint);
 
     label_track_album = lv_label_create(right_col);
-    lv_label_set_text(label_track_album, "Album  Waiting for metadata");
+    lv_label_set_text(label_track_album, ui_i18n_is_zh()
+                      ? "专辑  等待元数据" : "Album  Waiting for metadata");
     lv_obj_set_style_text_font(label_track_album, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(label_track_album, lv_color_hex(0x94A3B8), 0);
     prepare_marquee_label(label_track_album, 24);
@@ -1438,7 +1488,7 @@ void bt_app_init(void) {
     lv_obj_set_flex_align(vol_header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t *label_vol_title = lv_label_create(vol_header);
-    lv_label_set_text(label_vol_title, "OUTPUT VOLUME");
+    lv_label_set_text(label_vol_title, ui_tr(UI_STR_SETTINGS_VOLUME));
     lv_obj_set_style_text_font(label_vol_title, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(label_vol_title, lv_color_hex(0x94A3B8), 0);
     lv_obj_set_style_text_letter_space(label_vol_title, 1, 0);
@@ -1485,7 +1535,7 @@ void bt_app_init(void) {
     lv_obj_add_event_cb(details_btn, on_device_details_click, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *details_label = lv_label_create(details_btn);
-    lv_label_set_text(details_label, "Device Details & Connections  ›");
+    lv_label_set_text(details_label, ui_tr(UI_STR_BT_DEVICE_MANAGEMENT));
     lv_obj_set_style_text_font(details_label, ui_font_body_lg(), 0);
     lv_obj_set_style_text_color(details_label, lv_color_hex(0xCBD5E1), 0);
     lv_obj_center(details_label);
@@ -1523,20 +1573,20 @@ void bt_app_init(void) {
     lv_obj_clear_flag(device_details_sheet, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *sheet_title = lv_label_create(device_details_sheet);
-    lv_label_set_text(sheet_title, "Bluetooth Device Management");
+    lv_label_set_text(sheet_title, ui_tr(UI_STR_BT_DEVICE_MANAGEMENT));
     lv_obj_set_style_text_font(sheet_title, ui_font_h1(), 0);
     lv_obj_set_style_text_color(sheet_title, lv_color_hex(0xF8FAFC), 0);
     lv_obj_align(sheet_title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     lv_obj_t *sheet_close = lv_button_create(device_details_sheet);
-    lv_obj_set_size(sheet_close, 90, 42);
+    lv_obj_set_size(sheet_close, 96, 48);
     lv_obj_align(sheet_close, LV_ALIGN_TOP_RIGHT, 0, -4);
     lv_obj_set_style_radius(sheet_close, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(sheet_close, lv_color_hex(0x263247), 0);
     lv_obj_set_style_shadow_width(sheet_close, 0, 0);
     lv_obj_add_event_cb(sheet_close, on_device_details_close, LV_EVENT_CLICKED, NULL);
     lv_obj_t *sheet_close_label = lv_label_create(sheet_close);
-    lv_label_set_text(sheet_close_label, "Done");
+    lv_label_set_text(sheet_close_label, ui_tr(UI_STR_DONE));
     lv_obj_set_style_text_font(sheet_close_label, ui_font_body_lg(), 0);
     lv_obj_set_style_text_color(sheet_close_label, lv_color_hex(0xF8FAFC), 0);
     lv_obj_center(sheet_close_label);
@@ -1563,12 +1613,12 @@ void bt_app_init(void) {
     lv_obj_add_flag(info_name, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(info_name, show_name_edit_modal, LV_EVENT_CLICKED, NULL);
     lv_obj_t *info_name_title = lv_label_create(info_name);
-    lv_label_set_text(info_name_title, "Bluetooth name · Tap to edit");
+    lv_label_set_text(info_name_title, ui_tr(UI_STR_BT_NAME_TAP_EDIT));
     lv_obj_set_style_text_font(info_name_title, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(info_name_title, lv_color_hex(0x64748B), 0);
     prepare_single_line_label(info_name_title);
     label_adapter_name = lv_label_create(info_name);
-    lv_label_set_text(label_adapter_name, "Not initialized");
+    lv_label_set_text(label_adapter_name, ui_i18n_is_zh() ? "尚未初始化" : "Not initialized");
     lv_obj_set_style_text_font(label_adapter_name, ui_font_h3(), 0);
     lv_obj_set_style_text_color(label_adapter_name, lv_color_hex(0xF8FAFC), 0);
     prepare_single_line_label(label_adapter_name);
@@ -1585,7 +1635,7 @@ void bt_app_init(void) {
     lv_obj_set_flex_flow(info_mac, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_gap(info_mac, 5, 0);
     lv_obj_t *info_mac_title = lv_label_create(info_mac);
-    lv_label_set_text(info_mac_title, "MAC Address");
+    lv_label_set_text(info_mac_title, ui_tr(UI_STR_BT_MAC_ADDRESS));
     lv_obj_set_style_text_font(info_mac_title, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(info_mac_title, lv_color_hex(0x64748B), 0);
     label_adapter_addr = lv_label_create(info_mac);
@@ -1603,7 +1653,7 @@ void bt_app_init(void) {
     lv_obj_set_style_pad_column(sheet_actions, 20, 0);
 
     lv_obj_t *switch_title = lv_label_create(sheet_actions);
-    lv_label_set_text(switch_title, "Bluetooth");
+    lv_label_set_text(switch_title, ui_tr(UI_STR_APP_BLUETOOTH));
     lv_obj_set_style_text_font(switch_title, ui_font_h3(), 0);
     lv_obj_set_style_text_color(switch_title, lv_color_hex(0xF8FAFC), 0);
 
@@ -1620,7 +1670,7 @@ void bt_app_init(void) {
     lv_obj_set_flex_grow(action_spacer, 1);
 
     label_conn_device = lv_label_create(sheet_actions);
-    lv_label_set_text(label_conn_device, "Bluetooth audio input");
+    lv_label_set_text(label_conn_device, ui_tr(UI_STR_BT_AUDIO));
     lv_obj_set_width(label_conn_device, 250);
     lv_label_set_long_mode(label_conn_device, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(label_conn_device, LV_TEXT_ALIGN_RIGHT, 0);
@@ -1639,7 +1689,7 @@ void bt_app_init(void) {
     lv_obj_add_flag(btn_disconnect, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(btn_disconnect, on_disconnect_click, LV_EVENT_CLICKED, NULL);
     lv_obj_t *disconnect_label = lv_label_create(btn_disconnect);
-    lv_label_set_text(disconnect_label, "Disconnect");
+    lv_label_set_text(disconnect_label, ui_tr(UI_STR_DISCONNECT));
     lv_obj_set_style_text_font(disconnect_label, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(disconnect_label, lv_color_hex(0xFCA5A5), 0);
     lv_obj_center(disconnect_label);
@@ -1647,7 +1697,7 @@ void bt_app_init(void) {
     lv_obj_add_flag(device_details_overlay, LV_OBJ_FLAG_HIDDEN);
 
     update_playback_details();
-    set_audio_status("Waiting for connection", UI_COLOR_PRIMARY);
+    set_audio_status(ui_tr(UI_STR_BT_WAITING), UI_COLOR_PRIMARY);
 
     lv_scr_load(scr);
 

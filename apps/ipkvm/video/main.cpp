@@ -28,15 +28,19 @@
 
 #include "AWVideoEncoder.h"
 #include "sunxiMemInterface.h"
+#include "capture_cache_sync.h"
 extern "C" {
 #include <videoOutPort.h>
 }
 
-#define VIDEO_VERSION     "1.0.0"
+#define VIDEO_VERSION     "1.0.2"
 #define VIDEO_DEV         "/dev/video0"
 #define WIDTH            1920
 #define HEIGHT           1080
 #define FPS              60
+#define LOCAL_DISPLAY_FPS 15
+#define LOCAL_DISPLAY_FRAME_DIVISOR (FPS / LOCAL_DISPLAY_FPS)
+#define DISPLAY_BUFFER_COUNT 2
 #define BITRATE          6000
 #define BUFFER_COUNT     3
 #define CAPTURE_SOCKET   "/var/run/aitvbox/capture.sock"
@@ -113,6 +117,9 @@ static std::atomic<uint64_t> g_recovery_count(0);
 // Physically contiguous input shared with the CedarX video engine.
 static dma_mem_des_t gIonMem;
 static bool g_ion_inited = false;
+static dma_mem_des_t gDisplayMem[DISPLAY_BUFFER_COUNT];
+static bool g_display_mem_inited[DISPLAY_BUFFER_COUNT] = {false, false};
+static int g_display_buffer_index = -1;
 
 // Socket fds
 static int g_ctrl_fd = -1;
@@ -122,7 +129,7 @@ static pthread_mutex_t g_cap_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_display_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static videoParam g_display_video_param;
-static renderBuf g_display_render_buf;
+static renderBuf g_display_render_buf[DISPLAY_BUFFER_COUNT];
 static dispOutPort* g_display_port = NULL;
 
 // V4L2 buffer structure
@@ -155,6 +162,8 @@ static int ensure_capture_started(void);
 static int init_display_output(void);
 static void deinit_display_output(void);
 static void set_display_requested(bool enabled);
+static int init_display_memory(void);
+static void free_display_memory(void);
 
 // Get current timestamp in milliseconds
 static uint64_t get_timestamp_ms(void)
@@ -771,6 +780,43 @@ static void free_ion_memory(void)
     kvm_log("[INFO] Ion memory freed\n");
 }
 
+static int init_display_memory(void)
+{
+    for (int i = 0; i < DISPLAY_BUFFER_COUNT; i++) {
+        memset(&gDisplayMem[i], 0, sizeof(gDisplayMem[i]));
+        if (allocOpen(MEM_TYPE_CDX_NEW, &gDisplayMem[i], NULL) < 0) {
+            kvm_log("[DISPLAY] allocOpen failed for buffer %d\n", i);
+            free_display_memory();
+            return -1;
+        }
+        g_display_mem_inited[i] = true;
+        gDisplayMem[i].size = VISIBLE_Y_PLANE_SIZE + VISIBLE_UV_PLANE_SIZE;
+        if (allocAlloc(MEM_TYPE_CDX_NEW, &gDisplayMem[i], NULL) < 0) {
+            kvm_log("[DISPLAY] allocAlloc failed for buffer %d\n", i);
+            free_display_memory();
+            return -1;
+        }
+    }
+    g_display_buffer_index = -1;
+    kvm_log("[DISPLAY] allocated %d independent scanout buffers\n",
+            DISPLAY_BUFFER_COUNT);
+    return 0;
+}
+
+static void free_display_memory(void)
+{
+    for (int i = 0; i < DISPLAY_BUFFER_COUNT; i++) {
+        if (!g_display_mem_inited[i]) continue;
+        if (gDisplayMem[i].vir) {
+            allocFree(MEM_TYPE_CDX_NEW, &gDisplayMem[i], NULL);
+        }
+        allocClose(MEM_TYPE_CDX_NEW, &gDisplayMem[i], NULL);
+        memset(&gDisplayMem[i], 0, sizeof(gDisplayMem[i]));
+        g_display_mem_inited[i] = false;
+    }
+    g_display_buffer_index = -1;
+}
+
 static int init_display_output(void)
 {
     pthread_mutex_lock(&g_display_mutex);
@@ -822,12 +868,16 @@ static int init_display_output(void)
     g_display_video_param.srcInfo.format = VIDEO_PIXEL_FORMAT_NV12;
     g_display_video_param.srcInfo.color_space = VIDEO_BT709;
 
-    memset(&g_display_render_buf, 0, sizeof(g_display_render_buf));
-    g_display_render_buf.isExtPhy = VIDEO_USE_EXTERN_ION_BUF;
-    g_display_render_buf.y_phaddr = gIonMem.phy;
-    g_display_render_buf.u_phaddr = gIonMem.phy + VISIBLE_Y_PLANE_SIZE;
-    g_display_render_buf.v_phaddr = gIonMem.phy + VISIBLE_Y_PLANE_SIZE;
-    g_display_render_buf.fd = gIonMem.ion_buffer.fd_data.aw_fd;
+    for (int i = 0; i < DISPLAY_BUFFER_COUNT; i++) {
+        memset(&g_display_render_buf[i], 0, sizeof(g_display_render_buf[i]));
+        g_display_render_buf[i].isExtPhy = VIDEO_USE_EXTERN_ION_BUF;
+        g_display_render_buf[i].y_phaddr = gDisplayMem[i].phy;
+        g_display_render_buf[i].u_phaddr =
+            gDisplayMem[i].phy + VISIBLE_Y_PLANE_SIZE;
+        g_display_render_buf[i].v_phaddr =
+            gDisplayMem[i].phy + VISIBLE_Y_PLANE_SIZE;
+        g_display_render_buf[i].fd = gDisplayMem[i].ion_buffer.fd_data.aw_fd;
+    }
     g_display_enabled.store(false);
     pthread_mutex_unlock(&g_display_mutex);
 
@@ -852,26 +902,34 @@ static void deinit_display_output(void)
 static void set_display_requested(bool enabled)
 {
     g_display_requested.store(enabled);
-    pthread_mutex_lock(&g_display_mutex);
-    if (!enabled && g_display_port && g_display_enabled.load()) {
-        g_display_port->setEnable(g_display_port, 0);
+    if (!enabled) {
+        // Do not disable the disp2 layer while VIN is still streaming.  On
+        // the A133 Linux 4.9 display stack, the next queue after a layer-off
+        // transition can hard-lock the SoC.  Pausing submissions leaves the
+        // last frame underneath the LVGL UI and lets DISPLAY 1 resume without
+        // tearing down or re-enabling the hardware layer.
         g_display_enabled.store(false);
     }
-    pthread_mutex_unlock(&g_display_mutex);
     kvm_log("[DISPLAY] requested=%d\n", enabled ? 1 : 0);
 }
 
-static void present_local_frame(void)
+static void present_local_frame(uint64_t frame_number)
 {
     if (!g_display_requested.load() || !g_ion_inited) return;
+    if ((frame_number % LOCAL_DISPLAY_FRAME_DIVISOR) != 0) return;
     pthread_mutex_lock(&g_display_mutex);
     if (g_display_port) {
-        flushCache(MEM_TYPE_CDX_NEW, &gIonMem, NULL);
+        const int next_buffer =
+            (g_display_buffer_index + 1) % DISPLAY_BUFFER_COUNT;
+        memcpy((void*)gDisplayMem[next_buffer].vir,
+               (const void*)gIonMem.vir,
+               VISIBLE_Y_PLANE_SIZE + VISIBLE_UV_PLANE_SIZE);
+        flushCache(MEM_TYPE_CDX_NEW, &gDisplayMem[next_buffer], NULL);
         const int queued = g_display_port->queueToDisplay(
             g_display_port,
             VISIBLE_Y_PLANE_SIZE + VISIBLE_UV_PLANE_SIZE,
             &g_display_video_param,
-            &g_display_render_buf);
+            &g_display_render_buf[next_buffer]);
         if (queued == 0 && !g_display_enabled.load()) {
             g_display_port->setEnable(g_display_port, 1);
             g_display_enabled.store(true);
@@ -879,6 +937,9 @@ static void present_local_frame(void)
         } else if (queued != 0) {
             g_display_enabled.store(false);
             kvm_log("[DISPLAY] queue failed: %d\n", queued);
+        }
+        if (queued == 0) {
+            g_display_buffer_index = next_buffer;
         }
     }
     pthread_mutex_unlock(&g_display_mutex);
@@ -1220,6 +1281,14 @@ static void* capture_thread(void* arg)
     (void)arg;
     kvm_log("[INFO] Capture thread started\n");
 
+    CaptureCacheSync capture_cache;
+    if (!capture_cache.ready()) {
+        kvm_log("[ERROR] Cannot open capture cache sync: %s\n", strerror(errno));
+        send_video_unavailable("cache_sync_failed");
+        g_capture_started = false;
+        return NULL;
+    }
+
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     struct v4l2_requestbuffers req;
@@ -1409,6 +1478,14 @@ static void* capture_thread(void* arg)
 
         if (buf.index < (unsigned int)g_buffer_count &&
             g_buffers[buf.index].start[0] && g_ion_inited) {
+            // The CPU must see this DMA frame before any consumer copies it.
+            // Flushing gIonMem after the copy only synchronizes the destination.
+            if (!capture_cache.before_cpu_read(g_buffers[buf.index].start[0],
+                                               g_buffers[buf.index].length[0])) {
+                kvm_log("[ERROR] Capture cache sync failed: %s\n", strerror(errno));
+                send_video_unavailable("cache_sync_failed");
+                break;
+            }
             copy_repaired_nv12(
                 (unsigned char*)gIonMem.vir,
                 (const unsigned char*)g_buffers[buf.index].start[0]);
@@ -1454,7 +1531,7 @@ static void* capture_thread(void* arg)
             // /dev/video0, and local presentation can no longer delay this
             // frame's entry into the IPKVM network path.
             queue_snapshot_frame((const unsigned char*)gIonMem.vir);
-            present_local_frame();
+            present_local_frame((uint64_t)frame_count);
         }
 
         // Re-queue buffer
@@ -1594,7 +1671,12 @@ int main(int argc, char* argv[])
     if (init_ion_memory() < 0) {
         return -1;
     }
+    if (init_display_memory() < 0) {
+        free_ion_memory();
+        return -1;
+    }
     if (init_display_output() < 0) {
+        free_display_memory();
         free_ion_memory();
         return -1;
     }
@@ -1603,6 +1685,7 @@ int main(int argc, char* argv[])
     kvm_log("[MAIN] Initializing encoder...\n");
     if (init_encoder() < 0) {
         deinit_display_output();
+        free_display_memory();
         free_ion_memory();
         return -1;
     }
@@ -1696,6 +1779,7 @@ int main(int argc, char* argv[])
     }
 
     deinit_display_output();
+    free_display_memory();
     free_ion_memory();
 
     // Free buffers

@@ -1,5 +1,11 @@
 # System architecture
 
+Application/platform separation and release compatibility are governed by
+[MIMI-UPDATE-001](../application-update-policy.md) (Chinese, authoritative).
+A133 is the initial platform; T527 and RK3576 are future targets. Shared upper-layer
+source does not imply binary compatibility. The A527 skeleton is not a T527 adapter,
+and the V2 framework does not imply that all application commands have migrated.
+
 ## Design rule
 
 Dependencies point inward: frontends and service transports invoke application

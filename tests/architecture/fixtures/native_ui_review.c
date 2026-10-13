@@ -1,0 +1,399 @@
+#include "src/ui/desktop_update.h"
+/* Real LVGL widgets with in-memory hardware and middleware fixtures.
+ * Run through scripts/render_ui_review.py from the repository root.
+ */
+#include "lvgl/lvgl.h"
+#include "src/ui/ui.h"
+#include "src/ui/ui_fonts.h"
+#include "src/ui/ui_i18n.h"
+#include "src/ui/theme/theme.h"
+#include "src/ui/desktop_all_apps.h"
+#include "src/ui/desktop_home_tokens.h"
+#include "src/ui/desktop_status_bar.h"
+#include "src/ui/desktop_clock.h"
+#include "src/ui/desktop_dock.h"
+#include "src/ui/lockscreen.h"
+#include "src/system/settings.h"
+#include "src/system/backlight_control.h"
+#include "src/system/volume_control.h"
+#include "src/system/app_registry.h"
+#include "src/middleware/middleware.h"
+#include "src/apps/setting/setting_app.h"
+#include "src/apps/wifi/wifi_app.c"
+#include <assert.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+/* A local socket pair supplies the idle response; no device service is used. */
+static bool review_hdmi_idle;
+static int review_control_peer = -1;
+int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
+ (void)length;
+ if (review_hdmi_idle && address->sa_family == AF_UNIX &&
+     !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock")) {
+  int pair[2];
+  if (review_control_peer >= 0) close(review_control_peer);
+  assert(socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == 0);
+  assert(dup2(pair[0], fd) == fd); close(pair[0]); review_control_peer=pair[1];
+  const char reply[]="{\"state\":\"idle\",\"history\":[]}\n";
+  assert(write(review_control_peer, reply, sizeof(reply)-1) == sizeof(reply)-1);
+  return 0;
+ }
+ errno=ECONNREFUSED;return -1;
+}
+FILE *__real_fopen(const char *path, const char *mode);
+FILE *__wrap_fopen(const char *path, const char *mode) {
+    if (strstr(path, "SarasaUiSC-")) {
+        char local[1024];
+        snprintf(local, sizeof(local), "apps/lv_port_linux/src/ui/font/%s", strrchr(path, '/') + 1);
+        return __real_fopen(local, mode);
+    }
+    return __real_fopen(path, mode);
+}
+void __real_lv_lottie_set_src_file(lv_obj_t *object, const char *source);
+void __wrap_lv_lottie_set_src_file(lv_obj_t *object, const char *source) {
+ const char *name=strrchr(source,'/');assert(name);
+ const char *groups[]={"Neutral & Thinking","Positive Emotions","Negative Emotions","Surprise & Reactions","Physical & Special States"};
+ char path[1024];
+ for(size_t i=0;i<sizeof(groups)/sizeof(groups[0]);i++) {
+  snprintf(path,sizeof(path),"third_party/aitvbox_emotion_lottie_pack/%s/%s",groups[i],name+1);
+  FILE *file=__real_fopen(path,"rb");if(file){fclose(file);__real_lv_lottie_set_src_file(object,path);return;}
+ }
+ fprintf(stderr,"Missing real emotion asset: %s\n",name);assert(false);
+}
+static sys_settings_t settings = {.brightness=78,.volume=50,.wifi_enabled=true,.theme_preset_id=0};
+sys_settings_t *sys_settings_get(void) {return &settings;}
+static int saves, backlight, volume;
+void sys_settings_save(void) {saves++;}
+int sys_backlight_set_percent(int p) {backlight=p;return 0;}
+int sys_volume_set_percent(int p) {volume=p;return 0;}
+static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
+int mw_subscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(!callbacks[t][i]){callbacks[t][i]=c;return 0;}return -1;}
+int mw_unsubscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(callbacks[t][i]==c)callbacks[t][i]=NULL;return 0;}
+static int connect_count, ai_exit_count, ota_commands, last_ota_command;
+static wifi_cmd_t last_connect;
+int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
+ (void)dir;
+ if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
+ if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
+ if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_CONNECT) {
+   connect_count++;last_connect=*(const wifi_cmd_t*)d;
+ }
+ return 0;
+}
+void mw_get_status(mw_status_t*s) {memset(s,0,sizeof(*s));}
+static int app_open_count;
+#ifndef REVIEW_REAL_APP_MANAGER
+void app_manager_init(void) {}
+void app_manager_open(app_id_t id) {(void)id;app_open_count++;}
+void app_manager_back_home(void) {}
+void app_manager_set_home_screen(lv_obj_t*s) {(void)s;}
+void app_manager_refresh_current(void) {}
+void app_manager_show_hdmi_preview_screen(void) {}
+void app_manager_hide_hdmi_preview_screen(void) {}
+#else
+bool sunxifb_set_transparent_overlay(bool transparent) {(void)transparent;return true;}
+#endif
+extern AppDescriptor app_ai;
+#include "src/apps/ai/ai_free_chat_view.h"
+extern AppDescriptor app_bt,app_ota,app_video,app_user,app_hdmi_mcp;
+static void emit(mw_topic_t t, void *data, size_t size) {
+ mw_msg_t msg={.topic=t,.data_len=size};memcpy(msg.data,data,size);
+ for(int i=0;i<10;i++)if(callbacks[t][i])callbacks[t][i](&msg);
+}
+static unsigned char pixels[1024*768*4];
+static void flush(lv_display_t*d,const lv_area_t*a,uint8_t*p) {
+ for(int y=a->y1;y<=a->y2;y++)memcpy(pixels+(y*1024+a->x1)*4,p+(y-a->y1)*(a->x2-a->x1+1)*4,(a->x2-a->x1+1)*4);
+ lv_display_flush_ready(d);
+}
+static void save(const char*path) {
+ lv_obj_update_layout(lv_scr_act());
+ lv_refr_now(NULL);
+ FILE*f=fopen(path,"wb");assert(f);fprintf(f,"P6\n1024 768\n255\n");
+ for(int i=0;i<1024*768;i++){unsigned char rgb[]={pixels[i*4+2],pixels[i*4+1],pixels[i*4]};fwrite(rgb,1,3,f);}fclose(f);
+}
+static void inspect(lv_obj_t*o) {
+ if(lv_obj_has_flag(o,LV_OBJ_FLAG_HIDDEN))return;
+ lv_area_t a;lv_obj_get_coords(o,&a);
+ if(lv_obj_check_type(o,&lv_label_class))printf("LABEL %d %d %d %d %s\n",a.x1,a.y1,a.x2,a.y2,lv_label_get_text(o));
+ for(uint32_t i=0;i<lv_obj_get_child_count(o);i++)inspect(lv_obj_get_child(o,i));
+}
+static lv_obj_t *find_label(lv_obj_t *root, const char *text) {
+ if(lv_obj_check_type(root,&lv_label_class) && !strcmp(lv_label_get_text(root),text))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){
+  lv_obj_t *found=find_label(lv_obj_get_child(root,i),text);if(found)return found;
+ }
+ return NULL;
+}
+static void test_sliders(lv_obj_t *root, int *index) {
+ if(lv_obj_check_type(root,&lv_slider_class)) {
+  int value=(*index)++ == 0 ? 64 : 37;
+  int before=saves;
+  lv_slider_set_value(root,value,LV_ANIM_OFF);lv_obj_send_event(root,LV_EVENT_VALUE_CHANGED,NULL);
+  assert(saves==before);
+  lv_obj_send_event(root,LV_EVENT_RELEASED,NULL);assert(saves==before+1);
+ }
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++)test_sliders(lv_obj_get_child(root,i),index);
+}
+static void pump(void) {lv_tick_inc(40);lv_timer_handler();}
+static void test_settings(void) {
+ int index=0;test_sliders(lv_scr_act(),&index);
+ assert(index==2 && settings.brightness==64 && settings.volume==37 && backlight==64 && volume==37);
+ lv_obj_t *english=find_label(lv_scr_act(),"English");assert(english);
+ lv_obj_send_event(lv_obj_get_parent(english),LV_EVENT_CLICKED,NULL);pump();pump();
+ assert(!ui_i18n_is_zh());
+ lv_obj_t *dark=find_label(lv_scr_act(),"Dark");assert(dark);
+ lv_obj_send_event(lv_obj_get_parent(dark),LV_EVENT_CLICKED,NULL);pump();pump();
+ assert(ui_theme_is_dark());
+ for(int t=0;t<TOPIC_MAX;t++){
+  int count=0;for(int i=0;i<10;i++)if(callbacks[t][i])count++;
+  assert(count <= (t==TOPIC_CLOUD_STATUS ? 2 : 1));
+ }
+ /* Closing during a deferred rebuild must not resurrect the settings page. */
+ english=find_label(lv_scr_act(),"English");assert(english);
+ lv_obj_send_event(lv_obj_get_parent(english),LV_EVENT_CLICKED,NULL);
+ app_setting.close();lv_obj_t *last=lv_scr_act();pump();pump();assert(lv_scr_act()==last);
+ assert(callbacks[TOPIC_AI_STATUS][0]==NULL);
+ puts("PASS settings: live sliders, release persistence, locale/theme rebuild, subscriptions, close cancellation");
+}
+static void test_password(void) {
+ lv_obj_update_layout(password_modal);
+ lv_area_t kb,ta,dialog;lv_obj_get_coords(password_kb,&kb);lv_obj_get_coords(password_ta,&ta);
+ lv_obj_get_coords(lv_obj_get_parent(password_kb),&dialog);
+ assert(kb.y1>ta.y2 && kb.y2<dialog.y2 && kb.y2<768 && kb.y2-kb.y1>=240);
+ const char *letters="abcdefghijklmnopqrstuvwxyz";
+ const char *const *map=lv_keyboard_get_map_array(password_kb);
+ for(const char *c=letters;*c;c++) {bool found=false;for(int i=0;map[i][0];i++)if(map[i][0]==*c && map[i][1]==0)found=true;assert(found);}
+ lv_textarea_set_text(password_ta,"short");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+ assert(password_modal && connect_count==0 && strlen(lv_label_get_text(password_error_label))>0);
+ lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+ assert(!password_modal && !password_kb && !password_ta && connect_count==1);
+ assert(!strcmp(last_connect.ssid,"100ASK-Lab") && !strcmp(last_connect.password,"review123"));
+ app_wifi.close();
+ puts("PASS password: keyboard bounds, full alphabet, short-password rejection, connect command, modal cleanup");
+}
+#include "native_lockscreen_checks.h"
+
+static void tap_screen(lv_indev_t *pointer, int x, int y) {
+ touch_x=x;touch_y=y;lv_obj_update_layout(lv_screen_active());
+ touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();
+ lv_tick_inc(500);pump();pump();
+}
+static void test_launcher_rounds(void) {
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
+ lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ lv_obj_t *home=lv_screen_active();
+ for(int round=0;round<100;round++) {
+  for(size_t i=0;i<app_registry_get_launcher_count();i++) {
+   const app_registry_entry_t *entry=app_registry_get_launcher_entry(i);
+   ui_all_apps_show();pump();lv_obj_update_layout(home);
+   lv_obj_t *label=NULL;
+   for(int child=(int)lv_obj_get_child_count(home)-1;child>=0 && !label;child--) {
+    lv_obj_t *layer=lv_obj_get_child(home,child);
+    if(lv_obj_is_visible(layer))label=find_label(layer,ui_tr(entry->name_id));
+   }
+   assert(label && lv_obj_is_visible(label));
+   lv_area_t box;lv_obj_get_coords(label,&box);
+   tap_screen(pointer,(box.x1+box.x2)/2,(box.y1+box.y2)/2);
+   assert(!ui_all_apps_is_visible() && lv_screen_active()!=home);
+   ui_string_id_t title_id=entry->id==APP_ID_VIDEO?UI_STR_VIDEO_PLAYER:entry->name_id;
+   if(!find_label(lv_screen_active(),ui_tr(title_id))){fprintf(stderr,"Missing title round=%d app=%s\n",round,entry->name);inspect(lv_screen_active());fflush(stdout);assert(false);}
+   app_manager_back_home();lv_tick_inc(500);pump();pump();
+   assert(lv_screen_active()==home);
+  }
+ }
+ lv_indev_delete(pointer);
+ puts("PASS 100 host pointer rounds across all 8 launcher apps and return to Home (800 entries)");
+}
+static void test_home_navigation(void) {
+ lv_obj_t *home=lv_screen_active();
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
+ lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ tap_screen(pointer,835,590);
+ assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_APP_SETTINGS)));
+ app_manager_back_home();lv_tick_inc(500);pump();pump();
+ tap_screen(pointer,140,590);assert(ui_all_apps_is_visible());
+ ui_all_apps_hide();pump();
+ tap_screen(pointer,512,32);
+ lv_obj_t *center=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));
+ assert(center && lv_obj_is_visible(center));
+ tap_screen(pointer,512,650);
+ lv_indev_delete(pointer);
+ puts("PASS real Home pointer navigation: Settings, Apps, top-bar Control Center reach their own targets");
+}
+
+int main(int argc,char**argv) {
+ assert(argc==5);lv_init();
+ settings.locale_mode=strcmp(argv[2],"zh")==0?SYS_LOCALE_ZH_CN:SYS_LOCALE_EN_US;
+ settings.appearance_mode=strcmp(argv[3],"light")==0?SYS_APPEARANCE_LIGHT:SYS_APPEARANCE_DARK;
+ lv_display_t*d=lv_display_create(1024,768);lv_display_set_color_format(d,LV_COLOR_FORMAT_XRGB8888);
+ static uint8_t buf[1024*100*4];lv_display_set_buffers(d,buf,NULL,sizeof(buf),LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,flush);
+ ui_init();
+#ifdef REVIEW_REAL_APP_MANAGER
+ test_home_navigation();
+ test_launcher_rounds();
+ lv_obj_t *home=lv_screen_active();
+ assert(ui_lockscreen_show());
+ app_manager_show_hdmi_preview_screen();pump();
+ assert(!ui_lockscreen_is_active() && lv_screen_active()!=home);
+ app_manager_hide_hdmi_preview_screen();lv_tick_inc(500);pump();assert(lv_screen_active()==home);
+ assert(ui_lockscreen_show());app_manager_open(APP_ID_SETTING);pump();pump();
+ assert(!ui_lockscreen_is_active() && lv_screen_active()!=home);
+ app_manager_back_home();lv_tick_inc(500);pump();pump();assert(lv_screen_active()==home);
+ assert(ui_lockscreen_show());ui_rebuild_home();pump();
+ app_manager_show_hdmi_preview_screen();pump();app_manager_hide_hdmi_preview_screen();pump();
+ assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_HOME_TALK_MIMI)));
+ save(argv[4]);puts("PASS real app manager: locked HDMI entry/return, app navigation, rebuilt Home lifetime");return 0;
+#endif
+ /* Keep the retired component tests explicit; production does not enable it. */
+ if(strcmp(argv[1],"lockscreen")==0){ui_lockscreen_init(lv_screen_active());assert(ui_lockscreen_show());}
+ else if(strcmp(argv[1],"control-center")==0){
+  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
+  lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+  tap_screen(pointer,512,32);lv_indev_delete(pointer);
+  lv_obj_t *title=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));assert(title && lv_obj_is_visible(title));
+ }
+ else if(strcmp(argv[1],"desktop-update")==0){
+  app_setting.init();
+  lv_obj_t *entry=find_label(lv_screen_active(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update");
+  assert(entry);
+  lv_obj_send_event(lv_obj_get_parent(entry),LV_EVENT_CLICKED,NULL);pump();
+  assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update"));
+ } else if(strcmp(argv[1],"settings")==0){
+  app_setting.init();
+  ai_status_t ai={.tuya_schema_known=true,.tuya_schema_supported_dps=2,.tuya_schema_required_dps=12};emit(TOPIC_AI_STATUS,&ai,sizeof(ai));
+  cloud_status_t cloud={.state=CLOUD_STATE_UNAVAILABLE};emit(TOPIC_CLOUD_STATUS,&cloud,sizeof(cloud));
+ }else if(strncmp(argv[1],"bt",2)==0){
+  app_bt.init();
+  if(strcmp(argv[1],"bt")) {
+   bt_runtime_t runtime={.enabled=true,.discoverable=true,.a2dp_connected=true,.audio_streaming=true,.volume=50};
+   snprintf(runtime.adapter_name,sizeof(runtime.adapter_name),"Mimi Living Room Speaker");
+   snprintf(runtime.adapter_addr,sizeof(runtime.adapter_addr),"12:34:56:78:9A:BC");
+   snprintf(runtime.connected_device_name,sizeof(runtime.connected_device_name),"Living Room Music Player");
+   emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));
+   bt_avrcp_info_t track={.song_len_ms=240000,.song_pos_ms=62000,.is_playing=true,.player_available=true,.playback_state=BT_PLAYBACK_PLAYING};
+   snprintf(track.title,sizeof(track.title),"A Very Long Song Title for an Evening by the Window");
+   snprintf(track.artist,sizeof(track.artist),"The Acoustic Ensemble and Friends");
+   snprintf(track.album,sizeof(track.album),"Live Sessions from the Living Room");
+   emit(TOPIC_BT_AVRCP_INFO,&track,sizeof(track));
+   if(!strcmp(argv[1],"bt-details") || !strcmp(argv[1],"bt-rename")) {
+    lv_obj_t *details=find_label(lv_scr_act(),ui_tr(UI_STR_BT_DEVICE_MANAGEMENT));assert(details);
+    lv_obj_send_event(lv_obj_get_parent(details),LV_EVENT_CLICKED,NULL);pump();
+    if(!strcmp(argv[1],"bt-rename")) {
+     lv_obj_t *name=find_label(lv_scr_act(),ui_tr(UI_STR_BT_NAME_TAP_EDIT));assert(name);
+     lv_obj_send_event(lv_obj_get_parent(name),LV_EVENT_CLICKED,NULL);pump();
+    }
+   }
+  }
+ }
+ else if(strncmp(argv[1],"video",5)==0){
+  app_video.init();
+  if(!strcmp(argv[1],"video-library") || !strcmp(argv[1],"video-empty")) {
+   lv_obj_t *library=find_label(lv_scr_act(),ui_tr(UI_STR_VIDEO_LIBRARY));assert(library);
+   lv_obj_update_layout(lv_scr_act());
+   assert(lv_obj_get_height(lv_obj_get_parent(library))>=48);
+   lv_obj_send_event(lv_obj_get_parent(library),LV_EVENT_CLICKED,NULL);
+   lv_tick_inc(500);pump();
+   video_playlist_item_t item={.total_count=-1,.index=0,.width=3840,.height=2160,.fps=30};
+   snprintf(item.path,sizeof(item.path),"/mnt/sdcard/A long evening walk through the mountains and countryside.mp4");
+   if(strcmp(argv[1],"video-empty")) emit(TOPIC_VIDEO_PLAYLIST,&item,sizeof(item));
+   item.total_count=!strcmp(argv[1],"video-empty") ? 0 : 1;
+   emit(TOPIC_VIDEO_PLAYLIST,&item,sizeof(item));
+   lv_obj_t *refresh=find_label(lv_scr_act(),ui_tr(UI_STR_REFRESH));assert(refresh);
+   lv_obj_update_layout(lv_scr_act());
+   assert(lv_obj_get_height(lv_obj_get_parent(refresh))>=48);
+   assert(!lv_obj_has_flag(lv_obj_get_parent(lv_obj_get_parent(lv_obj_get_parent(lv_obj_get_parent(refresh)))),LV_OBJ_FLAG_HIDDEN));
+   puts("PASS video library opens from empty state; refresh has 48px touch target");
+  }
+ }
+ else if(strncmp(argv[1],"ai",2)==0){
+  app_ai.init();
+  ai_status_t ai={.state=AI_STATE_IDLE,.control_center_running=true,.tuya_bound=true};
+  if(!strcmp(argv[1],"ai-pairing")){ai.tuya_bound=false;ai.tuya_bind_qr_pending=true;snprintf(ai.bind_url,sizeof(ai.bind_url),"https://example.invalid/host-test-only");}
+  if(!strcmp(argv[1],"ai-offline")) ai.state=AI_STATE_NETWORK_UNAVAILABLE;
+  if(!strcmp(argv[1],"ai-speaking")) ai.state=AI_STATE_SPEAKING;
+  if(!strcmp(argv[1],"ai-free-chat")){ai.state=AI_STATE_LISTENING;ai.free_chat_active=true;ai.chat_mode=AI_CHAT_MODE_FREE;}
+  emit(TOPIC_AI_STATUS,&ai,sizeof(ai));
+  ai_text_t text={0};snprintf(text.text,sizeof(text.text),"A long response checks readable wrapping and conversation layout without pretending microphone or speaker hardware was tested.");
+  emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();
+  if(ai.free_chat_active){assert(ai_free_chat_view_is_open());for(int frame=0;frame<12;frame++)pump();}
+ }
+ else if(strcmp(argv[1],"user")==0){app_user.init();}
+ else if(strcmp(argv[1],"hdmi")==0 || strcmp(argv[1],"hdmi-idle")==0){
+  review_hdmi_idle=!strcmp(argv[1],"hdmi-idle");app_hdmi_mcp.init();
+  if(review_hdmi_idle) {
+   assert(find_label(lv_scr_act(),ui_tr(UI_STR_READY)));
+   assert(find_label(lv_scr_act(),ui_tr(UI_STR_MCP_EMPTY)));
+   lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
+   assert(lv_obj_has_state(lv_obj_get_parent(stop),LV_STATE_DISABLED));
+  }
+ }
+ else if(strncmp(argv[1],"ota",3)==0){
+  app_ota.init();ota_status_t status={.state=OTA_STATE_UPDATE_AVAILABLE};
+  snprintf(status.version_local,sizeof(status.version_local),"1.4.2");
+  snprintf(status.version_remote,sizeof(status.version_remote),"1.5.0");
+  status.update_available=true;
+  if(!strcmp(argv[1],"ota-error")){status.state=OTA_STATE_ERROR;status.error_code=11;}
+  if(!strcmp(argv[1],"ota-downloading")){status.state=OTA_STATE_DOWNLOADING;status.progress=47;}
+  emit(TOPIC_OTA_STATUS,&status,sizeof(status));
+ }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();}
+ else if(strcmp(argv[1],"wifi")==0 || strcmp(argv[1],"password")==0){
+  app_wifi.init();wifi_spinner_delete();
+  wifi_ap_t ap={.ssid="100ASK-Lab",.encrypted=true};
+  lv_obj_t*item=create_list_item(wifi_list,&ap);
+  ap.ssid="Long-Network-Name-For-Layout-Test";create_list_item(wifi_list,&ap);
+  ap.ssid="Workshop-IoT";ap.encrypted=false;create_list_item(wifi_list,&ap);
+  if(strcmp(argv[1],"password")==0)lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);
+ }
+ save(argv[4]);inspect(lv_scr_act());
+ if(!strcmp(argv[1],"ai-free-chat")){
+  int before=ai_exit_count;
+  lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
+  assert(ai_exit_count==before+1);
+  ai_status_t idle={.state=AI_STATE_IDLE,.control_center_running=true,.tuya_bound=true,.chat_mode=AI_CHAT_MODE_WAKEUP};
+  emit(TOPIC_AI_STATUS,&idle,sizeof(idle));pump();assert(!ai_free_chat_view_is_open());
+  puts("PASS real free-chat view: assets rendered, exit command, backend acknowledgement closes overlay");
+ }
+ if(!strcmp(argv[1],"bt-rename")) {
+  lv_obj_t *cancel=find_label(lv_layer_top(),ui_tr(UI_STR_CANCEL));assert(cancel);
+  lv_obj_t *dialog=lv_obj_get_parent(lv_obj_get_parent(lv_obj_get_parent(cancel)));
+  lv_obj_t *modal=lv_obj_get_parent(dialog);
+  lv_obj_t *keyboard=lv_obj_get_child(modal,-1);assert(lv_obj_check_type(keyboard,&lv_keyboard_class));
+  lv_area_t da,ka;lv_obj_get_coords(dialog,&da);lv_obj_get_coords(keyboard,&ka);
+  assert(da.y1>=12 && da.y2<ka.y1 && ka.y2<768);
+  assert(lv_obj_get_height(lv_obj_get_parent(cancel))>=48);
+  lv_font_glyph_dsc_t glyph;
+  const lv_font_t *key_font=lv_obj_get_style_text_font(keyboard,LV_PART_ITEMS);
+  assert(lv_font_get_glyph_dsc(key_font,&glyph,0xf55a,0) && !glyph.is_placeholder);
+  int before=saves;lv_obj_send_event(lv_obj_get_parent(cancel),LV_EVENT_CLICKED,NULL);
+  assert(!find_label(lv_layer_top(),ui_tr(UI_STR_BT_RENAME)) && saves==before);
+  puts("PASS Bluetooth rename: dialog above keyboard, readable keys, 48px actions, cancel without saving");
+ }
+ if(!strcmp(argv[1],"desktop-update")){
+  lv_obj_t *close=find_label(lv_layer_top(),ui_i18n_is_zh()?"关闭":"Close");assert(close);
+  lv_obj_send_event(lv_obj_get_parent(close),LV_EVENT_CLICKED,NULL);pump();
+  assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update"));
+  puts("PASS desktop update: dedicated settings entry, close stays on Settings");
+ }
+ if(!strcmp(argv[1],"ota-downloading")){
+  lv_obj_t *cancel=find_label(lv_scr_act(),ui_tr(UI_STR_CANCEL));assert(cancel);
+  int before=ota_commands;lv_obj_send_event(lv_obj_get_parent(cancel),LV_EVENT_CLICKED,NULL);
+  assert(ota_commands==before+1 && last_ota_command==OTA_CMD_CANCEL);
+  ota_status_t installing={.state=OTA_STATE_APPLYING,.progress=10};
+  emit(TOPIC_OTA_STATUS,&installing,sizeof(installing));pump();
+  lv_obj_t *check=find_label(lv_scr_act(),ui_tr(UI_STR_OTA_CHECK));assert(check);
+  assert(lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));
+  puts("PASS OTA: download cancel routes correctly; installation disables cancellation");
+ }
+ if(!strcmp(argv[1],"settings"))test_settings();
+ if(!strcmp(argv[1],"password"))test_password();
+ if(!strcmp(argv[1],"lockscreen"))test_lockscreen();
+ if(!strcmp(argv[1],"home")){
+  lv_obj_t *home=lv_screen_active();lv_tick_inc(UI_LOCKSCREEN_IDLE_MS+1600);pump();pump();
+  assert(lv_screen_active()==home && !ui_lockscreen_is_active());
+  puts("PASS Home stays visible while idle; cancelled lockscreen has no automatic entry");
+ }
+ return 0;
+}

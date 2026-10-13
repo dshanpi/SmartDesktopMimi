@@ -12,8 +12,10 @@ SDK=""
 CHECK_ONLY=0
 WITH_OTA=0
 INCLUDE_SDK_IMAGES=0
+APPLICATION_UPDATES=0
 ALLOW_DIRTY=0
 OUTPUT_DIR=""
+MIMI_SYSTEM_VERSION="${MIMI_SYSTEM_VERSION:-}"
 
 usage() {
     cat >&2 <<USAGE
@@ -21,7 +23,9 @@ usage: $0 [options] <sdk-root>
 
 Options:
   --check-only          只做环境、源码和 SDK 预检，不编译、不创建发布目录
+  --system-version VER  独立系统版本（必需），不会修改应用 VERSION
   --with-ota            构建带 A/B 地基的固件，并生成 RSA 签名 .swu
+  --application-updates Require a prepared, signed factory application baseline
   --include-sdk-images  除最终烧录镜像外，再归档 boot.img 和 rootfs.img
   --output-dir <path>   指定发布目录；默认 build/releases/<版本-提交-UTC时间>
   --allow-dirty         允许已跟踪源码有未提交修改（会记录在构建清单；不推荐）
@@ -36,6 +40,10 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --check-only) CHECK_ONLY=1; shift ;;
         --with-ota) WITH_OTA=1; shift ;;
+        --system-version)
+            [[ $# -ge 2 ]] || die "--system-version requires a value"
+            MIMI_SYSTEM_VERSION="$2"; shift 2 ;;
+        --application-updates) APPLICATION_UPDATES=1; shift ;;
         --include-sdk-images) INCLUDE_SDK_IMAGES=1; shift ;;
         --allow-dirty) ALLOW_DIRTY=1; shift ;;
         --output-dir)
@@ -58,6 +66,15 @@ done
 [[ -n "${SDK}" ]] || { usage; exit 2; }
 [[ -d "${SDK}/.repo" ]] || die "not a Tina SDK root: ${SDK}" "SDK 路径错或缺 .repo"
 SDK="$(cd "${SDK}" && pwd)"
+[[ -n "$MIMI_SYSTEM_VERSION" ]] || die "--system-version is required for a system release"
+python3 - "$PRODUCT_ROOT" "$MIMI_SYSTEM_VERSION" <<'VERSION_CHECK'
+import sys
+sys.path.insert(0,sys.argv[1]+'/tools/update')
+from release_identity import tag_for
+print('System release tag:',tag_for('system',sys.argv[2],'a133'))
+VERSION_CHECK
+export MIMI_SYSTEM_VERSION
+
 
 for command in git make cmake rsync unsquashfs debugfs blkid sha256sum file; do
     require_cmd "${command}" "请安装提供 ${command} 的主机软件包"
@@ -73,6 +90,18 @@ for path in \
     "${SELF_DIR}/sync_to_sdk.sh"; do
     require_file "${path}"
 done
+
+if [[ "${APPLICATION_UPDATES}" -eq 1 ]]; then
+    require_file "${PRODUCT_ROOT}/build/mimi-baseline/baseline-lock.json" \
+        "Prepare a verified signed factory baseline with tools/update/baseline.py first"
+    python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify --output "${PRODUCT_ROOT}/build/mimi-baseline"
+    python3 - "$PRODUCT_ROOT/build/mimi-baseline/rootfs/etc/smartdesktopmimi/device.json" "$MIMI_SYSTEM_VERSION" <<'BASELINE_VERSION_CHECK'
+import json,sys
+with open(sys.argv[1]) as source: device=json.load(source)
+if device['runtime']['system'] != sys.argv[2]:
+    raise SystemExit('signed factory baseline system version differs from requested system release')
+BASELINE_VERSION_CHECK
+fi
 
 VERSION="$(tr -d '[:space:]' < "${PRODUCT_ROOT}/VERSION")"
 [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
@@ -101,10 +130,12 @@ while IFS= read -r submodule_path; do
 done < <(git -C "${PRODUCT_ROOT}" config --file .gitmodules --get-regexp path 2>/dev/null | awk '{print $2}')
 
 if [[ "${WITH_OTA}" -eq 1 ]]; then
-    require_file "${PRODUCT_ROOT}/secrets/swupdate_priv.pem" \
-        "生成方式见 docs/ota.md；私钥不得提交 Git"
-    require_file "${PRODUCT_ROOT}/secrets/swupdate_priv.password"
-    require_file "${PRODUCT_ROOT}/integrations/swupdate/keys/swupdate_public.pem"
+    : "${MIMI_SWU_SIGNING_KEY:?Set external SWUpdate signing key}"
+    : "${MIMI_SWU_PUBLIC_KEY:?Set matching platform public key}"
+    : "${MIMI_SYSTEM_VERSION:?Set independent system release version}"
+    : "${SOURCE_DATE_EPOCH:?Set fixed system build epoch}"
+    require_file "${MIMI_SWU_SIGNING_KEY}" "External SWUpdate signing key is missing"
+    require_file "${MIMI_SWU_PUBLIC_KEY}" "External SWUpdate public key is missing"
     require_file "${SELF_DIR}/build_swu.sh"
 fi
 
@@ -112,7 +143,8 @@ echo "AITVBox release preflight"
 echo "  product : ${PRODUCT_ROOT}"
 echo "  branch  : ${BRANCH}"
 echo "  commit  : ${COMMIT}"
-echo "  version : ${VERSION}"
+echo "  application version : ${VERSION}"
+echo "  system version      : ${MIMI_SYSTEM_VERSION}"
 echo "  SDK     : ${SDK}"
 echo "  target  : A133 / B6 / UART0"
 echo "  OTA     : ${WITH_OTA}"
@@ -141,16 +173,16 @@ if [[ "${CHECK_ONLY}" -eq 1 ]]; then
     echo
     echo "Preflight complete; no build was started."
     if [[ "${WITH_OTA}" -eq 1 ]]; then
-        echo "正式构建: $0 --with-ota ${SDK}"
+        echo "正式构建: $0 --system-version ${MIMI_SYSTEM_VERSION} --with-ota ${SDK}"
     else
-        echo "正式构建: $0 ${SDK}"
+        echo "正式构建: $0 --system-version ${MIMI_SYSTEM_VERSION} ${SDK}"
     fi
     exit 0
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 if [[ -z "${OUTPUT_DIR}" ]]; then
-    OUTPUT_DIR="${PRODUCT_ROOT}/build/releases/${VERSION}-${SHORT_COMMIT}-${STAMP}"
+    OUTPUT_DIR="${PRODUCT_ROOT}/build/releases/system-a133-v${MIMI_SYSTEM_VERSION}-${SHORT_COMMIT}-${STAMP}"
 elif [[ "${OUTPUT_DIR}" != /* ]]; then
     OUTPUT_DIR="${PRODUCT_ROOT}/${OUTPUT_DIR}"
 fi
@@ -217,10 +249,11 @@ if [[ "${INCLUDE_SDK_IMAGES}" -eq 1 ]]; then
         "${BOOT_IMAGE}" "${ROOTFS_IMAGE}" "${OUTPUT_DIR}/sdk-images/"
 fi
 if [[ "${WITH_OTA}" -eq 1 ]]; then
-    SWU_IMAGE="${PRODUCT_ROOT}/build/swu/openwrt_a133_b6-ab-sign-rollback.swu"
+    SWU_IMAGE="${PRODUCT_ROOT}/build/swu/${MIMI_SYSTEM_VERSION}/system.swu"
     require_file "${SWU_IMAGE}" "build_swu.sh 未生成预期 .swu"
     mkdir -p "${OUTPUT_DIR}/ota"
     cp --reflink=auto --preserve=timestamps "${SWU_IMAGE}" "${OUTPUT_DIR}/ota/"
+    cp "${PRODUCT_ROOT}/build/swu/${MIMI_SYSTEM_VERSION}/swu-build.json" "${OUTPUT_DIR}/metadata/"
 fi
 
 APP_SUMS="${OUTPUT_DIR}/metadata/APPLICATION-SHA256SUMS"
@@ -250,6 +283,9 @@ SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
 {
     echo "AITVBOX_RELEASE_FORMAT=1"
     echo "AITVBOX_VERSION=${VERSION}"
+    echo "APPLICATION_VERSION=${VERSION}"
+    echo "SYSTEM_VERSION=${MIMI_SYSTEM_VERSION}"
+    echo "SYSTEM_TAG=system-a133-v${MIMI_SYSTEM_VERSION}"
     echo "PRODUCT_BRANCH=${BRANCH}"
     echo "PRODUCT_COMMIT=${COMMIT}"
     echo "PRODUCT_TRACKED_DIRTY=$([[ -n "${TRACKED_STATUS}" ]] && echo 1 || echo 0)"

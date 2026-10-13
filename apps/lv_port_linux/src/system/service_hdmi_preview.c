@@ -533,6 +533,11 @@ void service_hdmi_preview_send_status(void)
     publish_last_status();
 }
 
+bool service_hdmi_preview_is_enabled(void)
+{
+    return atomic_load(&g_hdmi_enabled);
+}
+
 void service_hdmi_preview_deinit(void)
 {
     stop_monitor();

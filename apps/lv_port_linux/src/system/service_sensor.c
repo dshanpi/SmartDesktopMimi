@@ -121,6 +121,13 @@ void service_sensor_set_listener(void (*cb)(const sensor_status_t *st))
     g_sensor.listener = cb;
 }
 
+bool service_sensor_get_status(sensor_status_t *out)
+{
+    if (!out || !g_sensor.initialized) return false;
+    *out = g_sensor.last_status;
+    return out->valid;
+}
+
 void service_sensor_init(void)
 {
     memset(&g_sensor, 0, sizeof(g_sensor));

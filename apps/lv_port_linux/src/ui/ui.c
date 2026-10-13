@@ -1,6 +1,8 @@
 #include "ui.h"
+#include "desktop_health.h"
 #include "ui_helpers.h"
 #include "ui_fonts.h"
+#include "ui_i18n.h"
 #include <stdio.h>
 #include <string.h>
 #include "../system/app_manager.h"
@@ -14,6 +16,7 @@
 #include "desktop_dock.h"
 #include "desktop_status_bar.h"
 #include "desktop_home_tokens.h"
+#include "lockscreen.h"
 #include "../apps/hdmi_mcp/hdmi_mcp_app.h"
 
 /* 布局调试开关：1=显示区域边框，0=关闭 */
@@ -39,33 +42,36 @@ LV_IMAGE_DECLARE(sun);
  * ======================= */
 static lv_obj_t *create_main_card(lv_obj_t *parent);
 static void create_desktop_background_layers(lv_obj_t *parent);
+static void build_desktop(lv_obj_t *scr);
+static void ui_generation_timer_cb(lv_timer_t *timer);
+static lv_obj_t *desktop_screen;
+static lv_timer_t *ui_generation_timer;
+static uint32_t observed_theme_generation;
+static uint32_t observed_i18n_generation;
 
 /* =======================
  * UI 入口
  * ======================= */
 void ui_init(void)
 {
+    ui_i18n_init();
     /* 初始化主题 */
     ui_theme_init();
     ui_fonts_init();
 
     lv_obj_t *scr = lv_scr_act();
-    lv_obj_add_style(scr, ui_theme_get_desktop_bg_style(), 0);
-    lv_obj_set_style_bg_color(scr, HOME_BG, 0);
-    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
-
-    create_desktop_background_layers(scr);
+    desktop_screen = scr;
+    build_desktop(scr);
 
     /* 初始化应用管理器 (注册当前屏幕为主页) */
     app_manager_init();
+    /* Lockscreen work was cancelled; keep Home active when idle. */
+    ui_lockscreen_set_home(desktop_screen);
+    observed_theme_generation = ui_theme_generation();
+    observed_i18n_generation = ui_i18n_generation();
+    ui_generation_timer = lv_timer_create(ui_generation_timer_cb, 1000, NULL);
     hdmi_mcp_app_monitor_start();
-
-    lv_obj_t *main_card = create_main_card(scr);
-
-    ui_statusbar_create(main_card);
-    ui_clock_create(main_card);
-    ui_dock_create(main_card);
-    ui_all_apps_create(scr);
+    desktop_health_start();
 
     /* 订阅WiFi状态消息 */
     mw_subscribe(TOPIC_WIFI_STATUS, wifi_status_callback);
@@ -97,17 +103,63 @@ void ui_init(void)
     mw_publish(TOPIC_OTA_COMMAND, &ocmd, sizeof(ocmd), MW_DIR_UI_TO_BACKEND);
 }
 
+static void build_desktop(lv_obj_t *scr)
+{
+    lv_obj_add_style(scr, ui_theme_get_desktop_bg_style(), 0);
+    lv_obj_set_style_bg_color(scr, HOME_BG, 0);
+    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
+
+    create_desktop_background_layers(scr);
+    lv_obj_t *rail_body = mimi_ui_body(scr);
+    lv_obj_delete(rail_body);
+
+    lv_obj_t *main_card = create_main_card(scr);
+
+    ui_statusbar_create(main_card);
+    ui_clock_create(main_card);
+    ui_dock_create(main_card);
+    ui_all_apps_create(scr);
+
+}
+
+void ui_rebuild_home(void)
+{
+    lv_obj_t *old = desktop_screen;
+    bool was_visible = old && old == lv_scr_act();
+    desktop_screen = lv_obj_create(NULL);
+    build_desktop(desktop_screen);
+    app_manager_set_home_screen(desktop_screen);
+    ui_lockscreen_set_home(desktop_screen);
+    observed_theme_generation = ui_theme_generation();
+    observed_i18n_generation = ui_i18n_generation();
+    if (was_visible) lv_scr_load(desktop_screen);
+    if (old && old != desktop_screen) lv_obj_delete_async(old);
+}
+
+static void ui_generation_timer_cb(lv_timer_t *timer)
+{
+    (void)timer;
+    uint32_t theme = ui_theme_generation();
+    uint32_t language = ui_i18n_generation();
+    if (theme == observed_theme_generation &&
+        language == observed_i18n_generation) return;
+
+    ui_rebuild_home();
+    app_manager_refresh_current();
+}
+
 /* =======================
  * 桌面背景分层
  * ======================= */
 static void create_desktop_background_layers(lv_obj_t *parent)
 {
-    /* A restrained cool halo gives the AI surface depth without using a
-     * decorative wallpaper that competes with HDMI content. */
+    /* A quiet tint anchors the appliance chrome without forcing a dark header
+     * into light appearance. */
     lv_obj_t *upper_field = lv_obj_create(parent);
     lv_obj_set_size(upper_field, lv_pct(100), 310);
     lv_obj_align(upper_field, LV_ALIGN_TOP_MID, 0, 0);
-    lv_obj_set_style_bg_color(upper_field, lv_color_hex(0x111827), 0);
+    lv_obj_set_style_bg_color(upper_field,
+                              lv_color_mix(HOME_BG, UI_COLOR_PRIMARY, 230), 0);
     lv_obj_set_style_bg_grad_color(upper_field, HOME_BG, 0);
     lv_obj_set_style_bg_grad_dir(upper_field, LV_GRAD_DIR_VER, 0);
     lv_obj_set_style_bg_opa(upper_field, LV_OPA_COVER, 0);
@@ -140,18 +192,9 @@ static lv_obj_t *create_main_card(lv_obj_t *parent)
     /* Let child tray/card shadows paint into the 12px flex gaps. */
     lv_obj_add_flag(card, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
 
-    /* 使用纵向 Flex 布局 */
-    lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(card,
-                           LV_FLEX_ALIGN_START,
-                           LV_FLEX_ALIGN_CENTER,
-                           LV_FLEX_ALIGN_CENTER);
-
-    /* 10 + 64 + 10 + 550 + 10 + 114 + 10 = 768. */
-    lv_obj_set_style_pad_hor(card, 0, 0);
-    lv_obj_set_style_pad_top(card, 10, 0);
-    lv_obj_set_style_pad_bottom(card, 10, 0);
-    lv_obj_set_style_pad_row(card, HOME_GAP, 0);
+    lv_obj_set_layout(card, LV_LAYOUT_NONE);
+    lv_obj_set_style_pad_all(card, 0, 0);
+    lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
 
     apply_debug_outline(card, lv_color_hex(0x6A4CFF));
 

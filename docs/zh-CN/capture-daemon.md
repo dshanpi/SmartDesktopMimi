@@ -36,7 +36,9 @@ Unix stream socket 每次接收一行命令：
 
 - `STATUS`：返回单行 JSON，包括 `state`、`capture`、`displayRequested`、`display`、
   `streamRequested`、`frames`、`frameAgeMs`、`recoveries`、`width`、`height` 和 `fps`。
-- `DISPLAY 1` / `DISPLAY 0`：开启或关闭本地显示消费者。
+- `DISPLAY 1` / `DISPLAY 0`：开启或暂停本地显示消费者。A133 在 VIN 运行时不会动态关闭
+  disp2 图层；暂停后保留最后一帧，由 LVGL 页面覆盖，重新开启时直接恢复提交，避免 Linux
+  4.9 显示驱动在 layer-off 后首次 queue 时锁死 SoC。
 - `SNAPSHOT`：返回 4 字节网络序长度和 JPEG 数据。
 
 WebRTC 控制和 Annex-B H264 媒体仍使用 IPKVM 原有 socket，不与上述控制面混用。
@@ -47,6 +49,11 @@ WebRTC 控制和 Annex-B H264 媒体仍使用 IPKVM 原有 socket，不与上述
 编码，再处理按需快照，最后更新本地 Display。这样本地显示的缓存同步和图层 ioctl 不会
 增加当前帧进入 IPKVM 网络路径的时间。新平台即使采用独立 Display worker，也必须使用
 “最新帧优先、满则丢旧帧”的有界邮箱，禁止反向阻塞 Capture Provider。
+
+A133 的 VIN 与 WebRTC 保持 60 fps，本地 Display 仅每四帧提交一次（15 fps），以减少
+1080p NV12 全帧 cache flush 与 disp2 ioctl 压力；这不会降低截图源或浏览器视频帧率。
+本地 Display 使用两块独立 ION scanout 缓冲交替提交，不再让 disp2 DMA 扫描 CPU 每帧
+改写的编码/截图共享缓冲。
 
 Go WebRTC writer 使用 6 帧有界队列：按 60 fps 计算，应用层最多积压约 100 ms。队列满
 时丢弃已经失去参考链的 GOP，并等新的 IDR 恢复，不能让网络抖动拖慢采集线程。浏览器端

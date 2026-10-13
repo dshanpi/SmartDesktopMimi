@@ -3,9 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <sys/stat.h>
 
 #define SETTINGS_FILENAME ".lv_port_linux_settings.bin"
-#define SETTINGS_VERSION 6
+#define SETTINGS_VERSION 8
 #define DEFAULT_THEME_COLOR 0x5267B8U
 #define DEFAULT_THEME_PRESET_ID 0U
 #define THEME_PRESET_COUNT 5U
@@ -41,7 +45,14 @@ static sys_settings_t current_settings = {
     .theme_preset_id = DEFAULT_THEME_PRESET_ID,
     .theme_follow_time = true,
     .bluetooth_name = {0},
+    .tuya_ai_enabled = true,
+    .led_enabled = true,
+    .led_brightness = 22,
+    .locale_mode = SYS_LOCALE_AUTO,
+    .appearance_mode = SYS_APPEARANCE_AUTO,
 };
+static sys_settings_t persisted_settings_snapshot;
+static bool persisted_settings_snapshot_valid;
 
 typedef struct {
     uint32_t theme_color;
@@ -99,6 +110,37 @@ typedef struct {
     uint32_t theme_preset_id;
     bool theme_follow_time;
 } settings_v5_t;
+
+/* v6: custom bluetooth name, before Tuya IoT persisted controls. */
+typedef struct {
+    uint32_t version;
+    uint32_t theme_color;
+    int32_t brightness;
+    int32_t volume;
+    bool wifi_enabled;
+    bool bluetooth_enabled;
+    bool hdmi_enabled;
+    uint32_t theme_preset_id;
+    bool theme_follow_time;
+    char bluetooth_name[48];
+} settings_v6_t;
+
+/* v7: Tuya IoT controls, before locale and appearance preferences. */
+typedef struct {
+    uint32_t version;
+    uint32_t theme_color;
+    int32_t brightness;
+    int32_t volume;
+    bool wifi_enabled;
+    bool bluetooth_enabled;
+    bool hdmi_enabled;
+    uint32_t theme_preset_id;
+    bool theme_follow_time;
+    char bluetooth_name[48];
+    bool tuya_ai_enabled;
+    bool led_enabled;
+    int32_t led_brightness;
+} settings_v7_t;
 
 static uint32_t preset_from_legacy_color(uint32_t color)
 {
@@ -184,6 +226,14 @@ static void normalize_settings(void) {
     if (current_settings.brightness > 100) current_settings.brightness = 100;
     if (current_settings.volume < 0) current_settings.volume = 0;
     if (current_settings.volume > 100) current_settings.volume = 100;
+    if (current_settings.led_brightness < 0) current_settings.led_brightness = 0;
+    if (current_settings.led_brightness > 100) current_settings.led_brightness = 100;
+    if (current_settings.locale_mode > SYS_LOCALE_EN_US) {
+        current_settings.locale_mode = SYS_LOCALE_AUTO;
+    }
+    if (current_settings.appearance_mode > SYS_APPEARANCE_DARK) {
+        current_settings.appearance_mode = SYS_APPEARANCE_AUTO;
+    }
     normalize_bluetooth_name();
 }
 
@@ -207,6 +257,55 @@ void sys_settings_init(void) {
                 current_settings = loaded;
             } else {
                 printf("Unknown settings version, using defaults.\n");
+                need_save = true;
+            }
+        } else if (file_size == (long)sizeof(settings_v7_t)) {
+            settings_v7_t legacy = {0};
+            if (fread(&legacy, sizeof(legacy), 1, f) == 1 &&
+                legacy.version == 7U) {
+                current_settings.theme_color = legacy.theme_color;
+                current_settings.brightness = legacy.brightness;
+                current_settings.volume = legacy.volume;
+                current_settings.wifi_enabled = legacy.wifi_enabled;
+                current_settings.bluetooth_enabled = legacy.bluetooth_enabled;
+                current_settings.hdmi_enabled = legacy.hdmi_enabled;
+                current_settings.theme_preset_id = legacy.theme_preset_id;
+                current_settings.theme_follow_time = legacy.theme_follow_time;
+                memcpy(current_settings.bluetooth_name, legacy.bluetooth_name,
+                       sizeof(current_settings.bluetooth_name));
+                current_settings.tuya_ai_enabled = legacy.tuya_ai_enabled;
+                current_settings.led_enabled = legacy.led_enabled;
+                current_settings.led_brightness = legacy.led_brightness;
+                current_settings.locale_mode = SYS_LOCALE_AUTO;
+                current_settings.appearance_mode = SYS_APPEARANCE_AUTO;
+                printf("Settings v7 loaded and migrated.\n");
+                need_save = true;
+            } else {
+                printf("Unknown settings v7 payload, using defaults.\n");
+                need_save = true;
+            }
+        } else if (file_size == (long)sizeof(settings_v6_t)) {
+            settings_v6_t legacy = {0};
+            if (fread(&legacy, sizeof(legacy), 1, f) == 1 &&
+                legacy.version == 6U) {
+                current_settings.theme_color = legacy.theme_color;
+                current_settings.brightness = legacy.brightness;
+                current_settings.volume = legacy.volume;
+                current_settings.wifi_enabled = legacy.wifi_enabled;
+                current_settings.bluetooth_enabled = legacy.bluetooth_enabled;
+                current_settings.hdmi_enabled = legacy.hdmi_enabled;
+                current_settings.theme_preset_id = legacy.theme_preset_id;
+                current_settings.theme_follow_time = legacy.theme_follow_time;
+                memcpy(current_settings.bluetooth_name, legacy.bluetooth_name,
+                       sizeof(current_settings.bluetooth_name));
+                /* New IoT controls intentionally start from safe product defaults. */
+                current_settings.tuya_ai_enabled = true;
+                current_settings.led_enabled = true;
+                current_settings.led_brightness = 22;
+                printf("Settings v6 loaded and migrated.\n");
+                need_save = true;
+            } else {
+                printf("Unknown settings v6 payload, using defaults.\n");
                 need_save = true;
             }
         } else if (file_size == (long)sizeof(settings_v5_t)) {
@@ -320,11 +419,15 @@ void sys_settings_init(void) {
             need_save = true;
         }
         printf("Settings loaded from %s\n", path);
+        persisted_settings_snapshot = current_settings;
+        persisted_settings_snapshot_valid = true;
         if (need_save) {
             sys_settings_save();
         }
     } else {
         printf("No settings file found at %s, using defaults.\n", path);
+        persisted_settings_snapshot = current_settings;
+        persisted_settings_snapshot_valid = true;
         sys_settings_save(); // Create initial file
     }
 }
@@ -333,25 +436,95 @@ sys_settings_t* sys_settings_get(void) {
     return &current_settings;
 }
 
+static void merge_local_settings_changes(sys_settings_t *target,
+                                         const sys_settings_t *desired,
+                                         const sys_settings_t *base)
+{
+#define MERGE_CHANGED_FIELD(field) \
+    do { \
+        if (desired->field != base->field) target->field = desired->field; \
+    } while (0)
+
+    target->version = SETTINGS_VERSION;
+    MERGE_CHANGED_FIELD(theme_color);
+    MERGE_CHANGED_FIELD(brightness);
+    MERGE_CHANGED_FIELD(volume);
+    MERGE_CHANGED_FIELD(wifi_enabled);
+    MERGE_CHANGED_FIELD(bluetooth_enabled);
+    MERGE_CHANGED_FIELD(hdmi_enabled);
+    MERGE_CHANGED_FIELD(theme_preset_id);
+    MERGE_CHANGED_FIELD(theme_follow_time);
+    if (memcmp(desired->bluetooth_name, base->bluetooth_name,
+               sizeof(desired->bluetooth_name)) != 0) {
+        memcpy(target->bluetooth_name, desired->bluetooth_name,
+               sizeof(target->bluetooth_name));
+    }
+    MERGE_CHANGED_FIELD(tuya_ai_enabled);
+    MERGE_CHANGED_FIELD(led_enabled);
+    MERGE_CHANGED_FIELD(led_brightness);
+    MERGE_CHANGED_FIELD(locale_mode);
+    MERGE_CHANGED_FIELD(appearance_mode);
+
+#undef MERGE_CHANGED_FIELD
+}
+
 void sys_settings_save(void) {
     char path[256];
+    sys_settings_t desired;
+    sys_settings_t merged;
+    sys_settings_t disk;
+    ssize_t count;
+    size_t written = 0;
+    int fd;
+
     get_settings_path(path, sizeof(path));
 
-    FILE *f = fopen(path, "wb");
-    if (f) {
-        size_t n = fwrite(&current_settings, sizeof(sys_settings_t), 1, f);
-        /* Flush through libc and kernel so power-loss/reboot keeps the write. */
-        if (n == 1) {
-            fflush(f);
-            fsync(fileno(f));
-        }
-        fclose(f);
-        if (n == 1) {
-            printf("Settings saved to %s\n", path);
-        } else {
-            printf("Error writing settings to %s!\n", path);
-        }
-    } else {
+    desired = current_settings;
+    merged = desired;
+    fd = open(path, O_RDWR | O_CREAT, 0600);
+    if (fd < 0) {
         printf("Error saving settings to %s!\n", path);
+        return;
     }
+    if (flock(fd, LOCK_EX) != 0) {
+        close(fd);
+        printf("Error locking settings at %s!\n", path);
+        return;
+    }
+    (void)fchmod(fd, 0600);
+
+    /* lv_backend and lvglsim are separate processes. Merge only fields changed
+     * since this process last loaded/saved the file, so a Tuya cloud write of
+     * HDMI/BT does not get reverted when the UI later saves brightness. */
+    count = pread(fd, &disk, sizeof(disk), 0);
+    if (persisted_settings_snapshot_valid && count == (ssize_t)sizeof(disk) &&
+        disk.version == SETTINGS_VERSION) {
+        merge_local_settings_changes(&disk, &desired,
+                                     &persisted_settings_snapshot);
+        merged = disk;
+    }
+
+    if (ftruncate(fd, 0) != 0) {
+        flock(fd, LOCK_UN);
+        close(fd);
+        printf("Error truncating settings at %s!\n", path);
+        return;
+    }
+    while (written < sizeof(merged)) {
+        count = pwrite(fd, (const char *)&merged + written,
+                       sizeof(merged) - written, (off_t)written);
+        if (count < 0 && errno == EINTR) continue;
+        if (count <= 0) break;
+        written += (size_t)count;
+    }
+    if (written == sizeof(merged) && fsync(fd) == 0) {
+        current_settings = merged;
+        persisted_settings_snapshot = merged;
+        persisted_settings_snapshot_valid = true;
+        printf("Settings saved to %s\n", path);
+    } else {
+        printf("Error writing settings to %s!\n", path);
+    }
+    flock(fd, LOCK_UN);
+    close(fd);
 }

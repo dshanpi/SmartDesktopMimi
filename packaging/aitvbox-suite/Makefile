@@ -17,6 +17,8 @@ BUILD_OUT    := $(PRODUCT_ROOT)/build
 VENDOR_LIBS  := $(PRODUCT_ROOT)/vendor/tuyaopen-a133-b6-libs
 LV_PORT_DIR  := $(PRODUCT_ROOT)/apps/lv_port_linux
 SWUPDATE_KEYS := $(PRODUCT_ROOT)/integrations/swupdate/keys
+# New system releases select a public verification key without copying secrets.
+SWUPDATE_PUBLIC_KEY := $(if $(strip $(MIMI_SWU_PUBLIC_KEY)),$(abspath $(MIMI_SWU_PUBLIC_KEY)),$(SWUPDATE_KEYS)/swupdate_public.pem)
 EMOTION_LOTTIE_PACK := $(PRODUCT_ROOT)/third_party/aitvbox_emotion_lottie_pack
 AUDIO_DIAGNOSTIC_ENABLED := $(filter 1 y yes true,$(AITVBOX_AUDIO_DIAGNOSTIC))
 CLOUD_100ASK_ENABLED := $(filter 1 y yes true on ON TRUE YES,$(AITVBOX_ENABLE_100ASK_CLOUD))
@@ -42,7 +44,7 @@ PKG_FILE_DEPENDS += $(VENDOR_LIBS)/models/mdtc_chunk_300ms.mnn
 PKG_FILE_DEPENDS += $(VENDOR_LIBS)/models/tokens.txt
 PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-version
 PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-tuya-pid
-PKG_FILE_DEPENDS += $(SWUPDATE_KEYS)/swupdate_public.pem
+PKG_FILE_DEPENDS += $(SWUPDATE_PUBLIC_KEY)
 ifneq ($(AUDIO_DIAGNOSTIC_ENABLED),)
 PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/tools/board/audio_chain_boot_test.init
 PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/tools/board/audio-chain-test.wav
@@ -53,7 +55,7 @@ define Package/aitvbox-suite
   CATEGORY:=Allwinner
   SUBMENU:=Custom
   TITLE:=A133 AI TVBox UI, Tuya AI runtime, and HDMI preview
-  DEPENDS:=+aitvbox-platform +boot-play +alsa-lib +alsa-utils +libsamplerate +bluez-daemon +bluez-utils +bluez-alsa +btmanager-v4.0 +sbc \
+  DEPENDS:=+aitvbox-platform +aitvbox-mimi-update +boot-play +alsa-lib +alsa-utils +libsamplerate +bluez-daemon +bluez-utils +bluez-alsa +btmanager-v4.0 +sbc \
     +libatomic \
     +libcedarx +libuapi +libevdev +libstdcpp +libjpeg-turbo +wifimanager-v2.0-lib $(CLOUD_100ASK_DEPENDS) +libcurl +ca-bundle
 endef
@@ -145,7 +147,7 @@ define Package/aitvbox-suite/install
 
 	# OTA 验签公钥 + 固件版本号（OTA 版本比对与溯源）
 	$(INSTALL_DIR) $(1)/etc
-	$(INSTALL_DATA) $(SWUPDATE_KEYS)/swupdate_public.pem $(1)/etc/swupdate_public.pem
+	$(INSTALL_DATA) $(SWUPDATE_PUBLIC_KEY) $(1)/etc/swupdate_public.pem
 	$(INSTALL_DATA) $(BUILD_OUT)/aitvbox-version $(1)/etc/aitvbox-version
 	$(INSTALL_DATA) $(BUILD_OUT)/aitvbox-tuya-pid $(1)/etc/aitvbox-tuya-pid
 

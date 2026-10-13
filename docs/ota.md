@@ -1,5 +1,9 @@
 # OTA 升级
 
+本文描述现有 **系统 OTA**。独立桌面/应用更新与跨平台版本匹配遵循
+[MIMI-UPDATE-001](application-update-policy.md)，其更新器与自动门禁尚待实现。
+应用更新不得写系统槽；系统切槽也须在新机制中检查持久应用与目标系统的兼容性。
+
 本产品采用 **SWUpdate A/B 双槽 OTA**，由 LVGL UI 菜单触发，升级 kernel + rootfs（含 LVGL 应用、Tuya chatbot、MNN 库/模型、字体），带**失败自动回滚**。分两期交付：
 
 - **Phase 1（当前）**：全量 A/B + RSA 签名，App 触发。**升级链路已真机端到端验证通过**（验签→写非活动槽→切 env→重启进新槽→commit）；回滚路径待真机实测。

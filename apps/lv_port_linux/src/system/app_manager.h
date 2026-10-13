@@ -5,6 +5,9 @@
 
 /* 初始化应用管理器 */
 void app_manager_init(void);
+void app_manager_set_home_screen(lv_obj_t *screen);
+/* Recreate the visible app after a global language/theme generation change. */
+void app_manager_refresh_current(void);
 
 /* 打开指定应用 */
 void app_manager_open(app_id_t id);

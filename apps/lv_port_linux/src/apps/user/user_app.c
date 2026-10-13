@@ -3,6 +3,7 @@
 #include "../../system/app_manager.h"
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
+#include "../../ui/ui_i18n.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -160,7 +161,7 @@ static void scan_apps(void)
         json_object *manifest = json_object_from_file(manifest_path);
         if (!manifest) continue;
         json_object *id = NULL, *name = NULL, *ui = NULL, *permissions = NULL;
-        json_object *entry = NULL, *presentation = NULL;
+        json_object *entry = NULL, *presentation = NULL, *localizations = NULL;
         bool valid = json_object_object_get_ex(manifest, "id", &id) &&
                      json_object_is_type(id, json_type_string) &&
                      !strcmp(json_object_get_string(id), item->d_name) &&
@@ -177,6 +178,22 @@ static void scan_apps(void)
                      !strcmp(json_object_get_string(presentation), "embedded");
         if (valid) {
             const char *entry_text = json_object_get_string(entry);
+            const char *localized_name_text = json_object_get_string(name);
+            const char *locale_key = ui_i18n_is_zh() ? "zh-CN" : "en-US";
+            if (json_object_object_get_ex(manifest, "localizations", &localizations) &&
+                json_object_is_type(localizations, json_type_object)) {
+                json_object *localized = NULL, *localized_name = NULL;
+                json_object *localized_entry = NULL;
+                if (json_object_object_get_ex(localizations, locale_key, &localized) &&
+                    json_object_is_type(localized, json_type_object)) {
+                    if (json_object_object_get_ex(localized, "name", &localized_name) &&
+                        json_object_is_type(localized_name, json_type_string))
+                        localized_name_text = json_object_get_string(localized_name);
+                    if (json_object_object_get_ex(localized, "uiEntry", &localized_entry) &&
+                        json_object_is_type(localized_entry, json_type_string))
+                        entry_text = json_object_get_string(localized_entry);
+                }
+            }
             if (!strncmp(entry_text, "ui/", 3) && !strstr(entry_text, "..")) {
                 user_app_entry_t *target = &entries[entry_count];
                 target->permissions = 0;
@@ -190,7 +207,7 @@ static void scan_apps(void)
                 snprintf(target->id, sizeof(target->id), "%s",
                          json_object_get_string(id));
                 snprintf(target->name, sizeof(target->name), "%s",
-                         json_object_get_string(name));
+                         localized_name_text);
                 size_t root_len = strlen(USER_APP_ROOT);
                 size_t dir_len = strlen(item->d_name);
                 size_t file_len = strlen(entry_text);
@@ -244,7 +261,7 @@ static void action_event(lv_event_t *event)
             !json_object_get_boolean(ok) ||
             !json_object_object_get_ex(response, "message", &message) ||
             !json_object_is_type(message, json_type_string)) {
-            lv_label_set_text(status_label, "Could not launch the app");
+            lv_label_set_text(status_label, ui_tr(UI_STR_USER_LAUNCH_FAILED));
         } else {
             lv_label_set_text(status_label, json_object_get_string(message));
         }
@@ -253,7 +270,7 @@ static void action_event(lv_event_t *event)
     }
     uint32_t required = permission_bit(action->command);
     if (!required || !(current_permissions & required)) {
-        lv_label_set_text(status_label, "Action not authorized");
+        lv_label_set_text(status_label, ui_tr(UI_STR_USER_NOT_AUTHORIZED));
         return;
     }
     json_object *request = json_object_new_object();
@@ -274,9 +291,9 @@ static void action_event(lv_event_t *event)
             json_object_is_type(message, json_type_string))
             lv_label_set_text(status_label, json_object_get_string(message));
         else
-            lv_label_set_text(status_label, "Hardware request failed");
+            lv_label_set_text(status_label, ui_tr(UI_STR_USER_HARDWARE_FAILED));
     } else {
-        lv_label_set_text(status_label, "Request completed");
+        lv_label_set_text(status_label, ui_tr(UI_STR_USER_REQUEST_COMPLETE));
     }
     if (response) json_object_put(response);
 }
@@ -375,6 +392,8 @@ static void open_entry(lv_event_t *event)
     if (json_object_object_get_ex(page, "title", &title)) {
         lv_obj_t *heading = lv_label_create(page_content);
         lv_label_set_text(heading, json_object_get_string(title));
+        lv_obj_set_width(heading, lv_pct(100));
+        lv_label_set_long_mode(heading, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_font(heading, UI_TEXT_H2, 0);
         lv_obj_set_style_text_color(heading, UI_TEXT_PRIMARY, 0);
     }
@@ -406,7 +425,7 @@ void user_app_init(void)
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE |
                       LV_OBJ_FLAG_OVERFLOW_VISIBLE |
                       LV_OBJ_FLAG_SCROLL_CHAIN);
-    ui_create_app_header(screen, "User Apps", back_event, false, NULL);
+    ui_create_app_header(screen, ui_tr(UI_STR_APP_USER), back_event, false, NULL);
 
     lv_obj_t *body = lv_obj_create(screen);
     int32_t display_width = lv_display_get_horizontal_resolution(NULL);
@@ -421,15 +440,19 @@ void user_app_init(void)
                       LV_OBJ_FLAG_SCROLL_CHAIN);
 
     app_list = lv_obj_create(body);
-    int32_t list_width = display_width / 4;
+    int32_t body_width = LV_MIN(912, display_width - 48);
+    int32_t side_margin = (display_width - body_width) / 2;
+    int32_t list_width = body_width / 4;
     if (list_width < 160) list_width = 160;
     if (list_width > 280) list_width = 280;
     int32_t outer_pad = UI_SPACE_LG;
     int32_t column_gap = UI_SPACE_LG;
     int32_t content_height = LV_MAX(1, body_height - 2 * outer_pad);
-    int32_t content_x = outer_pad + list_width + column_gap;
-    int32_t content_width = LV_MAX(1, display_width - content_x - outer_pad);
-    lv_obj_set_pos(app_list, outer_pad, outer_pad);
+    int32_t content_x = side_margin + list_width + column_gap;
+    int32_t content_width = LV_MAX(1, display_width - content_x - side_margin);
+    lv_obj_set_pos(app_list, side_margin, outer_pad);
+    lv_obj_set_style_bg_color(app_list, UI_DESKTOP_CARD_BG, 0);
+    lv_obj_set_style_border_color(app_list, UI_DESKTOP_BORDER, 0);
     lv_obj_set_size(app_list, list_width, content_height);
     lv_obj_set_style_radius(app_list, UI_RADIUS_MD, 0);
     lv_obj_set_style_clip_corner(app_list, true, 0);
@@ -451,7 +474,7 @@ void user_app_init(void)
     lv_obj_set_style_border_color(page_content, UI_DESKTOP_BORDER, 0);
     lv_obj_set_style_radius(page_content, UI_RADIUS_MD, 0);
     lv_obj_set_style_clip_corner(page_content, true, 0);
-    lv_obj_set_style_pad_all(page_content, UI_SPACE_MD, 0);
+    lv_obj_set_style_pad_all(page_content, UI_SPACE_LG, 0);
     lv_obj_set_style_pad_row(page_content, UI_SPACE_MD, 0);
     lv_obj_set_flex_flow(page_content, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_scroll_dir(page_content, LV_DIR_VER);
@@ -476,10 +499,22 @@ void user_app_init(void)
         lv_obj_center(label);
     }
     if (entry_count == 0) {
+        lv_obj_add_flag(app_list, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_pos(page_content, side_margin, outer_pad);
+        lv_obj_set_width(page_content, body_width);
+        lv_obj_set_flex_align(page_content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_t *label = lv_label_create(page_content);
-        lv_label_set_text(label, "No apps installed");
-        lv_obj_set_style_text_font(label, UI_TEXT_BODY_LG, 0);
-        lv_obj_set_style_text_color(label, UI_TEXT_SECONDARY, 0);
+        lv_label_set_text(label, ui_tr(UI_STR_USER_NO_APPS));
+        lv_obj_set_style_text_font(label, UI_TEXT_H2, 0);
+        lv_obj_set_style_text_color(label, UI_TEXT_PRIMARY, 0);
+        lv_obj_t *hint = lv_label_create(page_content);
+        lv_label_set_text(hint, ui_i18n_is_zh()
+                          ? "安装应用后，即可在这里选择并打开。"
+                          : "Installed apps will appear here, ready to open.");
+        lv_obj_set_width(hint, lv_pct(100));
+        lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_set_style_text_font(hint, UI_TEXT_BODY_LG, 0);
+        lv_obj_set_style_text_color(hint, UI_TEXT_SECONDARY, 0);
     } else {
         lv_obj_send_event(lv_obj_get_child(app_list, 0), LV_EVENT_CLICKED, NULL);
     }

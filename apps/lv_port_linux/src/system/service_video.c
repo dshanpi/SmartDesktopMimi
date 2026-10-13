@@ -442,6 +442,9 @@ static void on_video_control(const mw_msg_t *msg)
     APP_LOGD("video-service", "recv cmd action=%d", cmd->action);
 
     switch (cmd->action) {
+    case VIDEO_CMD_GET_STATUS:
+        publish_play_status_now(NULL);
+        break;
     case VIDEO_CMD_PLAY:
         if (cmd->val >= 0) {
             play_index(cmd->val);

@@ -1,0 +1,725 @@
+{
+  "schema_version": 1,
+  "application_ids": [
+    "APP_ID_AI",
+    "APP_ID_BT",
+    "APP_ID_HDMI_MCP",
+    "APP_ID_OTA",
+    "APP_ID_SETTING",
+    "APP_ID_USER_APPS",
+    "APP_ID_VIDEO",
+    "APP_ID_WIFI"
+  ],
+  "surfaces": {
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/keyboard/KeyboardLayoutModal.tsx": {
+      "sha256": "2982edd9aefef7a8ec908aac4ff6034760c286a503852147ed472fdbe0488226",
+      "bindings": [
+        "onChange",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/keyboard/KeyboardPanel.tsx": {
+      "sha256": "e6d04ddfb6c2e88058e56c7e41e6c1325b68f2692d3546f27d46528712ce5c09",
+      "bindings": [
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/terminal/TerminalKVM.tsx": {
+      "sha256": "a11e3b6b48b6cb451a96852e77d31f8452dd5a92e611dc520b11cac6a1220a27",
+      "bindings": [
+        "onKeyDown"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/terminal/TerminalSerial.tsx": {
+      "sha256": "416eda4a03fe7748b51e7988daaf49cfd0a9292ca23c5192d33eb16f5bdb518e",
+      "bindings": [
+        "onKeyDown",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/terminal/TerminalSerialSide.tsx": {
+      "sha256": "103dac03f4de858b99c122bbf4ec1a3f496a8589c47e6366d58de4ccd1f15958",
+      "bindings": [
+        "onChange",
+        "onBlur",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/terminal/index.mobile.tsx": {
+      "sha256": "8df12fd3c0576f5b8edf6e14f8f1e24137ea737738043760a0b3f100397ab2d1",
+      "bindings": [
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/terminal/index.pc.tsx": {
+      "sha256": "fb5f8025f3c572e0a54f700c96f112a072162008077608eb486ac1ee7c828737",
+      "bindings": [
+        "onClick",
+        "onClick",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/usbepmode/UsbEpModeSelect.mobile.tsx": {
+      "sha256": "28e9812168ed6992fe3e5cf1c71fd41089702198e022912fe9360af52d14313b",
+      "bindings": [
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_bottom/usbepmode/UsbEpModeSelect.pc.tsx": {
+      "sha256": "734c52609137af22e383848243e758df12ac49ecd3d4560bae2a94f8164c5314",
+      "bindings": [
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/SettingsModalMobile.tsx": {
+      "sha256": "b97e4285b21da10c25963e46471ecd845cda18fa3a728751ecf91e530c251859",
+      "bindings": [
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/SettingsModalPC.tsx": {
+      "sha256": "99609e8ad703636d211cee9dbe4b4563ff6c9db3225e8942c1c20342de189fb1",
+      "bindings": [
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/access/AccessContent.tsx": {
+      "sha256": "707caa66d016d2750f6c08c9718182932379e2bbb77a9aa65d2742b8d18091d0",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/access/auth.tsx": {
+      "sha256": "0488647deefabd64d83285c38ad7dd00068668b192e889b6ba29fbe68f1ddb32",
+      "bindings": [
+        "onKeyDown",
+        "onSubmit",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onSubmit",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/advanced/AdvancedContent.tsx": {
+      "sha256": "d19f081d9876fa29de1a0b488fc83123bd060ea0f5bfe4cc62ed83a36912a293",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/agent/AgentContent.tsx": {
+      "sha256": "58fed125354939f7ebdadd38ffc8819501f9e4fce6496692c2a1dcee6579b07d",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/apps/ApplicationContent.tsx": {
+      "sha256": "35e7633a279e253d9bc0221fed0f9b5d29192371316c8cb6b941829bda4fdcc0",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/general/GeneralContent.tsx": {
+      "sha256": "88681465e538d8c81cbdd675e139c28eea51b4fde2d7d50a1691bf68822a9113",
+      "bindings": [
+        "onChange",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/hardware/HardwareContent.tsx": {
+      "sha256": "e43a871c316f858335d6f9da8d19e2e5e860bb15b2285a1ed6e69266cf279bd1",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/network/NetworkContent.tsx": {
+      "sha256": "4e6dae5d1f25b0a2cdfc401bff16f8855c4dd8f0fc182d04843c02dc1bfde217",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/version/DesktopUpdate.tsx": {
+      "sha256": "8a8470332e43e6b547a2fad856ad0db89af69c4568b6d4eed0f816757ed9a4c3",
+      "bindings": [
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/version/VersionContent.tsx": {
+      "sha256": "1179aac061e181c301de11fe12ac80279b9a8bd6a835681e70251feb656b16ab",
+      "bindings": [
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/video/VideoContent.tsx": {
+      "sha256": "805fc308a1382ae88f0b0c4c90f9c3caa722b227b4004d70bd5b681a7996e81e",
+      "bindings": [
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/Clipboard/Clipboard.tsx": {
+      "sha256": "86f99580b9f27874e17c422a0c540c581b3fcc0fd68aaf6f7db08794dfafd89a",
+      "bindings": [
+        "onChange",
+        "onKeyDown",
+        "onClick",
+        "onKeyDown",
+        "onChange",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/Power/PowerControlUp.tsx": {
+      "sha256": "41951c5e687d98bac30101797aeafd68f061a6ae6094b5ac9d3edceef6a95ecf",
+      "bindings": [
+        "onChange",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/Power/index.tsx": {
+      "sha256": "1e4b44907aaa9a89597c48e990f2d5c94cb9f41bbea25d5462482babf1f509e1",
+      "bindings": [
+        "onKeyDown"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/SharedFolders/FileManager.tsx": {
+      "sha256": "118e78ee456fab9b8b47449593a4aaae8d999286bf70ebb20d22cfd46dbaa4cd",
+      "bindings": [
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/Video/SettingsVideoSide.tsx": {
+      "sha256": "77258d11f29ca71b1c3a8ae00cd3c1c11f678dc6143df3a02f54017cf6546ec2",
+      "bindings": [
+        "onKeyDown",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onChange",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/VirtualMediaSource/ImageManager.tsx": {
+      "sha256": "32a7bf6f967d7d9634dd130caa9d8e53f2c4dc9d110b07d0d773e8cede42da58",
+      "bindings": [
+        "onClick",
+        "onChange",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/components_side/VirtualMediaSource/UnMount.tsx": {
+      "sha256": "1912d2bc55f8802d1a7d7e5d484c217a6215722f93ec78e230a174b5a902c1f6",
+      "bindings": [
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/bar_bottom/BottomBarMobile.tsx": {
+      "sha256": "22227d79dd4c03d12f859b2e95399d73de38d855207946b9bd529a9c33ecb277",
+      "bindings": [
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/bar_bottom/BottomBarPC.tsx": {
+      "sha256": "b73b8b35a4b77d6c74cfbb0e33c34b5a41f71042316926d73b554c0f56d1d38d",
+      "bindings": [
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/bar_top/TopBarMobile.tsx": {
+      "sha256": "56ae1d75d1a883b99f3876458038472839d222e9750f50f2d98978805bf63008",
+      "bindings": [
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/bar_top/TopBarPC.tsx": {
+      "sha256": "969f81df75c99f87e15430db454ee49c79c01fbe08e01be6d73f97a05ae84433",
+      "bindings": [
+        "onKeyDown",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/desktop/DesktopMobile.tsx": {
+      "sha256": "55ebb6ba0593c028e8805d206c202cbb6ad1bf5137eafb51d4d7e4abfc0f0524",
+      "bindings": [
+        "onClick",
+        "onPointerDown",
+        "onPointerUp",
+        "onPointerDown",
+        "onPointerUp",
+        "onClick",
+        "onPointerDown",
+        "onPointerUp",
+        "onPointerDown",
+        "onPointerUp",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/desktop/WorkspacePanel.tsx": {
+      "sha256": "8a9d657b2ffe4f3e54d8780d4cca2ae6f1087d4f613d128b3a4f5cfa6455ad79",
+      "bindings": [
+        "onKeyDown",
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/core/other-session.tsx": {
+      "sha256": "f1cbb73a28d8c113f7f9525afa16f627b73178926b59cb7838bfa894f825d4fe",
+      "bindings": [
+        "onClick"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/index.mobile.tsx": {
+      "sha256": "0188b1b2f04a767e0ccf45492dcf05bdaa6d3eb75994c868b099b038276e9860",
+      "bindings": [
+        "onClick",
+        "onKeyDown"
+      ]
+    },
+    "apps/ipkvm/upstream/ui/src/layout/index.pc.tsx": {
+      "sha256": "b6a39c08ea752bb76e277dcfe952df4a6f581cdd5146387009abb2dcbcda6327",
+      "bindings": [
+        "onClick",
+        "onKeyDown"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/ai/ai_app.c": {
+      "sha256": "cd1a7b4b6b5278748b04ad0fc082ea5b4b596612ec9786ade83d923a6f127674",
+      "bindings": [
+        "close_btn, bind_modal_close_event, LV_EVENT_CLICKED, NULL",
+        "btn, cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/ai/ai_free_chat_view.c": {
+      "sha256": "726cb76927ce61c3871395b790814910d2f8f73696a65717955ce13a4488474a",
+      "bindings": [
+        "view_root, root_event_cb, LV_EVENT_DOUBLE_CLICKED, NULL",
+        "view_root, root_event_cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/bt/bt_app.c": {
+      "sha256": "ac4dc6a9018cadd2b4422596bb29751cad3fbe5132b43f5a7c1fe2e8c9569467",
+      "bindings": [
+        "btn, name_edit_cancel_cb, LV_EVENT_CLICKED, NULL",
+        "btn, name_edit_reset_cb, LV_EVENT_CLICKED, NULL",
+        "btn, name_edit_save_cb, LV_EVENT_CLICKED, NULL",
+        "name_edit_kb, name_edit_keyboard_cb, LV_EVENT_ALL, NULL",
+        "btn, on_transport_click, LV_EVENT_CLICKED, (void *)(intptr_t)action",
+        "back_btn, on_back_click, LV_EVENT_CLICKED, NULL",
+        "slider_volume, on_slider_changed, LV_EVENT_VALUE_CHANGED, NULL",
+        "slider_volume, on_slider_changed, LV_EVENT_RELEASED, NULL",
+        "slider_volume, on_slider_changed, LV_EVENT_PRESS_LOST, NULL",
+        "details_btn, on_device_details_click, LV_EVENT_CLICKED, NULL",
+        "device_details_overlay, on_device_overlay_click, LV_EVENT_CLICKED, NULL",
+        "sheet_close, on_device_details_close, LV_EVENT_CLICKED, NULL",
+        "info_name, show_name_edit_modal, LV_EVENT_CLICKED, NULL",
+        "sw_bluetooth, on_switch_changed, LV_EVENT_VALUE_CHANGED, NULL",
+        "btn_disconnect, on_disconnect_click, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c": {
+      "sha256": "e28156769705696c133c1abda08f4cd95dd806bae2dccf776a2e1306a60eb63f",
+      "bindings": [
+        "confirm, stop_confirmed, LV_EVENT_CLICKED, box",
+        "cancel, stop_cancelled, LV_EVENT_CLICKED, box",
+        "button, callback, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/ota/ota_app.c": {
+      "sha256": "8ed8307b63e48f052adde3c030f8b88178705f2cd9efaf2a4b58077b0f4440ed",
+      "bindings": [
+        "btn, cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/setting/setting_app.c": {
+      "sha256": "ec3e0060856a36b721a7ac75146af68e6fb6aacc782db92a817d7624e108173e",
+      "bindings": [
+        "button, callback, LV_EVENT_CLICKED, (void *)value",
+        "slider, callback, LV_EVENT_VALUE_CHANGED, value_label",
+        "slider, callback, LV_EVENT_RELEASED, value_label",
+        "slider, callback, LV_EVENT_PRESS_LOST, value_label",
+        "sw, follow_time_switch_cb, LV_EVENT_VALUE_CHANGED, NULL",
+        "dot, color_event_cb, LV_EVENT_CLICKED, &preset_ids[i]",
+        "bind_code_item, bind_token_click_cb, LV_EVENT_CLICKED, NULL",
+        "preview, desktop_update_event, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/user/user_app.c": {
+      "sha256": "1dc0f19f503e62677c27b54ffe3e65b4fcd88971e5e625cbd0ad191f53b934ad",
+      "bindings": [
+        "button, action_event, LV_EVENT_CLICKED, action",
+        "button, action_delete_event, LV_EVENT_DELETE, action",
+        "button, open_entry, LV_EVENT_CLICKED, (void *)(uintptr_t)i"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/video/video_app.c": {
+      "sha256": "74f092ed0ad6628bcd98ad61ba5f4ce87adb7b351c4ff3eb3027ec7377a35024",
+      "bindings": [
+        "btn, cb, LV_EVENT_CLICKED, NULL",
+        "playlist_refresh_btn, playlist_refresh_cb, LV_EVENT_CLICKED, NULL",
+        "item, playlist_item_click_cb, LV_EVENT_CLICKED, ud",
+        "item, playlist_item_delete_cb, LV_EVENT_DELETE, ud",
+        "video_layer, screen_click_cb, LV_EVENT_CLICKED, NULL",
+        "library_btn, list_event_cb, LV_EVENT_CLICKED, NULL",
+        "progress_bar, progress_bar_event_cb, LV_EVENT_ALL, NULL",
+        "playlist_mask, playlist_mask_click_cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/wifi/wifi_app.c": {
+      "sha256": "500f854b7f842cbb7507bce882e0403383ea90108a8923a60d3cc88082e40ae6",
+      "bindings": [
+        "item, wifi_list_item_event_cb, LV_EVENT_CLICKED, ap_copy",
+        "item, free_wifi_ap_data, LV_EVENT_DELETE, ap_copy",
+        "password_modal, free_modal_data, LV_EVENT_DELETE, ssid_copy",
+        "cb_show_pass, show_password_event_cb, LV_EVENT_VALUE_CHANGED, NULL",
+        "btn_cancel, close_modal_cb, LV_EVENT_CLICKED, NULL",
+        "btn_connect, connect_click_cb, LV_EVENT_CLICKED, (void*)ssid_copy",
+        "password_kb, keyboard_event_cb, LV_EVENT_ALL, (void *)ssid_copy",
+        "sw_wlan, wlan_switch_event_cb, LV_EVENT_VALUE_CHANGED, NULL",
+        "btn_refresh, scan_click_cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/cloud_ota_modal.c": {
+      "sha256": "1609f77f86c9c60f464f2c8cc230e7f070f33bedfd77e77e69703de71ce9929b",
+      "bindings": [
+        "btn, cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/desktop_all_apps.c": {
+      "sha256": "12ec48e9ab2968e8149d85d63282e3b054bccbb13c4480d5a43f2f5ba3b564ce",
+      "bindings": [
+        "card, app_click_cb, LV_EVENT_CLICKED, (void *)entry",
+        "all_apps_grid, grid_key_cb, LV_EVENT_KEY, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/desktop_clock.c": {
+      "sha256": "187f25ecac74d240a9c1c7106098e685a4070fdd02d871a210fdba55ad9bc2a7",
+      "bindings": [
+        "button, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
+        "card, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)HOME_ACTION_AI",
+        "card, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)HOME_ACTION_HDMI",
+        "tile, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
+        "home_screen, home_screen_event_cb, LV_EVENT_SCREEN_UNLOADED, NULL",
+        "home_screen, home_screen_event_cb, LV_EVENT_SCREEN_LOADED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/desktop_dock.c": {
+      "sha256": "6125c05f5f66a8e69a53851797198ca1c515b2630ae679385f8cd41fb7d9204b",
+      "bindings": [
+        "item, nav_item_event, LV_EVENT_CLICKED, (void *)(intptr_t)index",
+        "nav_root, nav_key_event, LV_EVENT_KEY, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/desktop_status_bar.c": {
+      "sha256": "904d205c3fcdadcab6559f052bf2f6d9d2403d3994096fbdeb9a22a33f7240b6",
+      "bindings": [
+        "card, control_center_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
+        "control_center_overlay, control_center_overlay_event, LV_EVENT_CLICKED, NULL",
+        "control_center_panel, control_center_panel_event, LV_EVENT_GESTURE, NULL",
+        "control_center_hdmi_switch, on_control_center_hdmi_changed, LV_EVENT_VALUE_CHANGED, NULL",
+        "mid_col, control_center_trigger_event, LV_EVENT_CLICKED, NULL",
+        "mid_col, control_center_trigger_event, LV_EVENT_GESTURE, NULL",
+        "hdmi_switch_obj, on_hdmi_switch_changed, LV_EVENT_VALUE_CHANGED, NULL",
+        "hdmi_row, on_hdmi_row_clicked, LV_EVENT_CLICKED, NULL",
+        "hdmi_overlay_switch, on_hdmi_overlay_switch_changed, LV_EVENT_VALUE_CHANGED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/desktop_update.c": {
+      "sha256": "a60af0269292ee67b95a9ea250cc8f74155ecbd082ef0b7ba3466401d56b1e54",
+      "bindings": [
+        "overlay, cleanup, LV_EVENT_DELETE, NULL",
+        "buttons[i], action, LV_EVENT_CLICKED, (void *)operations[i]",
+        "close, close_dialog, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/mimi_ui.c": {
+      "sha256": "7cb2f36159e725ac8348b74f7e9a94769dd7fc8a06621fa03533d01b3d973db4",
+      "bindings": [
+        "back, back_cb, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/ui_components.c": {
+      "sha256": "f37f404fd4dd52edd9b186cd380a304c50ce5a9438097d601e555cca57da2d87",
+      "bindings": [
+        "back_btn, back_cb, LV_EVENT_CLICKED, NULL"
+      ]
+    }
+  },
+  "scenarios": {
+    "desktop": [
+      "topbar-hit-target",
+      "control-center",
+      "dock-routing",
+      "all-apps",
+      "back-navigation",
+      "modal-focus"
+    ],
+    "setting": [
+      "sliders-persist",
+      "language-theme",
+      "network-navigation",
+      "application-update",
+      "system-update"
+    ],
+    "wifi": [
+      "scan",
+      "wrong-password",
+      "connect",
+      "disconnect",
+      "reconnect",
+      "cancel"
+    ],
+    "bt": [
+      "enable-disable",
+      "scan-pair",
+      "rename-cancel",
+      "audio-playback",
+      "progress",
+      "reconnect"
+    ],
+    "video": [
+      "empty-library",
+      "long-name",
+      "play-pause",
+      "seek",
+      "end-of-media",
+      "remove-media"
+    ],
+    "ai": [
+      "wake-nihao-tuya",
+      "speech-recognition",
+      "speech-output",
+      "external-barge-in",
+      "reject-speaker-echo",
+      "offline-recovery"
+    ],
+    "ota": [
+      "check",
+      "download",
+      "cancel-download",
+      "apply",
+      "error",
+      "back-to-settings"
+    ],
+    "user": [
+      "empty-list",
+      "install",
+      "invalid-signature",
+      "permissions",
+      "launch-exit",
+      "upgrade-data",
+      "uninstall"
+    ],
+    "hdmi_mcp": [
+      "source-preview",
+      "hotplug",
+      "task-state",
+      "cancel",
+      "keyboard-mouse",
+      "release-on-disconnect"
+    ],
+    "web": [
+      "login",
+      "same-origin",
+      "settings",
+      "video",
+      "keyboard-mouse",
+      "blur-release",
+      "mobile-layout",
+      "apps",
+      "update"
+    ]
+  },
+  "required_states": [
+    "normal",
+    "loading",
+    "empty",
+    "error",
+    "long-text",
+    "repeat-operation"
+  ],
+  "variants": [
+    "zh-light",
+    "zh-dark",
+    "en-light",
+    "en-dark"
+  ],
+  "note": "Inventory only. Physical results require separate artifact-bound evidence."
+}

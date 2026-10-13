@@ -8,6 +8,15 @@
     "schema": {"enum": [1, 2]},
     "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$", "maxLength": 96},
     "name": {"type": "string", "minLength": 1, "maxLength": 48},
+    "localizations": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "zh-CN": {"$ref": "#/definitions/localization"},
+        "en-US": {"$ref": "#/definitions/localization"}
+      }
+    },
     "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "publisher": {"type": "string", "pattern": "^[a-zA-Z0-9._-]{1,64}$"},
     "ui": {
@@ -46,6 +55,17 @@
         "type": {"const": "native-rpc"},
         "entry": {"type": "string", "pattern": "^bin/[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"},
         "api": {"const": 1}
+      }
+    }
+  },
+  "definitions": {
+    "localization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "uiEntry"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 48},
+        "uiEntry": {"type": "string", "pattern": "^ui/[a-zA-Z0-9._/-]+\\.json$"}
       }
     }
   },

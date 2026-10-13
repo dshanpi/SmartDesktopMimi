@@ -1,5 +1,9 @@
 # 编译与发布
 
+统一门禁见 [MIMI-UPDATE-001](../application-update-policy.md)。下列打包/烧录命令属于
+现有 A133 系统发布流程；独立应用发布不得强制重建系统镜像。跨板型、接口与运行库
+匹配必须在打包、发布和设备安装三处校验，独立应用更新工具尚待实现。
+
 ## 环境准备
 
 主机安装 Git、Python 3、Make、CMake、rsync、squashfs-tools、e2fsprogs 及厂商 SDK

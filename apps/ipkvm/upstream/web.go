@@ -95,7 +95,8 @@ func setupRouter() *gin.Engine {
 			return *ginLogger
 		}),
 	))
-	staticFS, _ := fs.Sub(staticFiles, "static")
+	embeddedFS, _ := fs.Sub(staticFiles, "static")
+	var staticFS fs.FS = desktopAssetFS{fallback: embeddedFS, selectRoot: selectedDesktopWebRoot}
 
 	if !isPlatformMode() {
 		r.Any("/debug/pprof/*any", gin.WrapH(http.DefaultServeMux))
@@ -190,6 +191,9 @@ func setupRouter() *gin.Engine {
 		protected.PUT("/auth/password-local", handleUpdatePassword)
 		protected.POST("/api/rpc", handleRpcRequest)
 		if isPlatformMode() {
+			protected.GET("/api/desktop-update/:operation", handleDesktopUpdate)
+			protected.POST("/api/desktop-update/:operation", handleDesktopUpdate)
+			protected.PUT("/api/desktop-update/:operation", handleDesktopUpdate)
 			protected.GET("/api/apps", handleAppList)
 			protected.POST("/api/apps/install", handleAppInstall)
 			protected.DELETE("/api/apps/:id", handleAppRemove)
@@ -631,6 +635,7 @@ func basicAuthProtectedMiddleware(requireDeveloperMode bool) gin.HandlerFunc {
 }
 
 func RunWebServer() {
+	startDesktopUpdateHealth()
 	logger.Info().Msg("=== RunWebServer START ===")
 	r := setupRouter()
 	logger.Info().Msg("=== Router created ===")

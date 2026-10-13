@@ -37,7 +37,7 @@ jobs:
       - name: Install host build prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install --yes adb libcurl4-openssl-dev libjson-c-dev
+          sudo apt-get install --yes adb cpio openssl e2fsprogs libcurl4-openssl-dev libjson-c-dev
 
       - name: Validate architecture and public boundary
         run: |
@@ -69,6 +69,17 @@ jobs:
         run: |
           go test ./...
           go test -race ./...
+
+      - name: Validate application and system update gates
+        run: |
+          python3 tools/update/check_contracts.py
+          cd services/mimi-update
+          go vet ./...
+          go test -race ./...
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o "$RUNNER_TEMP/mimi-update-a133" ./cmd/mimi-update
+          go build -trimpath -o "$RUNNER_TEMP/mimi-release-checker" ./cmd/mimi-update
+          cd ../..
+          python3 -m unittest discover -s tests/update -v
 
       - name: Audit the public tree and deterministic SBOM
         run: |

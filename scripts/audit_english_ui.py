@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject Han characters in strings rendered by the en-US LVGL product UI."""
+"""Reject unlocalized Han strings in the bilingual LVGL product UI."""
 
 from pathlib import Path
 import re
@@ -21,6 +21,17 @@ ALLOWED_COMPATIBILITY_LITERALS = {
         "助手:",
     },
 }
+
+BILINGUAL_CATALOG = "apps/lv_port_linux/src/ui/ui_i18n.c"
+ASCII_COPY = re.compile(r'"[^"\n]*[A-Za-z][^"\n]*"')
+
+
+def is_explicit_bilingual_branch(lines, line_number: int) -> bool:
+    """Accept nearby `ui_i18n_is_zh() ? zh : en` copy, including wraps."""
+    start = max(0, line_number - 11)
+    end = min(len(lines), line_number + 10)
+    window = "\n".join(lines[start:end])
+    return "ui_i18n_is_zh()" in window and ASCII_COPY.search(window) is not None
 
 
 def c_string_literals(source: str):
@@ -98,17 +109,23 @@ def main() -> int:
         relative = path.relative_to(REPO).as_posix()
         allowed = ALLOWED_COMPATIBILITY_LITERALS.get(relative, set())
         source = path.read_text(encoding="utf-8")
+        lines = source.splitlines()
         for line, literal in c_string_literals(source):
-            if HAN.search(literal) and literal not in allowed:
+            if not HAN.search(literal) or literal in allowed:
+                continue
+            if relative == BILINGUAL_CATALOG or \
+                    is_explicit_bilingual_branch(lines, line):
+                continue
+            if HAN.search(literal):
                 violations.append((relative, line, literal))
 
     if violations:
-        print("English UI audit failed; Han text remains in shipping string literals:", file=sys.stderr)
+        print("Bilingual UI audit failed; unlocalized Han text remains in shipping string literals:", file=sys.stderr)
         for relative, line, literal in violations:
             print(f"  {relative}:{line}: {literal}", file=sys.stderr)
         return 1
 
-    print("English UI audit: PASS (en-US; legacy speaker-prefix parsers allowlisted)")
+    print("Bilingual UI audit: PASS (zh-CN/en-US catalog and explicit fallbacks)")
     return 0
 
 

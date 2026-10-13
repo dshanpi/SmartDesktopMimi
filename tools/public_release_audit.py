@@ -18,6 +18,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_PATHS = (
+    re.compile(r"^\.delivery(?:/|$).*"),
     re.compile(r"^third_party/100ask-iot-sdk/.*"),
     re.compile(r"(^|/)factory-assistant-v1/(02-|03-|data/).*"),
     re.compile(r"(^|/)100ask_keys/.*"),

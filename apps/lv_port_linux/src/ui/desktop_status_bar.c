@@ -2,6 +2,7 @@
 #include "ui_helpers.h"
 #include "theme/theme.h"
 #include "desktop_home_tokens.h"
+#include "ui_i18n.h"
 #include "../system/app_manager.h"
 #include "../system/settings.h"
 #include "../system/backend_types.h"
@@ -14,10 +15,10 @@ LV_IMAGE_DECLARE(wireless_network_wifi);
 LV_IMAGE_DECLARE(cloud);
 
 /* 顶栏布局尺寸 */
-#define HDMI_MODE_ROW_WIDTH 228
+#define HDMI_MODE_ROW_WIDTH 252
 #define HDMI_MODE_ROW_HEIGHT 36
-#define HDMI_MODE_LABEL_WIDTH 152
-#define TOP_STATUS_GROUP_WIDTH 242
+#define HDMI_MODE_LABEL_WIDTH 178
+#define TOP_STATUS_GROUP_WIDTH 232
 #define TOP_POWER_LABEL_WIDTH 300
 #define CONTROL_CENTER_WIDTH 976
 #define CONTROL_CENTER_HEIGHT 344
@@ -242,7 +243,7 @@ static void control_center_build(void)
                         LV_EVENT_GESTURE, NULL);
 
     lv_obj_t *title = lv_label_create(control_center_panel);
-    lv_label_set_text(title, "Control Center");
+    lv_label_set_text(title, ui_tr(UI_STR_CONTROL_CENTER));
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 4, 2);
     lv_obj_set_style_text_font(title, ui_font_h2(), 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0xFFFFFF), 0);
@@ -266,7 +267,8 @@ static void control_center_build(void)
                           LV_FLEX_ALIGN_CENTER);
 
     control_center_wifi_detail =
-        control_center_create_card(cards, "NETWORK", "Wi-Fi", "Not connected",
+        control_center_create_card(cards, ui_i18n_is_zh() ? "网络" : "Network",
+                                   ui_tr(UI_STR_APP_WIFI), ui_tr(UI_STR_NOT_CONNECTED),
                                    lv_color_hex(0x4CB8FF),
                                    CONTROL_CENTER_ACTION_WIFI);
 
@@ -281,13 +283,13 @@ static void control_center_build(void)
     lv_obj_clear_flag(hdmi_card, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *hdmi_eyebrow = lv_label_create(hdmi_card);
-    lv_label_set_text(hdmi_eyebrow, "VIDEO INPUT");
+    lv_label_set_text(hdmi_eyebrow, ui_i18n_is_zh() ? "视频输入" : "Video input");
     lv_obj_align(hdmi_eyebrow, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_text_font(hdmi_eyebrow, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(hdmi_eyebrow, lv_color_hex(0xAEB7CB), 0);
 
     lv_obj_t *hdmi_title = lv_label_create(hdmi_card);
-    lv_label_set_text(hdmi_title, "HDMI Display");
+    lv_label_set_text(hdmi_title, ui_tr(UI_STR_HDMI_DISPLAY));
     lv_obj_align(hdmi_title, LV_ALIGN_LEFT_MID, 0, -4);
     lv_obj_set_style_text_font(hdmi_title, ui_font_h2(), 0);
     lv_obj_set_style_text_color(hdmi_title, lv_color_hex(0xFFFFFF), 0);
@@ -306,10 +308,12 @@ static void control_center_build(void)
                         on_control_center_hdmi_changed,
                         LV_EVENT_VALUE_CHANGED, NULL);
 
-    control_center_create_card(cards, "APPS", "User Apps", "Install and open apps",
+    control_center_create_card(cards, ui_i18n_is_zh() ? "应用" : "Apps",
+                               ui_tr(UI_STR_APP_USER), ui_tr(UI_STR_CONTROL_APPS_HINT),
                                lv_color_hex(0x42D3B0),
                                CONTROL_CENTER_ACTION_USER_APPS);
-    control_center_create_card(cards, "SYSTEM", "Settings", "Display, sound, and theme",
+    control_center_create_card(cards, ui_i18n_is_zh() ? "系统" : "System",
+                               ui_tr(UI_STR_APP_SETTINGS), ui_tr(UI_STR_CONTROL_SETTINGS_HINT),
                                lv_color_hex(0xA78BFA),
                                CONTROL_CENTER_ACTION_SETTINGS);
 
@@ -333,12 +337,13 @@ static void control_center_show(void)
 
     if (control_center_wifi_detail) {
         if (wifi_connected && wifi_connected_ssid[0]) {
-            lv_label_set_text_fmt(control_center_wifi_detail, "Connected\n%s",
+            lv_label_set_text_fmt(control_center_wifi_detail,
+                                  ui_i18n_is_zh() ? "已连接\n%s" : "Connected\n%s",
                                   wifi_connected_ssid);
         } else if (!wifi_runtime_enabled) {
-            lv_label_set_text(control_center_wifi_detail, "Wi-Fi is off");
+            lv_label_set_text(control_center_wifi_detail, ui_tr(UI_STR_WIFI_OFF));
         } else {
-            lv_label_set_text(control_center_wifi_detail, "Not connected");
+            lv_label_set_text(control_center_wifi_detail, ui_tr(UI_STR_NOT_CONNECTED));
         }
     }
     if (control_center_power_detail && power_label) {
@@ -381,18 +386,20 @@ static void control_center_trigger_event(lv_event_t *event)
 void ui_statusbar_create(lv_obj_t *parent)
 {
     lv_obj_t *bar = lv_obj_create(parent);
-    lv_obj_set_size(bar, HOME_CONTENT_W, HOME_STATUS_H);
+    lv_obj_set_size(bar, 1024, HOME_STATUS_H);
+    lv_obj_set_pos(bar, 0, 0);
     lv_obj_clear_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_radius(bar, 18, 0);
-    lv_obj_set_style_bg_color(bar, lv_color_hex(0x101620), 0);
+    lv_obj_set_style_radius(bar, 0, 0);
+    lv_obj_set_style_bg_color(bar, HOME_SURFACE_RAISED, 0);
     lv_obj_set_style_bg_opa(bar, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(bar, 1, 0);
+    lv_obj_set_style_border_side(bar, LV_BORDER_SIDE_BOTTOM, 0);
     lv_obj_set_style_border_color(bar, HOME_BORDER, 0);
     lv_obj_set_style_border_opa(bar, LV_OPA_COVER, 0);
     lv_obj_set_style_shadow_color(bar, lv_color_black(), 0);
-    lv_obj_set_style_shadow_opa(bar, LV_OPA_30, 0);
-    lv_obj_set_style_shadow_width(bar, 10, 0);
-    lv_obj_set_style_shadow_offset_y(bar, 4, 0);
+    lv_obj_set_style_shadow_opa(bar, LV_OPA_10, 0);
+    lv_obj_set_style_shadow_width(bar, 0, 0);
+    lv_obj_set_style_shadow_offset_y(bar, 3, 0);
     lv_obj_set_style_pad_hor(bar, 24, 0);
     lv_obj_set_style_pad_top(bar, 0, 0);
     lv_obj_set_style_pad_bottom(bar, 0, 0);
@@ -453,7 +460,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_set_size(wifi_icon_obj, 34, 34);
     lv_image_set_inner_align(wifi_icon_obj, LV_IMAGE_ALIGN_CONTAIN);
     lv_image_set_scale(wifi_icon_obj, LV_SCALE_NONE);
-    lv_obj_set_style_image_recolor(wifi_icon_obj, lv_color_hex(0xF7F8FC), 0);
+    lv_obj_set_style_image_recolor(wifi_icon_obj, HOME_TEXT, 0);
     lv_obj_set_style_image_recolor_opa(wifi_icon_obj, LV_OPA_COVER, 0);
     lv_obj_center(wifi_icon_obj);
 
@@ -474,7 +481,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_image_set_src(cloud_icon_obj, &cloud);
     lv_obj_set_size(cloud_icon_obj, 40, 40);
     lv_image_set_inner_align(cloud_icon_obj, LV_IMAGE_ALIGN_CONTAIN);
-    lv_obj_set_style_image_recolor(cloud_icon_obj, lv_color_hex(0xF7F8FC), 0);
+    lv_obj_set_style_image_recolor(cloud_icon_obj, HOME_TEXT, 0);
     lv_obj_set_style_image_recolor_opa(cloud_icon_obj, LV_OPA_COVER, 0);
     lv_obj_align(cloud_icon_obj, LV_ALIGN_TOP_MID, 0, 2);
 
@@ -484,7 +491,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_set_style_bg_color(cloud_status_dot_obj, lv_color_hex(0xA6B2BA), 0);
     lv_obj_set_style_bg_opa(cloud_status_dot_obj, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(cloud_status_dot_obj, 1, 0);
-    lv_obj_set_style_border_color(cloud_status_dot_obj, lv_color_hex(0x303548), 0);
+    lv_obj_set_style_border_color(cloud_status_dot_obj, HOME_SURFACE_RAISED, 0);
     lv_obj_set_style_border_opa(cloud_status_dot_obj, LV_OPA_COVER, 0);
     lv_obj_set_style_pad_all(cloud_status_dot_obj, 0, 0);
     lv_obj_clear_flag(cloud_status_dot_obj, LV_OBJ_FLAG_SCROLLABLE);
@@ -495,7 +502,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_set_size(cloud_progress_track_obj, 40, 3);
     lv_obj_align(cloud_progress_track_obj, LV_ALIGN_BOTTOM_MID, 0, -1);
     lv_obj_set_style_radius(cloud_progress_track_obj, 2, 0);
-    lv_obj_set_style_bg_color(cloud_progress_track_obj, lv_color_hex(0x464C61), 0);
+    lv_obj_set_style_bg_color(cloud_progress_track_obj, HOME_BORDER, 0);
     lv_obj_set_style_bg_opa(cloud_progress_track_obj, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(cloud_progress_track_obj, 0, 0);
     lv_obj_set_style_pad_all(cloud_progress_track_obj, 0, 0);
@@ -555,8 +562,8 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_set_size(pull_handle, 40, 4);
     lv_obj_align(pull_handle, LV_ALIGN_BOTTOM_MID, 0, -5);
     lv_obj_set_style_radius(pull_handle, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(pull_handle, lv_color_hex(0xAEB7CB), 0);
-    lv_obj_set_style_bg_opa(pull_handle, LV_OPA_70, 0);
+    lv_obj_set_style_bg_color(pull_handle, HOME_TEXT_MUTED, 0);
+    lv_obj_set_style_bg_opa(pull_handle, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(pull_handle, 0, 0);
     lv_obj_set_style_pad_all(pull_handle, 0, 0);
     lv_obj_clear_flag(pull_handle, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
@@ -596,14 +603,14 @@ void ui_statusbar_create(lv_obj_t *parent)
     apply_debug_outline(hdmi_row, lv_color_hex(0x3A86FF));
 
     lv_obj_t *hdmi_label = lv_label_create(hdmi_row);
-    lv_label_set_text(hdmi_label, "Display Mode");
+    lv_label_set_text(hdmi_label, ui_tr(UI_STR_DISPLAY_MODE));
     lv_label_set_long_mode(hdmi_label, LV_LABEL_LONG_CLIP);
     lv_obj_set_width(hdmi_label, HDMI_MODE_LABEL_WIDTH);
     lv_obj_set_style_min_width(hdmi_label, HDMI_MODE_LABEL_WIDTH, 0);
-    lv_obj_set_style_text_color(hdmi_label, lv_color_hex(0xF7F8FC), 0);
+    lv_obj_set_style_text_color(hdmi_label, HOME_TEXT, 0);
     /* 用带 CJK 的主题字体：font_interdisplay_regular_36 只含 ASCII（range 32-126），
      * 渲染中文会乱码。顶栏中文文字须用 ui_font_* 系列。 */
-    lv_obj_set_style_text_font(hdmi_label, ui_font_h3(), 0);
+    lv_obj_set_style_text_font(hdmi_label, ui_font_body_md(), 0);
     lv_obj_set_style_text_opa(hdmi_label, LV_OPA_90, 0);
     lv_obj_clear_flag(hdmi_label, LV_OBJ_FLAG_CLICKABLE);
 
@@ -758,6 +765,7 @@ static void hdmi_overlay_build(lv_obj_t *screen)
     lv_obj_set_style_bg_color(bar, lv_color_hex(0x303548), 0);
     lv_obj_set_style_bg_opa(bar, LV_OPA_80, 0);
     lv_obj_set_style_border_width(bar, 1, 0);
+    lv_obj_set_style_border_side(bar, LV_BORDER_SIDE_BOTTOM, 0);
     lv_obj_set_style_border_color(bar, lv_color_hex(0x464C61), 0);
     lv_obj_set_style_pad_hor(bar, 14, 0);
     lv_obj_set_style_pad_ver(bar, 0, 0);
@@ -771,7 +779,7 @@ static void hdmi_overlay_build(lv_obj_t *screen)
                           LV_FLEX_ALIGN_CENTER);
 
     lv_obj_t *label = lv_label_create(bar);
-    lv_label_set_text(label, "Display Mode");
+    lv_label_set_text(label, ui_tr(UI_STR_DISPLAY_MODE));
     lv_obj_set_style_text_font(label, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(label, lv_color_hex(0xF7F8FC), 0);
     lv_obj_clear_flag(label, LV_OBJ_FLAG_CLICKABLE);

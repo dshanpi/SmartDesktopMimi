@@ -46,7 +46,7 @@ cd /home/ubuntu/AI-DeskTopBox
    （每次新鲜副本，保留 `.venv` 复用）。**不再打补丁**--定制已在 vendored 源里。
 2. 将 `vendor/tuyaopen-a133-b6-libs/` 注入到 `platform/LINUX/tuyaos_adapter/src/tkl_audio/`。
 3. 复制 `build_a133.sh`、`README_A133_B6.md`、`A133_B6.config` 到 chatbot app。
-4. 注入本地凭据到 `tuya_config.h`。
+4. 注入 A133 构建配置；设备凭据仍只在量产阶段写入运行时保护目录。
 5. source `export.sh`，用本地 `.tools`（uv 0.11.18 + python 3.12.13）建 `.venv`（不下载）。
 
 可覆盖构建副本位置：
@@ -116,6 +116,11 @@ vendor/tuyaopen-a133-b6-libs/models/       -> platform/LINUX/.../models/
 Tuya 聊天机器人运行时需要真实设备凭据（UUID + AuthKey）才能连上 Tuya MQTT
 （`m2.tuyacn.com:8883`）。量产固件不得包含固定凭据：每台设备使用涂鸦平台分配的
 唯一 UUID/AuthKey，在产线阶段写入持久化工厂目录。
+
+UUID/AuthKey 不只用于 AI 对话，同一条 Tuya MQTT 会话也承载设备 DP。固件已实现控制、
+状态回报、重连同步、持久化和解绑复位；扩展 DP 只有在当前 PID Schema 中存在且类型匹配时
+才会上报。完整 DP 表和涂鸦平台配置要求见
+[Tuya 设备物联 DP Schema](tuya-iot-dp-schema.md)。
 
 ### 固件与运行时行为
 

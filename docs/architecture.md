@@ -1,5 +1,9 @@
 # AITVBox 运行时架构
 
+后续应用/底层分离、A133 与 T527/RK3576 接入和更新兼容性统一遵循
+[MIMI-UPDATE-001](application-update-policy.md)。A527 与 T527 不默认等价；本文中的
+历史迁移记录不代表新平台或独立桌面更新已经通过验收。
+
 > 当前完整中文架构说明见 [zh-CN/architecture.md](zh-CN/architecture.md)，英文版见 [en/architecture.md](en/architecture.md)。本文件保留第一阶段迁移记录。
 
 本文冻结目标依赖方向，并记录第一步迁移结果。这里的“分层”首先指源码职责和

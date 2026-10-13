@@ -15,38 +15,43 @@ static const ui_theme_t theme_light = {
     .name = "Light",
     
     /* Backgrounds */
-    .bg_default = LV_COLOR_MAKE(0xF0, 0xF1, 0xF4),
-    .bg_card = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .bg_inverse = LV_COLOR_MAKE(0x30, 0x35, 0x48),
-    .bg_desktop = LV_COLOR_MAKE(0xE8, 0xEC, 0xF1),
+    .bg_default = LV_COLOR_MAKE(0xF3, 0xF1, 0xEA),
+    .bg_card = LV_COLOR_MAKE(0xFF, 0xFE, 0xFA),
+    .bg_inverse = LV_COLOR_MAKE(0x20, 0x29, 0x33),
+    .bg_desktop = LV_COLOR_MAKE(0xEA, 0xEE, 0xE9),
+    .bg_elevated = LV_COLOR_MAKE(0xFF, 0xFE, 0xFA),
+    .bg_scrim = LV_COLOR_MAKE(0x18, 0x21, 0x2A),
     
     /* Text */
-    .text_primary = LV_COLOR_MAKE(0x27, 0x2C, 0x37),
-    .text_secondary = LV_COLOR_MAKE(0x74, 0x7B, 0x89),
+    .text_primary = LV_COLOR_MAKE(0x20, 0x29, 0x33),
+    .text_secondary = LV_COLOR_MAKE(0x68, 0x72, 0x76),
     .text_inverse = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .text_accent = LV_COLOR_MAKE(0x59, 0x6B, 0xC8),
+    .text_accent = LV_COLOR_MAKE(0xD9, 0x68, 0x52),
     
     /* Borders */
-    .border_default = LV_COLOR_MAKE(0xD8, 0xDD, 0xE6),
-    .border_focus = LV_COLOR_MAKE(0x59, 0x6B, 0xC8),
+    .border_default = LV_COLOR_MAKE(0xD8, 0xDD, 0xD8),
+    .border_focus = LV_COLOR_MAKE(0xD9, 0x68, 0x52),
     
     /* Status */
-    .color_primary = LV_COLOR_MAKE(0x59, 0x6B, 0xC8),
-    .color_secondary = LV_COLOR_MAKE(0x6B, 0x79, 0xD3),
+    .color_primary = LV_COLOR_MAKE(0xD9, 0x68, 0x52),
+    .color_secondary = LV_COLOR_MAKE(0x4D, 0x7F, 0xE8),
+    .color_success = LV_COLOR_MAKE(0x43, 0xA8, 0x91),
+    .color_warning = LV_COLOR_MAKE(0xD9, 0x98, 0x35),
+    .color_error = LV_COLOR_MAKE(0xC8, 0x4F, 0x60),
     
     /* Shadows */
     .shadow_default = LV_COLOR_MAKE(0x77, 0x81, 0x93),
     
     /* Desktop Specifics */
-    .desktop_card_bg = LV_COLOR_MAKE(0xFA, 0xFA, 0xF7),
-    .desktop_dock_bg = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .desktop_text_main = LV_COLOR_MAKE(0x31, 0x37, 0x46),
+    .desktop_card_bg = LV_COLOR_MAKE(0xFF, 0xFE, 0xFA),
+    .desktop_dock_bg = LV_COLOR_MAKE(0xF8, 0xF6, 0xEF),
+    .desktop_text_main = LV_COLOR_MAKE(0x20, 0x29, 0x33),
     .desktop_border = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
     .dock_app_border = LV_COLOR_MAKE(0xDD, 0xE1, 0xE8),
 
     /* Solid hardware surface with a restrained highlight gradient. */
-    .glass_bg = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .glass_bg_grad = LV_COLOR_MAKE(0xF7, 0xF8, 0xFB),
+    .glass_bg = LV_COLOR_MAKE(0xFF, 0xFE, 0xFA),
+    .glass_bg_grad = LV_COLOR_MAKE(0xF4, 0xF2, 0xEB),
     .glass_border = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
     .glass_outline = LV_COLOR_MAKE(0xE0, 0xE3, 0xEA),
     .glass_shadow = LV_COLOR_MAKE(0x7C, 0x85, 0x96),
@@ -61,24 +66,29 @@ static const ui_theme_t theme_dark = {
     .name = "Dark",
     
     /* Backgrounds */
-    .bg_default = LV_COLOR_MAKE(0x12, 0x12, 0x12), 
-    .bg_card = LV_COLOR_MAKE(0x1E, 0x1E, 0x1E),
+    .bg_default = LV_COLOR_MAKE(0x12, 0x19, 0x20),
+    .bg_card = LV_COLOR_MAKE(0x1C, 0x25, 0x2E),
     .bg_inverse = LV_COLOR_MAKE(0xFA, 0xFA, 0xFA),
-    .bg_desktop = LV_COLOR_MAKE(0x0F, 0x0F, 0x13),
+    .bg_desktop = LV_COLOR_MAKE(0x10, 0x17, 0x1E),
+    .bg_elevated = LV_COLOR_MAKE(0x26, 0x31, 0x3B),
+    .bg_scrim = LV_COLOR_MAKE(0x00, 0x00, 0x00),
     
     /* Text */
     .text_primary = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .text_secondary = LV_COLOR_MAKE(0xAA, 0xAA, 0xAA),
+    .text_secondary = LV_COLOR_MAKE(0xA8, 0xB3, 0xB8),
     .text_inverse = LV_COLOR_MAKE(0x12, 0x12, 0x12),
-    .text_accent = LV_COLOR_MAKE(0x00, 0xE5, 0xFF), // Brighter Cyan
+    .text_accent = LV_COLOR_MAKE(0xFF, 0x9A, 0x75),
     
     /* Borders */
-    .border_default = LV_COLOR_MAKE(0x33, 0x33, 0x33),
-    .border_focus = LV_COLOR_MAKE(0x00, 0xE5, 0xFF),
+    .border_default = LV_COLOR_MAKE(0x36, 0x43, 0x4D),
+    .border_focus = LV_COLOR_MAKE(0xFF, 0x9A, 0x75),
     
     /* Status */
-    .color_primary = LV_COLOR_MAKE(0x00, 0xE5, 0xFF),
-    .color_secondary = LV_COLOR_MAKE(0x5C, 0x7C, 0xFA),
+    .color_primary = LV_COLOR_MAKE(0xFF, 0x9A, 0x75),
+    .color_secondary = LV_COLOR_MAKE(0x79, 0xA0, 0xFF),
+    .color_success = LV_COLOR_MAKE(0x62, 0xC9, 0xAE),
+    .color_warning = LV_COLOR_MAKE(0xF0, 0xB6, 0x59),
+    .color_error = LV_COLOR_MAKE(0xEE, 0x72, 0x82),
     
     /* Shadows */
     .shadow_default = LV_COLOR_MAKE(0x00, 0x00, 0x00),
@@ -138,6 +148,8 @@ static uint32_t active_gradient_preset_id = 0U;
 static bool gradients_inited = false;
 static lv_timer_t *time_follow_timer = NULL;
 static int last_synced_hour = -1;
+static int last_appearance_hour = -1;
+static uint32_t theme_generation = 1U;
 
 /* =======================
  *  SHARED STYLES
@@ -150,6 +162,31 @@ static lv_style_t style_text_accent;
 static lv_style_t style_bg_desktop;
 static lv_style_t style_glass_card;
 static bool inited = false;
+
+static bool appearance_should_be_dark(sys_appearance_mode_t mode, int hour)
+{
+    if (mode == SYS_APPEARANCE_DARK) return true;
+    if (mode == SYS_APPEARANCE_LIGHT) return false;
+    return hour < 7 || hour >= 19;
+}
+
+static void refresh_shared_styles(void)
+{
+    if (!inited) return;
+    lv_style_set_bg_color(&style_card, current_theme->bg_card);
+    lv_style_set_shadow_color(&style_card, current_theme->shadow_default);
+    lv_style_set_bg_color(&style_slider_main, current_theme->border_default);
+    lv_style_set_bg_color(&style_slider_indicator, current_theme->color_primary);
+    lv_style_set_bg_color(&style_slider_knob, current_theme->color_primary);
+    lv_style_set_text_color(&style_text_accent, current_theme->text_accent);
+    lv_style_set_bg_color(&style_bg_desktop, current_theme->bg_desktop);
+    lv_style_set_bg_grad_color(&style_bg_desktop, current_theme->bg_default);
+    lv_style_set_bg_color(&style_glass_card, current_theme->glass_bg);
+    lv_style_set_bg_grad_color(&style_glass_card, current_theme->glass_bg_grad);
+    lv_style_set_border_color(&style_glass_card, current_theme->glass_border);
+    lv_style_set_outline_color(&style_glass_card, current_theme->glass_outline);
+    lv_style_set_shadow_color(&style_glass_card, current_theme->glass_shadow);
+}
 
 /* =======================
  *  IMPLEMENTATION
@@ -347,6 +384,7 @@ bool ui_theme_sync_time_of_day(bool force)
 static void time_follow_timer_cb(lv_timer_t *timer)
 {
     (void)timer;
+    ui_theme_sync_appearance(false);
     ui_theme_sync_time_of_day(false);
 }
 
@@ -355,8 +393,13 @@ void ui_theme_init(void) {
 
     init_gradient_descriptors();
 
-    /* Initialize active theme with default (Light) */
-    memcpy(&active_theme, &theme_light, sizeof(ui_theme_t));
+    time_t now = time(NULL);
+    struct tm tm_now;
+    int hour = localtime_r(&now, &tm_now) ? tm_now.tm_hour : 12;
+    bool dark = appearance_should_be_dark(
+        (sys_appearance_mode_t)sys_settings_get()->appearance_mode, hour);
+    memcpy(&active_theme, dark ? &theme_dark : &theme_light,
+           sizeof(ui_theme_t));
 
     /* Load persistent color from settings (may be overridden by follow-time). */
     sys_settings_t *settings = sys_settings_get();
@@ -405,7 +448,7 @@ void ui_theme_init(void) {
     /* Keep the desktop neutral. The selected theme color is an interaction accent,
      * not a full-screen tint. */
     lv_style_set_bg_color(&style_bg_desktop, current_theme->bg_desktop);
-    lv_style_set_bg_grad_color(&style_bg_desktop, lv_color_hex(0xDDE3EA));
+    lv_style_set_bg_grad_color(&style_bg_desktop, current_theme->bg_default);
     lv_style_set_bg_grad_dir(&style_bg_desktop, LV_GRAD_DIR_VER);
     lv_style_set_bg_grad_opa(&style_bg_desktop, LV_OPA_COVER);
     lv_style_set_bg_opa(&style_bg_desktop, LV_OPA_COVER);
@@ -429,6 +472,12 @@ void ui_theme_init(void) {
 
     inited = true;
 
+    apply_gradient_preset_to_theme(settings->theme_preset_id);
+    refresh_shared_styles();
+    lv_theme_default_init(NULL, active_theme.color_primary,
+                          active_theme.color_secondary, dark,
+                          LV_FONT_DEFAULT);
+
     /* Apply time-of-day accent if enabled, then poll each minute. */
     ui_theme_sync_time_of_day(true);
     if (!time_follow_timer) {
@@ -442,31 +491,57 @@ void ui_theme_set(const char * theme_name) {
     } else {
         memcpy(&active_theme, &theme_light, sizeof(ui_theme_t));
     }
-    // Note: To fully support runtime switching, we would need to:
-    // 1. Re-initialize styles (or use theme callbacks)
-    // 2. Invalidate all objects to trigger redraw
-    // For now, this just sets the state for new objects or manual refresh.
-    
-    // Simple style update for shared styles
-    if (inited) {
-        lv_style_set_bg_color(&style_card, current_theme->bg_card);
-        lv_style_set_shadow_color(&style_card, current_theme->shadow_default);
-        lv_style_set_bg_color(&style_slider_main, current_theme->border_default);
-        lv_style_set_bg_color(&style_slider_indicator, current_theme->color_primary);
-        lv_style_set_bg_color(&style_slider_knob, current_theme->color_primary);
-        lv_style_set_text_color(&style_text_accent, current_theme->text_accent);
-        lv_style_set_bg_color(&style_bg_desktop, current_theme->bg_desktop);
-
-        /* Glass card colors follow theme */
-        lv_style_set_bg_color(&style_glass_card, current_theme->glass_bg);
-        lv_style_set_bg_grad_color(&style_glass_card, current_theme->glass_bg_grad);
-        lv_style_set_border_color(&style_glass_card, current_theme->glass_border);
-        lv_style_set_outline_color(&style_glass_card, current_theme->glass_outline);
-        lv_style_set_shadow_color(&style_glass_card, current_theme->glass_shadow);
-    }
+    apply_gradient_preset_to_theme(sys_settings_get()->theme_preset_id);
+    bool is_dark = (strcmp(active_theme.name, "Dark") == 0);
+    lv_theme_default_init(NULL, active_theme.color_primary,
+                          active_theme.color_secondary, is_dark,
+                          LV_FONT_DEFAULT);
+    refresh_shared_styles();
+    theme_generation++;
 
     /* Trigger full redraw so shared styles (desktop bg, glass cards, sliders) repaint. */
     lv_obj_invalidate(lv_scr_act());
+}
+
+sys_appearance_mode_t ui_theme_get_appearance(void)
+{
+    return (sys_appearance_mode_t)sys_settings_get()->appearance_mode;
+}
+
+bool ui_theme_is_dark(void)
+{
+    return strcmp(active_theme.name, "Dark") == 0;
+}
+
+uint32_t ui_theme_generation(void) { return theme_generation; }
+
+bool ui_theme_sync_appearance(bool force)
+{
+    time_t now = time(NULL);
+    struct tm tm_now;
+    if (!localtime_r(&now, &tm_now)) return false;
+    sys_appearance_mode_t mode = ui_theme_get_appearance();
+    bool dark = appearance_should_be_dark(mode, tm_now.tm_hour);
+    if (!force && last_appearance_hour == tm_now.tm_hour &&
+        dark == ui_theme_is_dark()) return false;
+    last_appearance_hour = tm_now.tm_hour;
+    if (dark == ui_theme_is_dark()) return false;
+    ui_theme_set(dark ? "Dark" : "Light");
+    return true;
+}
+
+void ui_theme_set_appearance(sys_appearance_mode_t mode)
+{
+    if (mode < SYS_APPEARANCE_AUTO || mode > SYS_APPEARANCE_DARK)
+        mode = SYS_APPEARANCE_AUTO;
+    sys_settings_t *settings = sys_settings_get();
+    settings->appearance_mode = (uint32_t)mode;
+    sys_settings_save();
+    last_appearance_hour = -1;
+    if (!ui_theme_sync_appearance(true)) {
+        theme_generation++;
+        if (lv_scr_act()) lv_obj_invalidate(lv_scr_act());
+    }
 }
 
 void ui_theme_set_color_primary(lv_color_t color) {

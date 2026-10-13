@@ -80,7 +80,8 @@ typedef struct {
         VIDEO_CMD_NEXT,         /* 下一首 (由后端维护列表) */
         VIDEO_CMD_PREV,         /* 上一首 */
         VIDEO_CMD_SCAN_FILES,   /* 扫描文件 */
-        VIDEO_CMD_SET_RECT      /* 设置显示区域 */
+        VIDEO_CMD_SET_RECT,     /* 设置显示区域 */
+        VIDEO_CMD_GET_STATUS    /* App updater: read-only status, append-only V1 command */
     } action;
     int32_t val;                /* 通用参数: seek秒数, 播放索引 */
     char path[256];             /* 路径参数 (可选) */
@@ -213,6 +214,9 @@ typedef struct {
     bool bt_paused_by_ai;
     bool tuya_bound;
     bool tuya_bind_qr_pending;
+    bool tuya_schema_known;
+    uint8_t tuya_schema_supported_dps;
+    uint8_t tuya_schema_required_dps;
     int32_t last_error_code;
     char emotion[AI_EMOTION_NAME_MAX];
     char bind_url[AI_BIND_URL_MAX];

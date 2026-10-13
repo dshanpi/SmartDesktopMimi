@@ -1,6 +1,7 @@
 #include "app_manager.h"
 #include "app_registry.h"
 #include "../lib/backends.h"
+#include "../ui/lockscreen.h"
 #include <stdio.h>
 
 static lv_obj_t *home_screen = NULL;
@@ -13,6 +14,7 @@ typedef enum {
     APP_MANAGER_ACTION_NONE = 0,
     APP_MANAGER_ACTION_OPEN,
     APP_MANAGER_ACTION_BACK_HOME,
+    APP_MANAGER_ACTION_REFRESH,
 } app_manager_action_t;
 
 typedef struct {
@@ -27,6 +29,7 @@ static app_manager_pending_action_t pending_action = {
 
 static void app_manager_open_now(app_id_t id);
 static void app_manager_back_home_now(void);
+static void app_manager_refresh_current_now(void);
 static void app_manager_process_pending_action(void *user_data);
 static void app_manager_schedule_action(app_manager_action_t type, app_id_t id);
 
@@ -34,6 +37,13 @@ void app_manager_init(void)
 {
     home_screen = lv_scr_act();
     printf("[AppManager] Initialized. Home Screen: %p\n", (void *)home_screen);
+}
+
+void app_manager_set_home_screen(lv_obj_t *screen)
+{
+    if (!screen) return;
+    home_screen = screen;
+    printf("[AppManager] Home screen refreshed: %p\n", (void *)home_screen);
 }
 
 static void app_manager_open_now(app_id_t id)
@@ -45,6 +55,8 @@ static void app_manager_open_now(app_id_t id)
         printf("[AppManager] App ID %d not found!\n", id);
         return;
     }
+
+    ui_lockscreen_wake();
 
     printf("[AppManager] Opening App: %s\n", app->name);
 
@@ -83,6 +95,24 @@ static void app_manager_back_home_now(void)
     current_app_id = APP_ID_NONE;
 }
 
+static void app_manager_refresh_current_now(void)
+{
+    if (current_app_id == APP_ID_NONE ||
+        (hdmi_preview_screen && lv_scr_act() == hdmi_preview_screen)) return;
+
+    app_id_t id = current_app_id;
+    AppDescriptor *app = app_registry_get_descriptor(id);
+    if (!app) return;
+
+    lv_obj_t *old_scr = lv_scr_act();
+    if (app->close) app->close();
+    current_app_id = APP_ID_NONE;
+    if (app->init) app->init();
+    if (old_scr && old_scr != home_screen && old_scr != lv_scr_act())
+        lv_obj_delete_async(old_scr);
+    current_app_id = id;
+}
+
 static void app_manager_process_pending_action(void *user_data)
 {
     app_manager_pending_action_t action;
@@ -98,6 +128,9 @@ static void app_manager_process_pending_action(void *user_data)
             break;
         case APP_MANAGER_ACTION_BACK_HOME:
             app_manager_back_home_now();
+            break;
+        case APP_MANAGER_ACTION_REFRESH:
+            app_manager_refresh_current_now();
             break;
         default:
             break;
@@ -128,9 +161,18 @@ void app_manager_back_home(void)
     app_manager_schedule_action(APP_MANAGER_ACTION_BACK_HOME, APP_ID_NONE);
 }
 
+void app_manager_refresh_current(void)
+{
+    if (current_app_id == APP_ID_NONE) return;
+    app_manager_schedule_action(APP_MANAGER_ACTION_REFRESH, current_app_id);
+}
+
 void app_manager_show_hdmi_preview_screen(void)
 {
     if (hdmi_preview_screen && lv_scr_act() == hdmi_preview_screen) return;
+
+    /* Never save the transient sleep screen as HDMI's return destination. */
+    ui_lockscreen_wake();
 
     hdmi_return_screen = lv_scr_act();
     hdmi_return_app_id = current_app_id;

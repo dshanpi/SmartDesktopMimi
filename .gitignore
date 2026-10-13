@@ -17,7 +17,7 @@ reports/
 /output/
 
 # Local release inputs and capture intermediates. Public source exports are
-# generated beside the repository and must never be assembled from these.
+# generated from audited candidates and must never include these inputs.
 /a133-kvm-example/*.tar
 /a133-kvm-example/*.tar.gz
 /a133-kvm-example/*.tgz
@@ -73,3 +73,6 @@ id_ed25519*
 
 # Claude Code session/config（本地会话目录，不入库）
 .claude/
+
+# Local delivery candidates and private SDK inputs (never public source).
+/.delivery/

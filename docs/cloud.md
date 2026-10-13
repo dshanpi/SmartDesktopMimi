@@ -36,8 +36,9 @@
 ```
 
 **两条云并存**：本产品同时用 Tuya（`your_chat_bot_QIO` 进程连 `m2.tuyacn.com:8883`，
-管 AI 对话）和 100ask Cloud（`lv_backend` 内 `service_cloud` 连 100ask 云，管设备管控 + OTA）。
-两者独立，各连各的，互不冲突。
+承载 AI 对话以及设备 DP 控制/状态上报）和 100ask Cloud（`lv_backend` 内
+`service_cloud` 连 100ask 云，承载量产身份、原有设备管控和安全 OTA）。两者各自鉴权、
+互不冲突；Tuya 设备面板的完整 DP 合约见 [Tuya 设备物联 DP Schema](tuya-iot-dp-schema.md)。
 
 涂鸦 UUID/AuthKey 的量产云预分配、出厂写入、返修恢复和库存状态机见
 [AITVBox 出厂身份写入与涂鸦 License 量产标准](tuya-license-cloud-provisioning-spec.md)。

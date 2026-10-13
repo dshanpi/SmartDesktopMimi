@@ -50,6 +50,11 @@ SVGs and high-resolution PNGs are provided.
 
 ## Architecture
 
+The approved [layering and update release policy](docs/application-update-policy.md)
+(Chinese) separates application and system releases and requires explicit hardware,
+runtime and interface matching for A133 and future T527/RK3576 targets. Independent
+desktop updates and their automated compatibility gates remain to be implemented.
+
 The system separates product use cases from hardware and vendor SDKs:
 
 ```text

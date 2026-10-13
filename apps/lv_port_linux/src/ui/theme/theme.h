@@ -4,6 +4,7 @@
 #include "lvgl.h"
 #include "theme_types.h"
 #include "../ui_fonts.h"
+#include "../../system/settings.h"
 
 /*****************************************************************************
  *                                 GLOBAL STATE
@@ -23,6 +24,8 @@ extern const ui_theme_t * current_theme;
 #define UI_BG_CARD              (current_theme->bg_card)
 #define UI_BG_INVERSE           (current_theme->bg_inverse)
 #define UI_BG_DESKTOP           (current_theme->bg_desktop)
+#define UI_BG_ELEVATED          (current_theme->bg_elevated)
+#define UI_BG_SCRIM             (current_theme->bg_scrim)
 
 /* --- Text Colors --- */
 #define UI_TEXT_PRIMARY         (current_theme->text_primary)
@@ -37,6 +40,9 @@ extern const ui_theme_t * current_theme;
 /* --- Status / Feedback --- */
 #define UI_COLOR_PRIMARY        (current_theme->color_primary)
 #define UI_COLOR_SECONDARY      (current_theme->color_secondary)
+#define UI_COLOR_SUCCESS        (current_theme->color_success)
+#define UI_COLOR_WARNING        (current_theme->color_warning)
+#define UI_COLOR_ERROR          (current_theme->color_error)
 
 /* --- Shadows --- */
 #define UI_SHADOW_DEFAULT       (current_theme->shadow_default)
@@ -121,6 +127,11 @@ LV_FONT_DECLARE(font_inter_regular_16)
 
 void ui_theme_init(void);
 void ui_theme_set(const char * theme_name); // Switch theme by name
+void ui_theme_set_appearance(sys_appearance_mode_t mode);
+sys_appearance_mode_t ui_theme_get_appearance(void);
+bool ui_theme_is_dark(void);
+bool ui_theme_sync_appearance(bool force);
+uint32_t ui_theme_generation(void);
 void ui_theme_set_color_primary(lv_color_t color); // Set primary color dynamically
 void ui_theme_set_gradient_preset(uint32_t preset_id);
 uint32_t ui_theme_get_gradient_preset_id(void);

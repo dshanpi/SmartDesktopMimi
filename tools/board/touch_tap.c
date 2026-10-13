@@ -19,8 +19,8 @@ static int emit(int fd, unsigned short type, unsigned short code, int value)
 
 int main(int argc, char **argv)
 {
-    if (argc != 6) {
-        fprintf(stderr, "usage: %s EVENT SCREEN_W SCREEN_H X Y\n", argv[0]);
+    if (argc != 6 && !(argc == 7 && strcmp(argv[6], "--raw") == 0)) {
+        fprintf(stderr, "usage: %s EVENT SCREEN_W SCREEN_H X Y [--raw]\n", argv[0]);
         return 2;
     }
     int screen_width = atoi(argv[2]);
@@ -47,6 +47,9 @@ int main(int argc, char **argv)
         x * (abs_x.maximum - abs_x.minimum) / (screen_width - 1);
     int raw_y = abs_y.minimum +
         y * (abs_y.maximum - abs_y.minimum) / (screen_height - 1);
+
+    /* Replay controller coordinates without trusting possibly stale EVIOCGABS ranges. */
+    if (argc == 7) { raw_x = x; raw_y = y; }
 
     int failed =
         emit(fd, EV_ABS, ABS_MT_TRACKING_ID, 1) ||

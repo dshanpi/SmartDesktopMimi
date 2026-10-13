@@ -3,6 +3,7 @@
 #include "../../system/app_manager.h"
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
+#include "../../ui/ui_i18n.h"
 
 #include <errno.h>
 #include <json-c/json.h>
@@ -86,29 +87,33 @@ static json_object *control_request(const char *request)
 
 static const char *state_text(const char *state)
 {
-    if (!state) return "Service offline";
-    if (!strcmp(state, "running")) return "AI is controlling the computer";
-    if (!strcmp(state, "stopping")) return "Stopping";
-    if (!strcmp(state, "succeeded")) return "Task completed";
-    if (!strcmp(state, "failed")) return "Task failed";
-    return "Waiting for a task";
+    if (!state) return ui_tr(UI_STR_MCP_OFFLINE);
+    if (!strcmp(state, "idle")) return ui_tr(UI_STR_READY);
+    if (!strcmp(state, "running")) return ui_tr(UI_STR_MCP_RUNNING);
+    if (!strcmp(state, "stopping")) return ui_tr(UI_STR_MCP_STOPPING);
+    if (!strcmp(state, "succeeded")) return ui_tr(UI_STR_MCP_SUCCEEDED);
+    if (!strcmp(state, "failed")) return ui_tr(UI_STR_MCP_FAILED);
+    return ui_tr(UI_STR_MCP_EMPTY);
 }
 
 static lv_color_t role_color(const char *role)
 {
-    if (role && !strcmp(role, "assistant")) return lv_color_hex(0xE9F3FF);
-    if (role && !strcmp(role, "tool")) return lv_color_hex(0xEAF8F1);
-    if (role && !strcmp(role, "system")) return lv_color_hex(0xFFF3E5);
-    return lv_color_hex(0xF1EEFF);
+    if (role && !strcmp(role, "assistant"))
+        return lv_color_mix(UI_COLOR_SECONDARY, UI_BG_CARD, 36);
+    if (role && !strcmp(role, "tool"))
+        return lv_color_mix(UI_COLOR_SUCCESS, UI_BG_CARD, 36);
+    if (role && !strcmp(role, "system"))
+        return lv_color_mix(UI_COLOR_WARNING, UI_BG_CARD, 36);
+    return UI_BG_ELEVATED;
 }
 
 static const char *role_text(const char *role, const char *type)
 {
     if (role && !strcmp(role, "assistant")) return "AI";
-    if (role && !strcmp(role, "tool")) return "Tool";
-    if (role && !strcmp(role, "system")) return "System";
-    if (type && !strcmp(type, "task")) return "User task";
-    return "User";
+    if (role && !strcmp(role, "tool")) return ui_i18n_is_zh() ? "工具" : "Tool";
+    if (role && !strcmp(role, "system")) return ui_i18n_is_zh() ? "系统" : "System";
+    if (type && !strcmp(type, "task")) return ui_i18n_is_zh() ? "用户任务" : "User task";
+    return ui_i18n_is_zh() ? "用户" : "User";
 }
 
 static uint32_t digest_text(const char *text)
@@ -165,7 +170,7 @@ static void rebuild_history(json_object *history)
 
         lv_obj_t *meta = lv_label_create(card);
         if (step > 0) {
-            lv_label_set_text_fmt(meta, "%s · Step %d",
+            lv_label_set_text_fmt(meta, ui_i18n_is_zh() ? "%s · 步骤 %d" : "%s · Step %d",
                                   role_text(role, type), step);
         } else {
             lv_label_set_text(meta, role_text(role, type));
@@ -199,7 +204,7 @@ static void apply_status(json_object *status)
         lv_label_set_text(state_label, state_text(state));
         lv_obj_set_style_text_color(
             state_label,
-            running ? lv_color_hex(0x16855B) : UI_TEXT_SECONDARY, 0);
+            running ? UI_COLOR_SUCCESS : UI_TEXT_SECONDARY, 0);
     }
     if (stop_button) {
         if (running) lv_obj_clear_state(stop_button, LV_STATE_DISABLED);
@@ -238,7 +243,7 @@ static void monitor_cb(lv_timer_t *timer)
         apply_status(status);
         json_object_put(status);
     } else if (state_label) {
-        lv_label_set_text(state_label, "Service offline");
+        lv_label_set_text(state_label, ui_tr(UI_STR_MCP_OFFLINE));
     }
 }
 
@@ -255,21 +260,44 @@ static void back_event(lv_event_t *event)
         app_manager_back_home();
 }
 
-static void stop_event(lv_event_t *event)
+static void stop_confirmed(lv_event_t *event)
 {
     if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
     json_object *reply = control_request("{\"command\":\"stop\"}");
     if (reply) json_object_put(reply);
+    lv_obj_t *box = lv_event_get_user_data(event);
+    if (box) lv_obj_delete_async(box);
+}
+
+static void stop_cancelled(lv_event_t *event)
+{
+    if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
+    lv_obj_t *box = lv_event_get_user_data(event);
+    if (box) lv_obj_delete_async(box);
+}
+
+static void stop_event(lv_event_t *event)
+{
+    if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
+    lv_obj_t *box = lv_msgbox_create(lv_layer_top());
+    lv_msgbox_add_title(box, ui_i18n_is_zh() ? "停止当前任务？" : "Stop current task?");
+    lv_msgbox_add_text(box, ui_i18n_is_zh()
+                       ? "停止后会立即释放所有自动控制输入。"
+                       : "Stopping immediately releases automated input.");
+    lv_obj_t *confirm = lv_msgbox_add_footer_button(box, ui_tr(UI_STR_STOP));
+    lv_obj_t *cancel = lv_msgbox_add_footer_button(box, ui_tr(UI_STR_CANCEL));
+    lv_obj_add_event_cb(confirm, stop_confirmed, LV_EVENT_CLICKED, box);
+    lv_obj_add_event_cb(cancel, stop_cancelled, LV_EVENT_CLICKED, box);
 }
 
 static lv_obj_t *create_action(lv_obj_t *parent, const char *text,
                                lv_event_cb_t callback, bool danger)
 {
     lv_obj_t *button = lv_button_create(parent);
-    lv_obj_set_size(button, 170, 52);
+    lv_obj_set_size(button, lv_pct(100), 52);
     lv_obj_set_style_radius(button, 14, 0);
     lv_obj_set_style_bg_color(
-        button, danger ? lv_color_hex(0xD84B4B) : UI_COLOR_PRIMARY, 0);
+        button, danger ? UI_COLOR_ERROR : UI_COLOR_PRIMARY, 0);
     lv_obj_set_style_bg_color(button, lv_color_hex(0xA8B2C3),
                               LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(button, 0, 0);
@@ -289,51 +317,54 @@ void hdmi_mcp_app_init(void)
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
     lv_obj_set_style_pad_all(screen, 0, 0);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
-    ui_create_app_header(screen, "HDMI MCP", back_event, false, NULL);
+    ui_create_app_header(screen, ui_tr(UI_STR_APP_HDMI_MCP), back_event, false, NULL);
 
     lv_obj_t *content = lv_obj_create(screen);
-    lv_obj_set_size(content, 976, 664);
-    lv_obj_set_pos(content, 24, UI_APP_HEADER_H + 8);
+    int32_t screen_w = lv_display_get_horizontal_resolution(NULL);
+    int32_t screen_h = lv_display_get_vertical_resolution(NULL);
+    int32_t content_w = LV_MIN(912, screen_w - 48);
+    lv_obj_set_size(content, content_w, screen_h - UI_APP_HEADER_H - 48);
+    lv_obj_set_pos(content, (screen_w - content_w) / 2, UI_APP_HEADER_H + 24);
     lv_obj_set_style_bg_opa(content, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(content, 0, 0);
     lv_obj_set_style_pad_all(content, 0, 0);
-    lv_obj_set_style_pad_column(content, 16, 0);
+    lv_obj_set_style_pad_column(content, 24, 0);
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_ROW);
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *summary = lv_obj_create(content);
-    lv_obj_set_size(summary, 300, lv_pct(100));
+    lv_obj_set_size(summary, 288, lv_pct(100));
     lv_obj_set_style_radius(summary, 22, 0);
     lv_obj_set_style_bg_color(summary, UI_BG_CARD, 0);
     lv_obj_set_style_bg_opa(summary, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(summary, 0, 0);
-    lv_obj_set_style_pad_all(summary, 20, 0);
+    lv_obj_set_style_pad_all(summary, 24, 0);
     lv_obj_set_style_pad_row(summary, 14, 0);
     lv_obj_set_flex_flow(summary, LV_FLEX_FLOW_COLUMN);
     lv_obj_clear_flag(summary, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *eyebrow = lv_label_create(summary);
-    lv_label_set_text(eyebrow, "CURRENT TASK");
+    lv_label_set_text(eyebrow, ui_tr(UI_STR_MCP_CURRENT_TASK));
     lv_obj_set_style_text_font(eyebrow, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(eyebrow, UI_TEXT_SECONDARY, 0);
 
     state_label = lv_label_create(summary);
-    lv_label_set_text(state_label, "Syncing...");
-    lv_obj_set_style_text_font(state_label, UI_TEXT_H3, 0);
+    lv_label_set_text(state_label, ui_tr(UI_STR_MCP_SYNCING));
+    lv_obj_set_style_text_font(state_label, UI_TEXT_H2, 0);
     lv_label_set_long_mode(state_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_width(state_label, lv_pct(100));
 
     task_label = lv_label_create(summary);
-    lv_label_set_text(task_label, "Tasks started in the browser appear here.");
+    lv_label_set_text(task_label, ui_tr(UI_STR_MCP_EMPTY));
     lv_label_set_long_mode(task_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_width(task_label, lv_pct(100));
     lv_obj_set_style_text_font(task_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(task_label, UI_TEXT_PRIMARY, 0);
     lv_obj_set_flex_grow(task_label, 1);
 
-    stop_button = create_action(summary, "Emergency Stop", stop_event, true);
+    stop_button = create_action(summary, ui_tr(UI_STR_STOP), stop_event, true);
     lv_obj_add_state(stop_button, LV_STATE_DISABLED);
-    create_action(summary, "Back to Desktop", back_event, false);
+    create_action(summary, ui_tr(UI_STR_HOME), back_event, false);
 
     lv_obj_t *timeline = lv_obj_create(content);
     lv_obj_set_flex_grow(timeline, 1);
@@ -342,14 +373,14 @@ void hdmi_mcp_app_init(void)
     lv_obj_set_style_bg_color(timeline, UI_BG_CARD, 0);
     lv_obj_set_style_bg_opa(timeline, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(timeline, 0, 0);
-    lv_obj_set_style_pad_all(timeline, 18, 0);
+    lv_obj_set_style_pad_all(timeline, 24, 0);
     lv_obj_set_style_pad_row(timeline, 12, 0);
     lv_obj_set_flex_flow(timeline, LV_FLEX_FLOW_COLUMN);
     lv_obj_clear_flag(timeline, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *title = lv_label_create(timeline);
-    lv_label_set_text(title, "AI Conversation and Actions");
-    lv_obj_set_style_text_font(title, UI_TEXT_H3, 0);
+    lv_label_set_text(title, ui_tr(UI_STR_MCP_HISTORY));
+    lv_obj_set_style_text_font(title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
 
     history_list = lv_obj_create(timeline);

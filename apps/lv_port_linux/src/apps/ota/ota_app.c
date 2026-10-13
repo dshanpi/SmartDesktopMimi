@@ -13,6 +13,7 @@
 #include "../../system/backend_types.h"
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
+#include "../../ui/ui_i18n.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -27,21 +28,22 @@ static lv_obj_t *label_progress = NULL;
 static lv_obj_t *btn_check = NULL;
 static lv_obj_t *btn_download = NULL;
 static lv_obj_t *btn_apply = NULL;
+static ota_state_t displayed_state = OTA_STATE_IDLE;
 
 static const char *ota_state_text(ota_state_t state)
 {
     switch (state) {
-    case OTA_STATE_IDLE:             return "Idle";
-    case OTA_STATE_CHECKING:         return "Checking for updates";
-    case OTA_STATE_UPDATE_AVAILABLE: return "Update available";
-    case OTA_STATE_UP_TO_DATE:       return "Up to date";
-    case OTA_STATE_DOWNLOADING:      return "Downloading";
-    case OTA_STATE_DOWNLOAD_DONE:    return "Ready to install";
-    case OTA_STATE_APPLYING:         return "Installing";
-    case OTA_STATE_REBOOTING:        return "Restarting soon";
-    case OTA_STATE_COMMITTING:       return "Finalizing update";
-    case OTA_STATE_ERROR:            return "Update failed";
-    default:                         return "Unknown";
+    case OTA_STATE_IDLE:             return ui_tr(UI_STR_OTA_IDLE);
+    case OTA_STATE_CHECKING:         return ui_tr(UI_STR_OTA_CHECKING);
+    case OTA_STATE_UPDATE_AVAILABLE: return ui_tr(UI_STR_OTA_AVAILABLE);
+    case OTA_STATE_UP_TO_DATE:       return ui_tr(UI_STR_OTA_UP_TO_DATE);
+    case OTA_STATE_DOWNLOADING:      return ui_tr(UI_STR_OTA_DOWNLOADING);
+    case OTA_STATE_DOWNLOAD_DONE:    return ui_tr(UI_STR_OTA_READY_INSTALL);
+    case OTA_STATE_APPLYING:         return ui_tr(UI_STR_OTA_INSTALLING);
+    case OTA_STATE_REBOOTING:        return ui_tr(UI_STR_OTA_RESTARTING);
+    case OTA_STATE_COMMITTING:       return ui_tr(UI_STR_OTA_FINALIZING);
+    case OTA_STATE_ERROR:            return ui_tr(UI_STR_OTA_FAILED);
+    default:                         return ui_tr(UI_STR_UNKNOWN);
     }
 }
 
@@ -58,7 +60,10 @@ static void update_buttons(const ota_status_t *status)
 {
     if (!btn_check || !btn_download || !btn_apply) return;
 
-    bool can_check = status->state == OTA_STATE_IDLE ||
+    displayed_state = status->state;
+    lv_label_set_text(lv_obj_get_child(btn_check, 0), ui_tr(
+        status->state == OTA_STATE_DOWNLOADING ? UI_STR_CANCEL : UI_STR_OTA_CHECK));
+    bool can_check = status->state == OTA_STATE_DOWNLOADING || status->state == OTA_STATE_IDLE ||
                      status->state == OTA_STATE_UP_TO_DATE ||
                      status->state == OTA_STATE_UPDATE_AVAILABLE ||
                      status->state == OTA_STATE_ERROR;
@@ -85,12 +90,30 @@ static void on_ota_status(const mw_msg_t *msg)
     }
 
     if (label_hint) {
-        if (status->state == OTA_STATE_ERROR) {
-            lv_label_set_text_fmt(label_hint, "Error code: %d", status->error_code);
+        if (status->state == OTA_STATE_ERROR && status->error_code == 11) {
+            lv_label_set_text(label_hint, ui_i18n_is_zh()
+                ? "更新检查未通过。请确认网络连接和设备支持的系统版本。"
+                : "Update checks failed. Check connectivity and the system versions supported by this device.");
+        } else if (status->state == OTA_STATE_ERROR && status->error_code == 13) {
+            lv_label_set_text(label_hint, ui_i18n_is_zh()
+                ? "安装已完成，请重启设备以启用新版本。"
+                : "Installation finished. Restart the device to activate the new version.");
+        } else if (status->state == OTA_STATE_ERROR && status->error_code == 5) {
+            lv_label_set_text(label_hint, ui_i18n_is_zh()
+                ? "无法确认启动分区，已停止安装。请检查系统状态。"
+                : "The boot partition could not be verified. Installation has stopped.");
+        } else if (status->state == OTA_STATE_ERROR) {
+            lv_label_set_text_fmt(label_hint,
+                                  ui_i18n_is_zh() ? "错误代码：%d" : "Error code: %d",
+                                  status->error_code);
         } else if (status->state == OTA_STATE_UPDATE_AVAILABLE) {
-            lv_label_set_text(label_hint, "A new version is ready to download.");
+            lv_label_set_text(label_hint, ui_i18n_is_zh()
+                              ? "新版本已准备好，可以开始下载。"
+                              : "A new version is ready to download.");
         } else if (status->state == OTA_STATE_UP_TO_DATE) {
-            lv_label_set_text(label_hint, "Your firmware is up to date.");
+            lv_label_set_text(label_hint, ui_i18n_is_zh()
+                              ? "当前系统已是最新版本。"
+                              : "Your firmware is up to date.");
         } else {
             lv_label_set_text(label_hint, "");
         }
@@ -125,7 +148,7 @@ static void back_event_handler(lv_event_t *e)
 static void check_event_handler(lv_event_t *e)
 {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        send_ota_cmd(OTA_CMD_CHECK);
+        send_ota_cmd(displayed_state == OTA_STATE_DOWNLOADING ? OTA_CMD_CANCEL : OTA_CMD_CHECK);
     }
 }
 
@@ -146,7 +169,8 @@ static void apply_event_handler(lv_event_t *e)
 static lv_obj_t *create_button(lv_obj_t *parent, const char *text, lv_event_cb_t cb)
 {
     lv_obj_t *btn = lv_button_create(parent);
-    lv_obj_set_size(btn, 180, 60);
+    lv_obj_set_size(btn, 1, 52);
+    lv_obj_set_flex_grow(btn, 1);
     lv_obj_set_style_radius(btn, UI_RADIUS_LG, 0);
     lv_obj_set_style_bg_color(btn, UI_COLOR_PRIMARY, 0);
     lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
@@ -157,7 +181,9 @@ static lv_obj_t *create_button(lv_obj_t *parent, const char *text, lv_event_cb_t
 
     lv_obj_t *label = lv_label_create(btn);
     lv_label_set_text(label, text);
-    lv_obj_set_style_text_font(label, UI_TEXT_BODY_MD, 0);
+    lv_obj_set_style_text_font(label, UI_TEXT_BODY_LG, 0);
+    lv_obj_set_width(label, lv_pct(100));
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_color(label, lv_color_white(), 0);
     lv_obj_center(label);
     return btn;
@@ -178,11 +204,15 @@ static lv_obj_t *create_info_row(lv_obj_t *parent, const char *title, lv_obj_t *
 
     lv_obj_t *key = lv_label_create(row);
     lv_label_set_text(key, title);
+    lv_obj_set_width(key, 160);
     lv_obj_set_style_text_font(key, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(key, UI_TEXT_SECONDARY, 0);
 
     lv_obj_t *val = lv_label_create(row);
     lv_label_set_text(val, "—");
+    lv_obj_set_width(val, 1);
+    lv_obj_set_flex_grow(val, 1);
+    lv_label_set_long_mode(val, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(val, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(val, UI_TEXT_PRIMARY, 0);
 
@@ -196,6 +226,7 @@ void ota_app_init(void)
     lv_obj_t *content, *card, *card_title, *state_row, *hint_row;
     lv_obj_t *actions;
 
+    displayed_state = OTA_STATE_IDLE;
     mw_subscribe(TOPIC_OTA_STATUS, on_ota_status);
 
     int32_t screen_w = lv_display_get_horizontal_resolution(NULL);
@@ -210,15 +241,16 @@ void ota_app_init(void)
     lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
 
     /* 顶栏 */
-    ui_create_app_header(scr, "System Update", back_event_handler, false, NULL);
+    ui_create_app_header(scr, ui_tr(UI_STR_APP_OTA), back_event_handler, false, NULL);
 
     /* 内容区 */
     content = lv_obj_create(scr);
-    lv_obj_set_size(content, lv_pct(100), LV_MAX(1, screen_h - UI_APP_HEADER_H));
-    lv_obj_set_pos(content, 0, UI_APP_HEADER_H);
+    int32_t content_w = LV_MIN(912, screen_w - 48);
+    lv_obj_set_size(content, content_w, LV_MAX(1, screen_h - UI_APP_HEADER_H - 48));
+    lv_obj_set_pos(content, (screen_w - content_w) / 2, UI_APP_HEADER_H + 24);
     lv_obj_set_style_bg_opa(content, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(content, 0, 0);
-    lv_obj_set_style_pad_all(content, UI_SPACE_XL, 0);
+    lv_obj_set_style_pad_all(content, 0, 0);
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     card = lv_obj_create(content);
@@ -236,8 +268,8 @@ void ota_app_init(void)
     lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
 
     card_title = lv_label_create(card);
-    lv_label_set_text(card_title, "Firmware Update");
-    lv_obj_set_style_text_font(card_title, UI_TEXT_H3, 0);
+    lv_label_set_text(card_title, ui_tr(UI_STR_OTA_FIRMWARE_UPDATE));
+    lv_obj_set_style_text_font(card_title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(card_title, UI_TEXT_PRIMARY, 0);
 
     /* 当前状态 */
@@ -252,12 +284,16 @@ void ota_app_init(void)
     lv_obj_clear_flag(state_row, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *state_key = lv_label_create(state_row);
-    lv_label_set_text(state_key, "Status:");
+    lv_label_set_text(state_key, ui_tr(UI_STR_OTA_STATUS));
+    lv_obj_set_width(state_key, 160);
     lv_obj_set_style_text_font(state_key, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(state_key, UI_TEXT_SECONDARY, 0);
 
     label_state = lv_label_create(state_row);
-    lv_label_set_text(label_state, "—");
+    lv_label_set_text(label_state, ui_tr(UI_STR_LOADING));
+    lv_obj_set_width(label_state, 1);
+    lv_obj_set_flex_grow(label_state, 1);
+    lv_label_set_long_mode(label_state, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(label_state, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(label_state, UI_TEXT_PRIMARY, 0);
 
@@ -276,8 +312,8 @@ void ota_app_init(void)
     lv_obj_set_width(label_hint, lv_pct(100));
 
     /* 版本信息 */
-    create_info_row(card, "Current version:", &label_ver_local);
-    create_info_row(card, "Latest version:", &label_ver_remote);
+    create_info_row(card, ui_i18n_is_zh() ? "当前版本：" : "Current version:", &label_ver_local);
+    create_info_row(card, ui_i18n_is_zh() ? "最新版本：" : "Latest version:", &label_ver_remote);
 
     /* 进度条 */
     lv_obj_t *prog_row = lv_obj_create(card);
@@ -302,6 +338,8 @@ void ota_app_init(void)
 
     label_progress = lv_label_create(prog_row);
     lv_label_set_text(label_progress, "0%");
+    lv_obj_set_width(label_progress, 56);
+    lv_obj_set_style_text_align(label_progress, LV_TEXT_ALIGN_RIGHT, 0);
     lv_obj_set_style_text_font(label_progress, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(label_progress, UI_TEXT_SECONDARY, 0);
 
@@ -316,11 +354,18 @@ void ota_app_init(void)
     lv_obj_set_flex_align(actions, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(actions, LV_OBJ_FLAG_SCROLLABLE);
 
-    btn_check = create_button(actions, "Check for Updates", check_event_handler);
-    btn_download = create_button(actions, "Download", download_event_handler);
-    btn_apply = create_button(actions, "Install Now", apply_event_handler);
+    btn_check = create_button(actions, ui_tr(UI_STR_OTA_CHECK), check_event_handler);
+    btn_download = create_button(actions, ui_tr(UI_STR_OTA_DOWNLOAD), download_event_handler);
+    btn_apply = create_button(actions, ui_tr(UI_STR_OTA_INSTALL), apply_event_handler);
+
+    lv_obj_t *power_hint = lv_label_create(card);
+    lv_label_set_text(power_hint, ui_tr(UI_STR_OTA_POWER_HINT));
+    lv_obj_set_width(power_hint, lv_pct(100));
+    lv_obj_set_style_text_font(power_hint, UI_TEXT_BODY_MD, 0);
+    lv_obj_set_style_text_color(power_hint, UI_COLOR_WARNING, 0);
 
     /* 初始禁用下载/安装，等待状态回调按实际状态启用。 */
+    lv_obj_add_state(btn_check, LV_STATE_DISABLED);
     lv_obj_add_state(btn_download, LV_STATE_DISABLED);
     lv_obj_add_state(btn_apply, LV_STATE_DISABLED);
 

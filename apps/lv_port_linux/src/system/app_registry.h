@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "../ui/ui_i18n.h"
 
 typedef enum {
     APP_ICON_BUILTIN = 0,
@@ -15,6 +16,7 @@ typedef enum {
 typedef struct {
     app_id_t id;
     const char *name;
+    ui_string_id_t name_id;
     app_icon_type_t icon_type;
     const void *icon_src;       /* Image descriptor/path, or NULL for a generated icon. */
     uint32_t accent_color;

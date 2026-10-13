@@ -18,5 +18,6 @@ void service_bt_update(void);
 bool service_bt_is_a2dp_connected(void);
 bool service_bt_is_audio_streaming(void);
 bool service_bt_is_playing(void);
+bool service_bt_is_enabled(void);
 
 #endif /* SERVICE_BT_H */

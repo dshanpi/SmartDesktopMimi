@@ -1,5 +1,11 @@
 # Build and release
 
+Follow [MIMI-UPDATE-001](../application-update-policy.md) (Chinese, authoritative)
+for application/system release separation and hardware/version matching. Packaging
+and flashing below describe the existing A133 system workflow. Independent desktop
+update tooling is not implemented yet; application releases must not require a new
+system image. Matching must be enforced at packaging, publication and installation.
+
 ## Host preparation
 
 Install Git, Python 3, Make, CMake, rsync, squashfs-tools, e2fsprogs and the

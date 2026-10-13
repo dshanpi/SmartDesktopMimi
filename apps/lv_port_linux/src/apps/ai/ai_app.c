@@ -7,6 +7,7 @@
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
 #include "../../ui/ui_fonts.h"
+#include "../../ui/ui_i18n.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +24,8 @@ static lv_obj_t *wave_bars[5] = {0};
 static lv_obj_t *btn_free_chat = NULL;
 static lv_obj_t *btn_free_chat_label = NULL;
 static lv_obj_t *free_chat_feedback_label = NULL;
+static lv_obj_t *pairing_status_label = NULL;
+static lv_obj_t *iot_schema_status_label = NULL;
 static lv_obj_t *bind_modal = NULL;
 static lv_obj_t *bind_qrcode = NULL;
 static bool bind_modal_dismissed = false;
@@ -48,14 +51,14 @@ static lv_obj_t *create_button(lv_obj_t *parent, const char *text, lv_event_cb_t
 static const char *ai_state_text(ai_state_t state)
 {
     switch (state) {
-        case AI_STATE_IDLE: return "Ready";
-        case AI_STATE_CONNECTING: return "Starting assistant";
-        case AI_STATE_LISTENING: return "Listening";
-        case AI_STATE_THINKING: return "Thinking";
-        case AI_STATE_SPEAKING: return "Speaking";
-        case AI_STATE_NETWORK_UNAVAILABLE: return "Wi-Fi disconnected";
-        case AI_STATE_ERROR: return "Service error";
-        default: return "Unknown";
+        case AI_STATE_IDLE: return ui_tr(UI_STR_READY);
+        case AI_STATE_CONNECTING: return ui_tr(UI_STR_AI_STARTING);
+        case AI_STATE_LISTENING: return ui_tr(UI_STR_AI_LISTENING);
+        case AI_STATE_THINKING: return ui_tr(UI_STR_AI_THINKING);
+        case AI_STATE_SPEAKING: return ui_tr(UI_STR_AI_SPEAKING);
+        case AI_STATE_NETWORK_UNAVAILABLE: return ui_tr(UI_STR_AI_NETWORK_OFFLINE);
+        case AI_STATE_ERROR: return ui_tr(UI_STR_AI_SERVICE_ERROR);
+        default: return ui_tr(UI_STR_UNKNOWN);
     }
 }
 
@@ -71,14 +74,14 @@ static void send_ai_cmd(ai_cmd_action_t action)
 static void update_buttons(const ai_status_t *status)
 {
     bool can_free_chat;
-    const char *button_text = "Open Free Chat";
+    const char *button_text = ui_tr(UI_STR_AI_OPEN_FREE_CHAT);
     const char *feedback_text = "";
 
     if (!status) return;
 
     if (free_chat_enter_pending) {
-        button_text = "Opening...";
-        feedback_text = "Waiting for the assistant";
+        button_text = ui_tr(UI_STR_AI_OPENING);
+        feedback_text = ui_tr(UI_STR_AI_WAITING_ASSISTANT);
         can_free_chat = false;
     } else {
         can_free_chat = status->control_center_running &&
@@ -87,30 +90,30 @@ static void update_buttons(const ai_status_t *status)
                         status->state == AI_STATE_IDLE;
 
         if (!status->tuya_bound) {
-            button_text = "Pair Device First";
-            feedback_text = "Pair this device to continue";
+            button_text = ui_tr(UI_STR_AI_PAIR_FIRST);
+            feedback_text = ui_tr(UI_STR_AI_PAIR_TO_CONTINUE);
         } else if (status->state == AI_STATE_NETWORK_UNAVAILABLE) {
-            button_text = "Connect to Wi-Fi";
-            feedback_text = "Wi-Fi is required";
+            button_text = ui_tr(UI_STR_AI_CONNECT_WIFI);
+            feedback_text = ui_tr(UI_STR_AI_WIFI_REQUIRED);
         } else if (status->state == AI_STATE_ERROR) {
-            button_text = "Service Unavailable";
-            feedback_text = "Tuya service unavailable. Try again later.";
+            button_text = ui_tr(UI_STR_AI_SERVICE_UNAVAILABLE);
+            feedback_text = ui_tr(UI_STR_AI_TRY_LATER);
         } else if (!status->control_center_running ||
                    status->state == AI_STATE_CONNECTING) {
-            button_text = "Assistant Starting";
-            feedback_text = "Connecting to Tuya Assistant";
+            button_text = ui_tr(UI_STR_AI_STARTING);
+            feedback_text = ui_tr(UI_STR_AI_CONNECTING_SERVICE);
         } else if (status->state == AI_STATE_LISTENING ||
                    status->state == AI_STATE_THINKING ||
                    status->state == AI_STATE_SPEAKING) {
-            button_text = "Conversation in Progress";
-            feedback_text = "Wait for the current conversation to finish";
+            button_text = ui_tr(UI_STR_AI_CONVERSATION_PROGRESS);
+            feedback_text = ui_tr(UI_STR_AI_WAIT_CONVERSATION);
         } else if (free_chat_enter_failed) {
-            feedback_text = "Could not open Free Chat. Try again.";
+            feedback_text = ui_tr(UI_STR_AI_OPEN_FAILED);
         }
 
         if (status->free_chat_active ||
             status->chat_mode == AI_CHAT_MODE_FREE) {
-            button_text = "Free Chat Active";
+            button_text = ui_tr(UI_STR_AI_FREE_CHAT_ACTIVE);
             feedback_text = "";
             can_free_chat = false;
         }
@@ -132,6 +135,40 @@ static void update_buttons(const ai_status_t *status)
     }
 }
 
+static void update_device_cloud_status(const ai_status_t *status)
+{
+    if (!status) return;
+
+    if (pairing_status_label) {
+        if (status->tuya_bound && !status->tuya_bind_qr_pending) {
+            lv_label_set_text_fmt(pairing_status_label, "%s\n%s",
+                                  ui_tr(UI_STR_AI_PAIRED_QR_HIDDEN),
+                                  ui_tr(UI_STR_AI_UNBIND_HINT));
+        } else if (status->tuya_bind_qr_pending && status->bind_url[0]) {
+            lv_label_set_text(pairing_status_label, ui_tr(UI_STR_AI_NOT_PAIRED));
+        } else {
+            lv_label_set_text(pairing_status_label, ui_tr(UI_STR_AI_CHECK_PAIRING));
+        }
+    }
+
+    if (iot_schema_status_label) {
+        if (!status->tuya_schema_known || status->tuya_schema_required_dps == 0) {
+            lv_label_set_text(iot_schema_status_label, ui_tr(UI_STR_AI_SCHEMA_CHECKING));
+        } else if (status->tuya_schema_supported_dps <
+                   status->tuya_schema_required_dps) {
+            lv_label_set_text_fmt(iot_schema_status_label,
+                                  ui_tr(UI_STR_AI_SCHEMA_LIMITED_FMT),
+                                  (unsigned int)status->tuya_schema_supported_dps,
+                                  (unsigned int)status->tuya_schema_required_dps);
+        } else {
+            lv_label_set_text_fmt(iot_schema_status_label,
+                                  ui_tr(UI_STR_AI_SCHEMA_READY_FMT),
+                                  (unsigned int)status->tuya_schema_supported_dps,
+                                  (unsigned int)status->tuya_schema_required_dps);
+        }
+    }
+}
+
 static lv_color_t ai_state_color(ai_state_t state)
 {
     switch (state) {
@@ -141,41 +178,41 @@ static lv_color_t ai_state_color(ai_state_t state)
         case AI_STATE_THINKING:
         case AI_STATE_SPEAKING:
             return UI_COLOR_PRIMARY;
-        case AI_STATE_NETWORK_UNAVAILABLE: return lv_color_hex(0x8A94A6);
-        case AI_STATE_ERROR: return lv_color_hex(0xE04F5F);
+        case AI_STATE_NETWORK_UNAVAILABLE: return UI_TEXT_SECONDARY;
+        case AI_STATE_ERROR: return UI_COLOR_ERROR;
         default: return UI_COLOR_PRIMARY;
     }
 }
 
 static const char *ai_hint_text(const ai_status_t *status)
 {
-    if (!status) return "Loading Tuya status";
+    if (!status) return ui_tr(UI_STR_AI_LOADING_STATUS);
 
     if (!status->tuya_bound) {
         return status->bind_url[0] ?
-               "Scan with the Smart Life app to pair this device" :
-               "Retrieving pairing status";
+               ui_tr(UI_STR_AI_SCAN_SMART_LIFE) :
+               ui_tr(UI_STR_AI_RETRIEVING_PAIRING);
     }
 
     switch (status->state) {
         case AI_STATE_NETWORK_UNAVAILABLE:
-            return "Connect to Wi-Fi";
+            return ui_tr(UI_STR_AI_CONNECT_WIFI);
         case AI_STATE_CONNECTING:
-            return "Starting the Tuya voice service";
+            return ui_tr(UI_STR_AI_SERVICE_STARTING);
         case AI_STATE_IDLE:
             return status->control_center_running ?
-                   "Say “Ni Hao Tuya” to wake me" :
-                   "Tuya service is starting";
+                   ui_tr(UI_STR_AI_WAKE_HINT) :
+                   ui_tr(UI_STR_AI_SERVICE_STARTING);
         case AI_STATE_LISTENING:
-            return "I'm listening";
+            return ui_tr(UI_STR_AI_IM_LISTENING);
         case AI_STATE_THINKING:
-            return "Thinking";
+            return ui_tr(UI_STR_AI_THINKING);
         case AI_STATE_SPEAKING:
-            return "Replying";
+            return ui_tr(UI_STR_AI_REPLYING);
         case AI_STATE_ERROR:
-            return "Tuya service error";
+            return ui_tr(UI_STR_AI_SERVICE_ERROR);
         default:
-            return "Syncing Tuya status";
+            return ui_tr(UI_STR_AI_SYNCING_STATUS);
     }
 }
 
@@ -271,6 +308,7 @@ static void on_ai_status(const mw_msg_t *msg)
 
     update_visual_state(status);
     update_buttons(status);
+    update_device_cloud_status(status);
     maybe_show_bind_modal(status);
 
     if (ai_free_chat_view_is_open()) {
@@ -430,7 +468,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     bind_modal = lv_obj_create(lv_layer_top());
     snprintf(modal_bind_url, sizeof(modal_bind_url), "%s", status->bind_url);
     lv_obj_set_size(bind_modal, lv_pct(100), lv_pct(100));
-    lv_obj_set_style_bg_color(bind_modal, lv_color_hex(0x111827), 0);
+    lv_obj_set_style_bg_color(bind_modal, UI_BG_SCRIM, 0);
     lv_obj_set_style_bg_opa(bind_modal, LV_OPA_70, 0);
     lv_obj_set_style_radius(bind_modal, 0, 0);
     lv_obj_set_style_border_width(bind_modal, 0, 0);
@@ -443,11 +481,11 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_size(card, 840, 520);
     lv_obj_center(card);
     lv_obj_set_style_radius(card, 28, 0);
-    lv_obj_set_style_bg_color(card, lv_color_white(), 0);
+    lv_obj_set_style_bg_color(card, UI_BG_CARD, 0);
     lv_obj_set_style_bg_opa(card, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(card, 1, 0);
-    lv_obj_set_style_border_color(card, lv_color_hex(0xDCE5E0), 0);
-    lv_obj_set_style_shadow_color(card, lv_color_hex(0x0B2419), 0);
+    lv_obj_set_style_border_color(card, UI_BORDER_DEFAULT, 0);
+    lv_obj_set_style_shadow_color(card, UI_SHADOW_DEFAULT, 0);
     lv_obj_set_style_shadow_opa(card, LV_OPA_20, 0);
     lv_obj_set_style_shadow_width(card, 32, 0);
     lv_obj_set_style_shadow_offset_y(card, 10, 0);
@@ -479,20 +517,20 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_scrollbar_mode(content_panel, LV_SCROLLBAR_MODE_AUTO);
 
     brand_label = lv_label_create(content_panel);
-    lv_label_set_text(brand_label, "TUYA ASSISTANT  ·  DEVICE PAIRING");
+    lv_label_set_text(brand_label, ui_i18n_is_zh() ? "涂鸦助手  设备绑定" : "Tuya Assistant  Device pairing");
     lv_obj_set_style_text_font(brand_label, UI_TEXT_BODY_MD, 0);
-    lv_obj_set_style_text_color(brand_label, lv_color_hex(0x24865D), 0);
+    lv_obj_set_style_text_color(brand_label, UI_COLOR_SUCCESS, 0);
 
     title = lv_label_create(content_panel);
-    lv_label_set_text(title, "Pair Your Device");
+    lv_label_set_text(title, ui_tr(UI_STR_AI_PAIR_TITLE));
     lv_obj_set_width(title, lv_pct(100));
     lv_obj_set_style_text_font(title, UI_TEXT_H1, 0);
     lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
 
     tip = lv_label_create(content_panel);
-    lv_label_set_text(tip,
-                      "Scan the QR code with the Smart Life app. "
-                      "The assistant opens automatically after pairing.");
+    lv_label_set_text(tip, ui_i18n_is_zh()
+                      ? "使用智能生活扫描二维码，绑定完成后助手会自动打开。"
+                      : "Scan the QR code with Smart Life. The assistant opens automatically after pairing.");
     lv_obj_set_width(tip, lv_pct(100));
     lv_label_set_long_mode(tip, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(tip, UI_TEXT_BODY_LG, 0);
@@ -506,7 +544,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_width(guide_group, lv_pct(100));
     lv_obj_set_height(guide_group, LV_SIZE_CONTENT);
     lv_obj_set_style_radius(guide_group, 14, 0);
-    lv_obj_set_style_bg_color(guide_group, lv_color_hex(0xF3F7F5), 0);
+    lv_obj_set_style_bg_color(guide_group, UI_BG_ELEVATED, 0);
     lv_obj_set_style_bg_opa(guide_group, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(guide_group, 0, 0);
     lv_obj_set_style_pad_left(guide_group, 16, 0);
@@ -518,15 +556,14 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_clear_flag(guide_group, LV_OBJ_FLAG_SCROLLABLE);
 
     guide_title = lv_label_create(guide_group);
-    lv_label_set_text(guide_title, "How to Pair");
+    lv_label_set_text(guide_title, ui_tr(UI_STR_AI_PAIR_GUIDE));
     lv_obj_set_style_text_font(guide_title, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(guide_title, UI_TEXT_PRIMARY, 0);
 
     guide_text = lv_label_create(guide_group);
-    lv_label_set_text(guide_text,
-                      "1. Download Smart Life from your app store "
-                      "(not Tuya Smart).\n"
-                      "2. Open the app, scan the QR code, and confirm pairing.");
+    lv_label_set_text(guide_text, ui_i18n_is_zh()
+                      ? "1. 从应用商店下载“智能生活”。\n2. 打开应用，扫描二维码并确认绑定。"
+                      : "1. Download Smart Life from your app store.\n2. Open it, scan the QR code, and confirm pairing.");
     lv_obj_set_width(guide_text, lv_pct(100));
     lv_label_set_long_mode(guide_text, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(guide_text, UI_TEXT_BODY_MD, 0);
@@ -541,33 +578,35 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_style_border_width(spacer, 0, 0);
 
     later_note = lv_label_create(content_panel);
-    lv_label_set_text(later_note, "You can return to the desktop and pair later.");
+    lv_label_set_text(later_note, ui_i18n_is_zh()
+                      ? "你可以先返回桌面，稍后再完成绑定。"
+                      : "You can return to the desktop and pair later.");
     lv_obj_set_width(later_note, lv_pct(100));
     lv_label_set_long_mode(later_note, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(later_note, UI_TEXT_CAPTION, 0);
-    lv_obj_set_style_text_color(later_note, lv_color_hex(0x718078), 0);
+    lv_obj_set_style_text_color(later_note, UI_TEXT_SECONDARY, 0);
 
     close_btn = lv_button_create(content_panel);
     lv_obj_set_size(close_btn, 210, 58);
     lv_obj_set_style_radius(close_btn, 14, 0);
-    lv_obj_set_style_bg_color(close_btn, lv_color_hex(0xF2F6F4), 0);
-    lv_obj_set_style_bg_color(close_btn, lv_color_hex(0xE5ECE8), LV_STATE_PRESSED);
+    lv_obj_set_style_bg_color(close_btn, UI_BG_ELEVATED, 0);
+    lv_obj_set_style_bg_color(close_btn, UI_BORDER_DEFAULT, LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(close_btn, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(close_btn, 1, 0);
-    lv_obj_set_style_border_color(close_btn, lv_color_hex(0xCAD7D0), 0);
+    lv_obj_set_style_border_color(close_btn, UI_BORDER_DEFAULT, 0);
     lv_obj_set_style_shadow_width(close_btn, 0, 0);
     lv_obj_set_style_translate_y(close_btn, 1, LV_STATE_PRESSED);
     lv_obj_add_event_cb(close_btn, bind_modal_close_event, LV_EVENT_CLICKED, NULL);
 
     close_label = lv_label_create(close_btn);
-    lv_label_set_text(close_label, "Pair Later and Exit");
+    lv_label_set_text(close_label, ui_tr(UI_STR_AI_PAIR_LATER));
     lv_obj_set_style_text_font(close_label, UI_TEXT_BODY_LG, 0);
-    lv_obj_set_style_text_color(close_label, lv_color_hex(0x28483A), 0);
+    lv_obj_set_style_text_color(close_label, UI_TEXT_PRIMARY, 0);
     lv_obj_center(close_label);
 
     qr_panel = lv_obj_create(card);
     lv_obj_set_size(qr_panel, 366, lv_pct(100));
-    lv_obj_set_style_bg_color(qr_panel, lv_color_hex(0xEEF7F2), 0);
+    lv_obj_set_style_bg_color(qr_panel, UI_BG_ELEVATED, 0);
     lv_obj_set_style_bg_opa(qr_panel, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(qr_panel, 0, 0);
     lv_obj_set_style_pad_left(qr_panel, 24, 0);
@@ -583,7 +622,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_clear_flag(qr_panel, LV_OBJ_FLAG_SCROLLABLE);
 
     qr_title = lv_label_create(qr_panel);
-    lv_label_set_text(qr_title, "Scan with Smart Life");
+    lv_label_set_text(qr_title, ui_tr(UI_STR_AI_PAIR_SCAN));
     lv_obj_set_width(qr_title, lv_pct(100));
     lv_label_set_long_mode(qr_title, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(qr_title, UI_TEXT_H3, 0);
@@ -613,10 +652,10 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_center(bind_qrcode);
 
     qr_status = lv_label_create(qr_panel);
-    lv_label_set_text(qr_status, "Waiting for scan  ·  Continues after pairing");
+    lv_label_set_text(qr_status, ui_tr(UI_STR_AI_PAIR_WAITING));
     lv_obj_set_width(qr_status, lv_pct(100));
     lv_obj_set_style_text_font(qr_status, UI_TEXT_BODY_MD, 0);
-    lv_obj_set_style_text_color(qr_status, lv_color_hex(0x39745A), 0);
+    lv_obj_set_style_text_color(qr_status, UI_COLOR_SUCCESS, 0);
     lv_obj_set_style_text_align(qr_status, LV_TEXT_ALIGN_CENTER, 0);
 }
 
@@ -659,12 +698,12 @@ static lv_obj_t *create_panel(lv_obj_t *parent)
     lv_obj_t *panel = lv_obj_create(parent);
 
     lv_obj_set_style_radius(panel, 24, 0);
-    lv_obj_set_style_bg_color(panel, lv_color_hex(0xFCFCFE), 0);
+    lv_obj_set_style_bg_color(panel, UI_BG_CARD, 0);
     lv_obj_set_style_bg_opa(panel, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(panel, 1, 0);
-    lv_obj_set_style_border_color(panel, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_border_color(panel, UI_BORDER_DEFAULT, 0);
     lv_obj_set_style_border_opa(panel, LV_OPA_60, 0);
-    lv_obj_set_style_shadow_color(panel, lv_color_hex(0x6B7A99), 0);
+    lv_obj_set_style_shadow_color(panel, UI_SHADOW_DEFAULT, 0);
     lv_obj_set_style_shadow_opa(panel, LV_OPA_20, 0);
     lv_obj_set_style_shadow_width(panel, 20, 0);
     lv_obj_set_style_shadow_offset_y(panel, 7, 0);
@@ -786,6 +825,7 @@ void ai_app_init(void)
     lv_obj_t *mode_title;
     lv_obj_t *mode_description;
     lv_obj_t *section_divider;
+    lv_obj_t *cloud_status_title;
     lv_obj_t *recent_title;
     lv_obj_t *right_spacer;
     lv_obj_t *exit_note;
@@ -806,7 +846,7 @@ void ai_app_init(void)
     lv_obj_set_style_pad_all(scr, 0, 0);
     lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
 
-    header = ui_create_app_header(scr, "Tuya Assistant", back_event_handler, false, NULL);
+    header = ui_create_app_header(scr, ui_tr(UI_STR_APP_AI), back_event_handler, false, NULL);
 
     content = lv_obj_create(scr);
     lv_obj_set_size(content, lv_pct(100), LV_MAX(1, 768 - UI_APP_HEADER_H));
@@ -883,13 +923,13 @@ void ai_app_init(void)
     set_wave_active(false, UI_COLOR_PRIMARY);
 
     label_state = lv_label_create(left_panel);
-    lv_label_set_text(label_state, "Starting assistant");
+    lv_label_set_text(label_state, ui_tr(UI_STR_AI_STARTING));
     lv_obj_set_style_text_font(label_state, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(label_state, UI_COLOR_PRIMARY, 0);
     lv_obj_set_style_text_align(label_state, LV_TEXT_ALIGN_CENTER, 0);
 
     hero_title = lv_label_create(left_panel);
-    lv_label_set_text(hero_title, "Hello, I'm Tuya Assistant");
+    lv_label_set_text(hero_title, ui_tr(UI_STR_AI_HELLO));
     lv_obj_set_width(hero_title, 520);
     lv_label_set_long_mode(hero_title, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(hero_title, UI_TEXT_H1, 0);
@@ -897,7 +937,7 @@ void ai_app_init(void)
     lv_obj_set_style_text_align(hero_title, LV_TEXT_ALIGN_CENTER, 0);
 
     label_hint = lv_label_create(left_panel);
-    lv_label_set_text(label_hint, "Say “Ni Hao Tuya” to wake me");
+    lv_label_set_text(label_hint, ui_tr(UI_STR_AI_WAKE_HINT));
     lv_obj_set_width(label_hint, 520);
     lv_label_set_long_mode(label_hint, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(label_hint, UI_TEXT_H2, 0);
@@ -915,29 +955,48 @@ void ai_app_init(void)
                           LV_FLEX_ALIGN_START);
 
     mode_title = lv_label_create(right_panel);
-    lv_label_set_text(mode_title, "Free Chat");
+    lv_label_set_text(mode_title, ui_tr(UI_STR_AI_FREE_CHAT));
     lv_obj_set_width(mode_title, lv_pct(100));
     lv_obj_set_style_text_font(mode_title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(mode_title, UI_TEXT_PRIMARY, 0);
 
     mode_description = lv_label_create(right_panel);
-    lv_label_set_text(mode_description, "Open the full-screen assistant");
+    lv_label_set_text(mode_description, ui_tr(UI_STR_AI_FREE_CHAT_DESC));
     lv_obj_set_width(mode_description, lv_pct(100));
     lv_label_set_long_mode(mode_description, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(mode_description, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(mode_description, UI_TEXT_SECONDARY, 0);
 
-    btn_free_chat = create_button(right_panel, "Open Free Chat", free_chat_event_handler);
+    btn_free_chat = create_button(right_panel, ui_tr(UI_STR_AI_FREE_CHAT), free_chat_event_handler);
     lv_obj_set_size(btn_free_chat, lv_pct(100), 78);
     lv_obj_add_state(btn_free_chat, LV_STATE_DISABLED);
 
     free_chat_feedback_label = lv_label_create(right_panel);
-    lv_label_set_text(free_chat_feedback_label, "Loading assistant status");
+    lv_label_set_text(free_chat_feedback_label, ui_tr(UI_STR_AI_LOADING_STATUS));
     lv_obj_set_size(free_chat_feedback_label, lv_pct(100), 24);
     lv_label_set_long_mode(free_chat_feedback_label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(free_chat_feedback_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(free_chat_feedback_label, UI_TEXT_SECONDARY, 0);
     lv_obj_set_style_text_align(free_chat_feedback_label, LV_TEXT_ALIGN_CENTER, 0);
+
+    cloud_status_title = lv_label_create(right_panel);
+    lv_label_set_text(cloud_status_title, ui_tr(UI_STR_AI_DEVICE_CLOUD));
+    lv_obj_set_style_text_font(cloud_status_title, UI_TEXT_H3, 0);
+    lv_obj_set_style_text_color(cloud_status_title, UI_TEXT_SECONDARY, 0);
+
+    pairing_status_label = lv_label_create(right_panel);
+    lv_label_set_text(pairing_status_label, ui_tr(UI_STR_AI_CHECK_PAIRING));
+    lv_obj_set_width(pairing_status_label, lv_pct(100));
+    lv_label_set_long_mode(pairing_status_label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_font(pairing_status_label, UI_TEXT_BODY_MD, 0);
+    lv_obj_set_style_text_color(pairing_status_label, UI_TEXT_PRIMARY, 0);
+
+    iot_schema_status_label = lv_label_create(right_panel);
+    lv_label_set_text(iot_schema_status_label, ui_tr(UI_STR_AI_CHECK_SCHEMA));
+    lv_obj_set_width(iot_schema_status_label, lv_pct(100));
+    lv_label_set_long_mode(iot_schema_status_label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_font(iot_schema_status_label, UI_TEXT_BODY_MD, 0);
+    lv_obj_set_style_text_color(iot_schema_status_label, UI_TEXT_SECONDARY, 0);
 
     section_divider = lv_obj_create(right_panel);
     lv_obj_set_size(section_divider, lv_pct(100), 1);
@@ -948,15 +1007,15 @@ void ai_app_init(void)
     lv_obj_clear_flag(section_divider, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
 
     recent_title = lv_label_create(right_panel);
-    lv_label_set_text(recent_title, "CURRENT CONVERSATION");
+    lv_label_set_text(recent_title, ui_tr(UI_STR_AI_CURRENT_CONVERSATION));
     lv_obj_set_style_text_font(recent_title, UI_TEXT_H3, 0);
     lv_obj_set_style_text_color(recent_title, UI_TEXT_SECONDARY, 0);
 
     label_text = lv_label_create(right_panel);
     lv_obj_set_width(label_text, lv_pct(100));
-    lv_obj_set_height(label_text, 156);
+    lv_obj_set_height(label_text, 112);
     lv_label_set_long_mode(label_text, LV_LABEL_LONG_DOT);
-    lv_label_set_text(label_text, "No conversation yet");
+    lv_label_set_text(label_text, ui_tr(UI_STR_AI_NO_CONVERSATION));
     lv_obj_set_style_text_font(label_text, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(label_text, UI_TEXT_SECONDARY, 0);
 
@@ -969,7 +1028,7 @@ void ai_app_init(void)
     lv_obj_clear_flag(right_spacer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
 
     exit_note = lv_label_create(right_panel);
-    lv_label_set_text(exit_note, "Double-tap the screen to exit Free Chat");
+    lv_label_set_text(exit_note, ui_tr(UI_STR_AI_EXIT_HINT));
     lv_obj_set_width(exit_note, lv_pct(100));
     lv_label_set_long_mode(exit_note, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(exit_note, UI_TEXT_BODY_MD, 0);
@@ -1010,6 +1069,8 @@ void ai_app_close(void)
     btn_free_chat = NULL;
     btn_free_chat_label = NULL;
     free_chat_feedback_label = NULL;
+    pairing_status_label = NULL;
+    iot_schema_status_label = NULL;
     wave_anim_running = false;
     orb_breathe_running = false;
     latest_tuya_bound = false;

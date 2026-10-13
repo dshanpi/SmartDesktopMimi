@@ -48,6 +48,9 @@ lv_obj_t * ui_create_app_header(lv_obj_t *parent,
     lv_obj_t *back_btn = lv_button_create(bar);
     lv_obj_set_size(back_btn, nav_side, header_h);
     lv_obj_set_style_bg_opa(back_btn, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_bg_color(back_btn, UI_BG_ELEVATED, LV_STATE_PRESSED);
+    lv_obj_set_style_bg_opa(back_btn, LV_OPA_COVER, LV_STATE_PRESSED);
+    lv_obj_set_style_radius(back_btn, UI_RADIUS_MD, 0);
     lv_obj_set_style_shadow_width(back_btn, 0, 0);
     if (back_cb) {
         lv_obj_add_event_cb(back_btn, back_cb, LV_EVENT_CLICKED, NULL);
@@ -55,6 +58,8 @@ lv_obj_t * ui_create_app_header(lv_obj_t *parent,
 
     lv_obj_t *back_icon = lv_image_create(back_btn);
     lv_image_set_src(back_icon, &arrow_back_ios_28dp_1F1F1F);
+    lv_obj_set_style_image_recolor(back_icon, UI_TEXT_PRIMARY, 0);
+    lv_obj_set_style_image_recolor_opa(back_icon, LV_OPA_COVER, 0);
     lv_obj_clear_flag(back_icon, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_center(back_icon);
 
