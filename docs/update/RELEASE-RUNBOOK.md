@@ -149,3 +149,5 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - 固件 pack 前调用 filesystem_image.py，对 ext2/3/4 执行 e2fsck -f -n；只允许返回 0，禁止自动修复输入后仍声称原镜像通过。SquashFS 先读超级块，后续继续实际文件读回/基线核对。pack 后 rootfs 摘要必须与检查时相同。
 - 实际恢复 SDK 的 make_ext4fs 2020-01-05 版本未设置 inode bitmap 尾部保留位，基础 rootfs 虽编译返回 0，但只读 e2fsck 返回 4。修复存入私有 SDK 增量补丁，不能通过关闭检查或忽略错误放行。该修复不涉及 Boot0/U-Boot/BL31。
 - 主机测试以真实 ext4 镜像验证正常通过、损坏拒绝、检查前后字节不变；不代表板端文件系统已修复或新镜像已经启动。
+
+- 用户于 2026-10-13 最新要求优先上传 100askTeam/A133-AIDesktop-Tina5 的底层驱动和板级适配差异。本次允许完成源码重放及敏感内容核对后上传私有 SDK 源码归档；不扩大到应用源码、升级包、系统镜像或公开 Release，这些仍等待全部必需真机验收。归档未测项目如实标 not_run，不标产品发布合格。
