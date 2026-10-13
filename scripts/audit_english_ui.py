@@ -20,6 +20,14 @@ ALLOWED_COMPATIBILITY_LITERALS = {
         "助手：",
         "助手:",
     },
+    # Exact input vocabulary and punctuation consumed by the command parser.
+    # Keep the exception scoped to this file and these tokens: it must not
+    # exempt new UI labels or arbitrary Chinese strings in the voice app.
+    "apps/lv_port_linux/src/apps/voice/voice_command.c": {
+        "。", "！", "返回首页", "回到首页", "打开应用抽屉", "打开应用列表",
+        "打开设置", "打开无线网络", "打开wifi", "打开wi-fi", "打开蓝牙",
+        "打开视频", "打开设备配对", "打开涂鸦智家",
+    },
 }
 
 BILINGUAL_CATALOG = "apps/lv_port_linux/src/ui/ui_i18n.c"
@@ -34,7 +42,24 @@ def is_explicit_bilingual_branch(lines, line_number: int) -> bool:
     return "ui_i18n_is_zh()" in window and ASCII_COPY.search(window) is not None
 
 
-def c_string_literals(source: str):
+def bilingual_helper_spans(source: str):
+    """Recognize literal pairs only when tr has the verified locale selector."""
+    string = r'"(?:\\.|[^"\\])*"'
+    tokens = string + r"|'(?:\\.|[^'\\])*'|//[^\n]*|/\*[\s\S]*?\*/"
+    code = re.sub(tokens, lambda m: re.sub(r"[^\n]", " ", m[0])
+                  if m[0].startswith(("//", "/*")) else m[0], source)
+    helper = (r"static\s+const\s+char\s*\*\s*tr\s*\(\s*const\s+char\s*\*\s*(\w+)"
+              r"\s*,\s*const\s+char\s*\*\s*(\w+)\s*\)\s*\{\s*return\s+"
+              r"ui_i18n_is_zh\s*\(\s*\)\s*\?\s*\1\s*:\s*\2\s*;\s*\}")
+    if not re.search(helper, code):
+        return []
+    expression = string + r'(?:\s*' + string + r')*'
+    call = re.compile(r'\btr\s*\(\s*(' + expression + r')\s*,\s*(' + expression + r')\s*\)')
+    return [(m.start(1), m.end(1)) for m in call.finditer(code)
+            if ASCII_COPY.search(m[2]) and not HAN.search(m[2])]
+
+
+def c_string_literals(source: str, with_offsets=False):
     """Yield (line, decoded-ish contents) while skipping C/C++ comments."""
     i = 0
     line = 1
@@ -79,6 +104,7 @@ def c_string_literals(source: str):
             continue
 
         literal_line = line
+        literal_offset = i
         i += 1
         value = []
         while i < length:
@@ -93,7 +119,8 @@ def c_string_literals(source: str):
                 line += 1
             value.append(source[i])
             i += 1
-        yield literal_line, "".join(value)
+        item = (literal_line, "".join(value))
+        yield (*item, literal_offset) if with_offsets else item
 
 
 def main() -> int:
@@ -110,11 +137,13 @@ def main() -> int:
         allowed = ALLOWED_COMPATIBILITY_LITERALS.get(relative, set())
         source = path.read_text(encoding="utf-8")
         lines = source.splitlines()
-        for line, literal in c_string_literals(source):
+        helper_spans = bilingual_helper_spans(source)
+        for line, literal, offset in c_string_literals(source, with_offsets=True):
             if not HAN.search(literal) or literal in allowed:
                 continue
             if relative == BILINGUAL_CATALOG or \
-                    is_explicit_bilingual_branch(lines, line):
+                    is_explicit_bilingual_branch(lines, line) or \
+                    any(start <= offset < end for start, end in helper_spans):
                 continue
             if HAN.search(literal):
                 violations.append((relative, line, literal))
