@@ -96,6 +96,7 @@ if [[ "${APPLICATION_UPDATES}" -eq 1 ]]; then
     require_file "${PRODUCT_ROOT}/build/mimi-baseline/baseline-lock.json" \
         "Prepare a verified signed factory baseline with tools/update/baseline.py first"
     python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify --output "${PRODUCT_ROOT}/build/mimi-baseline"
+    BASELINE_LOCK_SHA="$(sha256sum "${PRODUCT_ROOT}/build/mimi-baseline/baseline-lock.json" | awk '{print $1}')"
     python3 - "$PRODUCT_ROOT/build/mimi-baseline/rootfs/etc/smartdesktopmimi/device.json" "$MIMI_SYSTEM_VERSION" <<'BASELINE_VERSION_CHECK'
 import json,sys
 with open(sys.argv[1]) as source: device=json.load(source)
@@ -111,6 +112,7 @@ COMMIT="$(git -C "${PRODUCT_ROOT}" rev-parse HEAD)"
 SHORT_COMMIT="$(git -C "${PRODUCT_ROOT}" rev-parse --short=12 HEAD)"
 BRANCH="$(git -C "${PRODUCT_ROOT}" symbolic-ref --short -q HEAD || echo detached)"
 TRACKED_STATUS="$(git -C "${PRODUCT_ROOT}" status --short --untracked-files=no)"
+SOURCE_STATUS="$(git -C "${PRODUCT_ROOT}" status --porcelain=v1 --untracked-files=normal)"
 if [[ -n "${TRACKED_STATUS}" && "${ALLOW_DIRTY}" -ne 1 ]]; then
     die "tracked source files have uncommitted changes" \
         "提交源码后重试，或明确使用 --allow-dirty（正式发布不推荐）" \
@@ -244,6 +246,17 @@ cp --preserve=timestamps \
     "${PRODUCT_ROOT}/build/aitvbox-version" \
     "${PRODUCT_ROOT}/build/aitvbox-tuya-pid" \
     "${OUTPUT_DIR}/metadata/"
+if [[ "${APPLICATION_UPDATES}" -eq 1 ]]; then
+    # Archive only public baseline metadata; keys and per-unit enrollment stay out.
+    BASELINE="${PRODUCT_ROOT}/build/mimi-baseline"
+    [[ "$(sha256sum "${BASELINE}/baseline-lock.json" | awk '{print $1}')" == "${BASELINE_LOCK_SHA}" ]] ||
+        die "factory baseline changed during system build"
+    python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify --output "${BASELINE}"
+    cp "${BASELINE}/baseline-lock.json" "${OUTPUT_DIR}/metadata/baseline-lock.json"
+    cp "${BASELINE}/rootfs/usr/lib/smartdesktopmimi/factory/manifest.json" "${OUTPUT_DIR}/metadata/factory-manifest.json"
+    cp "${BASELINE}/rootfs/usr/lib/smartdesktopmimi/factory/manifest.sig" "${OUTPUT_DIR}/metadata/factory-manifest.sig"
+    cp "${BASELINE}/rootfs/etc/smartdesktopmimi/device.json" "${OUTPUT_DIR}/metadata/factory-device.json"
+fi
 if [[ "${INCLUDE_SDK_IMAGES}" -eq 1 ]]; then
     mkdir -p "${OUTPUT_DIR}/sdk-images"
     cp --reflink=auto --preserve=timestamps \
@@ -281,6 +294,10 @@ if [[ -n "${SDK_MANIFEST}" && -f "${SDK_MANIFEST}" ]]; then
 fi
 SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
 
+[[ "$(git -C "${PRODUCT_ROOT}" rev-parse HEAD)" == "${COMMIT}" && \
+   "$(git -C "${PRODUCT_ROOT}" status --porcelain=v1 --untracked-files=normal)" == "${SOURCE_STATUS}" ]] ||
+    die "source changed during system build; refusing a stale build record"
+
 {
     echo "AITVBOX_RELEASE_FORMAT=1"
     echo "AITVBOX_VERSION=${VERSION}"
@@ -290,11 +307,13 @@ SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
     echo "PRODUCT_BRANCH=${BRANCH}"
     echo "PRODUCT_COMMIT=${COMMIT}"
     echo "PRODUCT_TRACKED_DIRTY=$([[ -n "${TRACKED_STATUS}" ]] && echo 1 || echo 0)"
+    echo "PRODUCT_DIRTY=$([[ -n "${SOURCE_STATUS}" ]] && echo 1 || echo 0)"
     echo "BUILD_UTC=${STAMP}"
     echo "TARGET_SOC=a133"
     echo "TARGET_BOARD=b6"
     echo "PACK_VARIANT=uart0"
     echo "WITH_OTA=${WITH_OTA}"
+    echo "APPLICATION_UPDATES=${APPLICATION_UPDATES}"
     echo "SDK_ROOT=${SDK}"
     echo "SDK_MANIFEST=${SDK_MANIFEST:-unknown}"
     echo "SDK_MANIFEST_SHA256=${SDK_MANIFEST_SHA}"

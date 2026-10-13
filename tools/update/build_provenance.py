@@ -48,6 +48,7 @@ def system(directory, lock, manifest, factory, load):
     if 'system-build.json' not in assets:raise ValueError('missing system build provenance')
     record=load(directory/'system-build.json')
     if record.get('schema_version')!=1 or record.get('kind')!='system-build':raise ValueError('unknown system build record')
+    if record.get('system_version')!=manifest['version']:raise ValueError('system build/version mismatch')
     if lock.get('hardware_repository')!=HARDWARE_REPOSITORY or record.get('hardware_repository')!=HARDWARE_REPOSITORY:
         raise ValueError('A133 private SDK repository mismatch')
     if manifest.get('build_provenance_sha256')!=assets['system-build.json']:

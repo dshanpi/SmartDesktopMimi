@@ -137,6 +137,37 @@ class SignedCollectionTests(unittest.TestCase):
             (root/'system.swu').write_bytes(b'damaged')
             with self.assertRaisesRegex(ValueError,'hash mismatch'):gate.check(root,'draft',self.checker,self.trust)
 
+    def test_system_build_record_uses_real_factory_signature_verification(self):
+        import test_system_record
+        import system_record
+        receipt=test_system_record.SystemRecordTests()
+        receipt.setUp()
+        try:
+            app=receipt.root/'signed-app';self.fixture(app,'a133')
+            factory=gate.load(app/'manifest.json');device=gate.load(app/'device.json')
+            device['enrollment_id']=''
+            (receipt.build/'metadata/factory-manifest.json').write_bytes((app/'manifest.json').read_bytes())
+            (receipt.build/'metadata/factory-manifest.sig').write_bytes((app/'manifest.sig').read_bytes())
+            preparation.write(receipt.build/'metadata/factory-device.json',device)
+            receipt.manifest.update(SYSTEM_VERSION='1.0.0',SYSTEM_TAG='system-a133-v1.0.0')
+            receipt.seal.update(factory_commit=factory['commit'],factory_version=factory['version'],
+                                factory_package_sha256=factory['package_sha256'])
+            for filename,sealed in [('factory-manifest.json','usr/lib/smartdesktopmimi/factory/manifest.json'),
+                                    ('factory-manifest.sig','usr/lib/smartdesktopmimi/factory/manifest.sig'),
+                                    ('factory-device.json','etc/smartdesktopmimi/device.json')]:
+                receipt.seal['files'][sealed]['sha256']=gate.sha(receipt.build/'metadata'/filename)
+            preparation.write(receipt.build/'metadata/baseline-lock.json',receipt.seal);receipt.refresh()
+            record=system_record.prepare(receipt.build,receipt.plan_path,receipt.output,self.checker,self.trust)
+            self.assertEqual(record['factory_application']['sha256'],factory['package_sha256'])
+            # Even mutually consistent checksum/seal metadata cannot bless a bad signature.
+            sig=receipt.build/'metadata/factory-manifest.sig';sig.write_bytes(b'invalid signature')
+            receipt.seal['files']['usr/lib/smartdesktopmimi/factory/manifest.sig']['sha256']=gate.sha(sig)
+            preparation.write(receipt.build/'metadata/baseline-lock.json',receipt.seal);receipt.refresh()
+            with self.assertRaises(subprocess.CalledProcessError):
+                system_record.prepare(receipt.build,receipt.plan_path,receipt.root/'rejected',self.checker,self.trust)
+            self.assertFalse((receipt.root/'rejected').exists())
+        finally:receipt.doCleanups()
+
     def test_ambiguous_targets_cannot_be_signed(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(subprocess.CalledProcessError):self.build(Path(temp),True)

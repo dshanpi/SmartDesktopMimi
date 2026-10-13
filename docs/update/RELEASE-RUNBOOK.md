@@ -133,3 +133,13 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - 桌面启动入口通过 `Engine.StartSelected` 在同一应用/系统事务锁内完成选择、验签和平台启动；启动失败释放锁，验签失败不调用平台启动。不能先 Select 后释放锁再单独激活。
 
 - 最终镜像检查直接读取 ext4/SquashFS inode 元数据，要求受保护文件及父目录 uid/gid 均为 0；不把普通账户解包后的属主当作镜像属主。CI 安装 fakeroot、e2fsprogs 和 squashfs-tools，覆盖错误文件/目录属主的拒绝。
+
+## 系统构建记录自动整理（2026-10-13）
+
+- 开启 `--application-updates` 的系统构建归档已核验的基线锁、工厂应用清单/签名和无单机登记号的设备描述；构建前后检查源码状态及基线锁不变。构建清单分别记录应用、系统版本和完整源码状态，未跟踪源码同样视为 dirty。
+- `system_record.py --build COMPLETED_BUILD --inputs PRIVATE_PLAN.json --output NEW_DIRECTORY --checker HOST_CHECKER --trust EXTERNAL_TRUST` 从成功构建整理系统发布输入。要求 BUILD-COMPLETE、无 BUILD-INCOMPLETE、干净源码、A133/B6/UART0 构建目标、正确系统标签、签名工厂基线及受外部 SHA256 固定的构建清单。B6 仅为 SDK 目标，真实 PCB 仍由已签名兼容清单和受控设备登记匹配。
+- 计划严格包含 schema_version=1、build_manifest_sha256、hardware_commit、sdk_baseline、sdk_local_inputs_sha256、toolchain_sha256、sysroot_sha256、partition_sha256、inputs。所有 SHA256 和私有硬件完整提交来自已审核构建输入，不在发布现场从任意文件生成后自行视为合格。inputs 仅包含 sdk-components.json 和 dependency-lock.json，条目格式为 {path, sha256}，路径相对计划文件。私有 SDK 输入闭合、分区几何与源码审计仍须实际核对。
+- public SDK inventory 仅允许 schema_version、sdk_baseline、manifest_sha256、components；每组件仅 path、commit、local_inputs_sha256。拒绝私有补丁、归档路径及未知字段，且 SDK manifest 哈希必须与实际构建清单相同。
+- 工具读取构建校验和，复核完整镜像、启动链门禁日志与工厂基线附件；独立验签工厂应用，核对最终封存的文件摘要。临时匹配描述只用于主机校验，不产生或安装设备登记。镜像使用固定 gzip 时间戳压缩，并解压读回核对原镜像哈希。
+- 输出仅 system.img.gz、system-build.json、公开 SDK 清单、依赖锁及工厂应用清单/签名。system-build.json 额外记录 system_version、build_manifest_sha256、raw_image_sha256；后续发布门禁强制核对系统构建版本和签名系统清单版本相同。
+- 这些输出尚未签署系统清单、未生成通过验收、没有上传资格；签名系统清单后继续通过 prepare_release.py 组装来源和实际验收资料。构建日志与本地私有计划不自动复制到公开产物。

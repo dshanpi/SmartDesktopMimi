@@ -54,7 +54,7 @@ class UnifiedReleaseTests(unittest.TestCase):
                 with self.assertRaises(ValueError):gate.check(root,'draft',Path('/checker'),Path('/trust'))
 
     def test_system_provenance_cannot_point_to_other_sdk_or_factory(self):
-        for field,value in [('hardware_commit','b'*40),('image_sha256','a'*64),('sdk_components_sha256','c'*64),('factory_application',{})]:
+        for field,value in [('system_version','9.9.9'),('hardware_commit','b'*40),('image_sha256','a'*64),('sdk_components_sha256','c'*64),('factory_application',{})]:
             with self.subTest(field=field),tempfile.TemporaryDirectory() as temp,patch.object(gate.subprocess,'run'):
                 root=Path(temp);lock,manifest=fixtures.SystemDestinationEvidenceTests().system_fixture(root)
                 record=gate.load(root/'system-build.json');record[field]=value
