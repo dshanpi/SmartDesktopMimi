@@ -118,6 +118,7 @@ require_file "${SDK}/build/envsetup.sh" "SDK 未初始化：${SDK}"
 require_file "${SDK}/build.sh" "SDK 缺 build.sh：${SDK}"
 require_cmd unsquashfs "apt install squashfs-tools"
 require_cmd debugfs "apt install e2fsprogs"
+require_cmd e2fsck "apt install e2fsprogs"
 require_cmd blkid "apt install util-linux"
 require_cmd sha256sum "apt install coreutils"
 require_cmd timeout "apt install coreutils"
@@ -276,6 +277,11 @@ for option in \
 done
 echo "Kernel platform requirements verified: HID + SECCOMP filter"
 
+ROOTFS_IMAGE="${SDK}/out/a133/b6/openwrt/rootfs.img"
+python3 "${PRODUCT_ROOT}/tools/update/filesystem_image.py" "${ROOTFS_IMAGE}" \
+    || die "rootfs filesystem integrity failed; refusing pack"
+ROOTFS_CHECKED_SHA="$(sha256sum "${ROOTFS_IMAGE}" | awk '{print $1}')"
+
 ./build.sh pack \
     || die "Tina SDK pack 失败" \
            "查看 pack 日志：${SDK}/out/a133/b6/pack_out" \
@@ -285,6 +291,8 @@ set -eu
 ROOTFS_IMAGE="${SDK}/out/a133/b6/openwrt/rootfs.img"
 FIRMWARE_IMAGE="${SDK}/out/a133/b6/openwrt/a133_linux_b6_uart0.img"
 require_file "${ROOTFS_IMAGE}" "Tina pack 未生成 rootfs.img"
+[[ "$(sha256sum "${ROOTFS_IMAGE}" | awk '{print $1}')" == "${ROOTFS_CHECKED_SHA}" ]] ||
+    die "rootfs changed during pack; verified filesystem no longer matches"
 require_file "${FIRMWARE_IMAGE}" "Tina pack 未生成最终固件镜像"
 if [[ ! -s "${ROOTFS_IMAGE}" || ! -s "${FIRMWARE_IMAGE}" ]]; then
     die "Tina pack generated an empty image"

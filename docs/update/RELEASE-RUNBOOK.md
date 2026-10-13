@@ -143,3 +143,9 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - 工具读取构建校验和，复核完整镜像、启动链门禁日志与工厂基线附件；独立验签工厂应用，核对最终封存的文件摘要。临时匹配描述只用于主机校验，不产生或安装设备登记。镜像使用固定 gzip 时间戳压缩，并解压读回核对原镜像哈希。
 - 输出仅 system.img.gz、system-build.json、公开 SDK 清单、依赖锁及工厂应用清单/签名。system-build.json 额外记录 system_version、build_manifest_sha256、raw_image_sha256；后续发布门禁强制核对系统构建版本和签名系统清单版本相同。
 - 这些输出尚未签署系统清单、未生成通过验收、没有上传资格；签名系统清单后继续通过 prepare_release.py 组装来源和实际验收资料。构建日志与本地私有计划不自动复制到公开产物。
+
+## 文件系统完整性前置检查（2026-10-13）
+
+- 固件 pack 前调用 filesystem_image.py，对 ext2/3/4 执行 e2fsck -f -n；只允许返回 0，禁止自动修复输入后仍声称原镜像通过。SquashFS 先读超级块，后续继续实际文件读回/基线核对。pack 后 rootfs 摘要必须与检查时相同。
+- 实际恢复 SDK 的 make_ext4fs 2020-01-05 版本未设置 inode bitmap 尾部保留位，基础 rootfs 虽编译返回 0，但只读 e2fsck 返回 4。修复存入私有 SDK 增量补丁，不能通过关闭检查或忽略错误放行。该修复不涉及 Boot0/U-Boot/BL31。
+- 主机测试以真实 ext4 镜像验证正常通过、损坏拒绝、检查前后字节不变；不代表板端文件系统已修复或新镜像已经启动。
