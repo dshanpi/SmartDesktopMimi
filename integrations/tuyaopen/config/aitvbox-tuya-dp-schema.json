@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "productId": "alon7qgyjj8yus74",
+  "dps": [
+    {"id": 1, "code": "switch", "name": "AI Assistant", "mode": "rw", "type": "obj", "property": {"type": "bool"}},
+    {"id": 3, "code": "volume_set", "name": "Volume", "mode": "rw", "type": "obj", "property": {"type": "value", "min": 0, "max": 100, "step": 1, "scale": 0}},
+    {"id": 101, "code": "screen_brightness", "name": "Screen Brightness", "mode": "rw", "type": "obj", "property": {"type": "value", "min": 20, "max": 100, "step": 1, "scale": 0}},
+    {"id": 102, "code": "hdmi_preview", "name": "HDMI Preview", "mode": "rw", "type": "obj", "property": {"type": "bool"}},
+    {"id": 103, "code": "bluetooth_speaker", "name": "Bluetooth Speaker", "mode": "rw", "type": "obj", "property": {"type": "bool"}},
+    {"id": 104, "code": "led_switch", "name": "LED Switch", "mode": "rw", "type": "obj", "property": {"type": "bool"}},
+    {"id": 105, "code": "led_brightness", "name": "LED Brightness", "mode": "rw", "type": "obj", "property": {"type": "value", "min": 0, "max": 100, "step": 1, "scale": 0}},
+    {"id": 106, "code": "temperature", "name": "Temperature", "mode": "ro", "type": "obj", "property": {"type": "value", "min": -400, "max": 1250, "step": 1, "scale": 1, "unit": "C"}},
+    {"id": 107, "code": "humidity", "name": "Humidity", "mode": "ro", "type": "obj", "property": {"type": "value", "min": 0, "max": 1000, "step": 1, "scale": 1, "unit": "%"}},
+    {"id": 108, "code": "bus_voltage", "name": "Bus Voltage", "mode": "ro", "type": "obj", "property": {"type": "value", "min": 0, "max": 20000, "step": 1, "scale": 0, "unit": "mV"}},
+    {"id": 109, "code": "bus_current", "name": "Bus Current", "mode": "ro", "type": "obj", "property": {"type": "value", "min": -10000, "max": 10000, "step": 1, "scale": 0, "unit": "mA"}},
+    {"id": 110, "code": "bus_power", "name": "Bus Power", "mode": "ro", "type": "obj", "property": {"type": "value", "min": 0, "max": 100000, "step": 1, "scale": 0, "unit": "mW"}},
+    {"id": 111, "code": "assistant_state", "name": "Assistant State", "mode": "ro", "type": "obj", "property": {"type": "enum", "range": ["idle", "connecting", "listening", "thinking", "speaking", "network_unavailable", "error"]}},
+    {"id": 112, "code": "free_chat", "name": "Free Chat", "mode": "rw", "type": "obj", "property": {"type": "bool"}}
+  ]
+}
