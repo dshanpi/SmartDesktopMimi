@@ -57,6 +57,7 @@ static lv_obj_t *create_generated_icon(lv_obj_t *parent,
     lv_obj_t *symbol = lv_label_create(plate);
     const char *symbol_text = LV_SYMBOL_DIRECTORY;
     switch (entry->id) {
+    case APP_ID_IOT: symbol_text = LV_SYMBOL_HOME; break;
     case APP_ID_AI: symbol_text = LV_SYMBOL_AUDIO; break;
     case APP_ID_BT: symbol_text = LV_SYMBOL_BLUETOOTH; break;
     case APP_ID_WIFI: symbol_text = LV_SYMBOL_WIFI; break;
@@ -66,7 +67,7 @@ static lv_obj_t *create_generated_icon(lv_obj_t *parent,
     }
     if (entry->id == APP_ID_HDMI_MCP)
         symbol_text = LV_SYMBOL_EYE_OPEN;
-    else if (entry->id == APP_ID_OTA)
+    else if (entry->id == APP_ID_OTA || entry == &desktop_update_entry)
         symbol_text = LV_SYMBOL_DOWNLOAD;
     lv_label_set_text(symbol, symbol_text);
     /* LVGL symbols live in the built-in Montserrat fonts, not the runtime
@@ -103,6 +104,8 @@ static void app_click_cb(lv_event_t *event)
     const app_registry_entry_t *entry = lv_event_get_user_data(event);
     if (!entry)
         return;
+    for (uint32_t i=0; i<all_apps_count; ++i)
+        if (all_apps_cards[i] == lv_event_get_target(event)) all_apps_focus_index=(int32_t)i;
     ui_all_apps_hide();
     if (entry == &desktop_update_entry) desktop_update_show();
     else app_manager_open(entry->id);
@@ -205,6 +208,7 @@ static lv_obj_t *create_app_card(lv_obj_t *grid,
 
     const char *detail = "";
     switch (entry->id) {
+    case APP_ID_PAIRING: detail = ui_i18n_is_zh() ? "连接你的账号" : "Connect your account"; break;
     case APP_ID_NONE: detail = ui_i18n_is_zh() ? "桌面版本与安装" : "Desktop version & install"; break;
     case APP_ID_WIFI: detail = ui_tr(UI_STR_HOME_SCAN_CONNECT); break;
     case APP_ID_AI: detail = ui_i18n_is_zh() ? "语音与物联" : "Voice & IoT"; break;
@@ -330,5 +334,7 @@ void ui_all_apps_show(void)
     lv_anim_set_exec_cb(&animation, drawer_slide);
     lv_anim_start(&animation);
     if (group) { lv_group_add_obj(group, all_apps_grid); lv_group_focus_obj(all_apps_grid); }
-    focus_app_card(all_apps_focus_index);
+    lv_indev_t *input=lv_indev_get_act();
+    if (!input || lv_indev_get_type(input)!=LV_INDEV_TYPE_POINTER)
+        focus_app_card(all_apps_focus_index);
 }

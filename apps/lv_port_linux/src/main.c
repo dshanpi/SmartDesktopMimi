@@ -42,6 +42,7 @@
 
 #include "src/lib/driver_backends.h"
 #include "src/ui/ui.h"
+#include "src/ui/display_profile.h"
 #include "src/lib/simulator_util.h"
 #include "src/lib/simulator_settings.h"
 #include "src/system/backlight_control.h"
@@ -278,6 +279,14 @@ int main(int argc, char ** argv)
     }
 #endif
 
+    /* Fail before declaring a healthy UI when this geometry was not selected
+     * by the developer. There is deliberately no build-configuration UI. */
+    int display_width=lv_display_get_horizontal_resolution(NULL);
+    int display_height=lv_display_get_vertical_resolution(NULL);
+    if(!mimi_display_profile_allows(display_width,display_height)) {
+        fprintf(stderr,"Unsupported display %dx%d; compiled profiles: %s\n",display_width,display_height,mimi_display_profile_list());
+        return EXIT_FAILURE;
+    }
     /* Create UI */
     ui_init();
 

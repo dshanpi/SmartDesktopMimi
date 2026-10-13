@@ -9,6 +9,7 @@
 #include "src/ui/theme/theme.h"
 #include "src/ui/desktop_all_apps.h"
 #include "src/apps/pairing/pairing_app.h"
+#include "src/apps/iot/iot_app.h"
 #include "src/ui/desktop_home_tokens.h"
 #include "src/ui/desktop_status_bar.h"
 #include "src/ui/desktop_clock.h"
@@ -26,6 +27,17 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+/* Transport fixtures are only linked into this host renderer. They never
+ * read account configuration or call the real cloud. */
+static bool review_iot_connected;
+static unsigned review_iot_commands;
+int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_t cap){
+ if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
+ if(command){review_iot_commands++;snprintf(out,cap,"{\"accepted\":true,\"state_confirmed\":false}");return 0;}
+ if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
+ else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"TEST Lamp\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}");
+ return 0;
+}
 /* A local socket pair supplies the idle response; no device service is used. */
 static bool review_hdmi_idle;
 static int review_control_peer = -1;
@@ -206,7 +218,7 @@ static void test_launcher_rounds(void) {
   }
  }
  lv_indev_delete(pointer);
- puts("PASS 100 host pointer rounds across all 8 launcher apps and return to Home (800 entries)");
+ puts("PASS 100 host pointer rounds across every registered launcher app and return to Home");
 }
 static void test_home_navigation(void) {
  lv_obj_t *home=lv_screen_active();
@@ -341,6 +353,25 @@ int main(int argc,char**argv) {
   if(!strcmp(argv[1],"ota-error")){status.state=OTA_STATE_ERROR;status.error_code=11;}
   if(!strcmp(argv[1],"ota-downloading")){status.state=OTA_STATE_DOWNLOADING;status.progress=47;}
   emit(TOPIC_OTA_STATUS,&status,sizeof(status));
+ }else if(strncmp(argv[1],"iot",3)==0){
+  review_iot_connected=strcmp(argv[1],"iot")!=0;
+  app_iot.init();for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+  if(review_iot_connected){
+   lv_obj_t*l=find_label(lv_scr_act(),ui_i18n_is_zh()?"TEST Lamp  ·  在线":"TEST Lamp  ·  Online");assert(l);
+   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+   for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);
+   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);pump();
+   assert(review_iot_commands==0);
+   l=find_label(lv_layer_top(),ui_i18n_is_zh()?"取消":"Cancel");assert(l);
+   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);pump();assert(review_iot_commands==0);
+   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);pump();
+   l=find_label(lv_layer_top(),ui_i18n_is_zh()?"确认发送":"Send command");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+   for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+   assert(review_iot_commands==1);
+   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"指令已受理，尚未确认设备状态。请刷新核对结果。":"Command accepted; device state is not confirmed. Refresh to check the result."));
+   puts("PASS IoT host fixture: explicit confirmation, cancel sends nothing, one command, no false state confirmation");
+  }
  }else if(strcmp(argv[1],"pairing")==0){
   app_pairing.init();cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};
   strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();

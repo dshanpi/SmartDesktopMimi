@@ -16,6 +16,7 @@ typedef enum {
     APP_ID_USER_APPS,
     APP_ID_HDMI_MCP,
     APP_ID_PAIRING,
+    APP_ID_IOT,
     APP_ID_MAX
 } app_id_t;
 

@@ -106,6 +106,9 @@ def main():
         # A failed rebuild must not leave an earlier successful receipt usable.
         (a.build_dir/'application-build.json').unlink(missing_ok=True)
         env={**os.environ,'MIMI_SDK_ROOT':str(sdk),'STAGING_DIR':str(sdk)}
+        screens=os.environ.get('MIMI_DISPLAY_PROFILES','1024x768')
+        if not re.fullmatch(r'[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3}){0,15}',screens):
+            p.error('invalid build-time display profile list')
         cache=a.build_dir/'CMakeCache.txt'
         if cache.exists() and ('MIMI_SDK_ROOT:PATH='+str(sdk)) not in cache.read_text():
             p.error('build directory belongs to a different SDK; select a fresh --build-dir')
@@ -114,7 +117,7 @@ def main():
         subprocess.run(['cmake','-S',str(ROOT/'apps/lv_port_linux'),'-B',str(a.build_dir),
                         '-DCMAKE_TOOLCHAIN_FILE='+str(ROOT/'cmake/application-sdk.cmake'),
                         '-DAITVBOX_ENABLE_100ASK_CLOUD=OFF','-DAITVBOX_PLATFORM=a133',
-                        '-DMIMI_APPLICATION_ONLY=ON'],env=env,check=True)
+                        '-DMIMI_APPLICATION_ONLY=ON','-DMIMI_DISPLAY_PROFILES='+screens],env=env,check=True)
         subprocess.run(['cmake','--build',str(a.build_dir),'--target','lvglsim','-j4'],env=env,check=True)
         verify_sdk(sdk,a.expected_sdk_sha256)
         receipt=create_receipt(ROOT,record,a.expected_sdk_sha256,a.build_dir,before_source,before_contract)

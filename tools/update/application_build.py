@@ -60,11 +60,15 @@ def create_receipt(root, sdk, sdk_hash, build_dir, before_source, before_contrac
             raise ValueError('platform backend entered application-only build')
     ownership = source_ownership.audit_commands(root, commands)
     record=dict(schema_version=1,kind='application-build',platform_id=sdk['platform_id'],
+                target_os=sdk.get('target_os','tina'),
                 architecture=sdk['architecture'],system_baseline=sdk['system_baseline'],
                 sdk_lock_sha256=sdk_hash,source=before_source,interface=before_contract,
                 build=dict(target='lvglsim',application_only=True,cloud_provider=False,
                            compile_commands_sha256=digest(build_dir/'compile_commands.json'), **ownership),
                 desktop_sha256=digest(binary))
+    cache=(build_dir/'CMakeCache.txt').read_text()
+    display=re.search(r'^MIMI_DISPLAY_PROFILES:STRING=(.+)$',cache,re.MULTILINE)
+    record['build']['display_profiles']=display.group(1).split(',') if display else ['1024x768']
     destination=build_dir/'application-build.json'
     temporary=build_dir/'.application-build.json.tmp'
     temporary.write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')

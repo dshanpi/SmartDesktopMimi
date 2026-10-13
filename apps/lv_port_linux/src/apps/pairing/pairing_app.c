@@ -44,6 +44,8 @@ static void render_status(void)
         state=tr("设备身份认证失败，请检查出厂登记", "Device authentication failed. Check factory enrollment.");
     else if (snapshot.bind_token_error == -ENOKEY)
         state=tr("缺少出厂设备身份，请完成受控登记", "Factory identity missing. Complete controlled enrollment.");
+    else if (snapshot.bind_token_error == 200)
+        state=tr("服务器返回的绑定数据不可用，请检查服务端配对配置", "Server pairing data is unavailable. Check the server pairing configuration.");
     else if (snapshot.bind_token_error)
         state=tr("暂时无法获取绑定码，请检查网络后重试", "Cannot get a code. Check the network and retry.");
     else if (usable) state=tr("在 100ask.net 输入下方绑定码", "Enter this code at 100ask.net.");

@@ -634,6 +634,7 @@ find_library(GOBJECT_LIB NAMES gobject-2.0)
 find_library(GLIBCORE_LIB NAMES glib-2.0)
 find_library(SBC_LIB NAMES sbc)
 find_library(JSONC_LIB NAMES json-c)
+find_library(CURL_LIB NAMES curl REQUIRED)
 find_library(DBUS_LIB NAMES dbus-1)
 find_path(DBUS_INCLUDE_DIR NAMES dbus/dbus.h
     HINTS "${SYSROOT_PATH}/usr/include/dbus-1.0"
@@ -710,6 +711,7 @@ endif()
 endif() # NOT MIMI_APPLICATION_ONLY
 find_library(ASOUND_LIB NAMES asound)
 find_library(JSONC_LIB NAMES json-c)
+find_library(CURL_LIB NAMES curl REQUIRED)
 add_executable(lvglsim
     src/main.c
     ${UI_SOURCES}
@@ -723,6 +725,12 @@ add_executable(lvglsim
     ${THEME_SOURCES}
 )
 
+set(MIMI_DISPLAY_PROFILES "1024x768" CACHE STRING "Compiled screen geometries, selected by the developer")
+if(NOT MIMI_DISPLAY_PROFILES MATCHES "^[0-9]+x[0-9]+(,[0-9]+x[0-9]+)*$")
+    message(FATAL_ERROR "Invalid MIMI_DISPLAY_PROFILES")
+endif()
+target_compile_definitions(lvglsim PRIVATE MIMI_DISPLAY_PROFILES="${MIMI_DISPLAY_PROFILES}")
+
 # Repeat lvgl_linux to resolve circular dependency with lvgl
 target_link_libraries(lvglsim 
     lvgl_linux 
@@ -730,6 +738,7 @@ target_link_libraries(lvglsim
     lvgl_linux
     ${ASOUND_LIB}
     ${JSONC_LIB}
+    ${CURL_LIB}
 )
 
 target_include_directories(lvglsim SYSTEM PRIVATE
