@@ -30,3 +30,5 @@
 - 用户于 2026-10-13 要求：工作候选、SDK 输入快照与交付资料统一放在本开发目录的 `.delivery/`，不再创建旁置交付目录；该目录必须忽略提交并禁止公开导出。签名私钥仍按门禁保存在源码树外。用户已删除旧旁置目录，旧提交/产物记录仅作历史，不得当作现存交付物。
 
 - 用户于 2026-10-13 最新要求优先上传 100askTeam/A133-AIDesktop-Tina5 的底层驱动和板级适配差异。本次允许完成源码重放及敏感内容核对后上传私有 SDK 源码归档；不扩大到应用源码、升级包、系统镜像或公开 Release，这些仍等待全部必需真机验收。归档未测项目如实标 not_run，不标产品发布合格。
+
+- 用户于 2026-10-13 明确 SDK 差异必须沿用私有仓库根目录 repo overlay 形式：overlay/、meta/ 和 scripts/apply_overlay.sh；包含实际修改/新增源码、配置、下载包、固件包并展开未追踪目录。排除 out/bak/project/tools/OpenixCLI/tools/serial_agent/prebuilt/rootfsbuilt/.local_patch 和编译缓存；openwrt/target、openwrt/openwrt/target 保留。不得用另一套组件 patch 目录替代该使用入口。
