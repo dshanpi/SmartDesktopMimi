@@ -169,3 +169,8 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 ## 恢复 SDK 的打包输入检查
 
 完整构建开始前检查 A133/B6/OpenWrt 目标和当前 SDK 绝对路径、输出目录 .buildconfig 与根配置一致，以及固定哈希黄金启动镜像。缺失或不符立即停止，不等待编译后才报错；构建前后比对记录，保存 metadata/pack-inputs.json。恢复 SDK 时需要从已选且路径正确的根配置恢复输出配置副本，并从受控恢复依赖取回原黄金镜像并核对固定哈希。不得运行全量 Boot0/U-Boot 重编或放宽启动链门禁代替恢复输入。黄金镜像属于外部恢复依赖，不进入公开源码包或 repo overlay 的 out/ 归档。
+
+
+## A133 受控系统更新身份
+
+首次系统描述来自实板分区几何和已有设备登记，不从参考 B6 名称推定 PCB。U-Boot 的 YYYY.MM 版本以 YYYY.M.0 记录，实际提交/dirty 标记保留为 SemVer build metadata，例如实测 2018.07-gc77c46b-dirty 对应 2018.7.0+gc77c46b.dirty。必须同时保存原始版本证据，并与固定黄金 U-Boot 输入核对；此版本表示不能代替实机启动链/刷写哈希验收。通用镜像清空单机登记 ID，由受控登记记录提供设备身份。系统升级候选使用 --with-ota，集成专用 SWUpdate 验签公钥并生成签名 SWU；只有应用更新基线的构建不能标为系统 OTA 可交付。
