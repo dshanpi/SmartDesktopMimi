@@ -51,6 +51,12 @@ if [[ ! -d "${SDK}/.repo" ]]; then
 fi
 SDK="$(cd "${SDK}" && pwd)"
 
+# Fail before SDK mutation if an updater-enabled release lacks its signed input.
+if [[ "${MIMI_APPLICATION_UPDATES:-0}" == 1 || -d "${PRODUCT_ROOT}/build/mimi-baseline" ]]; then
+    python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify \
+        --output "${PRODUCT_ROOT}/build/mimi-baseline"
+fi
+
 # Tina's kernel build launches tools/build/buildserver in the background with
 # stdout redirected but stderr still inherited.  When this script is wrapped
 # by build_release.sh's tee pipeline, that inherited descriptor keeps the
@@ -410,6 +416,18 @@ elif find "${ROOTFS_EXTRACT}" -type f \
     \( -name 100ask_ecdsa.pem -o -name tls.key -o -name id_rsa \) \
     -print -quit | grep -q .; then
     die "private key file detected in final rootfs"
+fi
+
+# Verify bytes from the actual final filesystem, not an intermediate package.
+if [[ "${MIMI_APPLICATION_UPDATES:-0}" == 1 || -d "${PRODUCT_ROOT}/build/mimi-baseline" ]]; then
+    if [[ "${ROOTFS_TYPE}" == squashfs ]]; then
+        ROOTFS_EXTRACT="$(mktemp -d /tmp/aitvbox-rootfs-extract.XXXXXX)"
+        unsquashfs -no-progress -d "${ROOTFS_EXTRACT}" "${ROOTFS_IMAGE}" \
+            || die "cannot extract final rootfs for signed baseline readback"
+    fi
+    python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify-rootfs \
+        --output "${PRODUCT_ROOT}/build/mimi-baseline" --rootfs "${ROOTFS_EXTRACT}" \
+        || die "final rootfs signed baseline verification failed"
 fi
 
 [[ -z "${ROOTFS_LIST}" ]] || rm -f "${ROOTFS_LIST}"

@@ -579,3 +579,46 @@ func TestSystemCommitKeepsSharedUpdateLock(t *testing.T) {
 		t.Fatal("health/commit failed", err)
 	}
 }
+
+type launchProbe struct {
+	Hooks
+	start func(string) error
+}
+
+func (h launchProbe) Start(dir string) error { return h.start(dir) }
+
+func TestStartSelectedKeepsSharedUpdateLock(t *testing.T) {
+	e, hooks, _, _, _, _ := engineFixture(t)
+	called := false
+	e.Hooks = launchProbe{Hooks: hooks, start: func(dir string) error {
+		called = true
+		if dir != e.Factory {
+			t.Fatalf("started unselected directory %q", dir)
+		}
+		if err := e.Install("", nil, nil, "stable"); err == nil || !strings.Contains(err.Error(), "another application/system update") {
+			t.Fatalf("installation entered during platform launch: %v", err)
+		}
+		return fmt.Errorf("platform launch failed")
+	}}
+	if err := e.StartSelected(); err == nil || err.Error() != "platform launch failed" || !called {
+		t.Fatalf("launch failure was lost: %v, called=%v", err, called)
+	}
+	unlock, err := e.lock()
+	if err != nil {
+		t.Fatal("failed launch leaked shared lock", err)
+	}
+	unlock()
+}
+
+func TestStartSelectedRejectsUntrustedTreeBeforeLaunch(t *testing.T) {
+	e, hooks, _, _, _, _ := engineFixture(t)
+	if err := os.WriteFile(filepath.Join(e.Factory, "manifest.sig"), []byte("tampered"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.StartSelected(); err == nil {
+		t.Fatal("started an untrusted factory tree")
+	}
+	if len(hooks.starts) != 0 {
+		t.Fatal("platform launched before admission")
+	}
+}

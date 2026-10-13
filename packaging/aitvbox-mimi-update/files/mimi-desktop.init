@@ -1,5 +1,6 @@
 #!/bin/sh /etc/rc.common
-START=100
+# rc.d is sorted lexically; run after S99aitvbox, never as S100 before S98.
+START=99
 STOP=9
 start() {
     [ -f /etc/smartdesktopmimi/updater.json ] || return 0

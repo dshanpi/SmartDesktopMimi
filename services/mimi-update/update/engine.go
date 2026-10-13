@@ -191,6 +191,22 @@ func (e *Engine) Select() (string, error) {
 	defer unlock()
 	return e.selectLocked()
 }
+
+// StartSelected keeps admission and activation in the same transaction. A
+// concurrent application or system update must not replace the selected tree
+// between its verification and the platform launch.
+func (e *Engine) StartSelected() error {
+	unlock, err := e.lock()
+	if err != nil {
+		return err
+	}
+	defer unlock()
+	dir, err := e.selectLocked()
+	if err != nil {
+		return err
+	}
+	return e.Hooks.Start(dir)
+}
 func (e *Engine) selectLocked() (string, error) {
 	s, err := e.readState()
 	if err != nil {

@@ -26,6 +26,7 @@ KEYS=(
     "CONFIG_PACKAGE_aitvbox-platform"
     "CONFIG_PACKAGE_aitvbox-usb-hid"
     "CONFIG_PACKAGE_aitvbox-ipkvm"
+    "CONFIG_PACKAGE_aitvbox-mimi-update"
 )
 
 set_config() {

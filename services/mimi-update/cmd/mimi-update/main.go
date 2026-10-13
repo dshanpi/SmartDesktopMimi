@@ -188,11 +188,7 @@ func run() error {
 		defer cancel()
 		return s.Serve(ctx)
 	case "start-selected":
-		dir, e := engine.Select()
-		if e != nil {
-			return e
-		}
-		return engine.Hooks.Start(dir)
+		return engine.StartSelected()
 	case "system-health":
 		return engine.SystemHealth(nil)
 	case "system-commit":

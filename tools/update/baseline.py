@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 from pathlib import Path
 import shutil
 import struct
@@ -41,6 +42,58 @@ def verify(directory):
     if factory['commit']!=seal['factory_commit'] or factory['package_sha256']!=seal['factory_package_sha256']:raise ValueError('factory provenance mismatch')
     if device.get('enrollment_id'):raise ValueError('unit-specific enrollment must not be baked into an image')
     if (root/'overlay').exists():raise ValueError('factory data does not belong in a generic image')
+    return seal
+
+
+def verify_rootfs(directory, rootfs):
+    """Compare the final filesystem with the prepared, verified factory input.
+
+    This is a packaging readback, not a replacement for signature verification
+    during prepare or for physical enrollment and upgrade acceptance.
+    """
+    seal=verify(directory)
+    rootfs=rootfs.resolve(strict=True)
+
+    def regular(relative):
+        path=rootfs
+        for part in Path(relative).parts:
+            path=path/part
+            if path.is_symlink():raise ValueError('final rootfs link in protected path: '+relative)
+            if not path.exists():raise ValueError('final rootfs missing: '+relative)
+            if path.stat().st_mode&0o022:raise ValueError('final rootfs writable protected path: '+relative)
+        if not path.is_file():raise ValueError('final rootfs is not a regular file: '+relative)
+        return path
+
+    for relative,expected in seal['files'].items():
+        actual=regular(relative)
+        if digest(actual)!=expected['sha256'] or actual.stat().st_mode&0o777!=expected['mode']:
+            raise ValueError('final rootfs differs from signed baseline: '+relative)
+    # Do not allow an unsigned extra library or configuration alongside the seal.
+    for prefix in ['etc/smartdesktopmimi','usr/lib/smartdesktopmimi/factory']:
+        actual=inventory(rootfs/prefix)
+        expected={p[len(prefix)+1:]:v for p,v in seal['files'].items() if p.startswith(prefix+'/')}
+        if actual!=expected:raise ValueError('final rootfs has unexpected baseline files: '+prefix)
+    for source,target in [('aitvbox.init','etc/init.d/aitvbox'),('start-ui.sh','usr/bin/aitvbox-start-ui')]:
+        path=regular(target)
+        if digest(path)!=digest(ROOT/'packaging/aitvbox-suite/files'/source) or path.stat().st_mode&0o777!=0o755:
+            raise ValueError('final rootfs has stale desktop launcher: '+target)
+    # OpenWrt sorts rc.d lexically: S100 would run before S98 and S99.
+    links={'S98mimi-update':'mimi-update','S99aitvbox':'aitvbox','S99mimi-desktop':'mimi-desktop'}
+    rc=rootfs/'etc/rc.d'
+    if rc.is_symlink() or not rc.is_dir() or rc.stat().st_mode&0o022:
+        raise ValueError('final rootfs has unsafe or missing rc.d')
+    for name,service in links.items():
+        path=rc/name
+        if not path.is_symlink():raise ValueError('final rootfs missing enabled service: '+name)
+        target=os.readlink(path)
+        resolved=posixpath.normpath(target if target.startswith('/') else '/etc/rc.d/'+target)
+        if resolved!='/etc/init.d/'+service:
+            raise ValueError('final rootfs wrong service target: '+name)
+    for path in rc.iterdir():
+        if path.name.startswith('S') and any(path.name.endswith(service) for service in links.values()) and path.name not in links:
+            raise ValueError('final rootfs stale service ordering: '+path.name)
+    if (rootfs/'overlay/smartdesktopmimi-platform/enrollment.json').exists():
+        raise ValueError('unit-specific enrollment must not be baked into final rootfs')
     return seal
 
 def prepare(args):
@@ -88,8 +141,9 @@ def prepare(args):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation',choices=['prepare','verify'])
+    parser.add_argument('operation',choices=['prepare','verify','verify-rootfs'])
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--rootfs',type=Path,help='extracted final filesystem, read-only verification')
     for name in ['device','trust','application','updater','checker']:parser.add_argument('--'+name,type=Path)
     parser.add_argument('--system-device',type=Path,help='controlled A133 system descriptor with measured partition geometry')
     args=parser.parse_args();args.output=args.output.resolve()
@@ -98,7 +152,9 @@ def main():
             value=getattr(args,name)
             if value is None:parser.error('prepare requires --'+name)
             setattr(args,name,value.resolve())
-    try:result=prepare(args) if args.operation=='prepare' else verify(args.output)
+    if args.operation=='verify-rootfs' and args.rootfs is None:parser.error('verify-rootfs requires --rootfs')
+    try:
+        result=prepare(args) if args.operation=='prepare' else verify_rootfs(args.output,args.rootfs) if args.operation=='verify-rootfs' else verify(args.output)
     except (ValueError,KeyError,OSError,subprocess.CalledProcessError) as error:parser.exit(1,'BASELINE BLOCKED: '+str(error)+'\n')
     print('PASS signed factory baseline '+result['factory_version']+'; physical enrollment and acceptance still required')
 if __name__=='__main__':main()

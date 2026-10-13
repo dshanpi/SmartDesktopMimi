@@ -7,6 +7,12 @@ ifeq ($(origin AITVBOX_PRODUCT_BUILD),undefined)
 $(error AITVBOX_PRODUCT_BUILD is required)
 endif
 PRODUCT_ROOT:=$(abspath $(AITVBOX_PRODUCT_BUILD))
+# Factory executables are already covered by signed file hashes. Never strip
+# them after signing; size reduction belongs before application packaging.
+RSTRIP:=:
+PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/build/mimi-update/mimi-update
+PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/build/mimi-baseline
+PKG_FILE_DEPENDS += ./files
 define Package/aitvbox-mimi-update
   SECTION:=utils
   CATEGORY:=Allwinner

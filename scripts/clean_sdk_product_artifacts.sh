@@ -29,6 +29,17 @@ ROOTS=(
 )
 
 PRODUCT_PATHS=(
+    "usr/bin/mimi-update"
+    "usr/libexec/mimi-platform-provider"
+    "usr/lib/smartdesktopmimi/factory"
+    "etc/smartdesktopmimi"
+    "etc/init.d/mimi-update"
+    "etc/init.d/mimi-desktop"
+    "etc/rc.d/S98mimi-update"
+    "etc/rc.d/S100mimi-desktop"
+    "etc/rc.d/S99mimi-desktop"
+    "etc/rc.d/K11mimi-update"
+    "etc/rc.d/K09mimi-desktop"
     "usr/bin/lv_backend"
     "usr/bin/lvglsim"
     "usr/bin/hdmi_preview"
@@ -74,6 +85,7 @@ PRODUCT_PATHS=(
 )
 
 PRODUCT_PACKAGES=(
+    "aitvbox-mimi-update"
     "aitvbox-suite"
     "aitvbox-platform"
     "aitvbox-usb-hid"

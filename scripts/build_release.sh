@@ -74,6 +74,7 @@ from release_identity import tag_for
 print('System release tag:',tag_for('system',sys.argv[2],'a133'))
 VERSION_CHECK
 export MIMI_SYSTEM_VERSION
+export MIMI_APPLICATION_UPDATES="${APPLICATION_UPDATES}"
 
 
 for command in git make cmake rsync unsquashfs debugfs blkid sha256sum file; do
