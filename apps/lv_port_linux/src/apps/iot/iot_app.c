@@ -89,6 +89,8 @@ static void launch(const char * path, const char * command)
         job_result[0] = 0;
     }
     pthread_mutex_unlock(&mutex);
+    lv_obj_set_style_max_height(message, LV_COORD_MAX, 0);
+    lv_label_set_long_mode(message, LV_LABEL_LONG_WRAP);
     lv_label_set_text(message, tr("正在连接…", "Connecting…"));
     lv_obj_add_state(refresh, LV_STATE_DISABLED);
 }
@@ -124,8 +126,15 @@ static lv_obj_t * button(lv_obj_t * parent, const char * text, lv_event_cb_t cb,
 {
     lv_obj_t * b = lv_button_create(parent);
     mimi_ui_button_style(b, true);
-    lv_obj_set_size(b, lv_pct(100), 56);
+    lv_obj_set_size(b, lv_pct(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_min_height(b, 56, 0);
     lv_obj_t * l = mimi_ui_text(b, text, ui_font_body_md(), MIMI_TEXT);
+    lv_obj_set_width(l, lv_pct(100));
+    lv_obj_set_style_max_height(l, 2 * ui_font_body_md()->line_height, 0);
+    lv_label_set_long_mode(l, LV_LABEL_LONG_DOT);
+    lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_flex_flow(b, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(b, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_center(l);
     lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, data);
     return b;
@@ -171,11 +180,15 @@ static void confirm(lv_event_t * e)
     lv_obj_set_size(modal, lv_pct(88), LV_SIZE_CONTENT);
     lv_obj_center(modal);
     mimi_ui_surface(modal, 18);
+    lv_obj_set_style_max_height(modal, lv_display_get_vertical_resolution(NULL) - 48, 0);
+    lv_obj_add_flag(modal, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(modal, LV_DIR_VER);
     lv_obj_set_style_pad_all(modal, 24, 0);
     lv_obj_set_flex_flow(modal, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(modal, 14, 0);
     lv_obj_t * l = mimi_ui_text(modal, tr("确认控制设备", "Confirm device command"), ui_font_h2(), MIMI_TEXT);
-    (void)l;
+    lv_obj_set_width(l, lv_pct(100));
+    lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
     l = mimi_ui_text(modal, selected_name, ui_font_body_lg(), MIMI_TEXT);
     lv_obj_set_width(l, lv_pct(100));
     lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
@@ -206,6 +219,9 @@ static void show_functions(json_object * root)
         lv_label_set_text(message, tr("设备指令数据不可用", "Device command data is unavailable"));
         return;
     }
+    /* Keep controls reachable; the confirmation shows the complete name. */
+    lv_obj_set_style_max_height(message, 3 * ui_font_body_lg()->line_height, 0);
+    lv_label_set_long_mode(message, LV_LABEL_LONG_DOT);
     lv_label_set_text(message, selected_name);
     for(size_t i = 0; i < json_object_array_length(items) && control_count < 24; i++) {
         json_object * f  = json_object_array_get_idx(items, i);
@@ -223,7 +239,9 @@ static void show_functions(json_object * root)
         lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_style_pad_all(card, 16, 0);
         lv_obj_set_style_pad_row(card, 12, 0);
-        mimi_ui_text(card, code, ui_font_body_lg(), MIMI_TEXT);
+        lv_obj_t * caption = mimi_ui_text(card, code, ui_font_body_lg(), MIMI_TEXT);
+        lv_obj_set_width(caption, lv_pct(100));
+        lv_label_set_long_mode(caption, LV_LABEL_LONG_WRAP);
         if(!strcmp(type, "Boolean")) {
             c->input = lv_switch_create(card);
         } else if(!strcmp(type, "Integer")) {
@@ -269,6 +287,7 @@ static void show_functions(json_object * root)
                 continue;
             }
             c->input = lv_dropdown_create(card);
+            lv_obj_set_width(c->input, lv_pct(100));
             lv_dropdown_set_options(c->input, options);
         }
         json_object_put(schema);

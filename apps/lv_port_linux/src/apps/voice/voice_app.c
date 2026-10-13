@@ -8,7 +8,8 @@
 #include "../../ui/ui_fonts.h"
 #include "../../ui/desktop_all_apps.h"
 #include <string.h>
-static lv_obj_t *entry, *message, *confirm_button, *listen_button, *enable_button, *keyboard;
+static lv_obj_t *entry, *message, *confirm_button, *listen_button, *enable_button, *keyboard, *body;
+static int32_t body_height;
 static lv_timer_t * timer;
 static bool active, enabled, armed, owns_session, listening_seen, received;
 static ai_status_t status;
@@ -20,6 +21,13 @@ static char last_user_text[sizeof(((ai_text_t *)0)->text)];
 static const char * tr(const char * z, const char * e)
 {
     return ui_i18n_is_zh() ? z : e;
+}
+static void hide_keyboard(void)
+{
+    if(!keyboard || !body) return;
+    lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_height(body, body_height);
+    lv_obj_update_layout(body);
 }
 static void send(ai_cmd_action_t action)
 {
@@ -43,6 +51,7 @@ static void clear_proposal(void)
 static void prepare(lv_event_t * event)
 {
     (void)event;
+    hide_keyboard();
     stop_listen();
     clear_proposal();
     if(mimi_command_parse(lv_textarea_get_text(entry), &proposal)) {
@@ -97,6 +106,7 @@ static void start_listen(lv_event_t * event)
     if(!enabled || !received || !status.tuya_bound || !status.control_center_running || status.free_chat_active ||
        status.state != AI_STATE_IDLE || owns_session)
         return;
+    hide_keyboard();
     clear_proposal();
     lv_textarea_set_text(entry, "");
     armed          = true;
@@ -203,6 +213,9 @@ static lv_obj_t * button(lv_obj_t * p, const char * text, lv_event_cb_t cb)
     mimi_ui_button_style(b, true);
     lv_obj_set_size(b, lv_pct(100), 52);
     lv_obj_t * l = mimi_ui_text(b, text, ui_font_body_md(), MIMI_TEXT);
+    lv_obj_set_width(l, lv_pct(100));
+    lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(l);
     lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, NULL);
     return b;
@@ -210,6 +223,7 @@ static lv_obj_t * button(lv_obj_t * p, const char * text, lv_event_cb_t cb)
 static void cancel(lv_event_t * e)
 {
     (void)e;
+    hide_keyboard();
     stop_listen();
     clear_proposal();
     lv_textarea_set_text(entry, "");
@@ -230,7 +244,7 @@ static void close_app(void)
         lv_timer_delete(timer);
         timer = NULL;
     }
-    entry = message = confirm_button = listen_button = enable_button = keyboard = NULL;
+    entry = message = confirm_button = listen_button = enable_button = keyboard = body = NULL;
     proposal                                                                    = MIMI_COMMAND_NONE;
     enabled = received = false;
     memset(&status, 0, sizeof(status));
@@ -242,12 +256,16 @@ static void focus(lv_event_t * e)
     if(keyboard) {
         lv_keyboard_set_textarea(keyboard, entry);
         lv_obj_remove_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+        /* Reserve space for the keyboard, then reveal the complete input. */
+        lv_obj_set_height(body, LV_MAX(96, body_height - lv_obj_get_height(keyboard)));
+        lv_obj_update_layout(body);
+        lv_obj_scroll_to_view_recursive(entry, LV_ANIM_OFF);
     }
 }
 static void keyboard_event(lv_event_t * e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    if(code == LV_EVENT_READY || code == LV_EVENT_CANCEL) lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
+    if(code == LV_EVENT_READY || code == LV_EVENT_CANCEL) hide_keyboard();
 }
 static void init_app(void)
 {
@@ -255,7 +273,9 @@ static void init_app(void)
     active            = true;
     lv_obj_t * screen = lv_obj_create(NULL);
     mimi_ui_header(screen, tr("语音操作", "Voice actions"), back);
-    lv_obj_t * body = mimi_ui_body(screen);
+    body = mimi_ui_body(screen);
+    lv_obj_update_layout(body);
+    body_height = lv_obj_get_height(body);
     lv_obj_set_flex_flow(body, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(body, 12, 0);
     lv_obj_add_flag(body, LV_OBJ_FLAG_SCROLLABLE);
@@ -278,6 +298,7 @@ static void init_app(void)
     lv_textarea_set_placeholder_text(entry, tr("例如：打开设置", "Example: open settings"));
     lv_obj_add_event_cb(entry, edited, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(entry, focus, LV_EVENT_FOCUSED, NULL);
+    lv_obj_add_event_cb(entry, focus, LV_EVENT_CLICKED, NULL);
     button(body, tr("预览文字指令", "Preview command"), prepare);
     message = mimi_ui_text(body, tr("语音控制已关闭", "Voice control is off"), ui_font_body_md(), MIMI_TEXT);
     lv_obj_set_width(message, lv_pct(100));
@@ -286,7 +307,8 @@ static void init_app(void)
     lv_obj_add_state(confirm_button, LV_STATE_DISABLED);
     button(body, tr("取消", "Cancel"), cancel);
     keyboard = lv_keyboard_create(screen);
-    lv_obj_set_size(keyboard, lv_pct(100), 280);
+    mimi_ui_keyboard_style(keyboard);
+    lv_obj_set_size(keyboard, lv_pct(100), LV_MIN(280, lv_display_get_vertical_resolution(NULL) / 2));
     lv_obj_align(keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_add_flag(keyboard, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_event_cb(keyboard, keyboard_event, LV_EVENT_ALL, NULL);

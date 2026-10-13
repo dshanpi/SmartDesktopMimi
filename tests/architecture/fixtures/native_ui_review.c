@@ -3,6 +3,7 @@
  * Run through scripts/render_ui_review.py from the repository root.
  */
 #include "lvgl/lvgl.h"
+#include "lvgl/src/widgets/buttonmatrix/lv_buttonmatrix_private.h"
 #include "src/ui/ui.h"
 #include "src/ui/ui_fonts.h"
 #include "src/ui/ui_i18n.h"
@@ -34,12 +35,13 @@ static bool review_iot_connected;
 static unsigned review_iot_commands;
 static const char *review_iot_reply="{\"accepted\":true,\"state_confirmed\":false}";
 static unsigned review_iot_delay_us;
+static const char *review_iot_name="TEST Lamp";
 int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_t cap){
  if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
  if(command){review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
- else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"TEST Lamp\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}");
+ else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"%s\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}",review_iot_name);
  return 0;
 }
 /* A local socket pair supplies the idle response; no device service is used. */
@@ -88,10 +90,11 @@ int sys_volume_set_percent(int p) {volume=p;return 0;}
 static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
 int mw_subscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(!callbacks[t][i]){callbacks[t][i]=c;return 0;}return -1;}
 int mw_unsubscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(callbacks[t][i]==c)callbacks[t][i]=NULL;return 0;}
-static int connect_count, ai_exit_count, ota_commands, last_ota_command;
+static int connect_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
+ if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
  if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_CONNECT) {
@@ -143,6 +146,12 @@ static lv_obj_t *find_label(lv_obj_t *root, const char *text) {
   lv_obj_t *found=find_label(lv_obj_get_child(root,i),text);if(found)return found;
  }
  return NULL;
+}
+static lv_obj_t *find_label_prefix(lv_obj_t *root, const char *prefix) {
+ if(lv_obj_check_type(root,&lv_label_class) && !strncmp(lv_label_get_text(root),prefix,strlen(prefix)))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){
+  lv_obj_t *found=find_label_prefix(lv_obj_get_child(root,i),prefix);if(found)return found;
+ }return NULL;
 }
 static void test_sliders(lv_obj_t *root, int *index) {
  if(lv_obj_check_type(root,&lv_slider_class)) {
@@ -199,6 +208,45 @@ static void tap_screen(lv_indev_t *pointer, int x, int y) {
  touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
  touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();
  lv_tick_inc(500);pump();pump();
+}
+/* Scroll real widgets into view and use the pointer, rather than dispatching
+ * click events to controls which could be clipped or covered. */
+static void tap_widget(lv_obj_t *widget) {
+ lv_obj_scroll_to_view_recursive(widget,LV_ANIM_OFF);pump();lv_obj_update_layout(widget);
+ lv_area_t b;lv_obj_get_coords(widget,&b);
+ assert(b.x1>=0 && b.y1>=0 && b.x2<review_width && b.y2<review_height);
+ for(lv_obj_t*p=lv_obj_get_parent(widget);p;p=lv_obj_get_parent(p)) {
+  lv_area_t a;lv_obj_get_content_coords(p,&a);
+  if(lv_obj_has_flag(p,LV_OBJ_FLAG_SCROLLABLE))assert(b.x1>=a.x1 && b.x2<=a.x2 && b.y1>=a.y1 && b.y2<=a.y2);
+ }
+ lv_indev_t*p=lv_indev_create();lv_indev_set_type(p,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(p,touch_read);
+ touch_state=LV_INDEV_STATE_RELEASED;tap_screen(p,(b.x1+b.x2)/2,(b.y1+b.y2)/2);lv_indev_delete(p);
+}
+static lv_obj_t* find_keyboard(lv_obj_t*root) {
+ if(lv_obj_check_type(root,&lv_keyboard_class))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t*v=find_keyboard(lv_obj_get_child(root,i));if(v)return v;}return NULL;
+}
+static void test_voice_keyboard(void) {
+ app_voice.init();pump();lv_obj_t*entry=find_textarea(lv_scr_act());assert(entry);
+ lv_obj_t*body=lv_obj_get_parent(entry),*kb=find_keyboard(lv_scr_act());assert(kb);
+ int original_height=lv_obj_get_height(body),before=app_open_count;
+ tap_widget(entry);assert(!lv_obj_has_flag(kb,LV_OBJ_FLAG_HIDDEN));
+ lv_area_t a,b,v;lv_obj_get_coords(entry,&a);lv_obj_get_coords(kb,&b);lv_obj_get_coords(body,&v);
+ assert(a.y1>=v.y1 && a.y2<=v.y2 && v.y2<b.y1 && b.y2<review_height);
+ lv_textarea_set_text(entry,"open settings");
+ /* Find and press the actual on-screen ready key. */
+ uint32_t count=((lv_buttonmatrix_t*)kb)->btn_cnt;bool pressed=false;
+ for(uint32_t i=0;i<count;i++)if(!strcmp(lv_buttonmatrix_get_button_text(kb,i),LV_SYMBOL_OK)) {
+  lv_area_t key=((lv_buttonmatrix_t*)kb)->button_areas[i];
+  lv_indev_t*p=lv_indev_create();lv_indev_set_type(p,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(p,touch_read);
+  touch_state=LV_INDEV_STATE_RELEASED;tap_screen(p,b.x1+(key.x1+key.x2)/2,b.y1+(key.y1+key.y2)/2);lv_indev_delete(p);pressed=true;break;
+ }
+ assert(pressed && lv_obj_has_flag(kb,LV_OBJ_FLAG_HIDDEN));assert(lv_obj_get_height(body)==original_height);
+ assert(app_open_count==before); /* Ready closes input; it never executes. */
+ lv_obj_t*l=find_label(lv_scr_act(),ui_i18n_is_zh()?"预览文字指令":"Preview command");assert(l);tap_widget(lv_obj_get_parent(l));
+ l=find_label(lv_scr_act(),ui_i18n_is_zh()?"确认执行":"Confirm action");assert(l);tap_widget(lv_obj_get_parent(l));assert(app_open_count==before+1);
+ tap_widget(entry);assert(!lv_obj_has_flag(kb,LV_OBJ_FLAG_HIDDEN));
+ puts("PASS voice keyboard: input remains above keyboard, ready restores viewport, pointer preview/confirm, reopening works");
 }
 static void test_launcher_rounds(void) {
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
@@ -389,6 +437,8 @@ int main(int argc,char**argv) {
   if(!strcmp(argv[1],"ota-error")){status.state=OTA_STATE_ERROR;status.error_code=11;}
   if(!strcmp(argv[1],"ota-downloading")){status.state=OTA_STATE_DOWNLOADING;status.progress=47;}
   emit(TOPIC_OTA_STATUS,&status,sizeof(status));
+ }else if(strcmp(argv[1],"voice-keyboard")==0){
+  test_voice_keyboard();
  }else if(strcmp(argv[1],"voice")==0){
   app_voice.init();pump();lv_obj_t*entry=find_textarea(lv_scr_act());assert(entry);
   ai_text_t text={0};strcpy(text.text,"You: 打开设置");emit(TOPIC_AI_TEXT,&text,sizeof(text));assert(!strlen(lv_textarea_get_text(entry)));
@@ -431,6 +481,8 @@ int main(int argc,char**argv) {
  }else if(strncmp(argv[1],"iot",3)==0){
   review_iot_connected=strcmp(argv[1],"iot")!=0;
   bool rejected=!strcmp(argv[1],"iot-rejected"),malformed=!strcmp(argv[1],"iot-malformed");
+  bool long_modal=!strcmp(argv[1],"iot-long-modal");
+  if(long_modal)review_iot_name="TEST living room lamp with a deliberately long descriptive name to verify wrapping and access to confirmation and cancellation on small screens TEST living room lamp with a deliberately long descriptive name to verify wrapping on small screens";
   if(rejected)review_iot_reply="{\"accepted\":false,\"state_confirmed\":false}";
   if(malformed)review_iot_reply="{\"accepted\":true,\"state_confirmed\":false} garbage";
   if(!strcmp(argv[1],"iot-reopen")){
@@ -443,16 +495,23 @@ int main(int argc,char**argv) {
   }
   app_iot.init();for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
   if(review_iot_connected){
-   lv_obj_t*l=find_label(lv_scr_act(),ui_i18n_is_zh()?"TEST Lamp  ·  在线":"TEST Lamp  ·  Online");assert(l);
-   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+   char device_label[600];snprintf(device_label,sizeof(device_label),"%s  ·  %s",review_iot_name,ui_i18n_is_zh()?"在线":"Online");
+   lv_obj_t*l=long_modal?find_label_prefix(lv_scr_act(),"TEST living room"):find_label(lv_scr_act(),device_label);assert(l);
+   tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);
-   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);pump();
+   tap_widget(lv_obj_get_parent(l));pump();
    assert(review_iot_commands==0);
    l=find_label(lv_layer_top(),ui_i18n_is_zh()?"取消":"Cancel");assert(l);
-   lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);pump();assert(review_iot_commands==0);
-   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);pump();
-   l=find_label(lv_layer_top(),ui_i18n_is_zh()?"确认发送":"Send command");assert(l);lv_obj_send_event(lv_obj_get_parent(l),LV_EVENT_CLICKED,NULL);
+   tap_widget(lv_obj_get_parent(l));pump();assert(review_iot_commands==0);
+   l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);tap_widget(lv_obj_get_parent(l));pump();
+   l=find_label(lv_layer_top(),ui_i18n_is_zh()?"确认发送":"Send command");assert(l);
+   if(long_modal){
+    lv_obj_t*m=lv_obj_get_parent(lv_obj_get_parent(l));lv_area_t a;lv_obj_get_coords(m,&a);assert(a.x1>=0 && a.y1>=0 && a.x2<review_width && a.y2<review_height);
+    lv_obj_scroll_to_view_recursive(lv_obj_get_parent(l),LV_ANIM_OFF);pump();
+    save(argv[4]);puts("PASS long device name: wrapped list, pointer selection/cancel, bounded scrollable confirmation");return 0;
+   }
+   tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
    assert(review_iot_commands==1);
    const char *accepted=ui_i18n_is_zh()?"指令已受理，尚未确认设备状态。请刷新核对结果。":"Command accepted; device state is not confirmed. Refresh to check the result.";
@@ -468,6 +527,9 @@ int main(int argc,char**argv) {
   strcpy(status.bind_token,"1234a6");status.bind_token_expires_in=60;
   emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));assert(!find_label(lv_scr_act(),"1234a6"));
   strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+  lv_obj_t*refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code");assert(refresh);
+  tap_widget(lv_obj_get_parent(refresh));assert(pairing_refreshes==1);assert(!find_label(lv_scr_act(),"123456"));
+  emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
   puts("PASS pairing: fresh code visible, expired/malformed code hidden");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
  else if(strcmp(argv[1],"wifi")==0 || strcmp(argv[1],"password")==0){

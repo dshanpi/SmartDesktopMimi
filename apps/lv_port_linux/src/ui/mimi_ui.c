@@ -88,7 +88,8 @@ lv_obj_t *mimi_ui_header(lv_obj_t *parent, const char *title,
     lv_obj_align(caption, LV_ALIGN_LEFT_MID, 20, 0);
 
     lv_obj_t *label = mimi_ui_text(bar, title, ui_font_h2(), MIMI_TEXT);
-    lv_obj_set_width(label, lv_pct(65));
+    /* Reserve the back button's space on both sides of a centered title. */
+    lv_obj_set_width(label, LV_MAX(1, lv_display_get_horizontal_resolution(NULL) - 256));
     lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(label);
