@@ -1,5 +1,6 @@
 #include "desktop_clock.h"
 #include "desktop_all_apps.h"
+#include "desktop_update.h"
 #include "desktop_home_tokens.h"
 #include "theme/theme.h"
 #include "ui_fonts.h"
@@ -99,7 +100,7 @@ static void home_action_event(lv_event_t *event)
         app_manager_open(APP_ID_WIFI);
         break;
     case HOME_ACTION_UPDATES:
-        app_manager_open(APP_ID_OTA);
+        desktop_update_show();
         break;
     case HOME_ACTION_SETTINGS:
         app_manager_open(APP_ID_SETTING);
