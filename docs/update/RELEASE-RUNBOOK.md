@@ -164,3 +164,8 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 独立源码不包含受限涂鸦 A133 库与离线 Python 工具。平台构建使用绝对路径 `AITVBOX_TUYA_VENDOR_ROOT` 和 `TUYAOPEN_TOOLS_ROOT` 指向开发目录中受控依赖，私有云仍使用 `AITVBOX_ENABLE_100ASK_CLOUD=ON` 与外部 `AITVBOX_100ASK_SDK_ROOT`。库安装、审计、构建准备和自动构建入口使用同一库路径；离线工具仅链接进被忽略的构建工作副本。不得将这些输入复制到公开源码归档。
 
 完整构建前后对外部 vendor 文件、权限和内部相对链接生成确定性清单并比对哈希，拒绝逃逸链接；元数据保存 vendor-inputs.json，构建记录固定 VENDOR_INPUT_SHA256。这些哈希不替代合法来源、完整 SDK 输入和实机验收。系统构建使用统一 SemVer 校验，允许正式版本及合法 rc 版本，拒绝前导零等不合法版本。
+
+
+## 恢复 SDK 的打包输入检查
+
+完整构建开始前检查 A133/B6/OpenWrt 目标和当前 SDK 绝对路径、输出目录 .buildconfig 与根配置一致，以及固定哈希黄金启动镜像。缺失或不符立即停止，不等待编译后才报错；构建前后比对记录，保存 metadata/pack-inputs.json。恢复 SDK 时需要从已选且路径正确的根配置恢复输出配置副本，并从受控恢复依赖取回原黄金镜像并核对固定哈希。不得运行全量 Boot0/U-Boot 重编或放宽启动链门禁代替恢复输入。黄金镜像属于外部恢复依赖，不进入公开源码包或 repo overlay 的 out/ 归档。

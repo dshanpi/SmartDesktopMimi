@@ -165,6 +165,8 @@ echo "  target  : A133 / B6 / UART0"
 echo "  OTA     : ${WITH_OTA}"
 echo
 
+python3 "$PRODUCT_ROOT/tools/update/pack_inputs.py" "$SDK"
+
 echo "==> 检查脚本语法"
 while IFS= read -r script; do
     bash -n "${script}"
@@ -232,6 +234,9 @@ run_logged() {
 python3 "$PRODUCT_ROOT/tools/update/external_inputs.py" "$AITVBOX_TUYA_VENDOR_ROOT" \
     --expect "$VENDOR_INPUT_SHA" --output "$OUTPUT_DIR/metadata/vendor-inputs.json"
 
+python3 "$PRODUCT_ROOT/tools/update/pack_inputs.py" "$SDK" \
+    --output "$OUTPUT_DIR/metadata/pack-inputs.json"
+
 run_logged 10-build-apps "${SELF_DIR}/build_apps.sh" --clean "${SDK}"
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     run_logged 20-build-firmware env AITVBOX_OTA=1 \
@@ -254,6 +259,9 @@ require_file "${ROOTFS_IMAGE}" "SDK 构建未生成 rootfs.img"
 # execute the board-verified gate before copying the image into a release.
 run_logged 50-bootchain-gate "${SELF_DIR}/a133-bootchain-gate.sh" \
     "${FIRMWARE_IMAGE}" "${SDK}"
+
+python3 "$PRODUCT_ROOT/tools/update/pack_inputs.py" "$SDK" \
+    --expect "$OUTPUT_DIR/metadata/pack-inputs.json"
 
 echo "==> 归档发布产物"
 cp --reflink=auto --preserve=timestamps "${FIRMWARE_IMAGE}" "${OUTPUT_DIR}/firmware/"
