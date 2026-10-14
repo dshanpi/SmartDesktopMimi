@@ -5,3 +5,10 @@
 流程：先读取已运行r2实际终态/PID，不重复启动→核对BUILD-COMPLETE/INCOMPLETE、97源码/8启动链/配置、应用-系统版本锁、实际镜像/SWU摘要→按现有校验工具执行ext4/工厂签名应用/运行库/启动链与签名目标门禁→在原MCP project4/device4/COM17/固定USB作用域且空闲时只读能力/工具参数和绑定USB设备清单→依据实际能力选合法受控FEL/安装方案。未取得真实签名/目标/当前数据备份与恢复依赖前，不进行刷写/擦除；绝不把不完整产物当固件、绕过vendorPolicy或用通用ADB/shell/devmem进入编程模式。若专用FEL流程最终需要物理按键，准备可核对产物后给出明确操作要求，不用无限重启替代。
 
 不变量：HDMI off，原钥/设备绑定不变；不移动标签或覆盖发布资产；无应用/Release上传；仅绑定scope的硬件，旧构建/观察未终态不破坏。当前能力读取和产物验收not_run；真实镜像安装、系统升级回退/阶段断电/全数据保持not_run。只读能力和USB可见性不算安装许可/目标确认通过。
+
+配置来源复核：raw差异只有禁用wds的multimedia菜单段顺序移动，全部2824个已赋值/显式禁用符号逐项相同，实际Image/SWU/启动链/9运行库检查无篡改。操作前追加：确认所有构建terminal，保存两处变后配置的字节/hash及语义对比后，按已验证input-configs恢复原board defconfig及OpenWrt有效.config原字节和mode，再复核全部97组件HEAD/diff与四配置摘要。恢复仅SDK工作状态，不更改已生成镜像或签名，不以重写原失败receipt冒充通过。
+
+实际产物门禁passed：rawImage556316672B/hash55297181b5ac35d54efa29c4c546ccab73901b51fbf7a405ebd9094e013401ec，SWU99224064B/hashddb56d6c0fad6dd96add86404c00105d2fe294d2c82996e83df112042cb21a9e。完整2824项config符号相同，仅menu顺序变化；原SDK四配置字节恢复，97source/8boot差异[]。只读ext4、24归档checksum、9 runtime和固定原钥image签名/实际登记目标匹配passed；正式稳定性/真机仍未通过。
+下一硬件操作事前范围：只调用绑定project4/device4/COM17的专用lynx_allwinner_enter_fel serial_shell_reboot_efex固定流程，confirmDestructive=true依据用户已授权真机升级/恢复目标，allowUnverifiedSerialShell=false且先实际rc17健康/idle和Linux shell完成标记确认；保留自有串口monitor取证。不得用通用shell/ADB输入进入模式、不改vendorPolicy、不调用刷写/擦除、当前数据刷新备份之前绝不安装镜像。进入失败保留原因并核对正常启动或按授权relay恢复原系统，成功也不当升级验收。旧rc17包/previous16和历史系统关键备份依赖可用；本次只mode transition不写分区，实际刷写前另刷新数据备份。
+
+专用FEL首次返回notfound但随后同一次操作的串口明确“write rtc: efex/eraly jump fel”；未重发转换，后续LYNX绑定位置扫描online FEL/FES、Windows实际VID1F3A/PIDEFE8/statusOK位置一致。该次转换最终成功，但原超时结果保留，不能据初始超时反复reboot。下一步通过LYNX自带SFTP download_firmware从固定SDK主机复制刚验签的镜像到自动per-channel cache，native SHA校验；再只读inspect。不是应用/Release上传，不调用flash；之后先回正常系统刷新约3MB关键数据备份，最终许可与刷写另记录。

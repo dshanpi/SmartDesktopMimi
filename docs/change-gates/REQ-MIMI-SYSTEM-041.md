@@ -9,3 +9,8 @@
 启动链8项与黄金链相同，不重新构建Boot0/U-Boot；只允许同板验证包在固定target写入。只有明确绑定/验签/目标/备份/保留模式满足才写，所有任务仍以原MCP硬件guard执行；不改vendorPolicy，不将full-speed大包标志默认打开。未通过必需整个矩阵不上传。固件首次安装与后续常规版本升级/回退/各阶段断电分开，均绑定实际产物/设备证据。当前flash/verify/boot/data/stability全部not_run。
 
 远端32702反向通道刚断开，同一LYNX进程47332的已配置project4本地8767仍online；只读workbench确认device4/COM17/固定USB/mcpName完全相同后可使用同一MCP本地入口，不改变项目、目标或任何用户配置，未扩大任意网络target。旧serial18已闭合，未破坏活跃任务。
+
+## 实际分区核对纠正（写入前）
+原实施前段落“九分区名字/大小/顺序和实际GPT对照一致”是未完成比对时的假设，现明确纠正；不覆盖该历史文本。前八分区名字/start/end一致，UDISK起点一致但结束不同：incoming 15269854，实测30535646；incoming GPT backupLBA15269887对应约8GB模板，实板约16GB。证据 output/system-clean-admission-20261014/incoming-gpt-layout-review.json、current-gpt-partitions.json。差异状态 review_required；尚未下发任何flash/erase写入，设备仍原rc17，串口已关闭。
+
+必须先证明当前原生MCP mode对实际GPT/UDISK的保留或容量适配行为，再选择安装路径；不得以没有UDISK downloadfile推定分区表不变，也不得以3.6MB关键备份覆盖全部UDISK媒体数据。MCP广告command/partition等与已装CLI0.2.11帮助keep_data的对应关系需要真实实现证据，未知时不得猜测。若需要新包调整，重新签名并重跑受影响构建/匹配/布局门禁；原冻结包和失败历史保留。当前完整系统安装、数据保留和稳定性均not_run/failed，禁止上传。

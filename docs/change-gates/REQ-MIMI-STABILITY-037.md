@@ -13,3 +13,5 @@
 增加只读LYNX自动任务清单，排查是否存在后台恢复动作影响此前“本轮未下发重启”的现象；只列表，不触发/取消任何任务，不把任务配置推断为已执行。
 
 实际结果：传输failed（host bytes24666112非实际board bytes），602.74sec/466UART读0字节、无restartmarker，最终两probe无响应。取证无软件安装/解包/重启调用；随后已授权relay30sec恢复。rc17/trialfalse/health0/idle0/UIready、WiFi原on/PMauto、p7p9errors0passed；原空授权/自有tmpfs材料清除及serial15关闭passed。实际旧#137 WATCHDOG_SYSFS/BOOTON未启用，PMIC input_current_limit原始3250、voltage_now原始0不作物理电压/根因结论。整体稳定性/系统升级及永久修复failed或not_run，保留所有旧失败；证据completion-summary及原始private只读日志，不公开。
+
+接续前只读核对Wi-Fi sysfs runtime_status/runtime_usage及绑定driver，先判断device power/control=auto是否实际启用runtimePM；未知/unsupported不靠翻转control制造无效对照。只读当前状态和UI健康，无寄存器/省电设置写入。证据runtimepm-readback-private.log及runtimepm-summary.json。
