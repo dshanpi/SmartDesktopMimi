@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Narrow logind detail reads to fixed-user seat0 rows",
+  "context": "Actual journal transient failure retained; SSH lifetimes need not enter graphical scope",
+  "next_steps": "Replace only independent platform bridge, read actual transitions; binary/app/system hashes unchanged",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Read-only scope refinement and SSH exclusion regression",
+      "invariants": "No query or launch for SSH/otherUID; full logind properties still required for seat0",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/batches/20261015-login052-query-scope.json",
+        "services/mimi-ubuntu-provider/login.py",
+        "tests/sdkbuild/test_ubuntu_login.py"
+      ],
+      "checks": [
+        {
+          "name": "Postdeployment transient failure",
+          "status": "failed",
+          "scope": "Actual journal login-start-failed then waiting, root cause of transient not proven",
+          "evidence": "output/ubuntu-login-20261015 and gate journal observation",
+          "reason": "Previously unnecessarily queried ephemeral SSH rows; now narrower actual scope"
+        },
+        {
+          "name": "15 Python regressions",
+          "status": "passed",
+          "scope": "Includes SSH skip and existing session tests, not graphical login",
+          "evidence": "output/ubuntu-login-20261015/python-boundaries-r5.log"
+        }
+      ]
+    }
+  ]
+}

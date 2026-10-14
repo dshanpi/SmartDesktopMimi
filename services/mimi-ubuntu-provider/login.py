@@ -102,7 +102,7 @@ def discover(uid):
         raise ValueError('too many login sessions')
     for row in rows:
         fields = row.split()
-        if len(fields) < 2 or not ID.fullmatch(fields[0]) or fields[1] != str(uid):
+        if len(fields) < 4 or not ID.fullmatch(fields[0]) or fields[1] != str(uid) or fields[3] != 'seat0':
             continue
         keys = ['Id', 'User', 'Seat', 'Remote', 'Active', 'Class', 'Type', 'Display', 'Scope', 'Service']
         p = command(['/usr/bin/loginctl', 'show-session', fields[0], *['--property=' + k for k in keys]])

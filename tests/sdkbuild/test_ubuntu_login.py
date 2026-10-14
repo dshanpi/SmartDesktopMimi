@@ -28,6 +28,11 @@ class LoginTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             login.select_session([good, dict(good, Id='43', Scope='session-43.scope')], os.getuid())
 
+    def test_ephemeral_ssh_rows_never_enter_graphical_query(self):
+        with patch.object(login, 'command', return_value=b'42 1000 ubuntu\n43 1000 ubuntu pts/0\n') as command:
+            self.assertIsNone(login.discover(1000))
+            command.assert_called_once()
+
     def test_real_logind_projection_and_zero_empty_output(self):
         raw = b'42 1000 ubuntu seat0 tty2\n'
         props = ('\n'.join(k+'='+v for k,v in session().items())+'\n').encode()

@@ -55,3 +55,6 @@ Python边界第一次 failed：测试夹具在group-writable开发目录内，�
 14项Python（含旧会话）边界passed；全Go测试在8b91版本passed、642实际CLI修复后仅重跑受影响Ubuntu/StartSelected passed，旧结果不移记新版本。
 证据 output/ubuntu-login-20261015/{build-result-r2,deployment-result-r3,actual-greeter-launch-refusal,retained-deb-result}.json及回归日志。真实图形登录/退出/再次登录、登录后健康和升级、完整媒体及扩展数据仍not_run；已一次请用户在VM控制台登录ubuntu并选择Ubuntu on Xorg，不请求密码，不开启GDM自动登录。普通Ubuntu Wayland桌面未支持/未宣称通过。
 A133 MCP可读scope，无活动hardware任务，device4保存ADBbinding仍空；该维护输入pending，已提问不重复。原FESfailed/失联未解决/全部升级回退断电数据与功能门禁继续保留，无公开上传。下一步获得实际X11会话后核对启动/健康/退出；获得ADBbinding后完成原key认证、传包、app23及sysrc2真机矩阵。
+
+## 追加实际运行观察与收紧投影范围（事前记录）
+部署后journal曾出现 login-start-failed 后回到等待，不能只用一次采样宣布长期桥接无错。代码仍对固定UID的所有SSH会话查询属性，虽最终拒绝非seat0，但这些短生命周期记录无需进入候选读取。下一步只从真实list-sessions的固定UID且seat0行读取详情，其他SSH行直接忽略；不将此观察归因板卡失联，也不声称已证明所有暂态错误根因。新增不查询SSH的回归，部署后实际定时读回。原日志及安装证据保留。
