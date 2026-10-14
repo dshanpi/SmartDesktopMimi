@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "同一已失败SSH SWU改HTTP传输作为新对照，固定限速/原runtime，不重复旧频率/显示实验。",
+  "context": "044接口准备失联且未改变显示，HTTP完整99MB未测试；先恢复并只下载诊断，不升级。",
+  "next_steps": "建立单文件单peer有界主机HTTP，验证后板端同包下载并真实hash/健康/清理。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-045",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-045.md",
+      "scope": "project4/device4同SWU tmpfs下载HTTP对照",
+      "invariants": "仅固定单文件，原runtime保持，不安装旧包，不以host发送bytes当设备实际bytes，不破坏活跃任务。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-045.md",
+        "docs/change-gates/batches/20261015-stability045-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "服务/传输/读回/健康",
+          "status": "not_run",
+          "scope": "真实A133 MainBoardV1.2",
+          "evidence": "output/a133-http-transfer-20261015/result.json",
+          "reason": "实施前记录，先恢复旧系统和验证服务"
+        }
+      ]
+    }
+  ]
+}

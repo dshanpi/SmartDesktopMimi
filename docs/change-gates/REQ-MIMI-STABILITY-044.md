@@ -7,3 +7,6 @@
 不变量：未安装/flash/erase、不重置绑定/信任、不改产品源码/版本/SDK输入；原验证候选/失败历史不删。停止显示只是临时诊断，产品必须恢复正常显示后完成功能/稳定性才可交付。observer/传输仍live不得重启或新建重复任务，即使MCP只显示hardwareidle。所有文件/图像走网络，UART只少量文本/控制且原文私有0600；普通证据只白名单阶段/摘要。HDMI持续off，不问电源/拔线前置，不把功耗推断当根因。不运行已有失败限频重复对照。
 
 当前恢复/接口可用性/扫描停用/传输/观察/还原均not_run；若扫描不能证实停止，不能进行“显示DMA关闭”对照或宣称通过。若观察通过，也仅有界诊断证据，需明确可重复修复和正常显示功能矩阵。最终发布禁令保持。
+
+接口准备实际结果：rc17/health0/idle0恢复；显示class runtime_enable0，平台6000000.disp runtimeactive/usage1，驱动dump err10453/irq10484，仅代表get_status累计非零，未归因。标准fb_blank4只关图层，不停止扫描；因此准备独立固定screen0的临时ARM64静态helper(query/blank/restore)，源fb140228…a9ee3/二进制51bc6d46…9869c/537576B，编译通过并未改产品镜像/SDK。
+helper经单SSH gzip260510B上传后板上SHA匹配，但query输出前SSH255/超时；随后网络三次不可达/正确CR UART probe未回应，重新打开自有串口仍空。无法确定是上传残留还是只读query触发，不宣称ioctl根因。没有执行blank/runtime_enable/STOP UI，也未启动observer，显示隔离与扫描停止证明全部not_run。终止此路径，partial/日志保留；scope和持久任务idle后按授权30秒恢复。不能在未证实接口时跳过前置直接blank。恢复健康/授权清理待补。
