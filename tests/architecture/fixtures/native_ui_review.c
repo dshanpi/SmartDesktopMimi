@@ -286,6 +286,16 @@ static void test_home_navigation(void) {
  assert(panel_box.x1==HOME_CONTENT_X && panel_box.y1==HOME_DOCK_Y);
  assert(panel_box.x2<review_width && panel_box.y2<review_height);
  assert(lv_obj_get_child_count(strip)>1 && !ui_all_apps_is_visible());
+ lv_obj_t *pager=lv_obj_get_child(panel,1);
+ int32_t pages=(int32_t)lv_obj_get_child_count(strip);
+ assert(lv_obj_get_child_count(pager)==(uint32_t)pages);
+ assert(!lv_obj_check_type(pager,&lv_label_class));
+ /* Every populated application page has one line; no label or number is used. */
+ for(int32_t i=0;i<pages;i++) {
+  lv_obj_t *line=lv_obj_get_child(pager,i);
+  assert(!lv_obj_check_type(line,&lv_label_class));
+  assert(lv_obj_get_width(line)>lv_obj_get_height(line));
+ }
  lv_obj_scroll_to_x(strip,0,LV_ANIM_OFF);pump();
  /* Actual pointer drag must scroll inside the home strip, never activate an
   * app, hide the main cards or open the old full-screen launcher. */
@@ -299,6 +309,8 @@ static void test_home_navigation(void) {
  touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);
  for(int i=0;i<20;i++){lv_tick_inc(50);pump();}
  assert(abs(lv_obj_get_scroll_x(strip)-lv_obj_get_content_width(strip))<=2);
+ for(int32_t i=0;i<pages;i++)
+  assert(lv_obj_get_style_bg_opa(lv_obj_get_child(pager,i),0)==(i==1?LV_OPA_COVER:LV_OPA_30));
  assert(lv_screen_active()==home && !ui_all_apps_is_visible());
  /* Reverse drag returns exactly one page, at hardware replay speed. */
  touch_x=box.x1+24;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
@@ -309,6 +321,8 @@ static void test_home_navigation(void) {
  touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);
  for(int i=0;i<20;i++){lv_tick_inc(50);pump();}
  assert(abs(lv_obj_get_scroll_x(strip))<=2);
+ for(int32_t i=0;i<pages;i++)
+  assert(lv_obj_get_style_bg_opa(lv_obj_get_child(pager,i),0)==(i==0?LV_OPA_COVER:LV_OPA_30));
  assert(lv_screen_active()==home && !ui_all_apps_is_visible());
  /* Every registry app is reachable directly from this strip. */
  for(size_t i=0;i<app_registry_get_launcher_count();i++) {

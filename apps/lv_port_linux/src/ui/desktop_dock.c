@@ -38,14 +38,68 @@ static const char *symbol_for(app_id_t id)
 static void page_changed(lv_event_t *e)
 {
     lv_obj_t *strip=lv_event_get_target(e);
-    lv_obj_t *label=lv_event_get_user_data(e);
+    lv_obj_t *pager=lv_event_get_user_data(e);
     int32_t width=lv_obj_get_content_width(strip);
-    if (width <= 0) return;
+    int32_t count=(int32_t)lv_obj_get_child_count(pager);
+    if (width <= 0 || count == 0) return;
     int32_t page=(lv_obj_get_scroll_x(strip)+width/2)/width;
-    int32_t count=(int32_t)lv_obj_get_child_count(strip);
     if (page < 0) page=0;
     if (page >= count) page=count-1;
-    lv_label_set_text_fmt(label,ui_i18n_is_zh()?"左右滑动选择应用   %d / %d":"Swipe to choose apps   %d / %d",(int)page+1,(int)count);
+    for (int32_t i=0;i<count;i++) {
+        lv_obj_t *line=lv_obj_get_child(pager,i);
+        lv_obj_set_style_bg_color(line,i==page?HOME_BLUE:HOME_TEXT_MUTED,0);
+        lv_obj_set_style_bg_opa(line,i==page?LV_OPA_COVER:LV_OPA_30,0);
+    }
+}
+
+/* Native LVGL shapes keep icons crisp without a platform image decoder.
+ * Decorative children never take touch focus from the application button. */
+static lv_obj_t *icon_shape(lv_obj_t *parent,int x,int y,int w,int h,int radius,lv_color_t color)
+{
+    lv_obj_t *shape=lv_obj_create(parent);
+    lv_obj_remove_style_all(shape);
+    lv_obj_set_pos(shape,x,y);
+    lv_obj_set_size(shape,w,h);
+    lv_obj_set_style_radius(shape,radius,0);
+    lv_obj_set_style_bg_color(shape,color,0);
+    lv_obj_set_style_bg_opa(shape,LV_OPA_COVER,0);
+    lv_obj_clear_flag(shape,LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    return shape;
+}
+
+static void create_icon(lv_obj_t *card,const app_registry_entry_t *entry)
+{
+    uint32_t tint=0xECE7F7,ink=0x75619D;
+    switch(entry->id) {
+    case APP_ID_HDMI_MCP: tint=0xE1E5F6;ink=0x535FA9;break;
+    case APP_ID_AI: case APP_ID_WIFI: tint=0xFFE0DE;ink=0xF36460;break;
+    case APP_ID_IOT: tint=0xFFE2CC;ink=0xFF8845;break;
+    case APP_ID_NONE: case APP_ID_OTA: tint=0xD9EEE9;ink=0x38998B;break;
+    default: break;
+    }
+    lv_color_t fg=lv_color_hex(ink),bg=lv_color_hex(tint);
+    lv_obj_t *tile=icon_shape(card,0,0,58,58,17,bg);
+    lv_obj_align(tile,LV_ALIGN_TOP_MID,0,0);
+    if (entry->id==APP_ID_HDMI_MCP) {
+        lv_obj_t *screen=icon_shape(tile,12,16,34,24,3,bg);
+        lv_obj_set_style_border_width(screen,3,0);
+        lv_obj_set_style_border_color(screen,fg,0);
+        icon_shape(tile,27,40,4,4,0,fg);
+        icon_shape(tile,21,43,16,3,1,fg);
+    } else if (entry->id==APP_ID_AI) {
+        icon_shape(tile,12,13,35,32,16,fg);
+        icon_shape(tile,33,33,17,16,8,bg);
+        icon_shape(tile,19,22,5,5,3,bg);
+        icon_shape(tile,27,17,5,5,3,bg);
+        icon_shape(tile,35,22,5,5,3,bg);
+        icon_shape(tile,17,30,5,5,3,bg);
+    } else {
+        lv_obj_t *glyph=lv_label_create(tile);
+        lv_label_set_text(glyph,symbol_for(entry->id));
+        lv_obj_set_style_text_font(glyph,&lv_font_montserrat_28,0);
+        lv_obj_set_style_text_color(glyph,fg,0);
+        lv_obj_center(glyph);
+    }
 }
 
 static void card_key(lv_event_t *e)
@@ -96,11 +150,7 @@ static void create_card(lv_obj_t *page,const app_registry_entry_t *entry,int32_t
     lv_obj_add_event_cb(card,open_app,LV_EVENT_CLICKED,(void *)entry);
     lv_obj_add_event_cb(card,card_key,LV_EVENT_KEY,(void *)entry);
     lv_obj_add_event_cb(card,card_focused,LV_EVENT_FOCUSED,NULL);
-    lv_obj_t *icon=lv_label_create(card);
-    lv_label_set_text(icon,symbol_for(entry->id));
-    lv_obj_set_style_text_font(icon,&lv_font_montserrat_28,0);
-    lv_obj_set_style_text_color(icon,lv_color_hex(entry->accent_color),0);
-    lv_obj_align(icon,LV_ALIGN_TOP_MID,0,4);
+    create_icon(card,entry);
     lv_obj_t *name=lv_label_create(card);
     lv_label_set_text(name,ui_tr(entry->name_id));
     lv_obj_set_width(name,width-16);
@@ -108,7 +158,7 @@ static void create_card(lv_obj_t *page,const app_registry_entry_t *entry,int32_t
     lv_obj_set_style_text_font(name,ui_font_body_md(),0);
     lv_obj_set_style_text_color(name,HOME_TEXT,0);
     lv_obj_set_style_text_align(name,LV_TEXT_ALIGN_CENTER,0);
-    lv_obj_align(name,LV_ALIGN_TOP_MID,0,44);
+    lv_obj_align(name,LV_ALIGN_TOP_MID,0,66);
     lv_group_t *group=lv_group_get_default();
     if (group) lv_group_add_obj(group,card);
 }
@@ -117,16 +167,17 @@ void ui_dock_create(lv_obj_t *parent)
 {
     const app_registry_entry_t *entries[APP_ID_MAX+1];
     size_t count=0;
-    const app_id_t first[]={APP_ID_USER_APPS,APP_ID_WIFI,APP_ID_NONE,APP_ID_SETTING};
+    const app_id_t first[]={APP_ID_HDMI_MCP,APP_ID_AI,APP_ID_IOT,APP_ID_WIFI};
     for (size_t i=0;i<sizeof(first)/sizeof(first[0]);i++) {
         const app_registry_entry_t *entry=first[i]==APP_ID_NONE?&update_entry:app_registry_get_entry(first[i]);
         if (entry && entry->show_in_launcher) entries[count++]=entry;
     }
     for (size_t i=0;i<app_registry_get_launcher_count();i++) {
         const app_registry_entry_t *entry=app_registry_get_launcher_entry(i);
-        if (entry->id!=APP_ID_USER_APPS && entry->id!=APP_ID_WIFI && entry->id!=APP_ID_SETTING)
+        if (entry->id!=APP_ID_HDMI_MCP && entry->id!=APP_ID_AI && entry->id!=APP_ID_IOT && entry->id!=APP_ID_WIFI)
             entries[count++]=entry;
     }
+    entries[count++]=&update_entry;
     lv_obj_t *panel=lv_obj_create(parent);
     lv_obj_set_pos(panel,HOME_CONTENT_X,HOME_DOCK_Y);
     lv_obj_set_size(panel,HOME_CONTENT_W,HOME_DOCK_H);
@@ -148,13 +199,17 @@ void ui_dock_create(lv_obj_t *parent)
     lv_obj_set_scrollbar_mode(strip,LV_SCROLLBAR_MODE_OFF);
     lv_obj_add_flag(strip,LV_OBJ_FLAG_SCROLL_ONE);
     lv_obj_clear_flag(strip,LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
-    lv_obj_t *pager=lv_label_create(panel);
-    lv_obj_set_style_text_font(pager,ui_font_body_md(),0);
-    lv_obj_set_style_text_color(pager,HOME_TEXT_MUTED,0);
-    lv_obj_align(pager,LV_ALIGN_BOTTOM_MID,0,0);
     lv_obj_update_layout(panel);
     int32_t page_width=lv_obj_get_content_width(strip);
     int32_t columns=HOME_SCREEN_W>=1000?4:2;
+    int32_t page_count=(int32_t)((count+columns-1)/columns);
+    lv_obj_t *pager=lv_obj_create(panel);
+    lv_obj_remove_style_all(pager);
+    lv_obj_set_size(pager,page_count*28+(page_count-1)*8,4);
+    lv_obj_clear_flag(pager,LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_align(pager,LV_ALIGN_BOTTOM_MID,0,-5);
+    for (int32_t i=0;i<page_count;i++)
+        icon_shape(pager,i*36,0,28,4,2,HOME_TEXT_MUTED);
     lv_obj_t *page=NULL;
     for (size_t i=0;i<count;i++) {
         if (i%(size_t)columns==0) {
