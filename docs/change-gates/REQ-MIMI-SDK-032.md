@@ -11,3 +11,5 @@
 本批开发文件：本门禁、索引及不可变批次。实际构建脚本/输入摘要/原始日志存output/sdk-clean-product-20261014，恢复缓存和构建产物都在.delivery。当前not_run：工作树check-only、缓存移动和完整clean构建；不提前标完成。后续真实镜像升级回退/断电/数据继续独立门禁，禁止发布。
 
 准备实际结果：首次check-only缺固定epoch被拒，r2绑定1791932282后passed。97组件HEAD/现有差异和八个启动输入已绑定；out/kernel output原子移至.delivery/sdk-cache-before-clean-20261014，未删除。新pack输入、黄金镜像及新生成五包索引passed。首次build supervisor在产品启动前拒绝staging_dir存在。复核为本轮metadata预检生成的4个regular host bootstrap文件及25个/usr/bin工具链接，目标均root拥有不可普通用户写，固定resolved/哈希；不含原build_dir/staging包缓存。两次汇总断言区分regular/link的日志说明保留；后续仅完全匹配fresh-bootstrap-files.json才启动，不泛化接受未知缓存。kernel output仍空、build_dir仍无。
+
+完整干净产品重建已实际启动：supervisor3623310/child3623311，output/sdk-clean-product-20261014/build-result.json phase=running；正在从新目录编译工具/产品依赖，最终kernel/rootfs/镜像门禁仍not_run。旧缓存保留恢复用，8GiB动态磁盘保留线触发会停止并记录失败；源码固定640c026与旧factory13，不是板端新安装或最新应用发版。下一轮读取现有job结果，禁止再启动另一个SDK构建。

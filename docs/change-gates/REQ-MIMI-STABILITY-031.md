@@ -15,3 +15,5 @@
 省电off单次4MiB网络下载和SHA256读回passed，仍sysfs PM=auto；尚不能视为根因修复。首个background命令串接出现&;语法错误，未启动；off-download-launch.log保留，正确r2才产生PID/下载与退出0，失败未改写。后续空闲对照延长43分钟，开发主机每15秒只读ping/固定静态页面/已验证MAC摘要；监测进程仅读取，不重试硬件/继电器。板端设置独立45分钟自动恢复on的一次性诊断timer（原值为on）；显式复核后清理。若板子失联，timer不保证执行，下一次授权恢复后必须读回on。用户/其他任务操作会使对照证据失效，不能据此直接持久关闭省电。结束后释放专用串口，下载文件和HTTP服务清理；计时脚本不进入生产镜像/配置。
 
 本轮保存：43分钟只读监测已启动，初始MAC摘要/签名静态页面摘要/ping一致；当前运行中，不记最终passed。板端45分钟自动恢复on timer已启动，恢复截止2026-10-14T10:53:43.142526+00:00；尚需实际读回确认。省电off仅临时诊断，无应用/系统/驱动安装。原子命令完成标记用于绑定异步UART回包，原语法失败保留。自有HTTP server已核对PID/cmdline后停止，诊断下载文件已删除，serial-5关闭。详情output/a133-stability-20261014-r4/result.json、idle-observer-{status,result}.json和逐样本jsonl。下一轮先读observer结果，再复核scope空闲、timer回执/on、真实rc17健康/数据状态并清理timer脚本；若未到截止且observer运行，不把它当完成或重启覆盖测试。整套交付未完成。
+
+最终结果：省电off对照监测1114.074秒/75样本后failed；连续网络失联，随后两次UART命令均空。证明单独关闭Wi-Fi powersave不足以保持稳定，不将其安装为修复，也不推定网络/其他PM无关。按授权再次恢复，原rc17/trialfalse/highwater17/health0、原powersave on/PMauto、p7错误0实际读回passed。旧timer在截止前因失联未证明执行，重启后/tmp脚本不存在，未按旧PID杀进程；serial-7关闭。最终证据output/a133-stability-20261014-r4/result-final.json；43分钟完整观察failed，原正在运行结论保留为历史。
