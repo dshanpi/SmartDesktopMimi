@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu图形登录桥接事前门禁",
+  "context": "Previous Xvfb not genuine graphical login; independent platform integration while ADB binding pending",
+  "next_steps": "Implement scoped platform bridge and regressions; actual graphical login separate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Preimplementation requirements only",
+      "invariants": "no fake login, app or trust changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/CHANGE-GATES.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261015-login052-prerecord.json"
+      ],
+      "checks": [
+        {
+          "name": "实现及实际登录",
+          "status": "not_run",
+          "scope": "No implementation or graphical login yet",
+          "evidence": "output/ubuntu-login-20261015",
+          "reason": "preimplementation"
+        }
+      ]
+    }
+  ]
+}
