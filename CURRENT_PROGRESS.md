@@ -49,3 +49,5 @@ source64253e65fb3e41cd398f504c8bc2007dc6404c41，native/ARM64更新器编译、1
 A133系统候选sysrc2/应用rc23保持原hash；新kernel尚未装板、FES重连failed、失联根因未解决。MCP可访问但保存ADBserial仍空，依赖问题pending不重复问。全部升级/回退/断电/完整数据/功能、源码拆分及其余外部验收/公开发布保留未完。证据 output/ubuntu-login-20261015；详见LOGIN052。无应用源码/Release上传。
 
 LOGIN052补充：桥接8258178已收紧只读固定UID/seat0详情（SSH不查询），15Python及5次/10秒实际等待passed；暂态日志failed保留，未声称长稳/真实登录。更新器642/d53不变、rc22 deb保留，真实用户登录和A133 ADB输入pending，全部发布门禁未完成。
+
+SPLIT053事前：从真实sysrc2后端32TU构建记录提取源/头闭包，独立编译验证后接入私有SDK并去除公开平台源；原候选冻结，迁移未完成。ADB和Ubuntu登录输入仍pending。

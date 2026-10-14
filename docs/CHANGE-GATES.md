@@ -128,3 +128,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-LOGIN-052](change-gates/REQ-MIMI-LOGIN-052.md)：Ubuntu固定用户真实图形登录桥接，事前记录，未实施/未验收。
 
 LOGIN052更新：独立root平台服务/保留签名deb已部署、真实无X11等待及greeter拒绝passed；CLI空投影缺陷修复，失败历史保留；真实用户X11登录/完整数据not_run，外部登录输入pending。
+
+- [REQ-MIMI-SPLIT-053](change-gates/REQ-MIMI-SPLIT-053.md)：A133后端独立源码和构建，事前记录；正式SDK接入/公共旧源移除仍待完成。
