@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Record actual narrowed bridge deployment and short waiting observation",
+  "context": "825 bridge only; updater642 unchanged; all historical failures retained; no actual ordinary graphical login",
+  "next_steps": "Actual Xorg user login/logout/data and saved ADBbinding; whole release gates remain",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "15Python and 10second real service waiting, not long stability or graphical login",
+      "invariants": "No secret/trust/app/system changes, no duplicate tasks or arbitrary session queries",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261015-login052-final-wait.json"
+      ],
+      "checks": [
+        {
+          "name": "Narrowed bridge deployed and short observation",
+          "status": "passed",
+          "scope": "5actual probes over10secs/activeunit/noUI/no newfailures, not normal login",
+          "evidence": "output/ubuntu-login-20261015/deployment-result-r4.json"
+        },
+        {
+          "name": "Actual login/full data",
+          "status": "not_run",
+          "scope": "ordinary Xorg user session missing",
+          "evidence": "output/ubuntu-login-20261015/deployment-result-r4.json",
+          "reason": "user resource pending, asked once"
+        }
+      ]
+    }
+  ]
+}

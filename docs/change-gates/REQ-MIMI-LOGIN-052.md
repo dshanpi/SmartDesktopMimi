@@ -58,3 +58,5 @@ A133 MCP可读scope，无活动hardware任务，device4保存ADBbinding仍空；
 
 ## 追加实际运行观察与收紧投影范围（事前记录）
 部署后journal曾出现 login-start-failed 后回到等待，不能只用一次采样宣布长期桥接无错。代码仍对固定UID的所有SSH会话查询属性，虽最终拒绝非seat0，但这些短生命周期记录无需进入候选读取。下一步只从真实list-sessions的固定UID且seat0行读取详情，其他SSH行直接忽略；不将此观察归因板卡失联，也不声称已证明所有暂态错误根因。新增不查询SSH的回归，部署后实际定时读回。原日志及安装证据保留。
+
+最终桥接源码8258178（更新器仍642/d53；二进制不重编）已部署。额外日志中的暂态failed保留，不推定为永久根因。改为固定UID且seat0列表行才读取详情，SSH不查询；15Python回归passed，部署后5次/10秒真实等待与无UI/新日志无failed读回passed，仅短时范围，不当作长期稳定或图形登录。root服务继续enabled/active；签名rc22 deb保留安装。实际登录/退出/完整数据和外部ADB输入仍pending。证据deployment-result-r4.json、python-boundaries-r5.log。
