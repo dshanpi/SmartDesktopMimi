@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "解决已装CLI0.2.11来源缺项，当前源构建exe与已装exe同SHA，核对不擦除路径。",
+  "context": "真实bfa82干净源码/Windows artifact与installed a577一致，SDK动态GPT末分区路径已核查；未改flasher。",
+  "next_steps": "重新核对原MCP目标/空闲/签名/040+10KB增量，执行冻结552镜像的原生partition受控安装，再读回实际GPT/数据/新内核/健康。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "实际已装binary与同版源码行为对应",
+      "invariants": "无工具替换/编译，无实验环境变量/任意命令；不会把源核对冒充真机升级通过；无raw/erase。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/system041-installed-flasher-source-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "已装与源构建exe对应",
+          "status": "passed",
+          "scope": "0.2.11/bfa82/a577字节摘要一致",
+          "evidence": "output/system-clean-admission-20261014/openixcli-installed-source-readback.json"
+        },
+        {
+          "name": "实际写入/GPT/数据/健康",
+          "status": "not_run",
+          "scope": "原IMAGEWTY552/A133 V1.2",
+          "evidence": "output/system-clean-admission-20261014/openixcli-installed-source-readback.json",
+          "reason": "本批仅只读核对，下一批真实安装后读回"
+        }
+      ]
+    }
+  ]
+}

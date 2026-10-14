@@ -18,3 +18,9 @@
 ### 分区容量路径只读分析
 固定SDK U-Boot组件c77c46bdd5669689ca5ad1452971d6734a2adeb7的sprite/sprite_download.c:558/618/644及938/954显示从实际存储总扇区设置GPT backupLBA/last_usable_lba，末分区结束采用实际last_usable；这解释8GB打包模板与16GB现盘差异可能是运行时容量适配，不直接改包重建。主机算式30535680-34=30535646与实际UDISK结束吻合。需继续核对本次FES加载器配置/实际对应二进制和0.2.11原生行为；源码分析不等于真机保留已通过。
 公开OpenixCLI upstream固定aeee88d/0.2.4及100askTeam fork ea0e305/0.1.3显示partition会跳过erase但仍下发MBR和Boot0/Boot1；不能声称partition完全不写GPT/启动链。两源不是当前已装CLI0.2.11的等价证据，不凭名字冒充版本核对。来源/算式/路径及限制见gpt-dynamic-capacity-source-review.json，尚未执行刷写。
+
+### 2026-10-15 当前已装0.2.11同二进制来源核对完成
+从已有用户授权开发主机192.168.1.17只读定位/home/ubuntu/AIHardAgent/upstream-OpenixCLI：clean HEAD bfa82ca27941fcd70f297524ba833b93300b6589/Cargo0.2.11。其Windows GNU release exe SHA a57725cd…23fd0a与本机LYNX实际已装exe逐字节摘要相同；未编译/替换/改动共享工具。现有来源/版本对应缺项已经解决，旧公开0.2.4/0.1.3不足的历史判断保留。
+真实实现核对：partition精确映射Partition并跳过FesErase；仍下发并严格验证MBR，下载清单跳过无downloadfile的分区，不会因mode=partition自动限定为某个分区。当前实际镜像仅boot-resource/env/bootA/rootfsA四负载，B/rootfs_data/private/UDISK无负载，启动链为原已核对黄金版本。FES收到SunxiMBR而非直接写入打包8GB GPT；固定SDK sunxi_mbr_convert_to_gpt依据实际total_sectors与末分区动态容量，相符实际16GB结束扇区。不能声称不写GPT/启动链；数据分区保留与升级结果仍须真实读回确认。
+此证据仅只读来源/行为核对，不冒充flash/data保留passed。当前040完整关键快照+变化TuyaDB10KB双读增量、全26非版本文件覆盖存在；六旧维修文件复制仍partial且原盘未删。下一批在目标/签名/当前版本/备份和原生guard重新核对后执行已批准受控安装，绑定原image55297181、mode=partition、verify=true、postreboot、无raw/erase/lab诊断变量或任意caller命令；后续真实GPT/数据/健康/新kernel必须验收，失败保存阶段并选择合法恢复。
+详细来源/实际二进制及文件摘要：output/system-clean-admission-20261014/openixcli-installed-source-readback.json。
