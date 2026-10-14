@@ -87,6 +87,22 @@ require_file "${PRODUCT_ROOT}/apps/lv_port_linux/build_openwrt.sh"
 require_file "${PRODUCT_ROOT}/apps/hdmi_preview/Makefile"
 require_file "${PRODUCT_ROOT}/apps/platform_services/Makefile"
 require_file "${PRODUCT_ROOT}/apps/ipkvm/Makefile"
+
+# The IPKVM video sender uses Tina's aarch64 toolchain, while OpenWrt can
+# prepare a different userspace compiler. Check before clearing application
+# outputs or spending time building staging dependencies.
+check_a133_video_toolchain() {
+    local toolchain="${SDK}/out/toolchain/gcc-linaro-5.3.1-2016.05-x86_64_aarch64-linux-gnu/bin"
+    local tool
+    for tool in gcc g++ ar ld; do
+        [[ -x "${toolchain}/aarch64-linux-gnu-${tool}" ]] ||
+            die "A133 video toolchain is not initialized: aarch64-linux-gnu-${tool}" \
+                "Initialize the selected SDK with './build.sh kernel', then retry." \
+                "This command builds the kernel only; do not use the no-argument full SDK build."
+    done
+}
+check_a133_video_toolchain
+
 require_dir "${PRODUCT_ROOT}/third_party/TuyaOpen" \
     "vendored 源码缺失：先跑 ./scripts/vendor_tuyaopen.sh"
 require_dir "${AITVBOX_TUYA_VENDOR_ROOT:-${PRODUCT_ROOT}/vendor/tuyaopen-a133-b6-libs}" \

@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Fail early before dependency rebuild if fixed video compiler is absent",
+  "context": "Actual SDK032 failure was delayed until IPKVM, after long fresh rootfs dependencies",
+  "next_steps": "Finish running kernel38 and retry full product using existing fresh dependencies",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-038",
+      "record": "docs/change-gates/REQ-MIMI-SDK-038.md",
+      "scope": "Developer-host build entry only",
+      "invariants": "No GUI build options, no alternate compiler or bootchain build, no destructive clean before dependency rejection",
+      "paths": [
+        "scripts/build_apps.sh",
+        "docs/change-gates/REQ-MIMI-SDK-038.md",
+        "docs/change-gates/batches/20261014-toolchain038-early-check.json"
+      ],
+      "checks": [
+        {
+          "name": "real CLI missing compiler guard before clean",
+          "status": "passed",
+          "scope": "Actual build entry with empty compiler fixture and unchanged own sentinel",
+          "evidence": "output/kernel-clean-build-20261014/compiler-guard-result.json"
+        },
+        {
+          "name": "fixed initialized A133 compiler guard",
+          "status": "passed",
+          "scope": "Actual saved GCC5.3.1 toolchain",
+          "evidence": "output/kernel-clean-build-20261014/compiler-guard-result.json"
+        },
+        {
+          "name": "kernel and full product acceptance",
+          "status": "not_run",
+          "scope": "Current kernel job live, product retry not started",
+          "reason": "Await final receipt and protected input readback",
+          "evidence": "output/kernel-clean-build-20261014/build-result.json"
+        }
+      ]
+    }
+  ]
+}
