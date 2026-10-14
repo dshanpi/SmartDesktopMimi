@@ -18,3 +18,5 @@
 六UDISK旧维修文件恢复copy真实job582551已终止failed：两小文件passed，bootA gzip读出5898240B后SSH255；未开始rootfs大文件，未执行flash/erase。正确CR串口probe本次仍无完成标记+网络失败，随后已授权第三次30秒relay恢复，实际健康待读回。不再启动同一job或覆盖partial目录。
 串口诊断修正：冷启动getty阶段只发LF可能无命令行输出，同scope发送单CR得到root prompt；恢复后health/idle/原空授权真实0，旧LF-probe失败与JSON无换行marker失配保留，不把它们推断为硬件死机证据。后续明确CR和输出前换行标记，不静默重放旧输入。
 只读新镜像启动脚本未发现mkfs/UDISK格式化调用；仅为已检查/etc/init.d范围，不扩大到完整二进制证明。041对应当前0.2.11与FES动态GPT具体路径尚未完整核对，仍未写入。证据system-data-baseline-20261014/result.json及私有原始材料。
+
+最终第三次恢复完成：真实rc17/hash34fc、trialfalse/busyfalse、health0/idle0、HDMIoff、原authorized_keys空且本批临时文件消失，serial22已关闭。final-recovery.json实际读回passed；失败partial和原040/10KB增量恢复包均保留，未重启同job、未flash/erase、未上传。

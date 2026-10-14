@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "失败后真实恢复与清理验收完成，系统安装和永久修复仍未完成。",
+  "context": "接续同批三项失联失败，原040+已读回10KB增量仍保留。",
+  "next_steps": "停止重复网络备份路径；核实当前原生FES保留模式后受控装板，完成稳定性及必需升级/回退/断电/数据矩阵。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-042",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-042.md",
+      "scope": "同一A133真实恢复/最终授权和串口清理",
+      "invariants": "恢复不当作永久修复；原钥/绑定/版本保持；原失败和未测项不改写，禁止上传。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-042.md",
+        "docs/change-gates/batches/system042-recovery-final-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "最终实际恢复/清理",
+          "status": "passed",
+          "scope": "rc17/trialfalse/health0/idle0/HDMIoff/原空授权/serial22closed",
+          "evidence": "output/system-data-baseline-20261014/final-recovery.json"
+        },
+        {
+          "name": "永久修复和完整系统安装",
+          "status": "not_run",
+          "scope": "受控新内核和整机矩阵",
+          "evidence": "output/system-data-baseline-20261014/result.json",
+          "reason": "未烧录/未安装新内核，失联根因未解决"
+        }
+      ]
+    }
+  ]
+}
