@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Restore fixed GPU source links within reconstructed kernel",
+  "context": "132 saved GPU links differ only in SDK root after relocation; original failure retained",
+  "next_steps": "Prepare actual independent source; wait for old build before activation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "Saved GPU kbuild link targets",
+      "invariants": "Original tar link names verified; only fixed internal GPU source targets, restore relative links, no external redirect or live SDK mutation",
+      "paths": [
+        "tools/update/replay_kernel_component.py",
+        "tests/test_replay_kernel_component.py",
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-kernel-replay-036-links.json"
+      ],
+      "checks": [
+        {
+          "name": "source link relocation regression",
+          "status": "passed",
+          "scope": "21 real Git/tar source and activation cases",
+          "evidence": "output/replay-kernel-tests-20261014-r6.log"
+        },
+        {
+          "name": "actual r4 preparation",
+          "status": "failed",
+          "scope": "pre-clone source link verification",
+          "reason": "Captured links contain original SDK absolute path",
+          "evidence": "output/kernel-clean-replay-20261014/link-mismatch-r4.json"
+        },
+        {
+          "name": "actual r5 preparation and kernel build",
+          "status": "not_run",
+          "scope": "Await prepare and live SDK032 terminal state",
+          "reason": "Not activated",
+          "evidence": "output/kernel-clean-replay-20261014"
+        }
+      ]
+    }
+  ]
+}

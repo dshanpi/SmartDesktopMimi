@@ -81,7 +81,7 @@ def delivery_paths(sdk, stage):
     return sdk, stage
 
 
-def extract(archive, expected, destination, selected=None):
+def extract(archive, expected, destination, selected=None, link_mappings=None):
     seen = set()
     with tarfile.open(archive, 'r:gz') as stream:
         for member in stream:
@@ -105,8 +105,8 @@ def extract(archive, expected, destination, selected=None):
             if output.exists() or output.is_symlink():
                 raise ValueError('archive overwrites an existing source')
             if 'link' in desc:
-                target = desc['link']
-                if not member.issym() or member.linkname != target or target.startswith('/'):
+                target = (link_mappings or {}).get(name, {}).get('relative_link', desc['link'])
+                if not member.issym() or member.linkname != desc['link'] or target.startswith('/'):
                     raise ValueError('untrusted archive link')
                 if destination not in (output.parent / target).resolve().parents:
                     raise ValueError('archive link escapes component')
@@ -142,7 +142,11 @@ def verify(root, record, full_modes=False):
             if parent.is_symlink() and parent != path:
                 raise ValueError('source input has linked parent')
         if 'link' in desc:
-            if not path.is_symlink() or os.readlink(path) != desc['link']:
+            accepted = {desc['link']}
+            mapping = record.get('source_link_relocations', {}).get(name)
+            if mapping and root == Path(record['sdk']) / COMPONENT:
+                accepted.update([mapping['saved_link'], mapping['current_link']])
+            if not path.is_symlink() or os.readlink(path) not in accepted:
                 raise ValueError('saved source link changed')
         else:
             accepted = {desc['sha256']}
@@ -251,6 +255,26 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin,
     entries, manifest_pin = overlay_inputs(overlay, overlay_commit)
     tracked = set(git(sdk / COMPONENT, 'ls-files', '-z').decode().split('\0'))
     saved_untracked = dict(inputs['untracked'])
+    relocation = relocated_gpu_config(folder / 'untracked.tar.gz', inputs['untracked'], sdk)
+    link_mappings = {}
+    gpu_root = 'modules/gpu/img-rgx/linux/rogue_km/'
+    for name, desc in inputs['untracked'].items():
+        if 'link' not in desc or not desc['link'].startswith('/'):
+            continue
+        if not relocation or not name.startswith(gpu_root + 'binary_sunxi_linux_nullws_release/target_aarch64/kbuild/'):
+            raise ValueError('saved absolute source link is outside fixed GPU inputs')
+        old_root = relocation[GPU_CONFIG]['old_sdk'] + '/' + COMPONENT + '/'
+        if not desc['link'].startswith(old_root):
+            raise ValueError('saved absolute source link escapes kernel component')
+        target = audit.relative(desc['link'][len(old_root):])
+        if not target.startswith(gpu_root) or not (
+                target in tracked or target in inputs['untracked'] and 'link' not in inputs['untracked'][target]):
+            raise ValueError('saved source link has no fixed source target')
+        relative_link = os.path.relpath(target, str(Path(name).parent))
+        link_mappings[name] = {'saved_link': desc['link'],
+                               'current_link': str(sdk / COMPONENT / target),
+                               'relative_link': relative_link}
+        saved_untracked[name] = dict(desc, link=relative_link)
     for name, desc in entries.items():
         if name in saved_untracked:
             previous = saved_untracked[name]
@@ -267,8 +291,8 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin,
                   config_mode=config['mode'],
                   overlay_commit=overlay_commit, overlay_manifest_sha256=manifest_pin,
                   overlay_inputs=entries,
-                  generated_path_relocations=relocated_gpu_config(
-                      folder / 'untracked.tar.gz', inputs['untracked'], sdk),
+                  generated_path_relocations=relocation,
+                  source_link_relocations=link_mappings,
                   phase='prepared', created_utc=time.time(), activation='not_run',
                   kernel_build='not_run', release_qualified=False)
     verify(sdk / COMPONENT, record)
@@ -280,7 +304,7 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin,
     git(stage, 'remote', 'remove', 'origin')
     if (folder / 'tracked.patch').stat().st_size:
         git(stage, 'apply', '--binary', '--whitespace=nowarn', str(folder / 'tracked.patch'))
-    extract(folder / 'untracked.tar.gz', inputs['untracked'], stage)
+    extract(folder / 'untracked.tar.gz', inputs['untracked'], stage, link_mappings=link_mappings)
     for name, desc in entries.items():
         source = Path(overlay) / 'overlay' / COMPONENT / name
         destination = stage / name

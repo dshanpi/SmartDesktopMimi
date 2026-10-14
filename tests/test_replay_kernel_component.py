@@ -200,6 +200,48 @@ class KernelReplayTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.stage.exists())
 
+    def gpu_link_fixture(self, external=False):
+        self.gpu_fixture()
+        target = 'modules/gpu/img-rgx/linux/rogue_km/generated/source.c'
+        link = 'modules/gpu/img-rgx/linux/rogue_km/binary_sunxi_linux_nullws_release/target_aarch64/kbuild/source.c'
+        path = self.kernel / target; path.parent.mkdir(parents=True)
+        path.write_bytes(b'fixed GPU source\n'); path.chmod(0o600)
+        self.inputs['untracked'][target] = self.desc(path.read_bytes())
+        old = '/saved/original-sdk/' + replay.COMPONENT + '/' + target
+        if external:
+            old = '/outside/source.c'
+        self.inputs['untracked'][link] = {'mode': 0o777, 'link': old}
+        p = self.kernel / link; p.parent.mkdir(parents=True)
+        p.symlink_to(str(self.kernel / target))
+        saved_gpu = ('override KERNELDIR := /saved/original-sdk/' + replay.COMPONENT + '\n'
+                     'override KERNEL_CROSS_COMPILE := /saved/original-sdk/out/toolchain/fixed/bin/aarch64-linux-gnu-\n'
+                     'override KERNEL_ID := 4.9.191\n').encode()
+        self.archive(self.folder / 'untracked.tar.gz', {
+            'driver.c': (self.kernel / 'driver.c').read_bytes(),
+            replay.GPU_CONFIG: saved_gpu, target: path.read_bytes()})
+        with tarfile.open(self.folder / 'untracked.tar.gz', 'r:gz') as t:
+            regular = [(m, t.extractfile(m).read()) for m in t]
+        with tarfile.open(self.folder / 'untracked.tar.gz', 'w:gz') as t:
+            for m, data in regular:
+                t.addfile(m, io.BytesIO(data))
+            m = tarfile.TarInfo(link); m.type = tarfile.SYMTYPE; m.mode = 0o777; m.linkname = old
+            t.addfile(m)
+        self.refresh()
+        return link, target
+
+    def test_fixed_gpu_absolute_links_restore_as_internal_relative_links(self):
+        link, target = self.gpu_link_fixture()
+        record = self.prepare()
+        self.assertFalse(os.readlink(self.stage / link).startswith('/'))
+        self.assertEqual((self.stage / link).resolve(), self.stage / target)
+        replay.verify(self.kernel, record); replay.verify(self.stage, record)
+
+    def test_gpu_absolute_link_cannot_redirect_to_external_source(self):
+        self.gpu_link_fixture(external=True)
+        with self.assertRaisesRegex(ValueError, 'escapes kernel component'):
+            self.prepare()
+        self.assertFalse(self.stage.exists())
+
     def test_uncaptured_source_cannot_be_silently_dropped(self):
         (self.kernel / 'new_driver.c').write_text('not saved\n')
         with self.assertRaisesRegex(ValueError, 'uncaptured untracked'):
