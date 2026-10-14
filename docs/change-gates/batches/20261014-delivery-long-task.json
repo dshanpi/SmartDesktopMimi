@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Bind approved persistent delivery task to existing focused execution gates",
+  "context": "User explicitly approved long-task implementation; actual task active in current thread",
+  "next_steps": "Finish existing SDK032 and STABILITY034 jobs; diagnose A133 and complete required release matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-033",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-033.md",
+      "scope": "Persistent task continuation only, no product artifact modification",
+      "invariants": "Existing scheduler reused; no duplicate builds, trusted key change or premature upload",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-DELIVERY-033.md",
+        "docs/change-gates/batches/20261014-delivery-long-task.json"
+      ],
+      "checks": [
+        {
+          "name": "current-thread persistent goal",
+          "status": "passed",
+          "scope": "Actual goal tool response active",
+          "evidence": "output/delivery-focus-20261014/long-task.json"
+        },
+        {
+          "name": "product delivery",
+          "status": "not_run",
+          "scope": "Full required acceptance and remote verification",
+          "reason": "Existing build and device isolation running; unresolved A133 failure",
+          "evidence": "output/next-phase-20261013/progress.json"
+        }
+      ]
+    }
+  ]
+}
