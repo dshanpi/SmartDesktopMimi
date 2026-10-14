@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "固定真实DTB选择而内核驱动缺失的输入缺口，先门禁后修改匹配配置。",
+  "context": "046发现active/health不能证明LCD恢复；有效SDK DTB/config/vmlinux不闭环。",
+  "next_steps": "核实板上原DTB/config后修正private repo overlay配置并增加前后构建检查。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-047",
+      "record": "docs/change-gates/REQ-MIMI-SDK-047.md",
+      "scope": "A133 LCD有效设备树/内核闭环",
+      "invariants": "不改上层/时序/受保护启动链/信任/绑定，无未经验证平台宣称。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-047.md",
+        "docs/change-gates/batches/20261015-sdk047-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "现有有效SDK面板编译闭环",
+          "status": "failed",
+          "scope": "实际DTB d320fpc2403、.config未set、vmlinux符号缺失",
+          "evidence": "output/a133-bottom-diagnosis-20261015/sdk-panel-readback.json",
+          "reason": "设备树选择的面板驱动没有编入候选内核"
+        },
+        {
+          "name": "板上匹配与修正构建",
+          "status": "not_run",
+          "scope": "实际原A133及新SDK候选",
+          "evidence": "output/a133-bottom-diagnosis-20261015",
+          "reason": "事前记录，恢复和板上核对之后才修改"
+        }
+      ]
+    }
+  ]
+}
