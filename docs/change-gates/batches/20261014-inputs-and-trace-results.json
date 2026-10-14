@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "summary": "Record expanded SDK input matching and interrupted passive-trace setup",
+  "context": "Existing clean build continues; fixed A133 MCP listener disappeared during setup",
+  "next_steps": "Finish existing SDK build/source restoration review; when fixed endpoint returns, clean original handle without replay and resume passive capture",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-032",
+      "record": "docs/change-gates/REQ-MIMI-SDK-032.md",
+      "scope": "Expanded input readback result",
+      "invariants": "No SDK mutation; final defconfig/source review still pending",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-032.md"
+      ],
+      "checks": [
+        {
+          "name": "regular inputs and symlinks",
+          "status": "passed",
+          "scope": "4109 files+4 exact links, private overlay commit5e947a6",
+          "evidence": "output/sdk-clean-product-20261014/overlay-input-review.json"
+        },
+        {
+          "name": "full clean product and final source config closure",
+          "status": "not_run",
+          "scope": "Existing supervisor3623310",
+          "reason": "Build still running, effective defconfig final restore pending",
+          "evidence": "output/sdk-clean-product-20261014/build-result.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-STABILITY-035",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-035.md",
+      "scope": "Interrupted trace setup, original ownership retained",
+      "invariants": "Unconfirmed partial command not replayed; failed close not marked closed",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-035.md",
+        "docs/change-gates/batches/20261014-inputs-and-trace-results.json"
+      ],
+      "checks": [
+        {
+          "name": "passive trace setup",
+          "status": "blocked",
+          "scope": "Fixed project4/device4/COM17",
+          "reason": "MCP32702 no listener, partial command and close unconfirmed",
+          "evidence": "output/a133-reboot-trace-20261014/setup-result.json"
+        }
+      ]
+    }
+  ]
+}

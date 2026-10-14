@@ -16,3 +16,6 @@
 
 
 构建等待期间补充只读输入核对（实施前）：按私有repo overlay manifest逐项核对4114个真实文件/链接在当前SDK中的内容摘要，补充97组件tracked diff检查未覆盖的未跟踪输入。原SDK组件快照/57项supplement/独立build-fix仍是恢复权威；overlay差异只列出并逐项关联原材料和产品注入，不自动认作丢失或修改构建中的文件。输出output/sdk-clean-product-20261014/overlay-input-readback.json，既有文件不覆盖，秘密/文件正文不打印。所有差异未解释前full input closure保持not_run，不以核对数量替代干净构建及真机验收。
+
+
+扩展输入只读核对：4109个regular文件哈希一致；四个启动链接的manifest字段为link，首次比较器使用target/link_target误报review，原记录保留，四个真实readlink与保存文本一致passed。共4113/4114条匹配；唯一defconfig在当前SDK构建中被临时规范化，最终恢复及97组件差异检查待job结束，仍not_run。无SDK修改/重复构建。证据overlay-input-readback.json和overlay-input-review.json；不把临时配置差异泛化为允许其他源输入变化。
