@@ -25,3 +25,6 @@ clean范围纠正：发现Tina实际KERNEL_BUILD_OUT_DIR是源码根，output只
 
 
 2026-10-14本轮实际结果：纠正clean范围：Tina内核在源码树编译，output仅staging，旧.o/vmlinux/generated早于032启动。故完整内核空缓存条件failed；032继续实际OpenWrt构建不重启，不将未来脚本passed当全SDKclean。036独立重放已完成，原SDK未修改，待032终止再核对激活和重编受影响镜像门禁。
+
+
+2026-10-14实际结果：首轮terminal failed1：IPKVM64编译器未初始化；97源码tracked差异[]、8保护差异[]，原配置已恢复；完整SDK镜像未完成。038真空缓存kernel全编译补齐后，产品r2复用本轮新OpenWrt缓存继续原source640c026/factory13基线，不用旧保留cache。r2首supervisor缺新目录metadata receipt在构建前失败，原异常保留；实际当前metadata再检通过后重启尚未开始的wrapper，supervisor344068/child见真实receipt，产品验收仍not_run。

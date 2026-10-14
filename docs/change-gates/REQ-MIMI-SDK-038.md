@@ -9,3 +9,6 @@
 产品build_apps增加早期明确检查A133视频所需64位gcc/g++/ar/ld，缺时在清应用/长依赖构建前拒绝并给出只编译kernel的初始化入口；不得换用PATH中其他编译器、默认为兼容CPU、进入桌面UI或自动重建启动链。仅检查SDK依赖、无需新桌面版本；验证实际缺项拒绝、初始化后实际A133完整构建，Ubuntu无该入口不误调用。当前kernel全编译/编译器初始化/后续产品均not_run，整体交付不合格。现有可信钥/设备绑定不变，HDMI off。
 
 早期工具链检查已实现scripts/build_apps.sh，在清应用/长staging构建前检查固定64位gcc/g++/ar/ld；缺项直接给出受限kernel初始化入口，不尝试其他编译器或执行fullSDK。真实CLI缺编译器用例passed（--clean仍保留预置sentinel）、已初始化的实际A133工具链同一检查passed，bash -n通过。SDK kernel-only job313025/313026已从已激活无cache树运行，编译器从固定保存archive初始化；完整kernel/保护文件/source/config核对仍等最终receipt。
+
+
+2026-10-14实际结果：真实kernel-only全编译passed(return0)，Image10813448B SHA11f0f5867bb1c8045d6da56158b8e0190b956c45c87b8a7fefb8698941710877，初始化保存编译器、97源码/8保护输入差异[]、原.config摘要2a4d…不变；.buildconfig before/after一致。编译器源Archive/Gitblob精确读回且CLI早期guard实际拒绝/就绪passed；完整productr2刚运行，新kernel未上板。

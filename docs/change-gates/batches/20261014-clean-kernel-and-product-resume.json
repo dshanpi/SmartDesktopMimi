@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "summary": "Record real clean kernel success and resume fixed product baseline",
+  "context": "Initial product failure preserved; fixed saved compiler and true source-cache-free kernel complete",
+  "next_steps": "Read running productr2 then affected signed image and device acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "\u771f\u5b9er5\u51c6\u5907/guarded activation\u5747passed\uff1b\u5df2\u4fdd\u7559\u65e7\u6e90\u7801cache\u6811\uff0ccanonical\u5185\u6838\u4ece\u65e0vmlinux/o/generated\u5f00\u59cb\u5168\u7f16\u8bd1\uff0c\u7531SDK038\u5b9e\u9645return0\u901a\u8fc7\uff0c97\u6e90\u7801/8\u4fdd\u62a4\u6587\u4ef6\u672a\u53d8/.config\u4e0d\u53d8\u3002\u8bc1\u636ekernel-clean-replay/activate-result\u53cakernel-clean-build/build-result\uff1b\u6ca1\u6709\u628a\u955c\u50cf/\u5b9e\u673a\u6807\u901a\u8fc7\u3002",
+      "invariants": "Original failure retained, no old compiler cache reused, no bootchain changes or qualified release",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-clean-kernel-and-product-resume.json"
+      ],
+      "checks": [
+        {
+          "name": "actual component result",
+          "status": "passed",
+          "scope": "\u771f\u5b9er5\u51c6\u5907/guarded activation\u5747passed\uff1b\u5df2\u4fdd\u7559\u65e7\u6e90\u7801cache\u6811\uff0ccanonical\u5185\u6838\u4ece\u65e0vmlinux/o/generated\u5f00\u59cb\u5168\u7f16\u8bd1\uff0c\u7531SDK038\u5b9e\u9645return0\u901a\u8fc7\uff0c97\u6e90\u7801/8\u4fdd\u62a4\u6587\u4ef6\u672a\u53d8/.config\u4e0d\u53d8\u3002\u8bc1\u636ekernel-clean-replay/activate-result\u53cakernel-clean-build/build-result\uff1b\u6ca1\u6709\u628a\u955c\u50cf/\u5b9e\u673a\u6807\u901a\u8fc7\u3002",
+          "evidence": "output/kernel-clean-build-20261014/build-result.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SDK-032",
+      "record": "docs/change-gates/REQ-MIMI-SDK-032.md",
+      "scope": "\u9996\u8f6eterminal failed1\uff1aIPKVM64\u7f16\u8bd1\u5668\u672a\u521d\u59cb\u5316\uff1b97\u6e90\u7801tracked\u5dee\u5f02[]\u30018\u4fdd\u62a4\u5dee\u5f02[]\uff0c\u539f\u914d\u7f6e\u5df2\u6062\u590d\uff1b\u5b8c\u6574SDK\u955c\u50cf\u672a\u5b8c\u6210\u3002038\u771f\u7a7a\u7f13\u5b58kernel\u5168\u7f16\u8bd1\u8865\u9f50\u540e\uff0c\u4ea7\u54c1r2\u590d\u7528\u672c\u8f6e\u65b0OpenWrt\u7f13\u5b58\u7ee7\u7eed\u539fsource640c026/factory13\u57fa\u7ebf\uff0c\u4e0d\u7528\u65e7\u4fdd\u7559cache\u3002r2\u9996supervisor\u7f3a\u65b0\u76ee\u5f55metadata receipt\u5728\u6784\u5efa\u524d\u5931\u8d25\uff0c\u539f\u5f02\u5e38\u4fdd\u7559\uff1b\u5b9e\u9645\u5f53\u524dmetadata\u518d\u68c0\u901a\u8fc7\u540e\u91cd\u542f\u5c1a\u672a\u5f00\u59cb\u7684wrapper\uff0csupervisor344068/child\u89c1\u771f\u5b9ereceipt\uff0c\u4ea7\u54c1\u9a8c\u6536\u4ecdnot_run\u3002",
+      "invariants": "Original failure retained, no old compiler cache reused, no bootchain changes or qualified release",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-032.md",
+        "docs/change-gates/batches/20261014-clean-kernel-and-product-resume.json"
+      ],
+      "checks": [
+        {
+          "name": "actual component result",
+          "status": "failed",
+          "scope": "\u9996\u8f6eterminal failed1\uff1aIPKVM64\u7f16\u8bd1\u5668\u672a\u521d\u59cb\u5316\uff1b97\u6e90\u7801tracked\u5dee\u5f02[]\u30018\u4fdd\u62a4\u5dee\u5f02[]\uff0c\u539f\u914d\u7f6e\u5df2\u6062\u590d\uff1b\u5b8c\u6574SDK\u955c\u50cf\u672a\u5b8c\u6210\u3002038\u771f\u7a7a\u7f13\u5b58kernel\u5168\u7f16\u8bd1\u8865\u9f50\u540e\uff0c\u4ea7\u54c1r2\u590d\u7528\u672c\u8f6e\u65b0OpenWrt\u7f13\u5b58\u7ee7\u7eed\u539fsource640c026/factory13\u57fa\u7ebf\uff0c\u4e0d\u7528\u65e7\u4fdd\u7559cache\u3002r2\u9996supervisor\u7f3a\u65b0\u76ee\u5f55metadata receipt\u5728\u6784\u5efa\u524d\u5931\u8d25\uff0c\u539f\u5f02\u5e38\u4fdd\u7559\uff1b\u5b9e\u9645\u5f53\u524dmetadata\u518d\u68c0\u901a\u8fc7\u540e\u91cd\u542f\u5c1a\u672a\u5f00\u59cb\u7684wrapper\uff0csupervisor344068/child\u89c1\u771f\u5b9ereceipt\uff0c\u4ea7\u54c1\u9a8c\u6536\u4ecdnot_run\u3002",
+          "evidence": "output/sdk-clean-product-20261014/build-result.json",
+          "reason": "IPKVM video lacked initialized saved64bit compiler; final image not produced"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SDK-038",
+      "record": "docs/change-gates/REQ-MIMI-SDK-038.md",
+      "scope": "\u771f\u5b9ekernel-only\u5168\u7f16\u8bd1passed(return0)\uff0cImage10813448B SHA11f0f5867bb1c8045d6da56158b8e0190b956c45c87b8a7fefb8698941710877\uff0c\u521d\u59cb\u5316\u4fdd\u5b58\u7f16\u8bd1\u5668\u300197\u6e90\u7801/8\u4fdd\u62a4\u8f93\u5165\u5dee\u5f02[]\u3001\u539f.config\u6458\u89812a4d\u2026\u4e0d\u53d8\uff1b.buildconfig before/after\u4e00\u81f4\u3002\u7f16\u8bd1\u5668\u6e90Archive/Gitblob\u7cbe\u786e\u8bfb\u56de\u4e14CLI\u65e9\u671fguard\u5b9e\u9645\u62d2\u7edd/\u5c31\u7eeapassed\uff1b\u5b8c\u6574productr2\u521a\u8fd0\u884c\uff0c\u65b0kernel\u672a\u4e0a\u677f\u3002",
+      "invariants": "Original failure retained, no old compiler cache reused, no bootchain changes or qualified release",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-038.md",
+        "docs/change-gates/batches/20261014-clean-kernel-and-product-resume.json"
+      ],
+      "checks": [
+        {
+          "name": "actual component result",
+          "status": "passed",
+          "scope": "\u771f\u5b9ekernel-only\u5168\u7f16\u8bd1passed(return0)\uff0cImage10813448B SHA11f0f5867bb1c8045d6da56158b8e0190b956c45c87b8a7fefb8698941710877\uff0c\u521d\u59cb\u5316\u4fdd\u5b58\u7f16\u8bd1\u5668\u300197\u6e90\u7801/8\u4fdd\u62a4\u8f93\u5165\u5dee\u5f02[]\u3001\u539f.config\u6458\u89812a4d\u2026\u4e0d\u53d8\uff1b.buildconfig before/after\u4e00\u81f4\u3002\u7f16\u8bd1\u5668\u6e90Archive/Gitblob\u7cbe\u786e\u8bfb\u56de\u4e14CLI\u65e9\u671fguard\u5b9e\u9645\u62d2\u7edd/\u5c31\u7eeapassed\uff1b\u5b8c\u6574productr2\u521a\u8fd0\u884c\uff0c\u65b0kernel\u672a\u4e0a\u677f\u3002",
+          "evidence": "output/kernel-clean-build-20261014/build-result.json"
+        }
+      ]
+    }
+  ]
+}
