@@ -44,3 +44,6 @@ flowchart TD
  L -->|失败| X
 ```
 回归不变量：私有SDK上传例外不授权提前应用或Release发布；离线符号/哈希通过不等于实际画面或失联修复；原始失败与前次范围不足均可追溯。
+
+2026-10-15远端源复验passed：独立既有readback checkout从GitHub取得master/FETCH_HEAD=1fb03f3828dd1f8e8cf5756781f73ec034798031，原HEAD3c89不强制checkout或覆盖已解码LFS；仅按远端真实commit提取变化文本，保留未改变的hydrated载荷。全部4114 package文件hash/类型/链接integrity passed。这里只是远端源码载荷复验，工具readback:false指未在此调用执行SDK apply，不把它当设备升级或完整SDK构建。SDK标准apply的4114全copy及模式验证另见result-r2。临时400MB复制树和首失败partial在结果持久保存后只按自身受限路径清理，原SDK/包/快照不删。关键代码、差异、脱敏证据增量备份；原始UART移至私有0700/.delivery目录、文件0600，公开记录不含raw/凭据。
+正式新系统pack/factory配对/安装/正常显示稳定性和剩余完整交付仍not_run或未完成；源私有上传不是交付完成。

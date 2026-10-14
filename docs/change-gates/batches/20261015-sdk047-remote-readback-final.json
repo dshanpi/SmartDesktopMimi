@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "私有SDK1fb真正远端下载及全部4114载荷integrity复验完成，源备份和后续边界清楚。",
+  "context": "私有master fastforward已推，新kernel真实编译passed；r2全overlay copy单独通过。",
+  "next_steps": "正确版本的新完整系统/factory配对，处理原生FES入口并实际新kernel稳定性及完整矩阵；不提前应用/Release。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-047",
+      "record": "docs/change-gates/REQ-MIMI-SDK-047.md",
+      "scope": "私有SDK真实远端源及关键上下文接续",
+      "invariants": "旧LFS有效载荷保留、SDK原树不删，只清自己的临时复制目标；raw不公开，应用/Release未上传。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-047.md",
+        "docs/change-gates/batches/20261015-sdk047-remote-readback-final.json"
+      ],
+      "checks": [
+        {
+          "name": "独立远端源取得及完整源码载荷一致",
+          "status": "passed",
+          "scope": "GitHub1fb/4114文件integrity；不等于系统包远端复验",
+          "evidence": "output/a133-overlay-replay-20261015/remote-readback.json"
+        },
+        {
+          "name": "完整系统和最终实机/公开交付",
+          "status": "not_run",
+          "scope": "新签名系统/应用及全部验收矩阵",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "新kernel未安装，原失联及FES故障未解决，最终产品/其他必需项目仍未完成"
+        }
+      ]
+    }
+  ]
+}
