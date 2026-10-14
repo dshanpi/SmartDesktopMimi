@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "实际内存/显示/SDK ioctl ABI核对后，分阶段小型只读helper诊断。",
+  "context": "044上传后未见query输出，缺少各阶段证据。",
+  "next_steps": "先核对实际依赖并小文件上传健康，随后独立UART只读query。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-046",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+      "scope": "只读接口及小型诊断工具",
+      "invariants": "不执行blank/runtime写入/STOP；原候选与信任保持。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+        "docs/change-gates/batches/20261015-stability046-query-plan.json"
+      ],
+      "checks": [
+        {
+          "name": "真实内存和显示基线",
+          "status": "passed",
+          "scope": "2033264kB total、1887548kB可用、LCD1024x768/29fps",
+          "evidence": "output/a133-bottom-diagnosis-20261015/baseline.json"
+        },
+        {
+          "name": "小型诊断编译与ELF",
+          "status": "passed",
+          "scope": "固定Linaro/6800B、源与bin完整SHA",
+          "evidence": ".delivery/diagnostics46/build-result.json"
+        },
+        {
+          "name": "独立板端只读query",
+          "status": "not_run",
+          "scope": "先健康确认，再query",
+          "evidence": "output/a133-bottom-diagnosis-20261015/result.json",
+          "reason": "事前计划，尚未部署执行"
+        }
+      ]
+    }
+  ]
+}
