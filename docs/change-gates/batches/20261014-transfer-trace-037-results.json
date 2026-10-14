@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Record transfer failure with full passive capture and verified recovery",
+  "context": "Same signed SWU fails before installation; bounded trace captured no UART or spontaneous restart",
+  "next_steps": "Finish SDK032 and kernel036 builds; isolate runtime/backend/SDIO factors and complete system path",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-037",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+      "scope": "Actual A133 rc17 transfer diagnostic; no new candidate",
+      "invariants": "No install/signing key replacement or binding reset; retain failure history and exact source/package/target",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+        "docs/change-gates/batches/20261014-transfer-trace-037-results.json"
+      ],
+      "checks": [
+        {
+          "name": "fixedSWU transfer stability",
+          "status": "failed",
+          "scope": "99224064B SWU before extraction/installation",
+          "reason": "Broken pipe/SSH255, network loss and two UART probes no response",
+          "evidence": "output/a133-transfer-trace-20261014/completion-summary.json"
+        },
+        {
+          "name": "authorized recovery and cleanup",
+          "status": "passed",
+          "scope": "Originalrc17 health, runtime values, empty auth/tmp staging and closed owned serial",
+          "evidence": "output/a133-transfer-trace-20261014/final-recovery-readback.json"
+        },
+        {
+          "name": "permanent fix and real system upgrade matrix",
+          "status": "not_run",
+          "scope": "A133 actual final system",
+          "reason": "Root cause unresolved, new image not installed",
+          "evidence": "output/a133-transfer-trace-20261014/completion-summary.json"
+        }
+      ]
+    }
+  ]
+}
