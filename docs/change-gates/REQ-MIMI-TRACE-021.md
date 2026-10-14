@@ -34,3 +34,7 @@ flowchart TD
 
 ### 主机实现结果（提交前）
 24项覆盖检查器真实临时Git仓库测试及全部74项架构测试passed，原始日志output/change-gates-20261014/architecture.log。首次22项通过后补充布尔schema/非字符串status拒绝，两项一并回归通过。CI配置已在本地加入PR、main push和手动基准入口；首次无父树导入明确拒绝，不伪称历史全覆盖。真实本轮已提交差异检查须在提交后执行，当前not_run；远端CI未上传执行，not_run。
+
+### 已提交真实差异验证（2026-10-14）
+实现提交65d065d3e966194e4ec389d7fa06d3aa3c0a67ec；比较基准8b25105dda4ca5d674d30979179ef5832283938e。实际6个变更文件均关联本门禁，自动覆盖检查passed，diff摘要0704d0276dbc54f4818aaf8c028c71d9ad8fd2ae5f928e13b8599f7a15c01bb3。用临时Git索引生成不挂接分支的负向提交，仅删去检查器自身的记录条目，真实检查返回1并准确指出遗漏scripts/check_change_gates.py；原HEAD和工作树未改变，passed。证据actual-coverage.json及actual-omission-rejected.json。
+CI YAML解析、只读权限和不保留凭据配置核验passed，远端实际执行仍not_run。此次验证没有产品代码变化，无需把原rc17重新签名/装板；其已记录验收仍只属于fe58653和原包。结果记录作为追加批次20261014-trace-021-evidence.json，同样执行覆盖检查，禁止为记录本身设置免检。历史补录、语义人工复核和产品发布门禁仍独立。

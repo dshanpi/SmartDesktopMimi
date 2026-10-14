@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Append actual committed-diff and rejection evidence",
+  "context": "Do not rewrite the original planned batch or equate traceability coverage with product qualification",
+  "next_steps": "Run coverage for this evidence commit; remote CI, historic backfill, Ubuntu deb and system device acceptance remain pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-TRACE-021",
+      "record": "docs/change-gates/REQ-MIMI-TRACE-021.md",
+      "scope": "Post-implementation evidence documentation only",
+      "invariants": "Original batch immutable; no firmware/source acceptance relabeling; no uploads",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-TRACE-021.md",
+        "docs/change-gates/batches/20261014-trace-021-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual six-file range coverage",
+          "status": "passed",
+          "scope": "8b25105 to 65d065d, record coverage only",
+          "evidence": "output/change-gates-20261014/actual-coverage.json"
+        },
+        {
+          "name": "Intentional omission rejected",
+          "status": "passed",
+          "scope": "Unreferenced negative fixture commit, original HEAD unchanged",
+          "evidence": "output/change-gates-20261014/actual-omission-rejected.json"
+        },
+        {
+          "name": "Remote workflow",
+          "status": "not_run",
+          "scope": "Public GitHub CI",
+          "evidence": "docs/change-gates/REQ-MIMI-TRACE-021.md",
+          "reason": "Source not uploaded pending mandatory real device acceptance"
+        }
+      ]
+    }
+  ]
+}
