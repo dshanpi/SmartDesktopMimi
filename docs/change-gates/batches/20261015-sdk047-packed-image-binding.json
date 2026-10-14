@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "summary": "修复实际完整镜像与单独boot产物缺少关联的门禁漏洞；私有SDK仅按例外上传。",
+  "context": "初版checker在SDK boot更新但完整image旧时passed，范围不足被实际readback识别，历史JSON不改写。",
+  "next_steps": "独立下载私有1fb源复验并关键增量备份；构建正确版本的完整产品与继续FES安装/真机矩阵。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-047",
+      "record": "docs/change-gates/REQ-MIMI-SDK-047.md",
+      "scope": "真实final.img内部boot与ELF/Image/SDK boot闭环；源传输限定私有SDK",
+      "invariants": "无环境保护门禁旁路、无任意parser selector/路径，失败不伪造通过；不提前应用或Release。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-047.md",
+        "docs/change-gates/batches/20261015-sdk047-packed-image-binding.json",
+        "tools/update/a133_display_gate.py",
+        "tests/update/test_a133_display_gate.py"
+      ],
+      "checks": [
+        {
+          "name": "135更新回归",
+          "status": "passed",
+          "scope": "19新增fixture关联/拒绝；Go PATH既有runtime；不代表硬件",
+          "evidence": "output/a133-bottom-diagnosis-20261015/host047-results-r2.json"
+        },
+        {
+          "name": "真实旧完整image与新boot错配拒绝",
+          "status": "passed",
+          "scope": "当前完整image552/SDK boot c355，新kernel8bd",
+          "evidence": "output/a133-bottom-diagnosis-20261015/panel-gate-final-image-rejection.json"
+        },
+        {
+          "name": "初版packed检查完整image范围",
+          "status": "failed",
+          "scope": "尚未检查实际img内boot",
+          "evidence": "output/a133-bottom-diagnosis-20261015/panel-gate-stale-packed-rejection.json",
+          "reason": "实际原checker仅校验SDK boot及image启动代码/DTB，遗漏image内kernel对应，已补而不擦除初版事实"
+        },
+        {
+          "name": "完整4114 overlay源复制验证",
+          "status": "passed",
+          "scope": "95实际基线共享对象引用/no-checkout；只验证overlay copy",
+          "evidence": "output/a133-overlay-replay-20261015/result-r2.json"
+        },
+        {
+          "name": "私有SDK新源上传",
+          "status": "passed",
+          "scope": "100askTeam/A133-AIDesktop-Tina5 master1fb，不含应用或Release",
+          "evidence": "output/a133-overlay-replay-20261015/private-upload.json"
+        },
+        {
+          "name": "独立远端源及新系统实机",
+          "status": "not_run",
+          "scope": "来源独立下载、最终产品实机矩阵",
+          "evidence": "output/a133-overlay-replay-20261015",
+          "reason": "源push已完成，readback待执行；新内核未装板"
+        }
+      ]
+    }
+  ]
+}

@@ -17,3 +17,30 @@
 
 2026-10-15真实编译passed：应用工具source467a5e8ad559858c9325be0ed39af72bf22f5af5，private overlay1fb03f3828dd1f8e8cf5756781f73ec034798031。单个kernel supervisor799056/child801922实际return0，终态且进程均结束；当前fixed defconfig ae0e6d…395d，生成kernel cfg=y、真实定义面板symbol及objcopy/Image逐SHA gate passed，新ImageSHA8bdace0ab67f3456372f943c18cd432537d76adc3708f2faee36dd59f90bddc2。97源组件HEAD/diff构建前后无新增变化，8保护boot输入无变化。这是SDK038真clean基础上的受影响kernel增量编译，非再次empty clean，未打包/未装板/未验收系统。
 私有上传下一步事前范围：遵循用户既有SDK例外，只上传同私有仓库新overlay1fb，先在本开发路径临时验证区按95个纳入overlay的实际Git baseline创建共享对象/no-checkout worktree，再运行原scripts/apply_overlay.sh、核对4114文件/模式/链接；该验证只证明overlay完整复制，未修改的SDK文件未checkout，不能称全SDK可构建。完整97来源仍沿用已验证恢复基础和本次kernel源守卫。仅400MB临时验证输入，成功后清理自己的验证目录，不当备份重复保存。新diff仅单配置项/摘要，无凭据/私钥/新厂商二进制；对远端master先核对原5e947，非预期提交则拒绝push而不force。上传后沿用已有独立readback克隆获取新commit并再次验package所有hash，普通证据只source/hash/status，私有日志不得进公开。应用/Release禁止上传不变。
+
+2026-10-15实际packed检查范围缺口：kernel重编实际更新SDK boot.img为c3556706…a55a，但完整.img仍冻结552971…01ec。首次当前checker packed输出passed只证明SDK boot.img匹配新Image、boot-package DTB/启动代码正确；没有证明完整.img内kernel同步，是本需求范围缺口，记录保留在panel-gate-stale-packed-rejection.json（里面实际是passed，不改成failed）。下一步实现前追加：沿用已reviewed SDK parser_img，只读取固定RFSFAT16/BOOT_FEX00000000条目至SDK内部受限临时目录，用与SDK boot.img逐SHA一致及Android header/Image对应共同拒绝旧完整.img。parser不支持绝对输出，cwd固定SDK且只传relative固定路径；无任意selector/路径/硬件写入；普通执行移除A133_ALLOW_BOOTCHAIN_*环境旁路，使既有保护门禁不能被环境跳过。需真实当前旧img被拒绝、匹配fixture与故意同大小旧payload被拒绝，源码改动后重跑受影响测试。
+overlay复制首试failed：95共享clone的第4个buildroot组件因60秒clone超时终止，实际worker839400及相关git/helper均已确认不再运行；仅3个baseline就绪，未执行apply。partial保留。为避免扫描巨大对象库，下次在新受限test-r2目录git init并通过原SDK实际git objects alternates引用相同95个真实commit，再git update-ref/rev-parse验证实际commit存在，不制造commit/伪造HEAD；仍不checkout未修改源，只测试标准apply_overlay全4114文件复制/模式/链接。相同400MB输入范围，失败不重写，SDK根/用户数据不动。
+
+修正后实际新完整image关联检查：源码gate增加SDK parser_img固定BOOT_FEX读取、cwd/relative路径约束、屏蔽bootchain环境override。135项update回归passed（19新增display关联/拒绝fixture）；当前真实旧完整img552…01ec的boot分区与新SDK boot.img不一致，实际packed gate失败“final firmware boot payload differs from checked SDK boot image”符合预期，不能使用旧完整img宣称含新driver。kernel编译无需因只读checker扩充而重复。
+源码传输验证首clone失败历史保留；r2使用实际源object-store引用95个真实commit，标准scripts/apply_overlay.sh完整4114文件/模式/链接copy+readback passed，约31秒，仅证明overlay复制，不冒充未checkout的完整SDK重建。私有新1fb已经按SDK既有例外push到原master（remote原5e947→1fb，fast-forward，无force）。独立远端源码readback仍待执行；应用/Release未上传。
+
+```mermaid
+flowchart TD
+ A[核对实际板型与面板配置] --> B[固定SDK组件与私有overlay输入]
+ B --> C{源配置编入匹配面板}
+ C -->|缺失或不匹配| X[保留失败 拒绝构建或发布]
+ C -->|匹配| D[仅编译受影响内核 不重建保护启动链]
+ D --> E{生成配置 ELF符号与Image字节一致}
+ E -->|失败| X
+ E -->|通过| F[构建根文件系统及完整镜像]
+ F --> G{完整镜像内boot等于SDK boot且包含新Image}
+ G -->|旧产物或错误DTB| X
+ G -->|一致| H[签名和版本配对 固定实际包哈希]
+ H --> I[真机升级 回退 断电 数据及正常功能验收]
+ I -->|未验或失败| X
+ I -->|全部通过| J[统一应用和系统Release并远端复验]
+ B --> K[私有SDK例外 标准overlay复制及来源检查]
+ K --> L[仅私有SDK源码上传 再独立下载校验]
+ L -->|失败| X
+```
+回归不变量：私有SDK上传例外不授权提前应用或Release发布；离线符号/哈希通过不等于实际画面或失联修复；原始失败与前次范围不足均可追溯。

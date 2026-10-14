@@ -6,6 +6,7 @@ This is an offline build gate, not a device health or hardware acceptance test.
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shlex
@@ -51,9 +52,10 @@ def digest(path):
     return h.hexdigest()
 
 
-def command(argv):
+def command(argv, cwd=None):
     try:
-        result = subprocess.run(argv, capture_output=True, text=True, timeout=30, check=True)
+        env = {k: v for k, v in os.environ.items() if not k.startswith("A133_ALLOW_BOOTCHAIN_")}
+        result = subprocess.run(argv, cwd=cwd, env=env, capture_output=True, text=True, timeout=30, check=True)
     except (OSError, subprocess.SubprocessError) as exc:
         raise GateError("artifact reader failed: " + Path(argv[0]).name) from exc
     return result.stdout
@@ -124,6 +126,14 @@ def verify(root, stage):
         if actual != value:
             raise GateError("effective DTB panel contract mismatch: " + prop)
     boot = checked(OUTPUT + "/boot.img")
+    parser = input_file(root, "tools/pack/pctools/linux/mod_update/parser_img")
+    with tempfile.TemporaryDirectory(prefix=".mimi-display-gate-", dir=root) as tmp:
+        extracted = Path(tmp) / "boot.img"
+        # The reviewed vendor reader prefixes absolute output paths with cwd.
+        command([str(parser), str(firmware.relative_to(root)), str(extracted.relative_to(root)),
+                 "RFSFAT16", "BOOT_FEX00000000"], cwd=root)
+        if not extracted.is_file() or extracted.stat().st_size != boot.stat().st_size or digest(extracted) != files[OUTPUT + "/boot.img"]["sha256"]:
+            raise GateError("final firmware boot payload differs from checked SDK boot image")
     with boot.open("rb") as stream:
         header = stream.read(48)
         if len(header) < 48 or header[:8] != b"ANDROID!":

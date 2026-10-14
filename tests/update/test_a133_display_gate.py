@@ -110,15 +110,23 @@ class DisplayGateTests(unittest.TestCase):
         struct.pack_into("<I", header, 8, 9)
         struct.pack_into("<I", header, 36, 2048)
         boot = self.write(gate.OUTPUT + "/boot.img", bytes(header) + b"old image")
+        self.write("tools/pack/pctools/linux/mod_update/parser_img", "reader fixture")
         values = {"lcd_used": "1", "lcd_driver_name": gate.PANEL,
                   "lcd_x": "1024", "lcd_y": "768", "lcd_if": "4"}
-        def reader(argv):
+        def reader(argv, cwd=None):
             if argv[0].endswith("-nm"):
                 return "00000000 D d320fpc2403_panel\n"
             if argv[0] == "fdtget":
                 return values[argv[-1]] + "\n"
             if argv[0] == "bash":
                 return "boot-chain fixture boundary accepted\n"
+            if argv[0].endswith("parser_img"):
+                self.assertEqual(cwd, self.root)
+                self.assertFalse(Path(argv[1]).is_absolute())
+                self.assertFalse(Path(argv[2]).is_absolute())
+                self.assertEqual(argv[3:], ["RFSFAT16", "BOOT_FEX00000000"])
+                (cwd / argv[2]).write_bytes(boot.read_bytes())
+                return ""
             Path(argv[-1]).write_bytes(b"old image")
             return ""
         return boot, values, reader
@@ -159,6 +167,23 @@ class DisplayGateTests(unittest.TestCase):
             result = gate.verify(self.root, "packed")
         self.assertEqual(result["physical_acceptance"], "not_run")
         self.assertFalse(result["release_qualified"])
+
+    def test_final_firmware_cannot_hide_old_kernel(self):
+        boot, _, reader = self.packed_fixture()
+        def stale_firmware(argv, cwd=None):
+            if argv[0].endswith("parser_img"):
+                (cwd / argv[2]).write_bytes(boot.read_bytes()[:-9] + b"bad image")
+                return ""
+            return reader(argv, cwd=cwd)
+        with patch.object(gate, "command", side_effect=stale_firmware):
+            self.reject("final firmware boot payload differs", "packed")
+
+    def test_reader_cannot_inherit_bootchain_override(self):
+        from types import SimpleNamespace
+        with patch.dict("os.environ", {"A133_ALLOW_BOOTCHAIN_CHANGE": "FEL_RECOVERY_READY_AND_CHANGE_APPROVED"}):
+            with patch.object(gate.subprocess, "run", return_value=SimpleNamespace(stdout="ok")) as run:
+                self.assertEqual(gate.command(["reader"]), "ok")
+                self.assertNotIn("A133_ALLOW_BOOTCHAIN_CHANGE", run.call_args.kwargs["env"])
 
 
 if __name__ == "__main__":
