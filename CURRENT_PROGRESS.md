@@ -6,3 +6,6 @@
 独立冻结系统source worktree .delivery/system-rc2-source-20261015与AArch64当前更新器、签名rc23工厂基线准备passed，factory lock89d2908dd9fe9c76f7f83e2f23612d7db040b74d5bbe82c7d15b76ac4d9dcd5d；系统版本1.0.0-rc.2是构建目标，非已装系统。首轮未知baseline_id字段被严格拒绝，历史failed保留，r2改用已定义system_baseline字段，受控硬件其余约束/原信任不变，通用镜像不含单机enrollment_id。
 完整rc2产品supervisor968196开始输入/环境核对；实际最终状态读取output/system-baseline-rc2-20261015/product-build-result.json，尚不得写镜像或实机passed。新产品必须核对面板配置/ELF/Image/实际完整img boot payload、文件系统、签名factory和版本，旧552镜像不能冒充新修复。SDK047私有overlay1fb已远端回读，应用与Release仍未上传。
 当前首要未完：完整新镜像与系统升级包、原生FES握手及新内核装板、显示修复对照和失联根因、升级回退/断电/数据/功能矩阵；其余Ubuntu真实登录数据、源码拆分收尾、配对归属/新绑定、真实语音/Tuya资源和统一发布远端复验保留。证据范围严格区分host/physical，整套交付未完成。
+
+
+SYSTEM048产品输入核对追加：首次supervisor968196已failed且未启动实际release构建，原因是新诊断代码用了full-index差异序列化而SDK047旧收据使用git diff HEAD --binary，21个组件文字index行长度不同造成SHA错配。逐组件用原命令重读均匹配历史SHA，提交均相同；实际源码未变化，不是SDK被外部修改，也没有放松内容门禁。input-diff-review.json保留failed、input-diff-correlation.json记录21组件关联passed。改用已固定旧序列化的r2 supervisor971798接续输入核对，输出product-build-result-r2.json，原result不覆盖；完整构建/实机仍待实际结果。

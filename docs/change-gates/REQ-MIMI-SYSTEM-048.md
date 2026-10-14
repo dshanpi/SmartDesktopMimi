@@ -35,3 +35,6 @@ FES只读复核新增事实：已装exe与保存Windows artifact同SHA a57725…
 当前首要未完：完整新镜像与系统升级包、原生FES握手及新内核装板、显示修复对照和失联根因、升级回退/断电/数据/功能矩阵；其余Ubuntu真实登录数据、源码拆分收尾、配对归属/新绑定、真实语音/Tuya资源和统一发布远端复验保留。证据范围严格区分host/physical，整套交付未完成。
 
 恢复/失败补充：准备脚本首次相对SFTP上传路径不存在，未上传任何文件；改本开发目录绝对路径后成功。实际scope与失败日志分别在application-build-private.log/application-sign-verify.json及r4、factory-prepare-result.json及r2，旧记录不覆盖。SDK047内核不是再次empty-clean，Sys048产品复用新依赖并检查受影响完整镜像；文档追加不换候选版本、冻结a37不重建。
+
+
+SYSTEM048产品输入核对追加：首次supervisor968196已failed且未启动实际release构建，原因是新诊断代码用了full-index差异序列化而SDK047旧收据使用git diff HEAD --binary，21个组件文字index行长度不同造成SHA错配。逐组件用原命令重读均匹配历史SHA，提交均相同；实际源码未变化，不是SDK被外部修改，也没有放松内容门禁。input-diff-review.json保留failed、input-diff-correlation.json记录21组件关联passed。改用已固定旧序列化的r2 supervisor971798接续输入核对，输出product-build-result-r2.json，原result不覆盖；完整构建/实机仍待实际结果。

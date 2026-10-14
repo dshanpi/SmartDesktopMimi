@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "修正SDK差异摘要序列化的诊断误判并保留失败",
+  "context": "21个组件用原SDK047命令重新校验全部匹配，源码内容和97提交未修改；第一次构建未启动",
+  "next_steps": "读取r2构建结果，不重复活跃任务，真实最终镜像和真机验收另记",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-048",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+      "scope": "SDK输入关联诊断；不放宽source守卫",
+      "invariants": "原失败不覆盖，原SDK47 diff序列化和8保护input保持，原可信key/设备/版本不变",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+        "docs/change-gates/batches/20261015-system048-input-correlation.json"
+      ],
+      "checks": [
+        {
+          "name": "首次SDK摘要对比",
+          "status": "failed",
+          "scope": "fullindex和历史短index序列化不一致；实际product未启动",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-result.json",
+          "reason": "诊断摘要格式不一致"
+        },
+        {
+          "name": "全部差异组件原序列化关联",
+          "status": "passed",
+          "scope": "21组件重读原SHA匹配，其余组件和提交已一致",
+          "evidence": "output/system-baseline-rc2-20261015/input-diff-correlation.json"
+        },
+        {
+          "name": "r2完整产品与真机",
+          "status": "not_run",
+          "scope": "新supervisor971798输入核对接续，尚无完整img成功",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-result-r2.json",
+          "reason": "等待实际构建和必需真机验收"
+        }
+      ]
+    }
+  ]
+}
