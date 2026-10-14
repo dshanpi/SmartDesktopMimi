@@ -70,6 +70,15 @@ static void card_key(lv_event_t *e)
     lv_obj_scroll_to_view_recursive(card,LV_ANIM_ON);
 }
 
+static void card_focused(lv_event_t *e)
+{
+    lv_indev_t *input=lv_indev_active();
+    /* Pointer focus must not start a second scroll animation during a drag. */
+    if (input && (lv_indev_get_type(input)==LV_INDEV_TYPE_KEYPAD ||
+                  lv_indev_get_type(input)==LV_INDEV_TYPE_ENCODER))
+        lv_obj_scroll_to_view_recursive(lv_event_get_target(e),LV_ANIM_ON);
+}
+
 static void create_card(lv_obj_t *page,const app_registry_entry_t *entry,int32_t width)
 {
     lv_obj_t *card=lv_button_create(page);
@@ -82,10 +91,11 @@ static void create_card(lv_obj_t *page,const app_registry_entry_t *entry,int32_t
     lv_obj_set_style_bg_opa(card,LV_OPA_COVER,LV_STATE_PRESSED);
     lv_obj_set_style_outline_color(card,HOME_BLUE,LV_STATE_FOCUSED);
     lv_obj_set_style_outline_width(card,2,LV_STATE_FOCUSED);
-    lv_obj_clear_flag(card,LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_flag(card,LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(card,LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_add_flag(card,LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_PRESS_LOCK);
     lv_obj_add_event_cb(card,open_app,LV_EVENT_CLICKED,(void *)entry);
     lv_obj_add_event_cb(card,card_key,LV_EVENT_KEY,(void *)entry);
+    lv_obj_add_event_cb(card,card_focused,LV_EVENT_FOCUSED,NULL);
     lv_obj_t *icon=lv_label_create(card);
     lv_label_set_text(icon,symbol_for(entry->id));
     lv_obj_set_style_text_font(icon,&lv_font_montserrat_28,0);
@@ -137,7 +147,7 @@ void ui_dock_create(lv_obj_t *parent)
     lv_obj_set_scroll_snap_x(strip,LV_SCROLL_SNAP_START);
     lv_obj_set_scrollbar_mode(strip,LV_SCROLLBAR_MODE_OFF);
     lv_obj_add_flag(strip,LV_OBJ_FLAG_SCROLL_ONE);
-    lv_obj_clear_flag(strip,LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_ELASTIC);
+    lv_obj_clear_flag(strip,LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM);
     lv_obj_t *pager=lv_label_create(panel);
     lv_obj_set_style_text_font(pager,ui_font_body_md(),0);
     lv_obj_set_style_text_color(pager,HOME_TEXT_MUTED,0);

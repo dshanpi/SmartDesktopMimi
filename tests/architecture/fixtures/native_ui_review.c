@@ -292,13 +292,23 @@ static void test_home_navigation(void) {
  lv_area_t box;lv_obj_get_content_coords(strip,&box);
  touch_x=box.x2-24;touch_y=(box.y1+box.y2)/2;
  touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
- for(int i=1;i<=16;i++) {
-  touch_x=box.x2-24-(lv_area_get_width(&box)-48)*i/16;
-  lv_tick_inc(20);lv_indev_read(pointer);pump();
+ for(int i=1;i<=24;i++) {
+  touch_x=box.x2-24-(lv_area_get_width(&box)*2/3)*i/24;
+  lv_tick_inc(18);lv_indev_read(pointer);lv_timer_handler();
  }
  touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);
  for(int i=0;i<20;i++){lv_tick_inc(50);pump();}
- assert(lv_obj_get_scroll_x(strip)>0);
+ assert(abs(lv_obj_get_scroll_x(strip)-lv_obj_get_content_width(strip))<=2);
+ assert(lv_screen_active()==home && !ui_all_apps_is_visible());
+ /* Reverse drag returns exactly one page, at hardware replay speed. */
+ touch_x=box.x1+24;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+ for(int i=1;i<=24;i++) {
+  touch_x=box.x1+24+(lv_area_get_width(&box)*2/3)*i/24;
+  lv_tick_inc(18);lv_indev_read(pointer);lv_timer_handler();
+ }
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);
+ for(int i=0;i<20;i++){lv_tick_inc(50);pump();}
+ assert(abs(lv_obj_get_scroll_x(strip))<=2);
  assert(lv_screen_active()==home && !ui_all_apps_is_visible());
  /* Every registry app is reachable directly from this strip. */
  for(size_t i=0;i<app_registry_get_launcher_count();i++) {
@@ -348,6 +358,7 @@ int main(int argc,char**argv) {
  if(argc==7){review_width=atoi(argv[5]);review_height=atoi(argv[6]);}
  assert(review_width>=480 && review_width<=1920 && review_height>=480 && review_height<=1920);
  pixels=calloc((size_t)review_width*review_height,4);assert(pixels);lv_init();
+ lv_group_set_default(lv_group_create()); /* Match the A133 evdev keypad group. */
  settings.locale_mode=strcmp(argv[2],"zh")==0?SYS_LOCALE_ZH_CN:SYS_LOCALE_EN_US;
  settings.appearance_mode=strcmp(argv[3],"light")==0?SYS_APPEARANCE_LIGHT:SYS_APPEARANCE_DARK;
  lv_display_t*d=lv_display_create(review_width,review_height);lv_display_set_color_format(d,LV_COLOR_FORMAT_XRGB8888);
