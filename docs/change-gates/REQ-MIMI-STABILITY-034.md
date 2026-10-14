@@ -8,3 +8,6 @@
 
 
 实际启动记录：rc17/trialfalse、签名健康/idle、原Wi-Fi powersave on、UI/后台PID核对passed；仅停止mimi-desktop，后台/IPKVM保留passed。45分钟只读观察已启动，host PID3775594；板端一次性恢复timer PID3889，调用现有验签start-selected。串口关闭。最终观察/恢复/健康not_run，详见output/a133-ui-isolation-20261014/result-pending.json。运行期间不得把UI暂停视为健康或通过发布稳定性。SDK032仍为实际CMake编译运行，并非已完成。
+
+
+实际结果failed：界面停止后MAC/签名静态页观察15分33.924秒、63样本，最后三次失联。随后串口已有新Linux启动日志，第二探针实际uptime213.53秒；本轮无relay调用，设备自行重启并恢复网络。此结果不同于持续无响应，不能笼统认定UI硬锁或电源因素。原rc17/trialfalse/highwater17、UI/Backend/IPKVM及签名健康0已读回，Wi-Fi原on/PMauto、ext4p7错误0passed；旧/tmp timer和log因重启消失，原PID未杀。自动timer恢复not_run，不能说定时器执行成功。首次status标记紧接JSON无换行，严格整行匹配误报未完成；原数据保留，精确解析状态及退出码后确认有效。raw启动private日志权限0600，仅摘要归档。output/a133-ui-isolation-20261014/result-final.json。下一步被动UART连续捕获，核查重启原因/看门狗，不将启动时Watchdog enabled(timeout16sec)当作复位原因的证据。
