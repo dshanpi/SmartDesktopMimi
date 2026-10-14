@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Record live UI-only isolation without changing installed candidate",
+  "context": "Continue focused A133 stability diagnosis after Wi-Fi-off comparison failed",
+  "next_steps": "Read existing observer result, restore selected signed UI and verify actual health; finish existing SDK032 build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-034",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-034.md",
+      "scope": "Actual isolation setup and pending observation",
+      "invariants": "No installed artifact change, no settings reset, pending restoration not passed",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-034.md",
+        "docs/change-gates/batches/20261014-ui-isolation-034-running.json"
+      ],
+      "checks": [
+        {
+          "name": "selected UI stop and retained services",
+          "status": "passed",
+          "scope": "Actual A133 rc17",
+          "evidence": "output/a133-ui-isolation-20261014/result-pending.json"
+        },
+        {
+          "name": "45min observation and signed UI restoration",
+          "status": "not_run",
+          "scope": "Final result pending",
+          "reason": "Observer and restoration timer running",
+          "evidence": "output/a133-ui-isolation-20261014/result-pending.json"
+        }
+      ]
+    }
+  ]
+}
