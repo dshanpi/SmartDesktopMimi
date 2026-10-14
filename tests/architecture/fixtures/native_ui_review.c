@@ -109,9 +109,10 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
 }
 void mw_get_status(mw_status_t*s) {memset(s,0,sizeof(*s));}
 static int app_open_count;
+static app_id_t last_app_open;
 #ifndef REVIEW_REAL_APP_MANAGER
 void app_manager_init(void) {}
-void app_manager_open(app_id_t id) {(void)id;app_open_count++;}
+void app_manager_open(app_id_t id) {last_app_open=id;app_open_count++;}
 void app_manager_back_home(void) {}
 void app_manager_set_home_screen(lv_obj_t*s) {(void)s;}
 void app_manager_refresh_current(void) {}
@@ -400,6 +401,15 @@ int main(int argc,char**argv) {
   puts("PASS unavailable HDMI: persisted ON, direct row/switch event and unsolicited active status cannot activate, save, or connect");
  }
 #ifdef REVIEW_REAL_APP_MANAGER
+ int refresh_before=pairing_refreshes;
+ app_manager_open(APP_ID_SETTING);pump();pump();
+ lv_obj_t *pair_entry=find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_MANAGE));assert(pair_entry);
+ lv_obj_scroll_to_view_recursive(lv_obj_get_parent(pair_entry),LV_ANIM_OFF);pump();
+ tap_widget(lv_obj_get_parent(pair_entry));pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code"));
+ assert(pairing_refreshes==refresh_before);
+ app_manager_back_home();pump();pump();
+ puts("PASS real Settings to pairing navigation: read status only, no automatic refresh");
  test_home_navigation();
  test_responsive_home();
  test_launcher_rounds();
@@ -447,6 +457,25 @@ int main(int argc,char**argv) {
   assert(entry);
   lv_obj_send_event(lv_obj_get_parent(entry),LV_EVENT_CLICKED,NULL);pump();
   assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update"));
+ } else if(strcmp(argv[1],"settings-pairing")==0){
+  int before=pairing_refreshes;
+  for(int round=0;round<3;round++){
+   app_setting.init();pump();
+   assert(pairing_refreshes==before);
+   cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_error=200};
+   emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+   assert(find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_MANAGE)));
+   assert(!find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_RETRY)));
+   strcpy(status.bind_token,"123456");status.bind_token_error=0;status.bind_token_expires_in=60;
+   emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+   assert(!find_label(lv_scr_act(),"123456"));
+   status.state=CLOUD_STATE_UNAVAILABLE;emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+   lv_obj_t *entry=find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_MANAGE));assert(entry);
+   int opened=app_open_count;tap_widget(lv_obj_get_parent(entry));
+   assert(app_open_count==opened+1 && last_app_open==APP_ID_PAIRING && pairing_refreshes==before);
+   if(round<2)app_setting.close();
+  }
+  puts("PASS Settings pairing: three entries, no automatic code request, no raw code/error projection, explicit navigation");
  } else if(strcmp(argv[1],"settings")==0){
   app_setting.init();
   ai_status_t ai={.tuya_schema_known=true,.tuya_schema_supported_dps=2,.tuya_schema_required_dps=12};emit(TOPIC_AI_STATUS,&ai,sizeof(ai));

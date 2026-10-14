@@ -59,11 +59,13 @@ class DesktopHomeContractTests(unittest.TestCase):
             self.wifi,
         )
 
-    def test_100ask_pairing_state_stays_visible_in_settings(self):
+    def test_settings_routes_pairing_without_provisioning(self):
         self.assertIn("ui_tr(UI_STR_SETTINGS_100ASK_PAIRING)", self.settings)
-        self.assertIn("ui_tr(UI_STR_SETTINGS_100ASK_UNAVAILABLE)", self.settings)
-        self.assertIn('[UI_STR_SETTINGS_100ASK_PAIRING] = T("100ask.net 配对", "100ask.net Pairing")', self.i18n)
-        self.assertIn("request_fresh_bind_token();", self.settings)
+        self.assertIn("app_manager_open(APP_ID_PAIRING)", self.settings)
+        self.assertNotIn("CLOUD_CMD_REFRESH_BIND_TOKEN", self.settings)
+        self.assertNotIn("status->bind_token", self.settings)
+        # Actual repeated entry, status projection and click behaviour are
+        # exercised by the real LVGL fixture, including the app manager.
 
     def test_tuya_bound_state_explains_why_pairing_qr_is_hidden(self):
         self.assertIn("status->tuya_bound && !status->tuya_bind_qr_pending", self.ai)

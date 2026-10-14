@@ -49,6 +49,7 @@ static const ui_translation_t translations[UI_STR_COUNT] = {
     [UI_STR_HDMI_DETAILS] = T("查看说明", "View details"),
     [UI_STR_HDMI_UNSUPPORTED] = T("未支持", "Not supported"),
     [UI_STR_HDMI_UNSUPPORTED_HINT] = T("此设备未接入 HDMI 控制", "HDMI control is not available on this device"),
+    [UI_STR_SETTINGS_100ASK_MANAGE] = T("管理配对", "Manage pairing"),
     [UI_STR_READY] = T("就绪", "Ready"),
     [UI_STR_UNKNOWN] = T("未知", "Unknown"),
     [UI_STR_SCANNING] = T("正在扫描…", "Scanning…"),

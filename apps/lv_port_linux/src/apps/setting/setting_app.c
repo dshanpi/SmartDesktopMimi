@@ -21,8 +21,6 @@ static bool settings_dirty = false;
 static lv_obj_t *schema_label = NULL;
 static bool setting_active;
 static bool rebuild_pending;
-static lv_obj_t *bind_code_label = NULL;
-static lv_obj_t *bind_code_item = NULL;
 
 static void make_transparent(lv_obj_t *obj)
 {
@@ -60,46 +58,12 @@ static void read_system_version(char *out, size_t out_len)
     fclose(fp);
 }
 
-static void request_fresh_bind_token(void)
+/* Account identity and expiring codes belong to the dedicated pairing flow.
+ * Opening/rebuilding Settings must never provision or refresh a code. */
+static void pairing_open_cb(lv_event_t *e)
 {
-    cloud_cmd_t cmd;
-    memset(&cmd, 0, sizeof(cmd));
-    cmd.action = CLOUD_CMD_REFRESH_BIND_TOKEN;
-    mw_publish(TOPIC_CLOUD_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
-}
-
-static void bind_token_click_cb(lv_event_t *e)
-{
-    if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
-    if (bind_code_item && !lv_obj_has_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE)) return;
-    if (bind_code_label) lv_label_set_text(bind_code_label, ui_tr(UI_STR_LOADING));
-    request_fresh_bind_token();
-}
-
-static void setting_cloud_status_cb(const mw_msg_t *msg)
-{
-    if (!msg || msg->topic != TOPIC_CLOUD_STATUS ||
-        msg->data_len != sizeof(cloud_status_t) || !bind_code_label) {
-        return;
-    }
-
-    const cloud_status_t *status = (const cloud_status_t *)msg->data;
-    if (status->state == CLOUD_STATE_UNAVAILABLE) {
-        lv_label_set_text(bind_code_label, ui_tr(UI_STR_SETTINGS_100ASK_UNAVAILABLE));
-        if (bind_code_item) lv_obj_clear_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE);
-    } else if (status->bind_token_refreshing) {
-        if (bind_code_item) lv_obj_add_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE);
-        lv_label_set_text(bind_code_label, ui_tr(UI_STR_LOADING));
-    } else if (status->bind_token[0]) {
-        if (bind_code_item) lv_obj_add_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE);
-        lv_label_set_text(bind_code_label, status->bind_token);
-    } else if (status->bind_token_error != 0) {
-        if (bind_code_item) lv_obj_add_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE);
-        lv_label_set_text(bind_code_label, ui_tr(UI_STR_SETTINGS_100ASK_RETRY));
-    } else {
-        if (bind_code_item) lv_obj_add_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE);
-        lv_label_set_text(bind_code_label, ui_tr(UI_STR_SETTINGS_100ASK_TAP_CODE));
-    }
+    if (lv_event_get_code(e) == LV_EVENT_CLICKED)
+        app_manager_open(APP_ID_PAIRING);
 }
 
 /* Apply hardware + memory on drag; persist only when the finger lifts so we
@@ -373,7 +337,6 @@ static void setting_init(void)
 {
     setting_active = true;
     /* Rebuilds replace the widgets, not their middleware subscriptions. */
-    mw_unsubscribe(TOPIC_CLOUD_STATUS, setting_cloud_status_cb);
     mw_unsubscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
     lv_obj_t *scr = lv_obj_create(NULL);
     mimi_ui_header(scr, ui_tr(UI_STR_APP_SETTINGS), back_event_handler);
@@ -443,10 +406,10 @@ static void setting_init(void)
     read_system_version(version, sizeof(version));
     create_info_row(device, ui_tr(UI_STR_SETTINGS_DEVICE_NAME), APP_DEVICE_NAME, NULL);
     create_info_row(device, ui_tr(UI_STR_SETTINGS_SYSTEM_VERSION), version, NULL);
-    bind_code_item = create_info_row(device, ui_tr(UI_STR_SETTINGS_100ASK_PAIRING),
-        ui_tr(UI_STR_LOADING), &bind_code_label);
-    lv_obj_add_flag(bind_code_item, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(bind_code_item, bind_token_click_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *pairing_item = create_info_row(device, ui_tr(UI_STR_SETTINGS_100ASK_PAIRING),
+        ui_tr(UI_STR_SETTINGS_100ASK_MANAGE), NULL);
+    lv_obj_add_flag(pairing_item, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(pairing_item, pairing_open_cb, LV_EVENT_CLICKED, NULL);
     create_info_row(device, ui_i18n_is_zh() ? "涂鸦物联模型" : "Tuya IoT schema",
         ui_i18n_is_zh() ? "等待云端状态" : "Waiting for cloud status", &schema_label);
     lv_obj_t *preview = lv_obj_create(device);
@@ -461,9 +424,7 @@ static void setting_init(void)
         (ui_i18n_is_zh() ? "当前使用暗色模式" : "Dark mode is active") :
         (ui_i18n_is_zh() ? "当前使用亮色模式" : "Light mode is active"), ui_font_body_md(), MIMI_MUTED);
     lv_obj_align(mode, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    mw_subscribe(TOPIC_CLOUD_STATUS, setting_cloud_status_cb);
     mw_subscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
-    request_fresh_bind_token();
     ai_cmd_t cmd = {.action = AI_CMD_GET_STATUS};
     mw_publish(TOPIC_AI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
     lv_scr_load(scr);
@@ -474,10 +435,7 @@ static void setting_close(void)
     setting_active = false;
     if (rebuild_pending) lv_async_call_cancel(setting_rebuild_async, NULL);
     rebuild_pending = false;
-    bind_code_label = NULL;
-    bind_code_item = NULL;
     schema_label = NULL;
-    mw_unsubscribe(TOPIC_CLOUD_STATUS, setting_cloud_status_cb);
     mw_unsubscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
     if (settings_dirty) {
         sys_settings_save();
