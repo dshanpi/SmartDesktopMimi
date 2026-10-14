@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Actual Ubuntu root-controlled enrollment and negative acceptance",
+  "context": "Native updater re-read the actual VMware Ubuntu20.04 host; no application activation",
+  "next_steps": "Capture SONAME/runtime library baseline then integrate trusted session hooks and signed deb activation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-ENROLL-027",
+      "record": "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+      "scope": "Actual host enrollment, four rejection checks and regression evidence",
+      "invariants": "No raw UUID/private key exposure; no A133 updater installation; no uploads; dependency completeness not claimed",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+        "docs/change-gates/batches/20261014-enroll-027-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual target and rejection checks",
+          "status": "passed",
+          "scope": "Read-only inspect and root-controlled check plus wrong architecture/path/machine and untrusted path refusal",
+          "evidence": "output/ubuntu-enrollment-20261014/result.json"
+        },
+        {
+          "name": "Builds and host regression",
+          "status": "passed",
+          "scope": "Native/arm64 updater, Go suite,116 update and74 architecture tests",
+          "evidence": "output/ubuntu-enrollment-20261014/go-tests-r1.log; update-tests.log; architecture.log"
+        },
+        {
+          "name": "Runtime dependencies and signed activation",
+          "status": "not_run",
+          "scope": "SONAME inventory and actual signed deb installation/upgrade/rollback",
+          "evidence": "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+          "reason": "Hardware/OS registration alone is incomplete application runtime baseline"
+        }
+      ]
+    }
+  ]
+}
