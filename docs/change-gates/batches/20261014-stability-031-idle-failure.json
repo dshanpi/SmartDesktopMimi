@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Idle loss observed before any probe download; gate temporary power-save-off comparison",
+  "context": "Host probe validated, device lost during read-only preflight",
+  "next_steps": "Authorized recovery and one-variable temporary Wi-Fi comparison; restore original state",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-031",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+      "scope": "Actual idle failure and controlled comparison plan",
+      "invariants": "No download had begun; no persistent config or driver/frequency change",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+        "docs/change-gates/batches/20261014-stability-031-idle-failure.json"
+      ],
+      "checks": [
+        {
+          "name": "idle baseline before transfer",
+          "status": "failed",
+          "scope": "Actual rc17 A133",
+          "reason": "NUL then empty UART and ping failed before download launch",
+          "evidence": "output/a133-stability-20261014-r4/baseline-followup.log"
+        },
+        {
+          "name": "host bounded probe calibration",
+          "status": "passed",
+          "scope": "Fixed64KiB/s4MiB response",
+          "evidence": "output/a133-stability-20261014-r4/host-server-check.json"
+        }
+      ]
+    }
+  ]
+}
