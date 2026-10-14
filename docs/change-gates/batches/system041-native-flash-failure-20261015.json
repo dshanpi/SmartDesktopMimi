@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "记录真实原生安装终态失败，准确保持最后RAM重连阶段和未写入事实。",
+  "context": "0.2.11实际源/binary相符；MBR等尚未执行，后续只能诊断同绑定FES重连，原SDK/工具不替换。",
+  "next_steps": "按已授权恢复验证旧rc17与清理；核查FES loader/USB/reconnect真实边界，考虑原生同guard串口保留方案而非重复盲烧。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "A133原生flash task1791995033620116300",
+      "invariants": "只原绑定/原签名包/原tool；未执行阶段不得标通过，失败不删除，不重复task、不取消其他任务；原授权恢复单独验收。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/system041-native-flash-failure-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "原生安装任务",
+          "status": "failed",
+          "scope": "RAM FES reconnect8%",
+          "evidence": "output/system-first-install-20261015/result-terminal.json",
+          "reason": "DRAM/U-Boot RAM下载后同位置efex_init USB transfer failed，未进入任何介质写入"
+        },
+        {
+          "name": "系统/分区写入和验收",
+          "status": "not_run",
+          "scope": "实际冻结镜像55297181",
+          "evidence": "output/system-first-install-20261015/result-terminal.json",
+          "reason": "任务停止在reconnecting；MBR/partition/Bootmedia/verify未执行"
+        },
+        {
+          "name": "失败后绑定设备只读",
+          "status": "passed",
+          "scope": "同USB10/1在线VID1F3A/PIDEFE8，serial24closed",
+          "evidence": "output/system-first-install-20261015/post-failure-device-scan.json"
+        }
+      ]
+    }
+  ]
+}
