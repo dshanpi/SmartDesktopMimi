@@ -246,6 +246,15 @@ cd "${SDK}"
 set +eu
 source build/envsetup.sh || die "Tina SDK environment initialization failed"
 [[ "${TINA_TOPDIR:-}" == "${SDK}" ]] || die "Tina SDK environment points outside the selected SDK"
+# The vendor scanner can return zero after a recipe dump fails. Require all
+# product definitions before spending time on the kernel/rootfs build.
+( source "${SDK}/.buildconfig" &&
+  make -C "${SDK}/openwrt/openwrt" -j1 prepare-tmpinfo ) ||
+    die "OpenWrt package metadata generation failed"
+python3 "${PRODUCT_ROOT}/tools/update/openwrt_metadata.py" \
+    "${SDK}/out/a133/b6/openwrt/tmp/.packageinfo" ||
+    die "OpenWrt product package metadata is incomplete; refusing build"
+
 echo "Building Tina kernel only; verified Boot0/U-Boot are intentionally untouched."
 ./build.sh kernel \
     || die "Tina kernel 编译失败" \
