@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu user session lifecycle and private real UI health",
+  "context": "SDK025 produced actual application but Tina-only health/start paths cannot qualify Ubuntu startup",
+  "next_steps": "Build rc19 and run actual process lifecycle, stale health and kill/recovery tests; trusted root platform and signed activation remain pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SESSION-026",
+      "record": "docs/change-gates/REQ-MIMI-SESSION-026.md",
+      "scope": "Platform session supervisor, Ubuntu-only health location, local rc19 and tests",
+      "invariants": "No UI appearance redesign, no A133 health path change, no keys/identity or uploads; only own children/private transient files; persistent settings separate",
+      "paths": [
+        "VERSION",
+        "apps/lv_port_linux/CMakeLists.txt",
+        "apps/lv_port_linux/src/ui/desktop_health.c",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SESSION-026.md",
+        "docs/change-gates/batches/20261014-session-026.json",
+        "docs/update/source-ownership.json",
+        "services/mimi-ubuntu-provider/README.md",
+        "services/mimi-ubuntu-provider/session.py",
+        "tests/sdkbuild/test_ubuntu_session.py",
+        "tests/sdkbuild/ubuntu_session_smoke.py"
+      ],
+      "checks": [
+        {
+          "name": "Host boundary and regression",
+          "status": "passed",
+          "scope": "63 SDK/service and74 architecture tests, frozen contract/ownership/public audit",
+          "evidence": "output/ubuntu-session-20261014/sdk-tests.log; architecture.log; contracts.log; ownership.log; public-audit.json"
+        },
+        {
+          "name": "New candidate build and actual lifecycle",
+          "status": "not_run",
+          "scope": "rc19 fixed source actual SDL/Provider",
+          "evidence": "docs/change-gates/REQ-MIMI-SESSION-026.md",
+          "reason": "Pending committed build"
+        },
+        {
+          "name": "Trusted platform and signed activation",
+          "status": "not_run",
+          "scope": "Root platform enrollment/session integration, signed deb install/update/data",
+          "evidence": "docs/change-gates/REQ-MIMI-SESSION-026.md",
+          "reason": "Ordinary-user lifecycle entry is not an installer"
+        }
+      ]
+    }
+  ]
+}

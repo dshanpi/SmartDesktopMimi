@@ -7,6 +7,24 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef MIMI_UBUNTU_SESSION
+#include <fcntl.h>
+#include <limits.h>
+#include <string.h>
+#include <sys/stat.h>
+static int health_directory = -1;
+static void close_health_directory(void) { if (health_directory >= 0) close(health_directory); }
+static bool private_health_directory(void)
+{
+    const char *path = getenv("MIMI_RUNTIME_DIR");
+    char canonical[PATH_MAX]; struct stat s;
+    if (!path || path[0] != '/' || !realpath(path, canonical) || strcmp(path, canonical)) return false;
+    int fd = open(path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0) return false;
+    if (fstat(fd, &s) || s.st_uid != geteuid() || (s.st_mode & 0777) != 0700) { close(fd); return false; }
+    health_directory = fd; atexit(close_health_directory); return true;
+}
+#endif
 
 static uint64_t backend_reply;
 static uint64_t activity_seen[4];
@@ -57,16 +75,31 @@ static void heartbeat(lv_timer_t *timer)
         if (!activity_seen[i] || now - activity_seen[i] > 5000) ready = false;
         busy |= activity_busy[i];
     }
+#ifdef MIMI_UBUNTU_SESSION
+    int fd = openat(health_directory, "ui-health.tmp", O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
+    if (fd < 0) return;
+    FILE *file = fdopen(fd, "w");
+    if (!file) { close(fd); unlinkat(health_directory, "ui-health.tmp", 0); return; }
+#else
     FILE *file = fopen("/run/smartdesktopmimi/ui-health.tmp", "w");
+#endif
     if (!file) return;
     fprintf(file, "{\"pid\":%ld,\"monotonic_ms\":%llu,\"backend_reply_ms\":%llu,\"activity_ready\":%s,\"busy\":%s}\n",
         (long)getpid(), (unsigned long long)monotonic_ms(), (unsigned long long)backend_reply, ready ? "true" : "false", busy ? "true" : "false");
+#ifdef MIMI_UBUNTU_SESSION
+    if (fclose(file) == 0) renameat(health_directory, "ui-health.tmp", health_directory, "ui-health.json");
+    unlinkat(health_directory, "ui-health.tmp", 0);
+#else
     if (fclose(file) == 0) rename("/run/smartdesktopmimi/ui-health.tmp", "/run/smartdesktopmimi/ui-health.json");
+#endif
 }
 void desktop_health_start(void)
 {
     /* Legacy systems and host fixtures do not create platform health receipts. */
     if (!getenv("MIMI_RELEASE_DIR")) return;
+#ifdef MIMI_UBUNTU_SESSION
+    if (!private_health_directory()) return;
+#endif
     mw_subscribe(TOPIC_WIFI_RUNTIME, runtime_received);
     mw_subscribe(TOPIC_AI_STATUS, activity_received);
     mw_subscribe(TOPIC_BT_RUNTIME, activity_received);

@@ -60,3 +60,32 @@ localNetworkObservation=true only describes the V1 getifaddrs snapshot; it does
 not claim Wi-Fi control, internet connectivity or a network V2 topic. This is
 not a signed installation identity. Ping means this process responds, not that
 the desktop, cloud binding or complete upgrade health check passed.
+
+## Desktop-user session lifecycle (REQ-MIMI-SESSION-026)
+
+`session.py run --release APPLICATION_TREE --provider PROVIDER_BINARY
+--runtime PRIVATE_DIRECTORY --settings PRIVATE_CONFIG_DIRECTORY/settings.json
+--screen 1024x768` starts one local user session. Paths must be absolute and
+canonical; runtime and persistent configuration directories must already exist,
+be owned by the user and mode0700. The selected screen must occur in the clean
+Ubuntu SDK build receipt, and the desktop bytes must match it. The process
+refuses root, owns only its child PIDs, and never installs or activates an update.
+
+The Ubuntu build writes real event-loop/backend activity health into its private
+MIMI_RUNTIME_DIR. A133 retains its existing /run path. The supervisor waits for
+three advancing healthy UI samples, checks same-user V2 queries and process
+identities, and monitors both children. Closing the desktop ends the session;
+a child failure or stale health stops both children and fails the session. It
+does not restart indefinitely. Transient session/health/config files are cleaned,
+while the separate persistent settings file stays intact. Linux parent-death signals terminate both direct children if the supervisor is
+killed; the next launch reclaims only its private stale files/endpoints under
+the singleton lock. This is process recovery, not update power-cut or data
+atomicity acceptance. A production service manager is still required for
+platform startup integration.
+
+`session.py health --runtime PRIVATE_DIRECTORY --release APPLICATION_TREE`
+checks the active process identities, actual desktop path, fresh UI/backend
+health and Provider replies. It is not a cloud/device capability test.
+The supervisor is platform code, excluded from the pure application payload.
+Trusted enrollment, root platform/update integration and signed deb activation
+are still required; this local development entry point cannot qualify them.
