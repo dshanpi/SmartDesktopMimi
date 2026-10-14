@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "先读实际内存及显示接口范围，避免把图层关闭当扫描停用。",
+  "context": "HTTP与SSH同类失联，显示helper准备失败且未blank。",
+  "next_steps": "只读基线后设计有证据的单变量诊断。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-046",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+      "scope": "A133真实只读基线，产品未改",
+      "invariants": "原钥/绑定/版本/SDK不变，仅适用固定设备。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+        "docs/change-gates/batches/20261015-stability046-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "真实接口及内存基线",
+          "status": "not_run",
+          "scope": "固定A133V1.2",
+          "evidence": "output/a133-bottom-diagnosis-20261015",
+          "reason": "事前记录，随后只读检查"
+        }
+      ]
+    }
+  ]
+}

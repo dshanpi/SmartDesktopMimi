@@ -7,3 +7,5 @@
 不变量：不改CPU/显示/WiFi、内核/SDK/签名/设备绑定，不替换sharedflasher、不发布任何包；源码/签名/固件冻结。HTTP服务仅这个已固定文件，禁止通配地址、路径穿越/外部代理/其他接口，文件inode/长度/mtime守卫且限字节/连接数。新私有源与证据保存在本开发目录，不复制整个SDK/缓存。所有图像/文件经网络，UART少量文本与控制，原文0600/普通日志仅白名单摘要。活跃下载或取证不能重启/重复任务；成功限定为单次HTTP对照，根因、系统升级/回退/断电/全数据和正式发布仍另验。
 
 当前恢复/服务/下载/字节哈希/最终健康清理均not_run；新工具与读回证据绑定实际hash/PID/设备。transport不同也改变时间/缓冲，不能仅据差异断言SSH是唯一根因。后续只有实际传输完成才能继续准备新系统OTA候选，不能旁路版本与兼容门禁。
+
+2026-10-15实际结果：固定单peer/单route服务host错误路径404/非目标peer403；实际板端仅一次wget同99,224,064B SWU，原runtime未改，host在发送23,257,088B后timeout。此长度不等于板端长度，板端hash未取得。被动240s观察188次UART读取0字节、27次ping失败；server/observer终态确认后仅一次30秒MCP恢复。真实恢复读回rc17/34fc809a…beed8/trial=false、health0/idle0、原授权0字节、runtime_enable0、HDMI采集无、serial30关闭passed。HTTP同类失联说明不能只归因SSH，不证明具体底层根因；未安装包。证据output/a133-http-transfer-20261015/{result,final-recovery}.json，永久修复和系统矩阵not_run。

@@ -10,3 +10,5 @@
 
 接口准备实际结果：rc17/health0/idle0恢复；显示class runtime_enable0，平台6000000.disp runtimeactive/usage1，驱动dump err10453/irq10484，仅代表get_status累计非零，未归因。标准fb_blank4只关图层，不停止扫描；因此准备独立固定screen0的临时ARM64静态helper(query/blank/restore)，源fb140228…a9ee3/二进制51bc6d46…9869c/537576B，编译通过并未改产品镜像/SDK。
 helper经单SSH gzip260510B上传后板上SHA匹配，但query输出前SSH255/超时；随后网络三次不可达/正确CR UART probe未回应，重新打开自有串口仍空。无法确定是上传残留还是只读query触发，不宣称ioctl根因。没有执行blank/runtime_enable/STOP UI，也未启动observer，显示隔离与扫描停止证明全部not_run。终止此路径，partial/日志保留；scope和持久任务idle后按授权30秒恢复。不能在未证实接口时跳过前置直接blank。恢复健康/授权清理待补。
+
+2026-10-15恢复追加：044故障后恢复原rc17/health0/idle0、SSH授权空、runtime_enable0/原CPU1512000，临时helper消失；没有做blank/STOP UI/observer。045执行前实际核对。只读源码sunxi_fb_blank(FB_BLANK_POWERDOWN)仅set_layer_config(enable=0)，不能当LCD scan停止。044显示隔离仍not_run，query故障原因未知。后续045最终再次核对原状态，见output/a133-http-transfer-20261015/final-recovery.json。

@@ -10,3 +10,5 @@
 
 实际atomic请求（同guard、uboot_serial_efex、serial26 monitor保留、原包/工具）在介质写入前返回ALLWINNER_FEL_NOT_STABLE，没有创建flash task。串口明确当前U-Boot efex→BOOT0→eraly jump fel，同次随后独立扫描固定USB10/1online；不能把false确认当未进入FEL，也不在此误报后重复同请求。header/run/work_mode与当前SDK结构吻合，FES1和黄金Boot0的32项DRAM参数完全相同；未发现头解析错位证据。原SDK旧45bc镜像与新552镜像的FES1/sysconfig/board相同，UBoot/DTB不同；旧UBoot7bfa不等于黄金d461，不能把这个未验证旧包当恢复替代或因差异直接改受保护启动链。历史MCP两条成功task的version同0.2.11，仅提供历史，不推定本轮通过。SDK主机VMware未列出1F3A设备，尚不能证明所有USB归属原因。
 原root历史1008000限频已在早期SWU64978944B处失败，因此禁止重复限频实验。下一步独立核查先前未做的显示扫描隔离，与034“仅暂停UI”的失败条件对照；此诊断单独预记需求，镜像、SDK输入和flasher保持冻结，不将显示关闭当交付目标。
+
+2026-10-15结果追加：原生同guard的uboot_serial_efex/preserveSerialMonitor=true请求返回ALLWINNER_FEL_NOT_STABLE，未创建flash task。自有UART实际记录efex/BOOT0/eraly jumpfel，同次之后scope scan在线；仅说明稳定检测未通过，不断言没有进入FEL。043原恢复后实际rc17健康/idle0。最新源LYNX版本0.1.0与已装0.9.5不等价；没有替换shared flasher。证据output/system-fes-trace-20261015，后续系统介质写入及验收not_run。

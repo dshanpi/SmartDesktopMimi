@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "summary": "追加043原生检测/044准备/045HTTP真实失败及原候选恢复，不覆盖历史。",
+  "context": "前序事前门禁b89be82/785ae74/7d78925与本次实际读回。",
+  "next_steps": "先核对内存/显示接口，停止重复CPU/原传输/盲烧，定位底层路径。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-043",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-043.md",
+      "scope": "固定A133V1.2原rc17诊断真实终态及恢复",
+      "invariants": "未改候选/信任/绑定，无介质写入，失败保留，原始UART不进入公开记录。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-043.md"
+      ],
+      "checks": [
+        {
+          "name": "诊断终态",
+          "status": "failed",
+          "scope": "REQ-MIMI-SYSTEM-043",
+          "evidence": "output/system-fes-trace-20261015",
+          "reason": "原生稳定FEL检测失败，未建任务"
+        },
+        {
+          "name": "原rc17恢复与最终清理",
+          "status": "passed",
+          "scope": "仅恢复、不代表稳定性修复",
+          "evidence": "output/a133-http-transfer-20261015/final-recovery.json"
+        },
+        {
+          "name": "正式系统及永久修复",
+          "status": "not_run",
+          "scope": "完整目标交付",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "未装新系统，根因未解决"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-STABILITY-044",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-044.md",
+      "scope": "固定A133V1.2原rc17诊断真实终态及恢复",
+      "invariants": "未改候选/信任/绑定，无介质写入，失败保留，原始UART不进入公开记录。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-044.md"
+      ],
+      "checks": [
+        {
+          "name": "诊断终态",
+          "status": "failed",
+          "scope": "REQ-MIMI-STABILITY-044",
+          "evidence": "output/a133-display-isolation-20261015",
+          "reason": "helper query前SSH失联，隔离未执行"
+        },
+        {
+          "name": "原rc17恢复与最终清理",
+          "status": "passed",
+          "scope": "仅恢复、不代表稳定性修复",
+          "evidence": "output/a133-http-transfer-20261015/final-recovery.json"
+        },
+        {
+          "name": "正式系统及永久修复",
+          "status": "not_run",
+          "scope": "完整目标交付",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "未装新系统，根因未解决"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-STABILITY-045",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-045.md",
+      "scope": "固定A133V1.2原rc17诊断真实终态及恢复",
+      "invariants": "未改候选/信任/绑定，无介质写入，失败保留，原始UART不进入公开记录。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-045.md",
+        "docs/change-gates/batches/20261015-diagnostics043045-results.json"
+      ],
+      "checks": [
+        {
+          "name": "诊断终态",
+          "status": "failed",
+          "scope": "REQ-MIMI-STABILITY-045",
+          "evidence": "output/a133-http-transfer-20261015/result.json",
+          "reason": "HTTP timeout及持续网络/UART不可达"
+        },
+        {
+          "name": "原rc17恢复与最终清理",
+          "status": "passed",
+          "scope": "仅恢复、不代表稳定性修复",
+          "evidence": "output/a133-http-transfer-20261015/final-recovery.json"
+        },
+        {
+          "name": "正式系统及永久修复",
+          "status": "not_run",
+          "scope": "完整目标交付",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "未装新系统，根因未解决"
+        }
+      ]
+    }
+  ]
+}

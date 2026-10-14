@@ -112,3 +112,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-STABILITY-044](change-gates/REQ-MIMI-STABILITY-044.md)：显示扫描关闭与网络/内存写入隔离，结束恢复显示。
 
 - [REQ-MIMI-STABILITY-045](change-gates/REQ-MIMI-STABILITY-045.md)：原SWU/原runtime受限HTTP传输对照，不安装。
+
+- [REQ-MIMI-STABILITY-046](change-gates/REQ-MIMI-STABILITY-046.md)：真实内存与显示接口核查，先证据后单变量对照。
