@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "summary": "Record Ubuntu V2 fixed builds and real window evidence including first failure",
+  "context": "Query and process tests passed, first native window discovery timed out; two replays passed without claiming a root-cause fix",
+  "next_steps": "Preserve startup timeout and add failure diagnostics; qualify Ubuntu SDK/deb and resume A133 when scoped hardware channel is free",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTU-024",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTU-024.md",
+      "scope": "Evidence and window failure diagnostics only; compiled source stays3a258ea",
+      "invariants": "Retain failure, no changed success criteria, no fake hardware acceptance or uploads",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UBUNTU-024.md",
+        "tests/sdkbuild/ubuntu_window_smoke.py",
+        "docs/change-gates/batches/20261014-ubuntu-024-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "Fixed native build and Provider process",
+          "status": "passed",
+          "scope": "Clean source exact hashes, idle expiry, query and endpoint cleanup",
+          "evidence": "output/ubuntu-v2-20261014/native-build.json; fixed-provider.json"
+        },
+        {
+          "name": "First actual window run",
+          "status": "failed",
+          "scope": "PID window discovery",
+          "evidence": "output/ubuntu-v2-20261014/window-r1/result.json",
+          "reason": "No visible PID window within10s; root cause not determined"
+        },
+        {
+          "name": "Two actual window replays",
+          "status": "passed",
+          "scope": "3 geometries, uncompiled geometry rejection, pairing visual, V2 query and cleanup",
+          "evidence": "output/ubuntu-v2-20261014/window-r2/result.json; window-r3/result.json"
+        },
+        {
+          "name": "New diagnostic failure branch",
+          "status": "not_run",
+          "scope": "Failure-only window tree/PID/root capture",
+          "evidence": "output/ubuntu-v2-20261014/window-diagnostic.py",
+          "reason": "Two replays did not reproduce first timeout"
+        },
+        {
+          "name": "A133 observation",
+          "status": "blocked",
+          "scope": "Hardware health check",
+          "evidence": "output/ubuntu-v2-20261014/a133-observation.json",
+          "reason": "Otherdevice7 hardware job active; no mutation attempted"
+        }
+      ]
+    }
+  ]
+}

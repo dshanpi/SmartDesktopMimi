@@ -43,3 +43,18 @@ V1 编号/结构/语义及 A133 Provider 不变；V2 与 V1 分流，同用户�
 - 桌面源码/资源/版本无改动；完整原生构建与实际窗口待提交后执行；A133本批不重新安装、不继承新Provider验证。
 
 追加通过：sdk-tests-final2.log 47项（含12项V2测试、实际root客户端被拒绝而Ubuntu同用户继续服务，以及退出不删除被替换路径）。无skip。
+
+## 固定源码与真实进程结果（2026-10-14 追加）
+源码 `3a258ea77306b8d55eb693d86ddd829cc5c63923`，原生构建 passed，receipt output/ubuntu-v2-20261014/native-build.json。
+桌面SHA256 `b81d85a0d60cb02220a6211712dad66c3052deaa6dd578ff2ee7c4866f4b13c2`（与前序d1a8ac5桌面字节相同）；独立Provider SHA256 `dcc7e62d521645e9d8a7519bea66a557d8a167f92c30e5477ceb66687ae9329c`。当前应用版本rc18未新增应用包或签名，A133仍仅最后确认rc17。
+
+- passed：47项SDK/服务测试、74项架构测试、冻结契约、归属、公开候选秘密检查。覆盖检查coverage.json仅代表文件追踪。
+- passed：固定新Provider真实空闲连接在20.096秒断开，随后正常查询、退出0、两端点清理，运行库无缺失；fixed-provider.json。
+- failed：首次实际窗口测试在10秒内未找到PID对应可见窗口；服务查询、清理通过，桌面未提前退出。window-r1与window.log保留，根因未确认，不能将后续通过写成已修复。
+- passed：带失败诊断的相同窗口测试r2以及原提交测试r3均通过1024x768/480x800/800x480运行和关闭，640x480拒绝；V2健康/描述、双端点清理通过。r2配对截图人工查看服务不可用、刷新禁用、英文占位正确。均为真实SDL/Provider+独立Xvfb，不是实体屏。
+- 为后续定位上述偶发窗口发现超时，将r2诊断脚本同步到tests/sdkbuild/ubuntu_window_smoke.py：失败前保存该隔离X服务器的窗口树、窗口ID及被测PID状态和根截图；不改变通过条件或重试次数。r2未再次触发诊断分支，分支实际输出仍not_run。
+- blocked：MCP project4/device4目标匹配，但hardwareSafety.busy显示device7正烧录；仅保存a133-target.json和a133-observation.json，未开串口/供电恢复/升级，不确认此刻设备版本。沿用STABILITY-023未解决状态。
+- not_run：本批A133编译/安装（未改A133/桌面代码）、完整Ubuntu SDK/签名身份/deb激活升级回退数据验收。旧通过不挪用到新产物。未上传。
+
+## 下一步
+Ubuntu会话生命周期/完整能力UI、可信x86_64 SDK与签名安装链；发布工具当前只接受ARM64，需按正式基线扩展而非改文件名。窗口发现首次超时保留为未定位，后续启动/稳定性验收继续收集诊断。A133待通道空闲后继续失联及系统升级矩阵。涂鸦云真实设备仍等待用户提供。全交付未完成。

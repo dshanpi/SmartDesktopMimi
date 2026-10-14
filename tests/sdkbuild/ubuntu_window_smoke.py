@@ -106,6 +106,11 @@ def main():
                 q=subprocess.run(['xdotool','search','--onlyvisible','--pid',str(process.pid)],env=env,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True)
                 if q.returncode==0 and q.stdout.strip():window=int(q.stdout.splitlines()[0]);break
                 time.sleep(.1)
+            if not window:
+                for command in (['xwininfo','-root','-tree'],['xdotool','search','--all','--name','.'],['ps','-o','pid,stat,wchan,comm','-p',str(process.pid)]):
+                    q=subprocess.run(command,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+                    with (out/'window-diagnostic.log').open('a') as f:f.write(repr(command)+'\n'+q.stdout)
+                subprocess.run(['import','-window','root',str(out/'root-diagnostic.png')],env=env,timeout=10)
             assert window
             time.sleep(1)
             subprocess.run(['import','-window',str(window),str(out/(name+'.png'))],env=env,check=True,timeout=10)
