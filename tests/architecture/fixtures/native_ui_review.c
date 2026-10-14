@@ -278,14 +278,38 @@ static void test_home_navigation(void) {
  lv_obj_t *home=lv_screen_active();
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
  lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
- tap_screen(pointer,review_width/2,review_height-48);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
+ pump();
  lv_obj_t *setting=find_label(home,ui_tr(UI_STR_APP_SETTINGS));assert(setting);
- lv_obj_scroll_to_view_recursive(setting,LV_ANIM_OFF);pump();
- lv_area_t pos;lv_obj_get_coords(setting,&pos);tap_screen(pointer,(pos.x1+pos.x2)/2,(pos.y1+pos.y2)/2);
- assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_APP_SETTINGS)));
- app_manager_back_home();lv_tick_inc(500);pump();pump();
- tap_screen(pointer,review_width/2,review_height-48);pump();lv_tick_inc(250);pump();assert(ui_all_apps_is_visible());
- tap_screen(pointer,100,20);pump();assert(!ui_all_apps_is_visible());
+ lv_obj_t *card=lv_obj_get_parent(setting), *page=lv_obj_get_parent(card), *strip=lv_obj_get_parent(page);
+ lv_obj_t *panel=lv_obj_get_parent(strip);
+ lv_area_t panel_box;lv_obj_get_coords(panel,&panel_box);
+ assert(panel_box.x1==HOME_CONTENT_X && panel_box.y1==HOME_DOCK_Y);
+ assert(panel_box.x2<review_width && panel_box.y2<review_height);
+ assert(lv_obj_get_child_count(strip)>1 && !ui_all_apps_is_visible());
+ lv_obj_scroll_to_x(strip,0,LV_ANIM_OFF);pump();
+ /* Actual pointer drag must scroll inside the home strip, never activate an
+  * app, hide the main cards or open the old full-screen launcher. */
+ lv_area_t box;lv_obj_get_content_coords(strip,&box);
+ touch_x=box.x2-24;touch_y=(box.y1+box.y2)/2;
+ touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+ for(int i=1;i<=16;i++) {
+  touch_x=box.x2-24-(lv_area_get_width(&box)-48)*i/16;
+  lv_tick_inc(20);lv_indev_read(pointer);pump();
+ }
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);
+ for(int i=0;i<20;i++){lv_tick_inc(50);pump();}
+ assert(lv_obj_get_scroll_x(strip)>0);
+ assert(lv_screen_active()==home && !ui_all_apps_is_visible());
+ /* Every registry app is reachable directly from this strip. */
+ for(size_t i=0;i<app_registry_get_launcher_count();i++) {
+  const app_registry_entry_t *entry=app_registry_get_launcher_entry(i);
+  lv_obj_t *label=find_label(panel,ui_tr(entry->name_id));assert(label);
+  tap_widget(lv_obj_get_parent(label));
+  assert(lv_screen_active()!=home && !ui_all_apps_is_visible());
+  app_manager_back_home();lv_tick_inc(500);pump();pump();assert(lv_screen_active()==home);
+ }
+ lv_obj_scroll_to_x(strip,0,LV_ANIM_OFF);pump();
+ puts("PASS inline home strip: pointer swipe stays on Home; every app opens directly and returns; no duplicate navigation");
  tap_screen(pointer,review_width/2,review_width<1000?84:32);
  lv_obj_t *center=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));
  assert(center && lv_obj_is_visible(center));
@@ -307,7 +331,7 @@ static void test_responsive_home(void) {
   lv_obj_t *button=lv_obj_get_parent(label);
   lv_obj_scroll_to_view_recursive(button,LV_ANIM_OFF);pump();
   lv_area_t b,t;lv_obj_get_coords(button,&b);lv_obj_get_coords(label,&t);
-  assert(b.x1>=0 && b.x2<review_width && b.y1>=HOME_STATUS_H && b.y2<review_height-78);
+  assert(b.x1>=0 && b.x2<review_width && b.y1>=HOME_STATUS_H && b.y2<HOME_DOCK_Y);
   assert(t.x1>=b.x1 && t.x2<=b.x2 && t.y1>=b.y1 && t.y2<=b.y2);
   tap_screen(pointer,(b.x1+b.x2)/2,(b.y1+b.y2)/2);
   assert(lv_screen_active()!=home);
@@ -348,6 +372,14 @@ int main(int argc,char**argv) {
 #endif
  /* Keep the retired component tests explicit; production does not enable it. */
  if(strcmp(argv[1],"lockscreen")==0){ui_lockscreen_init(lv_screen_active());assert(!ui_lockscreen_show());}
+ else if(strcmp(argv[1],"home-next")==0){
+  lv_obj_t *label=find_label(lv_screen_active(),ui_tr(UI_STR_APP_SETTINGS));assert(label);
+  lv_obj_t *strip=lv_obj_get_parent(lv_obj_get_parent(lv_obj_get_parent(label)));
+  lv_obj_update_layout(strip);
+  lv_obj_scroll_to_x(strip,lv_obj_get_content_width(strip),LV_ANIM_OFF);pump();
+  lv_obj_send_event(strip,LV_EVENT_SCROLL_END,NULL);pump();
+  assert(!ui_all_apps_is_visible());
+ }
  else if(strcmp(argv[1],"control-center")==0){
   lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
@@ -530,7 +562,12 @@ int main(int argc,char**argv) {
   lv_obj_t*refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code");assert(refresh);
   tap_widget(lv_obj_get_parent(refresh));assert(pairing_refreshes==1);assert(!find_label(lv_scr_act(),"123456"));
   emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
-  puts("PASS pairing: fresh code visible, expired/malformed code hidden");
+  status.bind_token[0]='\0';status.bind_token_expires_in=0;status.bind_token_error=200;
+  emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"暂未取得可用绑定码。若设备已绑定，可继续使用；账号归属请在 100ask.net 查看。":"No usable pairing code was returned. If already linked, continue using the device. Check account ownership at 100ask.net."));
+  assert(!find_label(lv_scr_act(),"123456"));
+  assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
+  puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
  else if(strcmp(argv[1],"wifi")==0 || strcmp(argv[1],"password")==0){
   app_wifi.init();wifi_spinner_delete();

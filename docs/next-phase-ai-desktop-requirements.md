@@ -58,3 +58,6 @@ This covers Home, launcher and Control Center geometry, not every application sc
 Physical qualification still requires the corresponding display, touch calibration,
 application matrix and signed build receipt. Only the actual A133 1024x768 panel has
 hardware evidence; selection in a build profile does not qualify other resolutions.
+
+## 2026-10-14 首页标注图纠正
+用户明确：删除红框的整条底部导航；保留绿框应用区在首页内，左右滑动选择软件并点击打开，不用一个小抽屉入口代替绿框，不要求跳到全屏应用页。上方助手/HDMI 卡片保留，编译配置不进入桌面。旧抽屉验收不代表本次首页内应用区验收。

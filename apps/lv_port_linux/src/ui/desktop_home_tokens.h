@@ -29,11 +29,11 @@
 #define HOME_SCREEN_H           lv_display_get_vertical_resolution(NULL)
 #define HOME_CONTENT_X          (HOME_SCREEN_W >= 1000 ? 56 : 16)
 #define HOME_DASHBOARD_Y        (HOME_STATUS_H + 22)
-#define HOME_DOCK_Y             (HOME_SCREEN_H - HOME_DOCK_H - 18)
+#define HOME_DOCK_Y             (HOME_SCREEN_H - HOME_DOCK_H - 28)
 #define HOME_CONTENT_W          (HOME_SCREEN_W - 2 * HOME_CONTENT_X)
 #define HOME_STATUS_H           (HOME_SCREEN_W >= 1000 ? 68 : 112)
-#define HOME_DASHBOARD_H        (HOME_SCREEN_H - HOME_DASHBOARD_Y - 102)
-#define HOME_DOCK_H             62
+#define HOME_DASHBOARD_H        (HOME_DOCK_Y - HOME_DASHBOARD_Y - 20)
+#define HOME_DOCK_H             164
 #define HOME_GAP                16
 #define HOME_RADIUS             22
 #define HOME_RADIUS_SM          16

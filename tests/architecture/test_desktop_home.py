@@ -75,7 +75,7 @@ class DesktopHomeContractTests(unittest.TestCase):
     def test_bottom_navigation_routes_are_not_placeholders(self):
         self.assertNotIn("NAV_ASSISTANT", self.dock)
         self.assertNotIn("NAV_HDMI", self.dock)
-        self.assertIn("ui_all_apps_show()", self.dock)
+        self.assertNotIn("ui_all_apps_show()", self.dock)
         self.assertIn("LV_OBJ_FLAG_CLICK_FOCUSABLE", self.dock)
 
     def test_home_chrome_follows_theme_and_video_viewport_keeps_contrast(self):
@@ -90,7 +90,7 @@ class DesktopHomeContractTests(unittest.TestCase):
             self.status_bar,
         )
         self.assertIn("HOME_SURFACE_RAISED", self.status_bar)
-        self.assertIn("HOME_SURFACE_RAISED", self.dock)
+        self.assertIn("HOME_SURFACE", self.dock)
 
     def test_touch_targets_meet_embedded_minimum(self):
         action = re.search(
@@ -98,9 +98,6 @@ class DesktopHomeContractTests(unittest.TestCase):
         )
         self.assertIsNotNone(action)
         self.assertGreaterEqual(int(action.group(1)), 48)
-        handle = re.search(r"lv_obj_set_size\(handle,\s*(\d+),\s*(\d+)\);", self.dock)
-        self.assertIsNotNone(handle)
-        self.assertGreaterEqual(int(handle.group(2)), 48)
         self.assertNotIn("create_quick_tile", self.dashboard)
 
     def test_home_runtime_pauses_when_screen_is_hidden(self):
