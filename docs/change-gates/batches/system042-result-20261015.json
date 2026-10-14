@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "补齐真实持久数据清点、10KB增量备份和三项失败，不启动烧录。",
+  "context": "全快照/精简PID阶段/维修文件恢复分别失联；原040完整快照保留；串口冷启CR行为纠正。",
+  "next_steps": "核对第三次恢复健康和授权清理；不重复失败backup，继续受控新内核安装路径与全部剩余验收。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-042",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-042.md",
+      "scope": "A133实际持久数据与恢复副本",
+      "invariants": "原钥/绑定/HDMIoff保持，失败不算备份；onlyowned资源清理，原040和partial全部保留，不flash/erase。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-042.md",
+        "docs/change-gates/batches/system042-result-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "数据清点/变化增量",
+          "status": "passed",
+          "scope": "92文件/26非版本文件/唯一变化TuyaDB双读一致",
+          "evidence": "output/system-data-baseline-20261014/result.json"
+        },
+        {
+          "name": "全/精简快照及UDISK恢复",
+          "status": "failed",
+          "scope": "真实网络和串口，不安装候选",
+          "evidence": "output/system-data-baseline-20261014/result.json",
+          "reason": "SSH255/网络失败，partial不作为完整恢复资料"
+        },
+        {
+          "name": "第三次恢复后实际健康",
+          "status": "not_run",
+          "scope": "A133仍原rc17候选",
+          "evidence": "output/system-data-baseline-20261014/result.json",
+          "reason": "30秒relay命令已下发，等待正常启动读回，未冒充通过"
+        }
+      ]
+    }
+  ]
+}
