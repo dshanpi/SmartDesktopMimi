@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "事前记录SDK make函数导致元数据阶段误入受保护构建",
+  "context": "SYS048真实失败发生在prepare-tmpinfo；不放宽启动链保护",
+  "next_steps": "确认终止后仅修正make调用，回归影子函数隔离及实际索引checker，再接续系统固件阶段",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-049",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+      "scope": "系统构建metadata调用修复",
+      "invariants": "不改SDK/8boot inputs/保护环境/keys/设备绑定，不换应用候选",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+        "docs/change-gates/batches/20261015-system049-prerecord.json"
+      ],
+      "checks": [
+        {
+          "name": "修复及受影响验证",
+          "status": "not_run",
+          "scope": "事前要求，无实际验证",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-private-r2.log",
+          "reason": "准备按真实make shadow失败修复"
+        }
+      ]
+    }
+  ]
+}
