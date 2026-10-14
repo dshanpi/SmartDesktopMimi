@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Single bounded download passed with temporary Wi-Fi power-save off; add bounded idle observation",
+  "context": "No baseline-on transfer: idle loss occurred before launch",
+  "next_steps": "43min read-only observer and45min automatic restoration, final UART verification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-031",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+      "scope": "Actual preliminary transfer and bounded temporary idle comparison",
+      "invariants": "No causal/root-fix claim; timer restores originalon; no persistent driver/config change",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+        "docs/change-gates/batches/20261014-stability-031-soak.json"
+      ],
+      "checks": [
+        {
+          "name": "temporary-off bounded transfer",
+          "status": "passed",
+          "scope": "Actual A1334MiB at64KiB/s",
+          "evidence": "output/a133-stability-20261014-r4/off-transfer-result.json"
+        },
+        {
+          "name": "43min idle comparison",
+          "status": "not_run",
+          "scope": "Actual board with read-only host observer",
+          "reason": "Recording limits before launch",
+          "evidence": "docs/change-gates/REQ-MIMI-STABILITY-031.md"
+        }
+      ]
+    }
+  ]
+}
