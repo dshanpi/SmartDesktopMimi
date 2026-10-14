@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "summary": "Actual rc22 deb activation and A133 recovery evidence",
+  "context": "Ubuntu chain passed, A133 instability remains",
+  "next_steps": "A133 stability/system matrix and Ubuntu graphical integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DEBACTIVATE-030",
+      "record": "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md",
+      "scope": "Actual installed signed deb activation and evidence",
+      "invariants": "Original trust unchanged; no physical-screen/powercut claim or uploads",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md",
+        "docs/change-gates/batches/20261014-debactivate-030-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "installed deb activation purge restart",
+          "status": "passed",
+          "scope": "Actual enrolled Ubuntu20.04 VM signed deb installation/activation/purge/restart using Xvfb; not physical display or system power loss",
+          "evidence": "output/ubuntu-deb-activation-20261014/result.json"
+        },
+        {
+          "name": "whole product acceptance",
+          "status": "not_run",
+          "scope": "Whole device",
+          "evidence": "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md",
+          "reason": "A133 stability/system matrix and graphical integration incomplete"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-STABILITY-023",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-023.md",
+      "scope": "Actual board probe and authorized recovery",
+      "invariants": "No new package or key; recovery is not stability qualification",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-023.md"
+      ],
+      "checks": [
+        {
+          "name": "idle health",
+          "status": "failed",
+          "scope": "A133 MainBoard V1.2",
+          "evidence": "output/ubuntu-deb-activation-20261014/a133-result.json",
+          "reason": "UART empty twice and ping failed"
+        },
+        {
+          "name": "restore rc17 health",
+          "status": "passed",
+          "scope": "Scoped authorized relay recovery",
+          "evidence": "output/ubuntu-deb-activation-20261014/a133-result.json"
+        }
+      ]
+    }
+  ]
+}

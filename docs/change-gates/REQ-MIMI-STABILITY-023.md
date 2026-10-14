@@ -25,3 +25,7 @@ MCP核对保存project4/device4/COM17与绑定USB，通道空闲后执行cycle/o
 SDK025本次恢复结果：rc17/previousrc16/trialfalse、health0和ext4p7错误0已实际核对，serial-1关闭，未改身份密钥/HDMI/频率或安装候选。output/ubuntu-sdk-20261014/a133-recovery-result.json；初始失联failed、重启恢复passed、根因未解决。
 
 2026-10-14 ACTIVATE029结束后只读核对：LYNX仍project4/device4/COM17/原USB绑定，但hardwareSafety.busy=true，活动为另一COM18串口。按本门禁不打开串口、不恢复电源、不传输；本轮A133实测blocked，版本仍仅沿用最后rc17记录。继续Ubuntu独立deb链路，不能宣称本轮A133健康。
+
+2026-10-14 DEBACTIVATE030进行中通道复查已空闲；仍原project4/device4/COM17/USB绑定，已有串口handle为closed。本轮继续同门禁只读版本/健康/HDMI/系统状态核对；不刷写或安装。若再次无响应，记录失败后沿用既有授权、再次核对作用域空闲，受控30秒恢复并关闭自有句柄。
+
+030实际：两次串口空和ping失败；首次恢复前组合断言失败未调用电源，随后重新逐字段核对全部通过，执行授权30秒cycle。首次命令被getty消费未执行，后实际确认rc17/previousrc16/trialfalse/highwater17/health0、p7错误0、46.056℃、1512000kHz；无频率/驱动改动。启动存在rootfs unchecked和SDIO -22告警，随后DHCP成功；不推定根因。无pstore，无打开video句柄。serial-3关闭，无SSH授权/新安装。output/ubuntu-deb-activation-20261014/a133-result.json；boot-private仅私有保存，归档用脱敏摘要。汇总脚本首次断言固定日志段失败，确认health0实际在后续diagnostic2读回而非diagnostic1，原日志保留。恢复不是事务断电验收。
