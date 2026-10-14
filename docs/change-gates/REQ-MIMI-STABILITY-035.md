@@ -10,3 +10,6 @@
 
 
 实际setup blocked：原serial-11打开后pre-state真实rc17/trialfalse读回passed；pre-health逐块发送中MCP连接reset，取消输入和close请求也connection refused。Windows32702确认无监听，LYNX app进程仍在；设备ping在线。没有被动捕获、设置/驱动/候选/relay改动。hardware-session保留open，不能凭失败的close标closed；可能未完成输入不得重放。已请求用户恢复固定A133 MCP通道。接续先核对scope/原handle，读回或取消未完成行，再关闭并复核通道；原句柄明确失效才记终止。output/a133-reboot-trace-20261014/setup-result.json。现有SDK032编译继续，不把MCP阻塞变成整个目标完成或停止。
+
+
+用户恢复通道后：原serial-11实际connected=true且无输出，固定scope核对后Ctrl-C取消未完成行并close成功。r2新serial-12完成rc17/trialfalse/健康idle/HDMI进程无/Wi-Fi原on检查，passive capture进程3936084已启动45分钟，UART观测仅read；host MAC/static观察同时记录。watchdog sysfs查询实际执行但所有指定属性均无值，procd fd查询也无结果，不把查询退出0当字段已取得；bootstatus/运行timeout仍unknown。禁止并发写serial-12。output/a133-reboot-trace-20261014/r2/capture-status.json，最终结果/健康not_run。

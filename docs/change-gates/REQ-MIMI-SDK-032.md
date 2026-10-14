@@ -19,3 +19,6 @@
 
 
 扩展输入只读核对：4109个regular文件哈希一致；四个启动链接的manifest字段为link，首次比较器使用target/link_target误报review，原记录保留，四个真实readlink与保存文本一致passed。共4113/4114条匹配；唯一defconfig在当前SDK构建中被临时规范化，最终恢复及97组件差异检查待job结束，仍not_run。无SDK修改/重复构建。证据overlay-input-readback.json和overlay-input-review.json；不把临时配置差异泛化为允许其他源输入变化。
+
+
+clean范围纠正：发现Tina实际KERNEL_BUILD_OUT_DIR是源码根，output只是staging；旧sunxi_wdt.o/vmlinux/generated头早于本job开始，vendor build_kernel不执行clean。032内核空缓存条件failed，不能将supervisor可能返回passed等同完整clean；OpenWrt缓存重建真实结果仍保留。补做036单组件保存输入重放，旧job继续不被打断。
