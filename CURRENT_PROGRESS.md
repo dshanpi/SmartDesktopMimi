@@ -42,3 +42,8 @@ MCPadb_list只见not_found，实际adb_shell固定serial被DEVICE_SCOPE“单板
 下一步：用户保存ADBbinding后先读actualscope与同物理位置，再新临时authorized session完成known-key认证和目标身份，使用受控USB传输（禁止UARTpayload）核对hash，先app23兼容Sys1/2实际升级，再签名Sys2OTA；所有真实升级/回退/断电/数据/新LCD/失联矩阵另验。source拆分、Ubuntu真实登录、账号归属/语音/Tuya及最终发布全范围保留，应用/Release仍未上传。证据本output目录，raw/PnP原身份私有目录0700/0600。
 
 2026-10-15 LOGIN052事前记录：Ubuntu当前只有GDM greeter，无普通图形用户。将实现独立平台登录桥接及严格logind scope，原候选/签名/密钥保持不变；真图形登录not_run。ADB绑定等待用户保存，不绕scope。
+
+## 2026-10-15 LOGIN052 独立Ubuntu交付进展
+独立平台登录桥接已实现并正式启用；仅启动固定UID1000真实local/seat0/user/X11，沿用签名和登记，退出登录由scope绑定停止；.deb无maintainer脚本、原应用/信任/硬件接口不变。实际发现Ubuntu20.04 loginctl逗号参数空返回缺陷，已修为独立property并拒绝缺投影；第一次错误夹具及证据inventory错误均保留failed。
+source64253e65fb3e41cd398f504c8bc2007dc6404c41，native/ARM64更新器编译、14Python边界、受影响Go回归、真实greeter拒绝passed。rootservice enabled/active，实际11条logind投影只有greeter/SSH，无普通X11时只等待，无桌面进程或临时X授权文件。已正式保留安装此前签名rc22 deb，实际payload验签和hash passed，原平台/state及已核对设置1文件无变；真实图形登录和完整用户数据仍not_run，已请用户VM控制台ubuntu登录Ubuntu on Xorg，不改autologin。
+A133系统候选sysrc2/应用rc23保持原hash；新kernel尚未装板、FES重连failed、失联根因未解决。MCP可访问但保存ADBserial仍空，依赖问题pending不重复问。全部升级/回退/断电/完整数据/功能、源码拆分及其余外部验收/公开发布保留未完。证据 output/ubuntu-login-20261015；详见LOGIN052。无应用源码/Release上传。

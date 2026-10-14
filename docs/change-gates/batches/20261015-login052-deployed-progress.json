@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "summary": "Record real Ubuntu root service and retained signed deb without fake graphical login claim",
+  "context": "Final independent platform source642; unchanged app/system candidates and signing trust; physical A133 blocked by saved ADBbinding",
+  "next_steps": "Actual fixed-user X11 login/logout/health/data; ADBpositiveauth/app23/sysrc2 then required matrix; no public upload",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Actual root platform deployment/CLI projection/greeter refusal/retained deb, not full graphical/data acceptance",
+      "invariants": "Failures retained; fixed scope, originaltrust/noautologin; no Xvfb as real login",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/20261015-login052-deployed-progress.json"
+      ],
+      "checks": [
+        {
+          "name": "Final platform builds and affected regressions",
+          "status": "passed",
+          "scope": "native+CGO0ARM64 updater,14Python and affectedGo; not full desktop recompile",
+          "evidence": "output/ubuntu-login-20261015/build-result-r2.json and logs"
+        },
+        {
+          "name": "r2 evidence serialization",
+          "status": "failed",
+          "scope": "Postdeployment inventory erroneously included generatedcache directory",
+          "evidence": "output/ubuntu-login-20261015/deployment-r2-inventory-failure.json",
+          "reason": "Corrected independent regularfile readback, deployment not restarted"
+        },
+        {
+          "name": "Rootservice real scope and installed signeddeb",
+          "status": "passed",
+          "scope": "No-user-X11 waiting and actualgreeter拒绝; package/state/settings only",
+          "evidence": "output/ubuntu-login-20261015/deployment-result-r3.json, actual-greeter-launch-refusal.json, retained-deb-result.json"
+        },
+        {
+          "name": "Graphical login/logout/full data/realupgrade",
+          "status": "not_run",
+          "scope": "ordinary user session not available, not Xvfb substitute",
+          "evidence": "output/ubuntu-login-20261015/deployment-result-r3.json",
+          "reason": "user VMconsole Xorg login pending; broader tests required"
+        }
+      ]
+    }
+  ]
+}

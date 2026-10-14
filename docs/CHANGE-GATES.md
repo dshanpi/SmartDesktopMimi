@@ -126,3 +126,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-SYSTEM-051](change-gates/REQ-MIMI-SYSTEM-051.md)：现有authorizedUSB临时bind/认证和复原、可信OTA接续；未知key unauthorized及原配置/HID恢复通过，MCPADB绑定待用户，正向认证/实机OTA未验收。
 
 - [REQ-MIMI-LOGIN-052](change-gates/REQ-MIMI-LOGIN-052.md)：Ubuntu固定用户真实图形登录桥接，事前记录，未实施/未验收。
+
+LOGIN052更新：独立root平台服务/保留签名deb已部署、真实无X11等待及greeter拒绝passed；CLI空投影缺陷修复，失败历史保留；真实用户X11登录/完整数据not_run，外部登录输入pending。
