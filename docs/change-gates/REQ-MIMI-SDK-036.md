@@ -19,3 +19,8 @@ repo overlay补充实现及17项测试passed：prepare CLI显式要求overlay路
 
 
 真实r2在clone前拒绝schema差异：旧snapshot 149个重叠条目只有mode/hash，repo overlay另有size，字典全等错误将新增元数据认成内容冲突。源哈希与mode实际一致，旧失败保留。按实际保存schema修正：重叠严格比较类型/内容hash/link/mode，两侧都有size才比较size，overlay size用于丰富恢复条目；旧tar无size字段时仍验哈希并限制单文件512MiB，不放弃完整性检查。fixture改为真实旧schema，17项r4passed且验证合法archive/重叠、实际内容冲突依旧拒绝。r3实际准备待运行，原SDK/旧job不动。
+
+
+真实r3拒绝已定位：仅GPU生成配置config_kernel.mk两个绝对路径从原SDK根迁到当前.delivery/sdk-restored，其余字节不变；文件已在固定snapshot归档，不能删除或重写保存摘要。实施前限定：仅该已登记文件，从验过容器/成员摘要的原始文本推导KERNELDIR、KERNEL_CROSS_COMPILE两行的当前SDK路径；原源只读校验允许原摘要或该精确推导摘要，其他行/路径/字段变化仍拒绝。独立新树继续恢复原保存字节，不从活跃源拷贝。记录原/迁移后摘要及路径来源，重跑合法迁移、额外字节改变及已有拒绝用例。当前实际SDK准备仍failed，激活/编译未运行。
+
+限定GPU路径迁移实现后19项测试passed（r5），已验证新树恢复原保存字节、当前树仅两字段迁移可读回，改动KERNEL_ID仍拒绝。未改活跃SDK源或可信快照；实际r4准备待执行，原r3错误与具体差异证据保留。

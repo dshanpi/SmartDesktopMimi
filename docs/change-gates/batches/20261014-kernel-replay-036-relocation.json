@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Verify only two saved GPU paths after SDK relocation",
+  "context": "Actual r3 blocked on generated absolute KERNELDIR/toolchain fields, with all other saved bytes identical",
+  "next_steps": "Prepare actual independent source; wait for old build before activation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "Fixed saved GPU configuration and current SDK directory",
+      "invariants": "Only exact two path fields derived from pinned saved member; original source read-only and restored bytes remain original; all other drift rejected",
+      "paths": [
+        "tools/update/replay_kernel_component.py",
+        "tests/test_replay_kernel_component.py",
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-kernel-replay-036-relocation.json"
+      ],
+      "checks": [
+        {
+          "name": "generated path relocation and rejection regression",
+          "status": "passed",
+          "scope": "19 real Git/tar cases",
+          "evidence": "output/replay-kernel-tests-20261014-r5.log"
+        },
+        {
+          "name": "r3 real preparation",
+          "status": "failed",
+          "scope": "before clone/no live SDK changes",
+          "reason": "Generated paths differ after relocation",
+          "evidence": "output/kernel-clean-replay-20261014/input-mismatch-r3.json"
+        },
+        {
+          "name": "real source and kernel build",
+          "status": "not_run",
+          "scope": "Await actual reconstruction and terminal SDK032",
+          "reason": "Old live build remains active",
+          "evidence": "output/kernel-clean-replay-20261014"
+        }
+      ]
+    }
+  ]
+}

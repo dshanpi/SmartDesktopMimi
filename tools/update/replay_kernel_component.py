@@ -17,6 +17,43 @@ import sdk_snapshot as audit
 
 COMPONENT = 'kernel/linux-4.9'
 RECEIPT = '.mimi-kernel-replay.json'
+GPU_CONFIG = 'modules/gpu/img-rgx/linux/rogue_km/binary_sunxi_linux_nullws_release/config_kernel.mk'
+
+
+def relocated_gpu_config(archive, inputs, sdk):
+    """Accept only two generated absolute paths, derived from saved bytes."""
+    if GPU_CONFIG not in inputs:
+        return {}
+    with tarfile.open(archive, 'r:gz') as stream:
+        member = stream.getmember(GPU_CONFIG)
+        if not member.isfile() or member.size > 1024 * 1024:
+            raise ValueError('saved GPU configuration type or size changed')
+        data = stream.extractfile(member).read()
+    if hashlib.sha256(data).hexdigest() != inputs[GPU_CONFIG]['sha256']:
+        raise ValueError('saved GPU configuration bytes changed')
+    text = data.decode('utf-8')
+    lines = text.splitlines(keepends=True)
+    kernel_lines = [line for line in lines if line.startswith('override KERNELDIR := ')]
+    cross_lines = [line for line in lines if line.startswith('override KERNEL_CROSS_COMPILE := ')]
+    if len(kernel_lines) != 1 or len(cross_lines) != 1:
+        raise ValueError('saved GPU path fields are ambiguous')
+    old_kernel = kernel_lines[0][len('override KERNELDIR := '):].rstrip('\r\n')
+    old_cross = cross_lines[0][len('override KERNEL_CROSS_COMPILE := '):].rstrip('\r\n')
+    suffix = '/' + COMPONENT
+    if not old_kernel.startswith('/') or not old_kernel.endswith(suffix):
+        raise ValueError('saved GPU kernel path is not an SDK component')
+    old_sdk = old_kernel[:-len(suffix)]
+    if not old_cross.startswith(old_sdk + '/out/toolchain/') or not old_cross.endswith('/bin/aarch64-linux-gnu-'):
+        raise ValueError('saved GPU toolchain path is not the selected SDK toolchain')
+    replacements = {
+        kernel_lines[0]: kernel_lines[0].replace(old_kernel, str(sdk / COMPONENT), 1),
+        cross_lines[0]: cross_lines[0].replace(old_cross, str(sdk) + old_cross[len(old_sdk):], 1),
+    }
+    relocated = ''.join(replacements.get(line, line) for line in lines).encode('utf-8')
+    return {GPU_CONFIG: {'saved_sha256': inputs[GPU_CONFIG]['sha256'],
+                         'relocated_sha256': hashlib.sha256(relocated).hexdigest(),
+                         'old_sdk': old_sdk, 'new_sdk': str(sdk),
+                         'fields': ['KERNELDIR', 'KERNEL_CROSS_COMPILE']}}
 
 
 def git(root, *args):
@@ -107,8 +144,13 @@ def verify(root, record, full_modes=False):
         if 'link' in desc:
             if not path.is_symlink() or os.readlink(path) != desc['link']:
                 raise ValueError('saved source link changed')
-        elif not path.is_file() or path.is_symlink() or audit.digest(path) != desc['sha256']:
-            raise ValueError('saved source input changed')
+        else:
+            accepted = {desc['sha256']}
+            relocation = record.get('generated_path_relocations', {}).get(name)
+            if relocation and root == Path(record['sdk']) / COMPONENT:
+                accepted.add(relocation['relocated_sha256'])
+            if not path.is_file() or path.is_symlink() or audit.digest(path) not in accepted:
+                raise ValueError('saved source input changed: ' + name)
         if path.lstat().st_mode & 0o777 != desc['mode']:
             raise ValueError('saved source input mode changed')
     if audit.digest(root / '.config') != record['config_sha256']:
@@ -225,6 +267,8 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin,
                   config_mode=config['mode'],
                   overlay_commit=overlay_commit, overlay_manifest_sha256=manifest_pin,
                   overlay_inputs=entries,
+                  generated_path_relocations=relocated_gpu_config(
+                      folder / 'untracked.tar.gz', inputs['untracked'], sdk),
                   phase='prepared', created_utc=time.time(), activation='not_run',
                   kernel_build='not_run', release_qualified=False)
     verify(sdk / COMPONENT, record)

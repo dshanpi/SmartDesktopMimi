@@ -168,6 +168,38 @@ class KernelReplayTests(unittest.TestCase):
             self.prepare()
         self.assertFalse(self.stage.exists())
 
+    def gpu_fixture(self, extra_change=False):
+        old = '/saved/original-sdk'
+        data = ('override KERNELDIR := ' + old + '/' + replay.COMPONENT + '\n'
+                'override KERNEL_CROSS_COMPILE := ' + old + '/out/toolchain/fixed/bin/aarch64-linux-gnu-\n'
+                'override KERNEL_ID := 4.9.191\n').encode()
+        self.inputs['untracked'][replay.GPU_CONFIG] = self.desc(data)
+        self.archive(self.folder / 'untracked.tar.gz', {
+            'driver.c': (self.kernel / 'driver.c').read_bytes(), replay.GPU_CONFIG: data})
+        path = self.kernel / replay.GPU_CONFIG
+        path.parent.mkdir(parents=True)
+        current = data.replace(old.encode(), str(self.sdk).encode())
+        if extra_change:
+            current = current.replace(b'4.9.191', b'4.9.192')
+        path.write_bytes(current); path.chmod(0o600)
+        self.refresh()
+        return data
+
+    def test_two_generated_gpu_paths_allow_sdk_relocation_only(self):
+        saved = self.gpu_fixture()
+        record = self.prepare()
+        self.assertEqual((self.stage / replay.GPU_CONFIG).read_bytes(), saved)
+        self.assertEqual(record['generated_path_relocations'][replay.GPU_CONFIG]['fields'],
+                         ['KERNELDIR', 'KERNEL_CROSS_COMPILE'])
+        replay.verify(self.kernel, record)
+        replay.verify(self.stage, record)
+
+    def test_gpu_relocation_does_not_accept_other_source_changes(self):
+        self.gpu_fixture(extra_change=True)
+        with self.assertRaisesRegex(ValueError, 'saved source input changed'):
+            self.prepare()
+        self.assertFalse(self.stage.exists())
+
     def test_uncaptured_source_cannot_be_silently_dropped(self):
         (self.kernel / 'new_driver.c').write_text('not saved\n')
         with self.assertRaisesRegex(ValueError, 'uncaptured untracked'):
