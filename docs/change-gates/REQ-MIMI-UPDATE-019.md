@@ -28,3 +28,6 @@ flowchart TD
 实现/证据位置：调查 services/mimi-update/update/github.go、cmd/mimi-update/main.go、packaging/aitvbox-mimi-update/files/mimi-update.init；外部日志 output/updater-dns-20261014/before.log。当前源码基准 2541ed95a05214bd914d391a0189cff45cb31454；板端运行历史 rc16，不是该源码构建产物。
 
 下一步：通道空闲后继续仅检查操作，保存真实网络结果；如仍失败按实际阶段修复，不扩大为 DNS/平台权限绕过。
+
+### 网络就绪后复验
+证据 output/updater-dns-20261014/check-complete.log / result.json：rc16 上 check退出0，观察到 busy=true/phase=check → busy=false/phase=idle，error空、candidate=null、download_bytes=0；uptime59分钟，包/状态未改变。该次在线候选检查 passed，无可安装候选；未改DNS/TLS或更新器代码。历史DNS失败的根因和冷启动网络切换仍未证实/未验收，不宣称永久修复。中间通道busy均等待，早期未等到命令完整输出的日志不用于结论，完整重测日志为准。

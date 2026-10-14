@@ -32,3 +32,17 @@ flowchart TD
 
 ### 候选准备范围追加
 主机架构50项已通过。将本轮配对入口与已验证的HDMI能力修复汇入本地 rc17 候选，VERSION 从 rc16 递增；完成完整应用构建、现有产品密钥签名、目标验签后再按通道空闲/版本/备份检查决定实机验收。签名不替代真机验收，候选不上传。构建和验签证据放 output/pairing-entry-20261014；旧 rc16 和前序关键备份保留。
+
+### 实施及真机结果（2026-10-14）
+代码 `fe58653135118be74f3ea4da01a787f4ceccbea3`，rc17 签名包 SHA256 `34fc809a45a93661bee74cab2bc1c5093d8d9f103fa8c334d393e80577fbeed8`，A133 桌面 `79b064fbe6f7f6bc62aa774176d530780b472a5b0f376bac753e42b11aee4b75`，Ubuntu 桌面 `4e3307e99bd5bca0200400611ba8b31a1aacd4a3521724800fc7a02decaa71ba`；构建后才追加本段记录，不将文档追加提交冒充编译源码。
+
+- passed：50 项架构测试；固定源码24张渲染及控件测试（3尺寸×中英文×深浅主题×设置入口/配对页），重复进入设置不申请码、不显示原始码/错误；真实 app-manager 导航正常。Ubuntu 原生构建/实际SDL窗口及不支持尺寸拒绝通过；窗口仅 IPC 测试桩。
+- passed：A133 完整应用构建、公开源码审计、冻结契约、现有产品钥签名及目标核对；512KiB/s传输与设备哈希匹配，正式安装器安装并提交 rc17，previous=rc16。UI/后端 ready、idle，ext4 p7错误0。
+- passed（限定范围）：实体板 evdev 输入回放、framebuffer截图确认首页→设置→独立配对页；管理配对入口存在，初始配对页等待明确刷新，不冒充绑定结果。
+- failed/blocked：计划一次刷新后抓取配对结果，实际截图变成涂鸦助手；应用日志还有未计划的返回/开启助手，backend记录两次 HTTP200 空码刷新。尚不能归因外部输入或程序错误；已向用户核对操作来源，完整刷新验收不通过，不把异常截图记为配对成功。
+- 数据：23项文件哈希22项不变（包括100ask身份/secret、网络配置），Tuya运行数据库不同，没有缺失；仅文件比较，语义/断电保留 not_run。
+- 清理 passed：临时SSH授权卸载，原authorized_keys仍0字节，serial-6关闭。没有上传。
+
+证据：output/pairing-entry-20261014/result.json、两份构建回执、签名与安装日志、settings-rc17-device.png、pairing-enter-rc17-device.png、pairing-refresh-rc17-device.png、unexpected-navigation.log。首次以logread计数0不能证明无刷新（实际后端写/tmp/lv_backend.log），已排除该错误观察方法；5秒只读event4观察无事件不能证明此前无外部输入。timeout工具缺失的首次观察失败也保留。
+
+接续：先核实输入归属，使用实际后台日志计数和连续短时输入记录重做单次刷新及返回；必要时修复自己的事件路由。后台绑定未重置；设备当前rc17，配对整体/长稳/系统更新及deb最终验收仍未完成。
