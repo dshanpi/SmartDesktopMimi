@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "summary": "完成修正内核完整候选、入场签名和本地native下载复验，真实旧板恢复另记",
+  "context": "全构建返回0，源差异仅注释且独立beforehash精确恢复；旧失联失败和首次误判全部保留",
+  "next_steps": "核对新factory启动/原userdata兼容继承，固定目标/backup进行原生首装；安装成功才运行全部必需真机矩阵，不提前公开",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-048",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+      "scope": "Host完整候选与native image ingress；旧板恢复不是新系统验收",
+      "invariants": "原key绑定/8boot不改，UID/HDMI采集不变，raw私有，candidatehash精确，不上传应用Release",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+        "docs/change-gates/batches/20261015-system048-complete-candidate.json"
+      ],
+      "checks": [
+        {
+          "name": "修正完整系统及SWU",
+          "status": "passed",
+          "scope": "Actual BUILD-COMPLETE/source/manifest/archive sum/real packedboot/rootfs/signedfactory",
+          "evidence": "output/system-baseline-rc2-20261015/product-reviewed-readback.json"
+        },
+        {
+          "name": "SDK纯配置差异审核",
+          "status": "passed",
+          "scope": "Exact before9ae reconstructed by only defconfig substitution, equal fullsymbolmap, prior039byteequal",
+          "evidence": "output/system-baseline-rc2-20261015/source-normalization-review-r2.json"
+        },
+        {
+          "name": "sourceguard与最初关联尝试",
+          "status": "failed",
+          "scope": "original automatic guard rejected componenthash; initial rawoverlay differed from realbeforeeffective",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-result-r4.json and source-normalization-diagnostic.json",
+          "reason": "显式review追加passed，不覆盖原failed"
+        },
+        {
+          "name": "旧板失联",
+          "status": "failed",
+          "scope": "UART28秒无marker且两次原IP失败，无本轮新安装/传输",
+          "evidence": "output/system-baseline-rc2-20261015/system048-device-preflight-result.json",
+          "reason": "old loss reproduced before candidateinstall; cause unknown"
+        },
+        {
+          "name": "旧板实际恢复",
+          "status": "passed",
+          "scope": "rc17/currenthash/trialfalse/healthidle0/dropbearauth0/capturefalse; no permanentfix claim",
+          "evidence": "output/system-baseline-rc2-20261015/system048-recovery-readback-r2.json"
+        },
+        {
+          "name": "raw image签名硬件匹配与native传输",
+          "status": "passed",
+          "scope": "host oldrc1 descriptor plus realwrongrevisionreject; localMCPdownload fullhash and33iteminspection",
+          "evidence": "output/system-baseline-rc2-20261015/local-image-admission-result.json and system048-localimage-hash.json"
+        },
+        {
+          "name": "新系统真机及完整交付",
+          "status": "not_run",
+          "scope": "new image notinstalled, SDKreleaseaudit/finalmatrix/Ubuntu/account/voice/Tuya/publicrelease remain",
+          "evidence": "output/system-baseline-rc2-20261015",
+          "reason": "must continue original whole goal"
+        }
+      ]
+    }
+  ]
+}
