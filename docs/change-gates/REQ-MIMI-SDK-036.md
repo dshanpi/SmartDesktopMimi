@@ -28,3 +28,6 @@ repo overlay补充实现及17项测试passed：prepare CLI显式要求overlay路
 真实r4在clone前发现同一GPU构建目录保存的绝对源码链接已随SDK搬迁，原链接/当前链接仅SDK根不同。实施前：逐项保存原链接来源，限定GPU kbuild内部且原目标属于保存kernel源码树；新树恢复成指向同一已追溯源文件的相对内部链接，禁止外部目标、路径穿越和未知目标。当前源只接受原/精确迁移绝对链接或等价内部相对链接，不接收任意重定向；原tar仍逐项核对原linkname，恢复映射与hash/config/HEAD一起验。原r4失败保留，未清理活跃SDK。
 
 GPU链接迁移实现：132个已保存链接均仅SDK根变化，独立树变成绑定同一固定GPU源码的内部相对链接；记录原linkname和canonical精确迁移目标。21项r6真实Git/tar测试passed，新增内部绝对链接恢复及外部重定向拒绝。真实r5准备待执行；活跃SDK仍未修改。
+
+
+2026-10-14本轮实际结果：真实r5准备passed：固定Git组件+saved patch/tar/286原输入+repo overlay额外archive+supplement.config独立源恢复，132个固定GPU源链接内部相对化；HEAD/diff/输入/config及无cache/Git独立对象检查通过，receipt生成。21主机回归passed。原prepare四次失败保留；活跃SDK未修改、激活与真实内核编译not_run。证据output/kernel-clean-replay-20261014/prepare-r5-result.json及新树.mimi-kernel-replay.json。

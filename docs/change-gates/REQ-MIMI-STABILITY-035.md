@@ -13,3 +13,6 @@
 
 
 用户恢复通道后：原serial-11实际connected=true且无输出，固定scope核对后Ctrl-C取消未完成行并close成功。r2新serial-12完成rc17/trialfalse/健康idle/HDMI进程无/Wi-Fi原on检查，passive capture进程3936084已启动45分钟，UART观测仅read；host MAC/static观察同时记录。watchdog sysfs查询实际执行但所有指定属性均无值，procd fd查询也无结果，不把查询退出0当字段已取得；bootstatus/运行timeout仍unknown。禁止并发写serial-12。output/a133-reboot-trace-20261014/r2/capture-status.json，最终结果/健康not_run。
+
+
+2026-10-14本轮实际结果：MCP恢复后正确scope和idle确认，原serial11残留取消/关闭，r2独占serial12被动45分钟完成并关闭。177次网络/固定静态字节检查无失败，无启动标记。最终serial13读取rc17包34fc…/previous rc16/trialfalse/highwater17、health0/idle0、uptime4653.88/原UI2815 ready、WiFi on/PMauto/p7errors0；自有串口关闭。health结果晚到下一次读取，原harness incomplete记录保留，marker-review绑定实际独立exit0。仅本轮观察passed，034自行重启失败保留，根因未解决；watchdog sysfs无值不记bootstatus通过。

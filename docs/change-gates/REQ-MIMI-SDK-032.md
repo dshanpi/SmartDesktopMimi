@@ -22,3 +22,6 @@
 
 
 clean范围纠正：发现Tina实际KERNEL_BUILD_OUT_DIR是源码根，output只是staging；旧sunxi_wdt.o/vmlinux/generated头早于本job开始，vendor build_kernel不执行clean。032内核空缓存条件failed，不能将supervisor可能返回passed等同完整clean；OpenWrt缓存重建真实结果仍保留。补做036单组件保存输入重放，旧job继续不被打断。
+
+
+2026-10-14本轮实际结果：纠正clean范围：Tina内核在源码树编译，output仅staging，旧.o/vmlinux/generated早于032启动。故完整内核空缓存条件failed；032继续实际OpenWrt构建不重启，不将未来脚本passed当全SDKclean。036独立重放已完成，原SDK未修改，待032终止再核对激活和重编受影响镜像门禁。

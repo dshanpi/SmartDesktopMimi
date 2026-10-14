@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "summary": "Record actual trace result and clean kernel source replay",
+  "context": "Resolved MCP outage; no-cache kernel prepared independently; live SDK build still pending",
+  "next_steps": "Read live SDK terminal result before activation, then affected full kernel/image/device tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-035",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-035.md",
+      "scope": "MCP\u6062\u590d\u540e\u6b63\u786escope\u548cidle\u786e\u8ba4\uff0c\u539fserial11\u6b8b\u7559\u53d6\u6d88/\u5173\u95ed\uff0cr2\u72ec\u5360serial12\u88ab\u52a845\u5206\u949f\u5b8c\u6210\u5e76\u5173\u95ed\u3002177\u6b21\u7f51\u7edc/\u56fa\u5b9a\u9759\u6001\u5b57\u8282\u68c0\u67e5\u65e0\u5931\u8d25\uff0c\u65e0\u542f\u52a8\u6807\u8bb0\u3002\u6700\u7ec8serial13\u8bfb\u53d6rc17\u530534fc\u2026/previous rc16/trialfalse/highwater17\u3001health0/idle0\u3001uptime4653.88/\u539fUI2815 ready\u3001WiFi on/PMauto/p7errors0\uff1b\u81ea\u6709\u4e32\u53e3\u5173\u95ed\u3002health\u7ed3\u679c\u665a\u5230\u4e0b\u4e00\u6b21\u8bfb\u53d6\uff0c\u539fharness incomplete\u8bb0\u5f55\u4fdd\u7559\uff0cmarker-review\u7ed1\u5b9a\u5b9e\u9645\u72ec\u7acbexit0\u3002\u4ec5\u672c\u8f6e\u89c2\u5bdfpassed\uff0c034\u81ea\u884c\u91cd\u542f\u5931\u8d25\u4fdd\u7559\uff0c\u6839\u56e0\u672a\u89e3\u51b3\uff1bwatchdog sysfs\u65e0\u503c\u4e0d\u8bb0bootstatus\u901a\u8fc7\u3002",
+      "invariants": "Preserve failures and candidate bindings; no live SDK mutation or qualified release",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-035.md",
+        "docs/change-gates/batches/20261014-trace-and-real-kernel-replay-results.json"
+      ],
+      "checks": [
+        {
+          "name": "actual bounded result",
+          "status": "passed",
+          "scope": "MCP\u6062\u590d\u540e\u6b63\u786escope\u548cidle\u786e\u8ba4\uff0c\u539fserial11\u6b8b\u7559\u53d6\u6d88/\u5173\u95ed\uff0cr2\u72ec\u5360serial12\u88ab\u52a845\u5206\u949f\u5b8c\u6210\u5e76\u5173\u95ed\u3002177\u6b21\u7f51\u7edc/\u56fa\u5b9a\u9759\u6001\u5b57\u8282\u68c0\u67e5\u65e0\u5931\u8d25\uff0c\u65e0\u542f\u52a8\u6807\u8bb0\u3002\u6700\u7ec8serial13\u8bfb\u53d6rc17\u530534fc\u2026/previous rc16/trialfalse/highwater17\u3001health0/idle0\u3001uptime4653.88/\u539fUI2815 ready\u3001WiFi on/PMauto/p7errors0\uff1b\u81ea\u6709\u4e32\u53e3\u5173\u95ed\u3002health\u7ed3\u679c\u665a\u5230\u4e0b\u4e00\u6b21\u8bfb\u53d6\uff0c\u539fharness incomplete\u8bb0\u5f55\u4fdd\u7559\uff0cmarker-review\u7ed1\u5b9a\u5b9e\u9645\u72ec\u7acbexit0\u3002\u4ec5\u672c\u8f6e\u89c2\u5bdfpassed\uff0c034\u81ea\u884c\u91cd\u542f\u5931\u8d25\u4fdd\u7559\uff0c\u6839\u56e0\u672a\u89e3\u51b3\uff1bwatchdog sysfs\u65e0\u503c\u4e0d\u8bb0bootstatus\u901a\u8fc7\u3002",
+          "evidence": "output/a133-reboot-trace-20261014/r2/completion-summary.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SDK-032",
+      "record": "docs/change-gates/REQ-MIMI-SDK-032.md",
+      "scope": "\u7ea0\u6b63clean\u8303\u56f4\uff1aTina\u5185\u6838\u5728\u6e90\u7801\u6811\u7f16\u8bd1\uff0coutput\u4ec5staging\uff0c\u65e7.o/vmlinux/generated\u65e9\u4e8e032\u542f\u52a8\u3002\u6545\u5b8c\u6574\u5185\u6838\u7a7a\u7f13\u5b58\u6761\u4ef6failed\uff1b032\u7ee7\u7eed\u5b9e\u9645OpenWrt\u6784\u5efa\u4e0d\u91cd\u542f\uff0c\u4e0d\u5c06\u672a\u6765\u811a\u672cpassed\u5f53\u5168SDKclean\u3002036\u72ec\u7acb\u91cd\u653e\u5df2\u5b8c\u6210\uff0c\u539fSDK\u672a\u4fee\u6539\uff0c\u5f85032\u7ec8\u6b62\u518d\u6838\u5bf9\u6fc0\u6d3b\u548c\u91cd\u7f16\u53d7\u5f71\u54cd\u955c\u50cf\u95e8\u7981\u3002",
+      "invariants": "Preserve failures and candidate bindings; no live SDK mutation or qualified release",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-032.md",
+        "docs/change-gates/batches/20261014-trace-and-real-kernel-replay-results.json"
+      ],
+      "checks": [
+        {
+          "name": "actual bounded result",
+          "status": "failed",
+          "scope": "\u7ea0\u6b63clean\u8303\u56f4\uff1aTina\u5185\u6838\u5728\u6e90\u7801\u6811\u7f16\u8bd1\uff0coutput\u4ec5staging\uff0c\u65e7.o/vmlinux/generated\u65e9\u4e8e032\u542f\u52a8\u3002\u6545\u5b8c\u6574\u5185\u6838\u7a7a\u7f13\u5b58\u6761\u4ef6failed\uff1b032\u7ee7\u7eed\u5b9e\u9645OpenWrt\u6784\u5efa\u4e0d\u91cd\u542f\uff0c\u4e0d\u5c06\u672a\u6765\u811a\u672cpassed\u5f53\u5168SDKclean\u3002036\u72ec\u7acb\u91cd\u653e\u5df2\u5b8c\u6210\uff0c\u539fSDK\u672a\u4fee\u6539\uff0c\u5f85032\u7ec8\u6b62\u518d\u6838\u5bf9\u6fc0\u6d3b\u548c\u91cd\u7f16\u53d7\u5f71\u54cd\u955c\u50cf\u95e8\u7981\u3002",
+          "evidence": "output/kernel-clean-replay-20261014/kernel-cache-evidence.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "\u771f\u5b9er5\u51c6\u5907passed\uff1a\u56fa\u5b9aGit\u7ec4\u4ef6+saved patch/tar/286\u539f\u8f93\u5165+repo overlay\u989d\u5916archive+supplement.config\u72ec\u7acb\u6e90\u6062\u590d\uff0c132\u4e2a\u56fa\u5b9aGPU\u6e90\u94fe\u63a5\u5185\u90e8\u76f8\u5bf9\u5316\uff1bHEAD/diff/\u8f93\u5165/config\u53ca\u65e0cache/Git\u72ec\u7acb\u5bf9\u8c61\u68c0\u67e5\u901a\u8fc7\uff0creceipt\u751f\u6210\u300221\u4e3b\u673a\u56de\u5f52passed\u3002\u539fprepare\u56db\u6b21\u5931\u8d25\u4fdd\u7559\uff1b\u6d3b\u8dc3SDK\u672a\u4fee\u6539\u3001\u6fc0\u6d3b\u4e0e\u771f\u5b9e\u5185\u6838\u7f16\u8bd1not_run\u3002\u8bc1\u636eoutput/kernel-clean-replay-20261014/prepare-r5-result.json\u53ca\u65b0\u6811.mimi-kernel-replay.json\u3002",
+      "invariants": "Preserve failures and candidate bindings; no live SDK mutation or qualified release",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-trace-and-real-kernel-replay-results.json"
+      ],
+      "checks": [
+        {
+          "name": "actual bounded result",
+          "status": "passed",
+          "scope": "\u771f\u5b9er5\u51c6\u5907passed\uff1a\u56fa\u5b9aGit\u7ec4\u4ef6+saved patch/tar/286\u539f\u8f93\u5165+repo overlay\u989d\u5916archive+supplement.config\u72ec\u7acb\u6e90\u6062\u590d\uff0c132\u4e2a\u56fa\u5b9aGPU\u6e90\u94fe\u63a5\u5185\u90e8\u76f8\u5bf9\u5316\uff1bHEAD/diff/\u8f93\u5165/config\u53ca\u65e0cache/Git\u72ec\u7acb\u5bf9\u8c61\u68c0\u67e5\u901a\u8fc7\uff0creceipt\u751f\u6210\u300221\u4e3b\u673a\u56de\u5f52passed\u3002\u539fprepare\u56db\u6b21\u5931\u8d25\u4fdd\u7559\uff1b\u6d3b\u8dc3SDK\u672a\u4fee\u6539\u3001\u6fc0\u6d3b\u4e0e\u771f\u5b9e\u5185\u6838\u7f16\u8bd1not_run\u3002\u8bc1\u636eoutput/kernel-clean-replay-20261014/prepare-r5-result.json\u53ca\u65b0\u6811.mimi-kernel-replay.json\u3002",
+          "evidence": "output/kernel-clean-replay-20261014/prepare-r5-result.json"
+        }
+      ]
+    }
+  ]
+}
