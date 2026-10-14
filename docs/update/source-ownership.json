@@ -327,6 +327,10 @@
     },
     "apps/lv_port_linux/src/system/wifi_hal_types.h": {
       "owner": "platform"
+    },
+    "apps/lv_port_linux/src/platform/ubuntu/desktop_controls.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "c6ad7659e92562ee5323e17b096c4884726a8b1729127fd3bc8e47d60d49b204"
     }
   },
   "migration_complete": false,

@@ -11,13 +11,21 @@ option(AITVBOX_ENABLE_100ASK_CLOUD
 set(AITVBOX_100ASK_SDK_ROOT "" CACHE PATH
     "Path to the private 100ask IoT SDK when AITVBOX_ENABLE_100ASK_CLOUD=ON")
 set(AITVBOX_PLATFORM "a133" CACHE STRING "AITVBox board adapter")
-set_property(CACHE AITVBOX_PLATFORM PROPERTY STRINGS a133 a527 v883 rk3576 rv1106)
+set_property(CACHE AITVBOX_PLATFORM PROPERTY STRINGS a133 ubuntu-host a527 v883 rk3576 rv1106)
 
 if(MIMI_APPLICATION_ONLY AND AITVBOX_ENABLE_100ASK_CLOUD)
     message(FATAL_ERROR "Application builds cannot enable the private platform cloud provider")
 endif()
 
-if(AITVBOX_PLATFORM STREQUAL "a133")
+if(AITVBOX_PLATFORM STREQUAL "ubuntu-host")
+    if(NOT MIMI_APPLICATION_ONLY OR AITVBOX_ENABLE_100ASK_CLOUD OR LV_USE_SUNXI_G2D)
+        message(FATAL_ERROR "ubuntu-host requires application-only, public providers and no Sunxi G2D")
+    endif()
+    if(CMAKE_CROSSCOMPILING OR NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$")
+        message(FATAL_ERROR "ubuntu-host currently accepts native x86_64 only")
+    endif()
+    set(AITVBOX_PLATFORM_SOURCES "")
+elseif(AITVBOX_PLATFORM STREQUAL "a133")
     set(AITVBOX_PLATFORM_SOURCES
         src/platform/a133/platform_capabilities_a133.c)
 else()
@@ -60,8 +68,9 @@ else()
     message(STATUS "100ask cloud provider: disabled (public stub)")
 endif()
 
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 add_definitions(-D_GNU_SOURCE)
+if(NOT AITVBOX_PLATFORM STREQUAL "ubuntu-host")
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
 # 解决 librt.so.1 not found 的问题
 # 使用 -rpath-link 显式告诉链接器去哪里找间接依赖库
@@ -77,6 +86,10 @@ link_directories(
 )
 
 message(STATUS ">>> [Agent Skill] Cross-compiling for A133 (ARM64) - OpenWrt")
+
+else()
+    message(STATUS "Native Ubuntu desktop: SDL, no A133 hardware implementation")
+endif()
 
 option(WERROR "Treat warnings as errors for LVGL targets" OFF)
 set(WIFI_PROVIDER "aw_wifimg" CACHE STRING "WiFi provider implementation")
@@ -101,6 +114,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Wno-psabi")
 
+if(AITVBOX_PLATFORM STREQUAL "ubuntu-host")
+    set(CONFIG "ubuntu-host" CACHE STRING "Native Ubuntu desktop configuration")
+endif()
 set(CONFIG "default" CACHE STRING "Config name to use. Leave empty for default `lv_conf.defaults`")
 
 set(LV_CONF_DEFAULTS_PATH "${CMAKE_SOURCE_DIR}/lv_conf.defaults")
@@ -143,6 +159,10 @@ if(NOT config_result EQUAL 0)
 endif()
 
 message(STATUS "${LV_BUILD_CONF_PATH} generated successfully")
+if(AITVBOX_PLATFORM STREQUAL "ubuntu-host" AND NOT CONFIG STREQUAL "ubuntu-host")
+    message(FATAL_ERROR "ubuntu-host requires its isolated SDL configuration")
+endif()
+
 
 # The product does not link upstream LVGL demos or examples.  Keep these
 # targets disabled explicitly so the pruned public source snapshot remains
@@ -232,6 +252,7 @@ endif()
 
 # 假设 sysroot 环境变量已设置，CMake 会自动在 sysroot 中查找
 # wifimg 库名为 libwifimg-v2.0.so，需要明确指定
+if(NOT MIMI_APPLICATION_ONLY)
 find_library(WIFIMG_LIB NAMES wifimg-v2.0 wifimg)
 find_library(WIFIMG_LOG_LIB log) # 假设依赖 liblog (从 demo 来看可能需要)
 
@@ -248,6 +269,7 @@ endif()
 if (WIFIMG_LOG_LIB)
     list(APPEND BACKEND_LIBS ${WIFIMG_LOG_LIB})
 endif()
+endif() # platform-only Wi-Fi provider
 
 # -----------------------------------------------------------------------------
 # Wayland Support
@@ -534,6 +556,10 @@ set(SYSTEM_SOURCES
     src/system/settings.c
     src/system/volume_control.c
 )
+if(AITVBOX_PLATFORM STREQUAL "ubuntu-host")
+    list(REMOVE_ITEM SYSTEM_SOURCES src/system/backlight_control.c src/system/volume_control.c)
+    list(APPEND SYSTEM_SOURCES src/platform/ubuntu/desktop_controls.c)
+endif()
 file(GLOB_RECURSE MIDDLEWARE_SOURCES "src/middleware/*.c")
 file(GLOB_RECURSE IPC_SOURCES "src/ipc/*.c")
 file(GLOB_RECURSE FONT_SOURCES "src/ui/font/*.c")
