@@ -17,3 +17,5 @@
 
 短周期结果追加：DISP_BLANK本身已调用，helper3秒状态等候返回71（failed保留）；SDK有5秒级runtime autosuspend，随后真实UART明确disp_runtime_suspend/disable/finish，runtime=suspended/usage0/disp sys无LCD输出passed；restore实际runtime_resume/active/usage1/LCD1024x768、runtime_enable还原0及health0passed，无UI暂停。该独立状态证据满足真实停用前置；不把71写成0。
 长对照恢复deadline细化为240秒（同包按512KiB/s约190秒，超过时可中断本次诊断连接但不重试），自有被动UART/网络270秒至timer之后。预置timer后只一次blank，调用后等真实suspended/usage0及固定LCD中断不增长证明，再只启动一次同045 HTTP文件下载。timer会正常恢复画面，观测270秒后读取board任务exit/bytes/hash及最终runtime/health/idle，清理临时目录/授权，保持原CPU/WiFi/后台。没有成功停止证据不得继续。若失败且timer未能执行，等待观察终态与deadline已过再恢复。所有代码/PID/hash实际绑定，原上传和helper超时失败保留。
+
+2026-10-15最终纠正：短周期active/usage1及UIhealth0仅是驱动/进程名义恢复，后续真实IRQ368仍25865证明实际扫描未恢复，lcd cfg_open_flow/close_flow=NULL；先前short-result的“恢复健康passed”不得扩大为显示恢复passed。本项完整显示恢复failed，后续再次整机失联，45秒35次UART读0、7次ping失败保留。长HTTP未启动，hostserver按自己PID759987/cmdline终止，accepted0/sent0，not_run。第一30秒恢复后没有取得可用shell/网络（CR复探也无输出），不当通过；第二次已授权恢复正常shell，原rc17 health0/auth0/runtime0/tmp helper消失、IRQ3014→3072，私有raw保存、自有serial36最终关闭。没有永久修复/安装新系统。发现对应板/pack DTB driver d320而kernel配置notset，接续SDK047已纠正输入/构建，不把此缺口直接归成所有整机失联根因。证据output/a133-bottom-diagnosis-20261015/result.json。

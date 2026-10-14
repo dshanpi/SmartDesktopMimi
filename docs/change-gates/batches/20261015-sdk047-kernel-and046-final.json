@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "summary": "保留046真实恢复失败，SDK047匹配驱动实际编译/源保护通过，私有SDK上传单独门禁。",
+  "context": "前序健康不足证明显示恢复，新增IRQ证据纠正；source467a/private1fb未装板。",
+  "next_steps": "验证新overlay完整复制并仅私有SDK上传/readback；继续真实系统安装和正常显示稳定性矩阵。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-046",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+      "scope": "真实显示恢复及最终原板恢复",
+      "invariants": "旧passed仅进程/PM范围，真实失败不擦除，不安装、不改变绑定/信任。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-046.md"
+      ],
+      "checks": [
+        {
+          "name": "实际LCD扫描恢复",
+          "status": "failed",
+          "scope": "IRQ368不增长及callbacks NULL",
+          "evidence": "output/a133-bottom-diagnosis-20261015/result.json",
+          "reason": "runtime active/health0不能证明扫描恢复，随后UART/网络失联"
+        },
+        {
+          "name": "最终原rc17冷启动恢复",
+          "status": "passed",
+          "scope": "health0/auth0/runtime0/IRQ3014→3072/自有serial36closed",
+          "evidence": "output/a133-bottom-diagnosis-20261015/result.json"
+        },
+        {
+          "name": "显示关闭下载对照",
+          "status": "not_run",
+          "scope": "HTTP99MB",
+          "evidence": "output/a133-display-transfer-20261015/server-state.json",
+          "reason": "显示恢复前置失败，server停止、accepted0/sent0"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SDK-047",
+      "record": "docs/change-gates/REQ-MIMI-SDK-047.md",
+      "scope": "原来源上的匹配面板kernel重编与私有源码传输门禁",
+      "invariants": "8启动输入不改，97HEAD/diff无追加变化，增量不冒充clean/系统真机验收。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-047.md",
+        "docs/change-gates/batches/20261015-sdk047-kernel-and046-final.json"
+      ],
+      "checks": [
+        {
+          "name": "真实受影响kernel编译/面板symbol及Image关联",
+          "status": "passed",
+          "scope": "return0/source467a/private1fb/新Image8bdace0",
+          "evidence": "output/a133-panel-kernel-20261015/build-result.json"
+        },
+        {
+          "name": "保护输入及97源构建一致",
+          "status": "passed",
+          "scope": "无Boot0/U-Boot等变更、无tracked追加差异",
+          "evidence": "output/a133-panel-kernel-20261015/inputs-before.json and build-result.json"
+        },
+        {
+          "name": "新overlay传输与新系统实机",
+          "status": "not_run",
+          "scope": "私有SDK上传单独，完整系统安装另验",
+          "evidence": "output/a133-overlay-replay-20261015",
+          "reason": "事前上传计划及等待实际copy/readback；新kernel未装板"
+        }
+      ]
+    }
+  ]
+}
