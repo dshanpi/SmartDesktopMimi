@@ -22,3 +22,12 @@ A133现有ubus路径保持；新增Ubuntu配置仅root可写，不从应用包�
 实际部署阶段：独立root平台/验收配置、原公钥和rc19签名factory已准备；授权Xvfb只本机Unix显示，由单独显示单元管理。原用户桌面及A133不变。首轮真实root可信启动成功，session单元active，后续显式健康/停止/重启检查记录factory-acceptance.json。
 
 升级验证前版本计划：当前应用rc19；为真实升级建立新的干净源码rc20，再独立构建rc21。仅VERSION变化用于固定新候选及源码/构建回执配对，首页和业务不改，不能将新版本号套在旧构建回执上。rc20验正常升级；rc21将仅终止该次新trial的已核对UI进程，验证既有更新器健康失败后的回退和禁止重装失败候选。不是伪造健康或向生产配置添加故障开关，原失败候选保持本地测试通道。
+
+## 2026-10-14 实际Ubuntu事务验收
+平台实现98abcc2，正常候选rc20源1d7d935e87975b3afb390014d8abf737483363d8，失败候选rc21源6af2a1d1789cb74afce91c77d646af6e4a06db5a；两次完整干净源码构建并逐项核对28文件passed。Go整组、6会话边界、116更新工具、74架构和63SDK/服务passed；原生及A133更新器编译passed，新平台二进制仅部署Ubuntu专用验收配置。
+
+真实签名factory启动/连续健康/空闲/停止/重启passed；6类错误配置/未选择版本拒绝passed。rc20签名包b5f7b79d0d22a5e33b16badf1a22872cd435b7496fef6d03a90a2c2fd9b8b523正常升级提交passed。rc21签名包1acc1bf978e4c0b40dbf422cc93105e24450044c21ecabf918729f5e051a2cf1试运行时核对PID/start_ticks/可执行文件/父子归属后仅强杀该UI，实际健康失败并回退rc20；回退后真实健康、失败候选重放拒绝、停止并重新选定启动passed。设置1文件逐字节保持，不能扩大为全部用户数据语义或迁移矩阵通过。失败候选不能发布。
+
+首次验收脚本误用需要daemon的status命令failed，日志before-upgrade-state.log保留；未进行安装。改为真实离线select和root事务日志后才继续，无跳过身份/验签/健康门禁。实际事务、拒绝及清理证据见output/ubuntu-activation-20261014/result.json及对应原始日志；截图rc20-desktop.png为真实主机Xvfb桌面，非实体面板。两专用systemd单元已停止、MainPID为0、显示socket消失。平台配置与签名版本保留，既有主桌面未替换。
+
+not_run：deb安装后直接使用其已安装载荷的完整激活链、图形登录自动启动、物理显示、整机断电、完整数据/迁移矩阵。A133失联根因和系统验收仍未完成，Tuya云资源仍待提供；无A133新安装、无应用/Release上传、无密钥替换。下一步接deb实际激活闭环与A133稳定性/系统矩阵。

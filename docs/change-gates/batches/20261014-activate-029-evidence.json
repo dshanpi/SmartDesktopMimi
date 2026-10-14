@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "ACTIVATE029 actual signed Ubuntu upgrade and failed-trial rollback evidence",
+  "context": "Real enrolled host and root-controlled systemd session, original key preserved",
+  "next_steps": "Installed deb activation chain, graphical integration, A133 stability and system acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-ACTIVATE-029",
+      "record": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+      "scope": "Actual signed application transactions and evidence documentation",
+      "invariants": "No physical-display or power-loss claim; failed rc21 retained locally; no upload",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+        "docs/change-gates/batches/20261014-activate-029-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "actual root-controlled signed factory upgrade rollback restart and cleanup",
+          "status": "passed",
+          "scope": "Root-controlled signed app transaction and real SDL/Provider processes in authorized Xvfb; not physical panel or machine power interruption",
+          "evidence": "output/ubuntu-activation-20261014/result.json"
+        },
+        {
+          "name": "physical power interruption and full product acceptance",
+          "status": "not_run",
+          "scope": "Whole-device delivery",
+          "reason": "Only application process failure tested; A133 system stability remains unresolved",
+          "evidence": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md"
+        }
+      ]
+    }
+  ]
+}
