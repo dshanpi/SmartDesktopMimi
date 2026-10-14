@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "summary": "Record fixed-source provider builds, native windows and separate A133 idle-loss recovery",
+  "context": "Append verified results without rewriting planned batch or treating recovery as stability qualification",
+  "next_steps": "Ubuntu V2/capability UI, trusted SDK/identity/deb activation; A133 system upgrade/rollback/powercut/data and idle instability investigation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTU-022",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTU-022.md",
+      "scope": "Fixed d1a8ac5 source, host builds and actual isolated desktop/provider windows",
+      "invariants": "Preserve actual historical failures; source/artifact/device evidence not interchangeable; no upload and no trust replacement",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UBUNTU-022.md",
+        "docs/change-gates/batches/20261014-ubuntu-022-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "Build and service/window checks",
+          "status": "passed",
+          "scope": "Ubuntu foundation only; no physical panel or deb acceptance",
+          "evidence": "output/ubuntu-provider-20261014/result.json"
+        },
+        {
+          "name": "Full Ubuntu platform and deb",
+          "status": "not_run",
+          "scope": "Trusted platform plus activation and rollback",
+          "evidence": "docs/change-gates/REQ-MIMI-UBUNTU-022.md",
+          "reason": "Foundation implemented; V2/capability and SDK identity chain remain"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-PAIR-020",
+      "record": "docs/change-gates/REQ-MIMI-PAIR-020.md",
+      "scope": "English placeholder glyph verification, no binding changes",
+      "invariants": "Preserve actual historical failures; source/artifact/device evidence not interchangeable; no upload and no trust replacement",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-PAIR-020.md"
+      ],
+      "checks": [
+        {
+          "name": "Render and native visual",
+          "status": "passed",
+          "scope": "12 host renders and actual native SDL; A133 new candidate not installed",
+          "evidence": "output/ubuntu-provider-20261014/window-final/pairing-provider.png"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-STABILITY-023",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-023.md",
+      "scope": "Read-only A133 probe and previously authorized scoped power recovery",
+      "invariants": "Preserve actual historical failures; source/artifact/device evidence not interchangeable; no upload and no trust replacement",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-023.md"
+      ],
+      "checks": [
+        {
+          "name": "Idle reachability",
+          "status": "failed",
+          "scope": "Existing rc17 before any new transfer/install",
+          "evidence": "output/ubuntu-provider-20261014/a133-existing-health.json",
+          "reason": "UART empty and ping timeout; root cause unresolved"
+        },
+        {
+          "name": "Scoped recovery and original app health",
+          "status": "passed",
+          "scope": "Original rc17 retained, health exit0, ext4p7 errors0; not stability qualification",
+          "evidence": "output/ubuntu-provider-20261014/recovery-result.json"
+        }
+      ]
+    }
+  ]
+}
