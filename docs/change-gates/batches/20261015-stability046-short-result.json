@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "真实LCD停用与恢复状态通过；helper短轮询误报超时保留，长对照仅显示电源变化。",
+  "context": "无UI暂停，原服务/CPU/WiFi维持；本轮原rc17健康。",
+  "next_steps": "单次同SWU HTTP，240秒恢复、270秒被动观测并读回真实hash。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-046",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+      "scope": "显示电源单因素实机对照",
+      "invariants": "不把helper71当0，不以黑屏代替suspended，不安装/flash/改钥/改绑定。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+        "docs/change-gates/batches/20261015-stability046-short-result.json"
+      ],
+      "checks": [
+        {
+          "name": "实际显示停用与恢复健康",
+          "status": "passed",
+          "scope": "suspended0 → active1/LCD1024x768 → enable0/health0",
+          "evidence": "output/a133-bottom-diagnosis-20261015/display-short-cycle.json"
+        },
+        {
+          "name": "helper3秒轮询",
+          "status": "failed",
+          "scope": "工具状态等候",
+          "evidence": "output/a133-bottom-diagnosis-20261015/display-short-cycle.json",
+          "reason": "3秒早于实际5秒级autosuspend，仅超时而真实后来停用，保留原71"
+        },
+        {
+          "name": "显示停用HTTP长对照",
+          "status": "not_run",
+          "scope": "真实同99MB SWU/512KiB/s",
+          "evidence": "output/a133-display-transfer-20261015/result.json",
+          "reason": "事前记录，先timer和实际suspended/IRQ停用验证"
+        }
+      ]
+    }
+  ]
+}
