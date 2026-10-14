@@ -8,6 +8,7 @@ SDK="${1:-}"
 SWU_OUTPUT="${2:-}"
 [[ -n "$SDK" && -d "$SDK/.repo" ]] || die "usage: $0 <sdk-root>"
 SDK="$(cd "$SDK" && pwd)"
+python3 "$PRODUCT_ROOT/tools/update/a133_display_gate.py" "$SDK" --stage packed
 : "${MIMI_SWU_SIGNING_KEY:?Set the external RSA private key path}"
 : "${MIMI_SWU_PUBLIC_KEY:?Set the corresponding platform public key path}"
 : "${MIMI_SYSTEM_VERSION:?Set the independent system release version}"

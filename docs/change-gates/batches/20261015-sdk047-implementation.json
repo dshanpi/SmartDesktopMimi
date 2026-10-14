@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "summary": "实际板与最终pack DTB均选择d320驱动，配置缺失已纠正并强制三阶段真实构建关联。",
+  "context": "046显示resume假健康，047离线门禁拒绝未编译驱动/旧Image/错误DTB/旧boot payload。",
+  "next_steps": "固定私有新overlay提交，构建受影响内核并真实检查symbol/Image，再处理系统安装和正常显示稳定性。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-047",
+      "record": "docs/change-gates/REQ-MIMI-SDK-047.md",
+      "scope": "A133/B6离线输入/内核/pack闭环及脚本集成",
+      "invariants": "不替换可信钥/绑定/保护boot链，不把离线passed当真机，不公开SDK内容。",
+      "paths": [
+        "tools/update/a133_display_gate.py",
+        "tests/update/test_a133_display_gate.py",
+        "tests/update/test_swu_package.py",
+        "scripts/build_release.sh",
+        "scripts/build_firmware.sh",
+        "scripts/build_swu.sh",
+        "docs/change-gates/REQ-MIMI-SDK-047.md",
+        "docs/change-gates/batches/20261015-sdk047-implementation.json"
+      ],
+      "checks": [
+        {
+          "name": "真实板与SDK面板匹配及源配置单项纠正",
+          "status": "passed",
+          "scope": "原板driver d320、old config notset，源配置new y、实际hash",
+          "evidence": "output/a133-bottom-diagnosis-20261015/sdk047-config-change.json"
+        },
+        {
+          "name": "原坏输入拒绝/新输入接受",
+          "status": "passed",
+          "scope": "实际SDK只读preflight",
+          "evidence": "output/a133-bottom-diagnosis-20261015/panel-gate-original-rejection.json and panel-gate-corrected-inputs.json"
+        },
+        {
+          "name": "主机回归及脚本syntax",
+          "status": "passed",
+          "scope": "133 update tests including17 new offline guards; no physical acceptance",
+          "evidence": "output/a133-bottom-diagnosis-20261015/host047-results.json"
+        },
+        {
+          "name": "新内核/镜像/正常显示及系统验收",
+          "status": "not_run",
+          "scope": "最终签名产品与真机矩阵",
+          "evidence": "output/a133-bottom-diagnosis-20261015",
+          "reason": "新增配置尚未编译安装，原失联根因未定位"
+        }
+      ]
+    }
+  ]
+}

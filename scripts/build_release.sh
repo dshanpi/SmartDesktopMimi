@@ -173,6 +173,7 @@ echo "  OTA     : ${WITH_OTA}"
 echo
 
 python3 "$PRODUCT_ROOT/tools/update/pack_inputs.py" "$SDK"
+python3 "$PRODUCT_ROOT/tools/update/a133_display_gate.py" "$SDK" --stage inputs
 
 echo "==> 检查脚本语法"
 while IFS= read -r script; do
@@ -243,6 +244,9 @@ python3 "$PRODUCT_ROOT/tools/update/external_inputs.py" "$AITVBOX_TUYA_VENDOR_RO
 
 python3 "$PRODUCT_ROOT/tools/update/pack_inputs.py" "$SDK" \
     --output "$OUTPUT_DIR/metadata/pack-inputs.json"
+
+run_logged 05-display-input-gate python3 "$PRODUCT_ROOT/tools/update/a133_display_gate.py" \
+    "$SDK" --stage inputs --output "$OUTPUT_DIR/metadata/display-inputs.json"
 
 run_logged 10-build-apps "${SELF_DIR}/build_apps.sh" --clean "${SDK}"
 if [[ "${WITH_OTA}" -eq 1 ]]; then

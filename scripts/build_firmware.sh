@@ -51,6 +51,9 @@ if [[ ! -d "${SDK}/.repo" ]]; then
 fi
 SDK="$(cd "${SDK}" && pwd)"
 
+# Reject an SDK whose selected LCD driver will not be compiled, before mutation.
+python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage inputs
+
 # Fail before SDK mutation if an updater-enabled release lacks its signed input.
 if [[ "${MIMI_APPLICATION_UPDATES:-0}" == 1 || -d "${PRODUCT_ROOT}/build/mimi-baseline" ]]; then
     python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify \
@@ -261,6 +264,9 @@ echo "Building Tina kernel only; verified Boot0/U-Boot are intentionally untouch
            "查看 SDK 编译日志：${SDK}/out/a133/b6/" \
            "SDK 会由 trap 自动恢复纯态"
 
+python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage kernel \
+    || die "A133 selected LCD is missing from the actual kernel; refusing rootfs/pack"
+
 echo "Building OpenWrt rootfs only."
 ./build.sh openwrt_rootfs \
     || die "Tina rootfs 编译失败" \
@@ -296,6 +302,8 @@ ROOTFS_CHECKED_SHA="$(sha256sum "${ROOTFS_IMAGE}" | awk '{print $1}')"
            "查看 pack 日志：${SDK}/out/a133/b6/pack_out" \
            "SDK 会由 trap 自动恢复纯态"
 set -eu
+
+python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage packed
 
 ROOTFS_IMAGE="${SDK}/out/a133/b6/openwrt/rootfs.img"
 FIRMWARE_IMAGE="${SDK}/out/a133/b6/openwrt/a133_linux_b6_uart0.img"

@@ -58,6 +58,12 @@ class SWUPackageTests(unittest.TestCase):
             root=Path(temp);product=root/'product';sdk=root/'sdk';(sdk/'.repo').mkdir(parents=True)
             for name in ['scripts/build_swu.sh','scripts/lib.sh','tools/update/swu_package.py','tools/update/baseline.py','tools/update/release_identity.py','integrations/swupdate/sw-description-ab-sign-rollback']:
                 target=product/name;target.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(ROOT/name,target)
+            # This test deliberately uses nonbootable image fixtures to exercise
+            # the real RSA/rootfs-key/CPIO boundary. Accept the separate display
+            # prerequisite only inside this temporary fixture product; its
+            # artifact rejection cases live in test_a133_display_gate.
+            display_gate=product/'tools/update/a133_display_gate.py'
+            display_gate.write_text("import sys\nassert sys.argv[2:]==['--stage','packed']\n")
             fs=root/'fs';(fs/'etc').mkdir(parents=True);shutil.copy2(self.public,fs/'etc/swupdate_public.pem')
             images=sdk/'out/a133/b6/openwrt';images.mkdir(parents=True)
             (images/'boot.img').write_bytes(b'HOST FIXTURE NOT BOOTABLE')
@@ -74,6 +80,13 @@ class SWUPackageTests(unittest.TestCase):
             self.assertNotEqual(result.returncode,0)
             self.assertFalse((product/'build/swu/9.8.8-host-only').exists())
             self.assertFalse(list(sdk.rglob('*private*')))
+            # A failing display prerequisite must stop the real shell entry
+            # before any archive is produced, even with a valid signing key.
+            display_gate.write_text('raise SystemExit(19)\n')
+            env['MIMI_SYSTEM_VERSION']='9.8.9-host-only'
+            result=subprocess.run(command,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+            self.assertEqual(result.returncode,19)
+            self.assertFalse((product/'build/swu/9.8.9-host-only').exists())
 
     def test_reject_secret_in_sdk_or_insecure_mode(self):
         with tempfile.TemporaryDirectory() as temp:
