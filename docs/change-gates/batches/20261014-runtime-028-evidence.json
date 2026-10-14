@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Actual Ubuntu runtime registration, signed rc19 and amd64 dpkg transport acceptance",
+  "context": "Fixed platform2662a5b and applicatione5b7186 verified separately; first parser failure retained",
+  "next_steps": "Trusted Ubuntu session hooks and actual signed activation/upgrade/rollback; A133 stability and system matrix remain unfinished",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-RUNTIME-028",
+      "record": "docs/change-gates/REQ-MIMI-RUNTIME-028.md",
+      "scope": "Actual host dependency/signature/transport evidence and regression",
+      "invariants": "No A133 install or uploads; dpkg status is not application activation; no key replacement; preserve first failed probe",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-RUNTIME-028.md",
+        "docs/change-gates/batches/20261014-runtime-028-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "Runtime baseline and controlled registration",
+          "status": "passed",
+          "scope": "86 actual libraries, actual host matching, old incomplete identity rejection",
+          "evidence": "output/ubuntu-runtime-20261014/runtime-r2.json; registration.json"
+        },
+        {
+          "name": "Signed application and amd64 transport",
+          "status": "passed",
+          "scope": "Real product signature, target/ABI checks, actual dpkg installation, installed-byte/signature readback, purge and two existing session data files preserved",
+          "evidence": "output/ubuntu-runtime-20261014/deb-acceptance.json; result.json"
+        },
+        {
+          "name": "Host regressions",
+          "status": "passed",
+          "scope": "Go suite,116 update,74 architecture,63 SDK/service tests",
+          "evidence": "output/ubuntu-runtime-20261014/go-tests-r2.log; update-tests.log; architecture.log; sdk-tests.log"
+        },
+        {
+          "name": "Signed desktop activation and transaction acceptance",
+          "status": "not_run",
+          "scope": "Trusted session startup/health hooks, actual app upgrade/rollback/powercut/data",
+          "reason": "Transport installation only; platform hooks still pending",
+          "evidence": "docs/change-gates/REQ-MIMI-RUNTIME-028.md"
+        }
+      ]
+    }
+  ]
+}

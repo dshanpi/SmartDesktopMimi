@@ -18,3 +18,18 @@
 证据output/ubuntu-runtime-20261014/。完成后更新状态及哈希，不覆盖旧登记/旧失败；不上传。
 
 首次实际只读探测已得到86个ELF库，但核查发现Debian字母后缀1.1.1f被正则回退归一化为1.1.0，判failed，证据runtime-r1.json保留。修复为完整合法字符校验与数字前缀提取分开，新增具体OpenSSL版本回归；未使用错误探测结果登记/签包。
+
+实际运行登记passed（约0.45秒，低于现有5秒Provider身份预算），旧基础档案拒绝passed。rc19固定应用签包与amd64 deb构建passed，下一步在主机安装此仅传输包，确认dpkg无同名已装包/目标目录不存在、包无维护脚本及root路径范围正确后才操作；安装后对真实/usr/share负载重新验签，再仅卸载本次新包，核对已有会话配置数据未变。此流程不启动服务、不激活桌面、不改可信密钥/既有应用版本，不冒充升级事务验收。
+
+## 2026-10-14 固定产物与实际主机验收
+平台工具源码2662a5b291c6e629bcc4922e68883554cf4b577b，原生updater SHA256 f12a9cf9a4f23e40fba94fd6599d8e1c0aa9abfda07c56518fe76a07d76562ec，A133交叉updater 99f78c5d95019acde133c04fcfdf53ca681cf7ac024d14b890981dda245c82ae，均编译passed；A133未安装。实际86个库的版本/ELF/归属/内容闭包检查passed，runtime-bundle-sha256:477dbdd15cb2b29b92765c90adefc84226004c53f4ed060aaab75a79ae55fc7f。修复后的libssl/libcrypto归一化1.1.1正确；r1错误保留。
+
+新的独立root登记/var/lib/smartdesktopmimi-platform/ubuntu-runtime-20261014检查passed（0.45秒）；ENROLL027旧硬件档案因缺运行依赖被拒绝passed，旧档案保留。文件内容摘要不变而发行包版本改变也改变摘要能力，不能只凭粗粒度SemVer跨发行版。
+
+固定应用仍为rc19 / e5b7186529ec574314a0de5e8e21b49b301d7456，签包前逐一核对完整构建树哈希，未混入本轮平台代码。沿用现有产品私钥签名，本地应用包SHA256 e24190c6faf4d376e2e8821e66184423cf13f962eaf981e916effb22b8e9ac19，amd64 deb SHA256 d38a3ac032d88c965de165cdeac0a65a1590c5cb676000c4e87540c17f546150。打包/目标/签名验证passed。
+
+实际dpkg传输包验收passed：检查12个归档条目root所有/白名单路径/无维护脚本，确认无既有同名包后安装，核对installed版本1.0.8~rc.19-1及amd64，/usr/share安装副本三项逐字节与签名包一致，重新验签通过，再purge本次包；原会话两个数据文件哈希不变。错误平台/库版本/库摘要/篡改签名四类拒绝passed。没有安装或激活桌面服务，没有更新器事务、物理显示、应用升级/回退或断电数据验收。
+
+证据output/ubuntu-runtime-20261014/result.json、registration.json、deb-acceptance.json、runtime-r1/r2.json及对应日志。下一步为root平台会话管理与更新器钩子（身份/空闲/停止/启动/真实健康）集成，之后实际签名激活及事务矩阵；不得将此次dpkg状态记成应用激活状态。应用/Release无上传。
+
+收尾回归：Go整组、116项更新、74项架构、63项SDK/服务测试passed；实际提交差异覆盖检查在本次证据提交后执行。
