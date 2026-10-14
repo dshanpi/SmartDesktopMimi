@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Local rc21 clean-source candidate for actual signed Ubuntu failure rollback",
+  "context": "rc20 full build and 253 host regressions passed; separately build rc21 before inducing only its verified trial UI exit",
+  "next_steps": "Sign rc21 after complete build; verify failed-health rollback and failed-candidate refusal",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-ACTIVATE-029",
+      "record": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+      "scope": "Version pin and pre-test requirements",
+      "invariants": "No UI or business redesign; new build receipt required; no relabelled old package or uploads",
+      "paths": [
+        "VERSION",
+        "docs/change-gates/batches/20261014-activate-029-rc21.json"
+      ],
+      "checks": [
+        {
+          "name": "rc21 build and failed trial rollback",
+          "status": "not_run",
+          "scope": "New fixed-source native full application",
+          "reason": "Version pin precedes actual new build",
+          "evidence": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md"
+        }
+      ]
+    }
+  ]
+}
