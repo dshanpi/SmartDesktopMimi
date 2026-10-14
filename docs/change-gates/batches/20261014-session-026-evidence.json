@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Actual rc19 Ubuntu session lifecycle acceptance",
+  "context": "SDK-built actual desktop and separate Provider exercised through lifecycle failures",
+  "next_steps": "Trusted platform identity and signed amd64 update integration; A133 stability remains unresolved",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SESSION-026",
+      "record": "docs/change-gates/REQ-MIMI-SESSION-026.md",
+      "scope": "Fixed candidate build and actual process evidence",
+      "invariants": "Xvfb is not physical-panel or signed-install acceptance; no uploads or new A133 install",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SESSION-026.md",
+        "docs/change-gates/batches/20261014-session-026-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual builds and lifecycle",
+          "status": "passed",
+          "scope": "rc19 Ubuntu full app/A133 desktop;5 real SDL and Provider lifecycle groups",
+          "evidence": "output/ubuntu-session-20261014/result.json; lifecycle/result.json"
+        },
+        {
+          "name": "Signed Ubuntu activation",
+          "status": "not_run",
+          "scope": "Trusted identity and signed deb activation/update/rollback",
+          "evidence": "docs/change-gates/REQ-MIMI-SESSION-026.md",
+          "reason": "Ordinary-user session qualification only"
+        }
+      ]
+    }
+  ]
+}
