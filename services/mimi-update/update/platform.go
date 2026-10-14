@@ -18,15 +18,17 @@ import (
 	"time"
 )
 
+type EnrollmentEvidence struct {
+	Kind   string `json:"kind"`
+	Path   string `json:"path"`
+	SHA256 string `json:"sha256"`
+}
+
 type Enrollment struct {
-	Schema         int    `json:"schema_version"`
-	EnrollmentID   string `json:"enrollment_id"`
-	IdentitySHA256 string `json:"identity_sha256"`
-	Evidence       []struct {
-		Kind   string `json:"kind"`
-		Path   string `json:"path"`
-		SHA256 string `json:"sha256"`
-	} `json:"evidence"`
+	Schema         int                  `json:"schema_version"`
+	EnrollmentID   string               `json:"enrollment_id"`
+	IdentitySHA256 string               `json:"identity_sha256"`
+	Evidence       []EnrollmentEvidence `json:"evidence"`
 }
 type UIHealth struct {
 	PID     int    `json:"pid"`
@@ -83,6 +85,9 @@ func platformIdentity(c Config) error {
 	var record Enrollment
 	if e := ReadJSON(c.EnrollmentFile, &record); e != nil {
 		return e
+	}
+	if d.Identity["platform_id"] == "ubuntu-host" {
+		return validateUbuntuEnrollment(d, record)
 	}
 	d.Enrollment = record.EnrollmentID
 	if e := d.Validate(); e != nil {

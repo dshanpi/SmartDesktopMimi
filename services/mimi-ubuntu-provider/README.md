@@ -89,3 +89,20 @@ health and Provider replies. It is not a cloud/device capability test.
 The supervisor is platform code, excluded from the pure application payload.
 Trusted enrollment, root platform/update integration and signed deb activation
 are still required; this local development entry point cannot qualify them.
+
+## Controlled Ubuntu host enrollment (REQ-MIMI-ENROLL-027)
+
+The platform updater's `inspect-ubuntu --baseline BASELINE_ID` reads fixed
+DMI/OS/runtime nodes and outputs a candidate device and enrollment record. It
+does not install or activate anything. The initial supported inspection profile
+is the actual VMware Ubuntu20.04/x86_64/glibc2.31 development host. This does not
+claim arbitrary Ubuntu hardware qualification. DMI board/revision fingerprints
+are literal byte fingerprints, including an unspecified DMI revision; the VM
+UUID is recorded only as a hash and is not called a physical silicon ID.
+
+`check-enrollment --device ROOT_CONTROLLED_DEVICE --enrollment ROOT_CONTROLLED_RECORD`
+retains root-owned, non-writable ancestor checks and rereads the fixed host
+evidence. Host records cannot be installed as A133 identity. The expected
+Provider0.2.0/Ports2 profile is a controlled contract; the independent session
+handshake is still required before any activation is healthy. Trusted startup
+integration and signed deb activation remain unfinished.

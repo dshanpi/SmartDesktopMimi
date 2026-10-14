@@ -25,6 +25,21 @@ func run() error {
 		return fmt.Errorf("usage: mimi-update {match|verify|pack|sign-index|verify-index|serve|select|install-offline|install-offline-index|status|check|download|install|cancel} [options]")
 	}
 	op := os.Args[1]
+	if op == "inspect-ubuntu" {
+		f := flag.NewFlagSet(op, flag.ContinueOnError)
+		baseline := f.String("baseline", "", "controlled system baseline identifier")
+		if e := f.Parse(os.Args[2:]); e != nil {
+			return e
+		}
+		if f.NArg() != 0 {
+			return fmt.Errorf("unexpected arguments")
+		}
+		d, enrollment, e := u.InspectUbuntu(*baseline)
+		if e != nil {
+			return e
+		}
+		return json.NewEncoder(os.Stdout).Encode(map[string]any{"device": d, "enrollment": enrollment, "scope": "read-only host candidate; not installed or activation-qualified"})
+	}
 	if op == "platform" {
 		c, e := u.LoadConfig("/etc/smartdesktopmimi/updater.json")
 		if e != nil {

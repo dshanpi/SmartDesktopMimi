@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Read-only Ubuntu host enrollment and live matching",
+  "context": "Ubuntu session works but no controlled host identity existed",
+  "next_steps": "Fixed binary builds, actual root-controlled enrollment and signed amd64 bundle; activation remains pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-ENROLL-027",
+      "record": "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+      "scope": "Ubuntu-only inspection and live identity branch, CLI, tests and documentation",
+      "invariants": "A133 enrollment unchanged; no trust keys or raw UUID output; fixed kernel sources and exact host profile; no automatic install/upload",
+      "paths": [
+        "services/mimi-update/update/platform.go",
+        "services/mimi-update/update/ubuntu_identity.go",
+        "services/mimi-update/update/ubuntu_identity_test.go",
+        "services/mimi-update/cmd/mimi-update/main.go",
+        "services/mimi-ubuntu-provider/README.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+        "docs/change-gates/batches/20261014-enroll-027.json"
+      ],
+      "checks": [
+        {
+          "name": "Go regression",
+          "status": "passed",
+          "scope": "Full updater suite including new Ubuntu identity negative cases",
+          "evidence": "output/ubuntu-enrollment-20261014/go-tests-r1.log"
+        },
+        {
+          "name": "Actual host enrollment and binary builds",
+          "status": "not_run",
+          "scope": "Fixed source native/arm64 binaries, actual DMI and root-controlled check",
+          "evidence": "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+          "reason": "Awaiting committed build"
+        },
+        {
+          "name": "Signed activation",
+          "status": "not_run",
+          "scope": "Ubuntu trusted lifecycle/updater integration and deb activation",
+          "evidence": "docs/change-gates/REQ-MIMI-ENROLL-027.md",
+          "reason": "Enrollment is only one prerequisite"
+        }
+      ]
+    }
+  ]
+}
