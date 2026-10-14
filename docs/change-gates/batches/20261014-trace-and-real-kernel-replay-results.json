@@ -36,7 +36,8 @@
           "name": "actual bounded result",
           "status": "failed",
           "scope": "\u7ea0\u6b63clean\u8303\u56f4\uff1aTina\u5185\u6838\u5728\u6e90\u7801\u6811\u7f16\u8bd1\uff0coutput\u4ec5staging\uff0c\u65e7.o/vmlinux/generated\u65e9\u4e8e032\u542f\u52a8\u3002\u6545\u5b8c\u6574\u5185\u6838\u7a7a\u7f13\u5b58\u6761\u4ef6failed\uff1b032\u7ee7\u7eed\u5b9e\u9645OpenWrt\u6784\u5efa\u4e0d\u91cd\u542f\uff0c\u4e0d\u5c06\u672a\u6765\u811a\u672cpassed\u5f53\u5168SDKclean\u3002036\u72ec\u7acb\u91cd\u653e\u5df2\u5b8c\u6210\uff0c\u539fSDK\u672a\u4fee\u6539\uff0c\u5f85032\u7ec8\u6b62\u518d\u6838\u5bf9\u6fc0\u6d3b\u548c\u91cd\u7f16\u53d7\u5f71\u54cd\u955c\u50cf\u95e8\u7981\u3002",
-          "evidence": "output/kernel-clean-replay-20261014/kernel-cache-evidence.json"
+          "evidence": "output/kernel-clean-replay-20261014/kernel-cache-evidence.json",
+          "reason": "SDK032 removed output/staging only; old in-source kernel compiler cache predates build and prevents full clean qualification"
         }
       ]
     },

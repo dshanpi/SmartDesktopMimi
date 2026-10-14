@@ -31,3 +31,5 @@ GPU链接迁移实现：132个已保存链接均仅SDK根变化，独立树变�
 
 
 2026-10-14本轮实际结果：真实r5准备passed：固定Git组件+saved patch/tar/286原输入+repo overlay额外archive+supplement.config独立源恢复，132个固定GPU源链接内部相对化；HEAD/diff/输入/config及无cache/Git独立对象检查通过，receipt生成。21主机回归passed。原prepare四次失败保留；活跃SDK未修改、激活与真实内核编译not_run。证据output/kernel-clean-replay-20261014/prepare-r5-result.json及新树.mimi-kernel-replay.json。
+
+门禁覆盖首次检查failed：032的failed证据条目缺schema要求reason字段（实际失败状态/证据未变）。补齐既有条目的失败原因文本，原提交e546256和关键bundle保留原始记录，不改实际通过/失败事实；下一次覆盖检查重跑。关键新增源码bundle26388B与证据archive106885B已验证，仅增量材料、不含串口私有原文或SDK cache。

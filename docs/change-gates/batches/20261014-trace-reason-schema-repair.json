@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Add missing failure reason to trace batch schema",
+  "context": "First coverage check rejected missing reason text; physical outcomes are unchanged",
+  "next_steps": "Rerun coverage and continue live build/device diagnostic",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "Evidence metadata only",
+      "invariants": "Original failed status, evidence and Git history preserved; no artifact change",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-trace-and-real-kernel-replay-results.json",
+        "docs/change-gates/batches/20261014-trace-reason-schema-repair.json"
+      ],
+      "checks": [
+        {
+          "name": "original coverage schema",
+          "status": "failed",
+          "scope": "e546256 changed batch",
+          "reason": "Failed status lacked mandatory reason field",
+          "evidence": "git:e5462565e92072d575b52fb875e0eae6bcd1d663"
+        }
+      ]
+    }
+  ]
+}
