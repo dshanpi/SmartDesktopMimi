@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "记录真实metadata修复通过及受影响新系统构建运行",
+  "context": "首轮产品明确failed；修复脚本/生成型cache，签名应用不改，所有失败历史保留",
+  "next_steps": "先读取live1001802/1002649结果，不重复；最终packedboot/rootfs/sign/SWU通过后推进FES安装和真机完整矩阵",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-049",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+      "scope": "实际进度和索引，非全产品验收",
+      "invariants": "不新建循环/换key/清source/动8boot，不上传应用或Release，host不能冒充physical",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+        "docs/change-gates/batches/20261015-system049-progress.json"
+      ],
+      "checks": [
+        {
+          "name": "真实metadata和3回归",
+          "status": "passed",
+          "scope": "host exact5 packages generated under product environment",
+          "evidence": "output/system-baseline-rc2-20261015/metadata-make-real-result-r4.json"
+        },
+        {
+          "name": "前序系统构建与harness",
+          "status": "failed",
+          "scope": "product-r2 metadata failed and r3 guard matched launcher beforebuild",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-result-r2.json and -r3.json",
+          "reason": "历史保留；r4已独立launch但尚未完整结束"
+        },
+        {
+          "name": "新系统及真机",
+          "status": "not_run",
+          "scope": "1002649 livebuilder当前运行；physical未开始",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-result-r4.json",
+          "reason": "等待真实最终构建和完整矩阵"
+        }
+      ]
+    }
+  ]
+}

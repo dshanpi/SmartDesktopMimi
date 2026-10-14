@@ -118,3 +118,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-SDK-047](change-gates/REQ-MIMI-SDK-047.md)：实际设备树面板选择、内核配置和编译符号闭环，避免未接入驱动仍生成可用声明。
 
 - [REQ-MIMI-SYSTEM-048](change-gates/REQ-MIMI-SYSTEM-048.md)：新driver内核后的应用/系统版本配对、可信factory及完整产物验收。
+
+- [REQ-MIMI-SYSTEM-049](change-gates/REQ-MIMI-SYSTEM-049.md)：系统metadata外部make与固定生成型索引缓存刷新；真实SDK五包和3回归通过，完整产品/真机待验。

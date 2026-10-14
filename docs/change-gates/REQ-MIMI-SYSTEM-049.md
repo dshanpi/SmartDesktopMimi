@@ -24,3 +24,9 @@ flowchart TD
 
 2026-10-15修复实际结果：外部command make和五个固定生成型缓存刷新已实现；3项真实Shell回归passed（旧影子函数调用返回73、新调用外部make收到实际索引参数、只移除5产品缓存且保留其他缓存/源码），脚本语法passed。真实恢复SDK使用同product-root/vendor环境刷新并prepare-tmpinfo return0，五个产品包均唯一正确来源，metadata checker0/hash0bc083c824feb1689a174e34f33db54331766216d50979145a011feef5f88861，8保护启动输入无变。首次测试器Python3.8/片段错误及r1误传目录/r2/r3空缓存拒绝均保留，不冒充原产物通过。
 旧SYS048 product terminal failed，真实97tracked source和8保护input未变化；此前apps阶段完成日志保留。本修复只系统构建recipe，不改signedrc23/sourcea37/c22/factorylock89d290…和可信key/硬件接口。固定新系统recipe源码后接续完整产品pack/SWU及最终读回，签名应用不换版本。当前完整新系统与全部真机矩阵仍not_run，不能上传。证据metadata-make-real-result-r4.json、metadata-make-real-private-r4.log、metadata-cache-refresh-plan.json。
+
+
+## 2026-10-15 SYSTEM049 索引构建修复与接续
+SYS048首轮实际产品在metadata阶段failed：SDK同名make函数误入受保护tina；返回1、97tracked源码和8保护Boot输入无变。已修复系统脚本command make，并发现pure/product环境切换留下四个空Package dump缓存；只刷新五个固定生成型条目，不清其他包/SDK源码。3项真实Bash回归及语法passed，真实SDK prepare-tmpinfo0/fivepackage checker0/hash0bc083c824feb1689a174e34f33db54331766216d50979145a011feef5f88861，8Boot输入无变。初次夹具/传错checker目录、空缓存拒绝均保留failed，不吞检查。
+冻结系统recipe d7c8572b0f02ff02f6cc2ce8ba3ea79c06db306b；签名factory仍a37/rc23/packagec22/factorylock89d290…，原key/设备绑定不变。supervisor999304首轮在实际build前守卫匹配到含脚本名的SSH启动器而退出，未生成产品；单独launch且确认没有真实script进程后supervisor1001802/child1002649已通过preflight并实际运行。最后结果读output/system-baseline-rc2-20261015/product-build-result-r4.json；输出.delivery/system-rc2-product-20261015-r2；不重复启动。
+此次hardware只读scope确认project4/device4/COM17/固定USB，无活动硬件任务；扫描not_found只是当前非FEL可见，不能推断已在线/失联，未做重启或安装。原FES失败源码尚未找到已证实缺陷，mainline MCP明确要求T113/R528 SPL，不用于A133。全镜像、安装、永久失联修复和必需真机矩阵仍未通过；所有其余交付项保留，应用/Release未上传。
