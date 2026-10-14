@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "只读query真实通过后，以现有固定接口执行可恢复短周期显示电源对照。",
+  "context": "新instrumented helper已分离小上传与UART query，原044失败保留；UI后台全部保持。",
+  "next_steps": "先短周期显示停用证明及恢复，再决定有界HTTP单因素对照。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-046",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+      "scope": "固定屏0显示电源，原UI继续运行",
+      "invariants": "仅显示电源因素，原钥/包/CPU/WiFi/后台保持；必须先自动恢复并证明suspended，再传输；不安装。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-046.md",
+        "docs/change-gates/batches/20261015-stability046-display-plan.json"
+      ],
+      "checks": [
+        {
+          "name": "小文件上传及分阶段GET",
+          "status": "passed",
+          "scope": "SHA256一致、健康0、1024/768/LCD1",
+          "evidence": "output/a133-bottom-diagnosis-20261015/query-result.json"
+        },
+        {
+          "name": "临时显示电源及恢复",
+          "status": "not_run",
+          "scope": "固定API/runtime实际状态、30秒timer",
+          "evidence": "output/a133-bottom-diagnosis-20261015/display-short-cycle.json",
+          "reason": "事前记录，未执行任何blank"
+        }
+      ]
+    }
+  ]
+}
