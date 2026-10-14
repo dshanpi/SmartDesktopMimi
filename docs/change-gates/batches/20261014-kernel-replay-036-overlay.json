@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Preserve expanded repo-overlay inputs in saved kernel replay",
+  "context": "Older component snapshot omits a real10MB sunxi-vin archive preserved in private5e947 overlay; first attempt correctly rejected before clone",
+  "next_steps": "Prepare actual kernel using snapshot plus explicitly pinned overlay; never ignore added download/source packages",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "Explicit overlay provenance, conflict and body integrity guards",
+      "invariants": "No missing input silently excluded; snapshot/overlay conflicts rejected; live SDK unchanged",
+      "paths": [
+        "tools/update/replay_kernel_component.py",
+        "tests/test_replay_kernel_component.py",
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-kernel-replay-036-overlay.json"
+      ],
+      "checks": [
+        {
+          "name": "snapshot and repo overlay replay guards",
+          "status": "passed",
+          "scope": "17 real Git/tar/temp-directory cases",
+          "evidence": "output/replay-kernel-tests-20261014-r3.log"
+        },
+        {
+          "name": "first real snapshot-only prepare",
+          "status": "blocked",
+          "scope": "Current savedSDK inputs",
+          "reason": "Uncaptured in old snapshot archive is saved in pinned repo overlay; no clone/mutation occurred",
+          "evidence": "output/kernel-clean-replay-20261014/prepare-rejection.json"
+        },
+        {
+          "name": "actual expanded replay and activation",
+          "status": "not_run",
+          "scope": "Pinned snapshot + private overlay5e947; selected canonical SDK untouched",
+          "reason": "r2 not yet run; existing SDK build still live",
+          "evidence": "output/kernel-clean-replay-20261014"
+        }
+      ]
+    }
+  ]
+}

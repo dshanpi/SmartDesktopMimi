@@ -80,9 +80,28 @@ class KernelReplayTests(unittest.TestCase):
         self.snapshot_pin = audit.digest(self.snapshot / 'sdk-components.json')
         self.supplement_pin = audit.digest(self.supplement / 'supplement.json')
 
-    def prepare(self):
+    def prepare(self, **kwargs):
         return replay.prepare(self.sdk, self.stage, self.snapshot, self.snapshot_pin,
-                              self.supplement, self.supplement_pin)
+                              self.supplement, self.supplement_pin, **kwargs)
+
+    def overlay(self, files):
+        root = self.delivery / 'hardware'
+        root.mkdir()
+        replay.git(root, 'init', '--quiet')
+        replay.git(root, 'config', 'user.name', 'Private overlay fixture')
+        replay.git(root, 'config', 'user.email', 'fixture@invalid')
+        manifest = {'schema_version': 1, 'files': {}}
+        for name, data in files.items():
+            relative = replay.COMPONENT + '/' + name
+            target = root / 'overlay' / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data); target.chmod(0o600)
+            manifest['files'][relative] = self.desc(data)
+        (root / 'meta').mkdir()
+        (root / 'meta/overlay-manifest.json').write_text(json.dumps(manifest))
+        replay.git(root, 'add', '.')
+        replay.git(root, 'commit', '--quiet', '-m', 'saved overlay fixture')
+        return root, replay.git(root, 'rev-parse', 'HEAD').decode().strip()
 
     def terminal_job(self):
         a = subprocess.Popen(['/bin/true']); a.wait()
@@ -107,6 +126,37 @@ class KernelReplayTests(unittest.TestCase):
         self.snapshot_pin = '0' * 64
         with self.assertRaisesRegex(ValueError, 'snapshot pin'):
             self.prepare()
+        self.assertFalse(self.stage.exists())
+
+    def test_expanded_repo_overlay_archive_preserved_with_provenance(self):
+        data = b'saved download archive'
+        (self.kernel / 'firmware.tar.gz').write_bytes(data)
+        (self.kernel / 'firmware.tar.gz').chmod(0o600)
+        overlay, commit = self.overlay({'firmware.tar.gz': data,
+                                        'kernel.c': b'saved modification\n'})
+        record = self.prepare(overlay=overlay, overlay_commit=commit)
+        self.assertEqual(record['overlay_commit'], commit)
+        self.assertEqual((self.stage / 'firmware.tar.gz').read_bytes(), data)
+        self.assertIn('firmware.tar.gz', record['untracked'])
+        replay.verify(self.stage, record, full_modes=True)
+
+    def test_wrong_overlay_commit_rejected_before_clone(self):
+        overlay, commit = self.overlay({'driver.c': b'saved untracked source\n'})
+        with self.assertRaisesRegex(ValueError, 'overlay commit'):
+            self.prepare(overlay=overlay, overlay_commit='0' * 40)
+        self.assertFalse(self.stage.exists())
+
+    def test_missing_overlay_lfs_body_rejected(self):
+        overlay, commit = self.overlay({'driver.c': b'saved untracked source\n'})
+        (overlay / 'overlay' / replay.COMPONENT / 'driver.c').unlink()
+        with self.assertRaisesRegex(ValueError, 'LFS object unavailable'):
+            self.prepare(overlay=overlay, overlay_commit=commit)
+        self.assertFalse(self.stage.exists())
+
+    def test_snapshot_overlay_conflict_requires_review(self):
+        overlay, commit = self.overlay({'driver.c': b'conflicting source\n'})
+        with self.assertRaisesRegex(ValueError, 'snapshot and overlay input conflict'):
+            self.prepare(overlay=overlay, overlay_commit=commit)
         self.assertFalse(self.stage.exists())
 
     def test_current_source_drift_rejected_before_clone(self):

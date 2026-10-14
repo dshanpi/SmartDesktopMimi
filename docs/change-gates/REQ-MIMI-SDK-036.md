@@ -10,3 +10,9 @@
 
 
 工具实施：prepare独立clone固定组件并从已保存patch/tar/config恢复，原SDK只读；activate要求旧构建真实terminal、原PID和childPID消失，且无其他SDK编译进程，重新逐项核对原源输入/模式/config及新树无非源缓存，再原子移动保留旧树；第二步rename失败恢复原位。13项真实Git/tar/临时目录测试passed（源码/config重放、旧cache排除、错pin/源漂移/未捕获新源/容器内坏内容/越界/.git覆盖/外逃链接/活跃job/PID/符号链接/带cache激活拒绝、实际终止后保留旧树激活）。首次测试两条失败是预期拒绝原因断言及fixture缺vmlinux忽略规则，守卫均拒绝，原log保留；修正fixture/断言后r2通过。实际SDK单组件重放/激活/全编译仍not_run，不复用fixture作为SDK验收。
+
+
+实际首次prepare在clone前拒绝：SDK比旧286项snapshot多一个drivers/media/platform/sunxi-vin.tar.gz；该包已在私有5e947 repo overlay真实保存，是用户要求保留的下载/源码包，不是cache，不能忽略。stage未创建、活跃SDK未修改。扩展实施前：prepare显式读取固定overlay commit和该commit内manifest，校验当前manifest及每个kernel覆盖条目的实际字节/模式；与snapshot重叠必须一致，新增条目合并入恢复清单，禁止覆盖冲突。只在已有snapshot基础补充已保存repo overlay，不从活跃树拷贝未知材料。下一步按该完整输入准备并补充overlay来源/冲突/缺失拒绝测试。
+
+
+repo overlay补充实现及17项测试passed：prepare CLI显式要求overlay路径与固定commit；manifest必须与该commit Git blob一致、LFS/文件实际摘要可用，kernel重叠来源内容冲突拒绝，合法新增下载包合入恢复清单。原树tracked文件非执行权限因先前恢复umask与overlay不同，只读验证保留字节/执行位；准备新树按overlay完整mode恢复且再次检查，原树不改。新增测试真实保留snapshot之外archive、错误overlay commit、缺少LFS body、来源冲突拒绝，原13项回归仍通过。首个真实prepare的pre-clone拒绝保留，r2将使用完整保存材料；没有忽略该下载包或复制未登记活跃源码。

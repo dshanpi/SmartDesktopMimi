@@ -86,7 +86,7 @@ def extract(archive, expected, destination, selected=None):
         raise ValueError('archive inputs missing')
 
 
-def verify(root, record):
+def verify(root, record, full_modes=False):
     if git(root, 'rev-parse', 'HEAD').decode().strip() != record['commit']:
         raise ValueError('kernel commit changed')
     patch = git(root, 'diff', '--no-ext-diff', '--no-textconv', '--binary', '--full-index', 'HEAD')
@@ -114,6 +114,51 @@ def verify(root, record):
         raise ValueError('saved effective kernel configuration changed')
     if (root / '.config').stat().st_mode & 0o777 != record['config_mode']:
         raise ValueError('saved effective kernel configuration mode changed')
+    for name, desc in record.get('overlay_inputs', {}).items():
+        path = root / audit.relative(name)
+        unlinked(path.parent)
+        if 'link' in desc:
+            if not path.is_symlink() or os.readlink(path) != desc['link']:
+                raise ValueError('overlay source link changed')
+        elif not path.is_file() or path.is_symlink() or audit.digest(path) != desc['sha256']:
+            raise ValueError('overlay source bytes changed')
+        mask = 0o777 if full_modes else 0o111
+        if path.lstat().st_mode & mask != desc['mode'] & mask:
+            raise ValueError('overlay source mode changed')
+
+
+def overlay_inputs(overlay, commit):
+    if overlay is None:
+        return {}, None
+    overlay = unlinked(overlay)
+    if not commit or git(overlay, 'rev-parse', 'HEAD').decode().strip() != commit:
+        raise ValueError('overlay commit changed')
+    captured = git(overlay, 'show', 'HEAD:meta/overlay-manifest.json')
+    manifest_path = overlay / 'meta/overlay-manifest.json'
+    if audit.digest(manifest_path) != hashlib.sha256(captured).hexdigest():
+        raise ValueError('overlay manifest differs from pinned commit')
+    manifest = audit.read_json(manifest_path)
+    if manifest.get('schema_version') != 1:
+        raise ValueError('unknown overlay manifest')
+    entries = {}
+    for name, desc in manifest['files'].items():
+        audit.relative(name)
+        if name.startswith(COMPONENT + '/'):
+            relative = audit.relative(name[len(COMPONENT) + 1:])
+            path = overlay / 'overlay' / name
+            unlinked(path.parent)
+            if 'link' in desc:
+                if not path.is_symlink() or os.readlink(path) != desc['link']:
+                    raise ValueError('saved overlay link changed')
+                component_root = overlay / 'overlay' / COMPONENT
+                if desc['link'].startswith('/') or component_root not in (path.parent / desc['link']).resolve().parents:
+                    raise ValueError('saved overlay link escapes kernel component')
+            elif not path.is_file() or path.is_symlink() or audit.digest(path) != desc['sha256']:
+                raise ValueError('saved overlay bytes changed or LFS object unavailable')
+            entries[relative] = {key: desc[key] for key in ('mode', 'size', 'sha256', 'link') if key in desc}
+    if not entries:
+        raise ValueError('overlay has no kernel inputs')
+    return entries, hashlib.sha256(captured).hexdigest()
 
 
 def cache_free(root):
@@ -134,7 +179,8 @@ def cache_free(root):
             raise ValueError('Git objects are hardlinked')
 
 
-def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin):
+def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin,
+            overlay=None, overlay_commit=None):
     sdk, stage = delivery_paths(sdk, stage)
     snapshot, supplement = unlinked(snapshot), unlinked(supplement)
     if stage.exists():
@@ -159,12 +205,22 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin):
     if audit.digest(supplement / 'inputs.tar.gz') != extra['archive_sha256']:
         raise ValueError('saved supplement archive changed')
     config = extra['files'][COMPONENT + '/.config']
+    entries, manifest_pin = overlay_inputs(overlay, overlay_commit)
+    tracked = set(git(sdk / COMPONENT, 'ls-files', '-z').decode().split('\0'))
+    saved_untracked = dict(inputs['untracked'])
+    for name, desc in entries.items():
+        if name in saved_untracked and saved_untracked[name] != desc:
+            raise ValueError('snapshot and overlay input conflict')
+        if name not in tracked:
+            saved_untracked[name] = desc
     record = dict(requirement='REQ-MIMI-SDK-036', component=COMPONENT,
                   sdk=str(sdk), commit=component['commit'],
                   snapshot_sha256=snapshot_pin, supplement_sha256=supplement_pin,
                   tracked_patch_sha256=inputs['tracked_patch_sha256'],
-                  untracked=inputs['untracked'], config_sha256=config['sha256'],
+                  untracked=saved_untracked, config_sha256=config['sha256'],
                   config_mode=config['mode'],
+                  overlay_commit=overlay_commit, overlay_manifest_sha256=manifest_pin,
+                  overlay_inputs=entries,
                   phase='prepared', created_utc=time.time(), activation='not_run',
                   kernel_build='not_run', release_qualified=False)
     verify(sdk / COMPONENT, record)
@@ -177,9 +233,29 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin):
     if (folder / 'tracked.patch').stat().st_size:
         git(stage, 'apply', '--binary', '--whitespace=nowarn', str(folder / 'tracked.patch'))
     extract(folder / 'untracked.tar.gz', inputs['untracked'], stage)
+    for name, desc in entries.items():
+        source = Path(overlay) / 'overlay' / COMPONENT / name
+        destination = stage / name
+        unlinked(destination.parent)
+        if destination.exists() or destination.is_symlink():
+            if 'link' in desc:
+                if not destination.is_symlink() or os.readlink(destination) != desc['link']:
+                    raise ValueError('snapshot and overlay restored link conflict')
+            elif not destination.is_file() or destination.is_symlink() or audit.digest(destination) != desc['sha256']:
+                raise ValueError('snapshot and overlay restored bytes conflict')
+        else:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if 'link' in desc:
+                if desc['link'].startswith('/') or stage not in (destination.parent / desc['link']).resolve().parents:
+                    raise ValueError('overlay link escapes reconstructed component')
+                destination.symlink_to(desc['link'])
+            else:
+                shutil.copyfile(source, destination)
+        if 'link' not in desc:
+            destination.chmod(desc['mode'])
     extract(supplement / 'inputs.tar.gz', extra['files'], stage,
             {COMPONENT + '/.config': '.config'})
-    verify(stage, record)
+    verify(stage, record, full_modes=True)
     cache_free(stage)
     (stage / RECEIPT).write_text(json.dumps(record, indent=2) + '\n')
     return record
@@ -224,7 +300,7 @@ def activate(sdk, stage, retained, build_result):
     if record['sdk'] != str(sdk) or record['phase'] != 'prepared':
         raise ValueError('stage belongs to another SDK or is not prepared')
     verify(sdk / COMPONENT, record)
-    verify(stage, record)
+    verify(stage, record, full_modes=True)
     cache_free(stage)
     retained.parent.mkdir(parents=True, exist_ok=True)
     if retained.parent.stat().st_dev != stage.stat().st_dev:
@@ -245,26 +321,28 @@ def activate(sdk, stage, retained, build_result):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['prepare', 'activate'])
-    for option in ['sdk', 'stage', 'snapshot', 'supplement', 'retained', 'build-result']:
+    for option in ['sdk', 'stage', 'snapshot', 'supplement', 'retained', 'build-result', 'overlay']:
         parser.add_argument('--' + option, type=Path)
     parser.add_argument('--snapshot-sha256')
     parser.add_argument('--supplement-sha256')
+    parser.add_argument('--overlay-commit')
     args = parser.parse_args()
     try:
         if args.sdk is None or args.stage is None:
             raise ValueError('selected SDK and stage required')
         if args.action == 'prepare':
-            if None in (args.snapshot, args.supplement, args.snapshot_sha256, args.supplement_sha256):
+            if None in (args.snapshot, args.supplement, args.snapshot_sha256, args.supplement_sha256,
+                        args.overlay, args.overlay_commit):
                 raise ValueError('saved input paths and exact pins required')
             record = prepare(args.sdk, args.stage, args.snapshot, args.snapshot_sha256,
-                             args.supplement, args.supplement_sha256)
+                             args.supplement, args.supplement_sha256, args.overlay, args.overlay_commit)
         else:
             if args.retained is None or args.build_result is None:
                 raise ValueError('retention path and terminal build receipt required')
             record = activate(args.sdk, args.stage, args.retained, args.build_result)
     except (ValueError, OSError, KeyError, subprocess.CalledProcessError) as error:
         parser.exit(1, 'KERNEL REPLAY BLOCKED: ' + str(error) + '\n')
-    print(json.dumps({k: v for k, v in record.items() if k != 'untracked'}, indent=2))
+    print(json.dumps({k: v for k, v in record.items() if k not in {'untracked', 'overlay_inputs'}}, indent=2))
 
 
 if __name__ == '__main__':
