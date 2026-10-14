@@ -251,8 +251,13 @@ source build/envsetup.sh || die "Tina SDK environment initialization failed"
 [[ "${TINA_TOPDIR:-}" == "${SDK}" ]] || die "Tina SDK environment points outside the selected SDK"
 # The vendor scanner can return zero after a recipe dump fails. Require all
 # product definitions before spending time on the kernel/rootfs build.
+# Package dumps depend on product environment that the scanner does not track.
+# Invalidate only fixed generated entries; keep SDK source and other caches.
+for product_package in aitvbox-ipkvm aitvbox-platform aitvbox-suite aitvbox-mimi-update aitvbox-usb-hid; do
+    rm -f -- "${SDK}/out/a133/b6/openwrt/tmp/info/.packageinfo-subpackage_allwinner_custom_${product_package}"
+done
 ( source "${SDK}/.buildconfig" &&
-  make -C "${SDK}/openwrt/openwrt" -j1 prepare-tmpinfo ) ||
+  command make -C "${SDK}/openwrt/openwrt" -j1 prepare-tmpinfo ) ||
     die "OpenWrt package metadata generation failed"
 python3 "${PRODUCT_ROOT}/tools/update/openwrt_metadata.py" \
     "${SDK}/out/a133/b6/openwrt/tmp/.packageinfo" ||

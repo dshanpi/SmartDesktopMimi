@@ -20,3 +20,7 @@ flowchart TD
 
 
 实施前追加真实缓存因素：externalmake调用修复后，先前非产品环境scanner缓存的四个aitvbox .packageinfo条目仅Source-Makefile无Package定义；重新传正确product-root/vendor环境仍因scan.mk只按Makefile时间戳命中空缓存，不重扫。真实checker明确拒绝，是有效拦截，不能称全部索引passed。改动增加仅删除五个固定产品包的生成型tmp/info缓存条目，然后运行prepare-tmpinfo和既有完整性checker；不清SDK源码或其他包缓存、不touch源Makefile、不取消错误检测。首次诊断checker传目录错误、r2/r3缺项失败继续保留；完整产品尚未启动重试。必须以真实产品环境重生后的Package定义和8Boot输入不变核验。
+
+
+2026-10-15修复实际结果：外部command make和五个固定生成型缓存刷新已实现；3项真实Shell回归passed（旧影子函数调用返回73、新调用外部make收到实际索引参数、只移除5产品缓存且保留其他缓存/源码），脚本语法passed。真实恢复SDK使用同product-root/vendor环境刷新并prepare-tmpinfo return0，五个产品包均唯一正确来源，metadata checker0/hash0bc083c824feb1689a174e34f33db54331766216d50979145a011feef5f88861，8保护启动输入无变。首次测试器Python3.8/片段错误及r1误传目录/r2/r3空缓存拒绝均保留，不冒充原产物通过。
+旧SYS048 product terminal failed，真实97tracked source和8保护input未变化；此前apps阶段完成日志保留。本修复只系统构建recipe，不改signedrc23/sourcea37/c22/factorylock89d290…和可信key/硬件接口。固定新系统recipe源码后接续完整产品pack/SWU及最终读回，签名应用不换版本。当前完整新系统与全部真机矩阵仍not_run，不能上传。证据metadata-make-real-result-r4.json、metadata-make-real-private-r4.log、metadata-cache-refresh-plan.json。

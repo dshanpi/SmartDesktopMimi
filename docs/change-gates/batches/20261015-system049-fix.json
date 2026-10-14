@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "summary": "修复metadata同名make函数和空产品索引缓存",
+  "context": "SYS048实际元数据失败后受限修复，r4真实SDK五包checker通过，前序失败原样保留",
+  "next_steps": "固定新系统recipe提交，接续完整rc2产品及SWU，不重新签应用；最终镜像和真机验收另记",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-049",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+      "scope": "只改系统metadata调用与五个固定generated条目刷新",
+      "invariants": "无Bootchain override，SDK源码/8boot/key/绑定/签名应用不变，不上传任何应用/Release",
+      "paths": [
+        "scripts/build_firmware.sh",
+        "tests/update/test_firmware_metadata_make.py",
+        "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+        "docs/change-gates/batches/20261015-system049-fix.json"
+      ],
+      "checks": [
+        {
+          "name": "真实Shell回归及语法",
+          "status": "passed",
+          "scope": "3 regression cases isolate make function and bounded cache refresh",
+          "evidence": "output/system-baseline-rc2-20261015/metadata-make-real-result-r4.json"
+        },
+        {
+          "name": "真实SDK产品索引完整性",
+          "status": "passed",
+          "scope": "fresh five exact product definitions,8protectedboot unchanged",
+          "evidence": "output/system-baseline-rc2-20261015/metadata-make-real-result-r4.json"
+        },
+        {
+          "name": "首次测试器及前序metadata诊断",
+          "status": "failed",
+          "scope": "3.8fixture/API/fragment and incorrectdirectory/incompletecachedmetadata rejected",
+          "evidence": "output/system-baseline-rc2-20261015/metadata-make-regression.json and metadata-make-real-result{,-r2,-r3}.json",
+          "reason": "受限修正后新r4通过，历史失败不改"
+        },
+        {
+          "name": "完整新产品及真机",
+          "status": "not_run",
+          "scope": "system rc2 recipe change; signedapp23 unchanged",
+          "evidence": "output/system-baseline-rc2-20261015",
+          "reason": "需新构建最终核对与实机完整验收"
+        }
+      ]
+    }
+  ]
+}
