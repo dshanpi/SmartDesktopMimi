@@ -44,3 +44,10 @@ flowchart TD
 开发入口：`python3 tools/sdkbuild/native_ubuntu.py --check` 检查依赖；`python3 tools/sdkbuild/native_ubuntu.py --interactive --output <开发目录下的新构建路径>` 选择屏幕并编译。必须为干净源码，记录编译器、运行库、源码和二进制哈希；原生开发凭证不被现有正式SDK/应用包门禁接受。此入口不安装、激活或上传任何东西。
 
 补充本轮门禁：三个原生目标错误组合（混入板级后端、G2D、错误显示配置）配置拒绝 passed；不支持的音量/背光控制返回 ENOTSUP 且不改输出值 passed。证据 native-gates.json；既有 SDK/deb 工具测试结果见 sdkbuild-tests.log。以上仍不替代真实 Ubuntu Provider 和 deb 安装验收。
+
+
+### 最终提交构建与接续（2026-10-14）
+源码 `7985eb93eb3779988ad64cd34430c2bc5bdca0de`（干净）已完成开发入口重新构建，native-build.json 绑定源码、编译器、运行库和真实二进制哈希。独立窗口最终验证 passed：3种已选分辨率启动/关闭、640x480拒绝；仅IPC接收夹具，不代表正式服务通过。21项SDK/deb测试、50项架构测试 passed。
+A133完整桌面交叉编译 passed，二进制SHA256 e6b307a1119dbb5246c30c2cb4598c7004bd65760ae8f7e92664e2ddcf46ef8a，与已安装rc16的桌面字节一致；本轮未修改板子，也未运行新镜像验收。原生Provider能力状态投影仍 failed，正式deb安装/升级 not_run。全部结果在 output/ubuntu-desktop-20261014/result.json，运行截图 window-final，构建记录 .delivery/ubuntu-native-final-20261014/native-build.json。本段为构建后的文档追加，不把该追加提交冒充已编译源码。
+
+本轮涉及的验证工具：tests/sdkbuild/ubuntu_window_smoke.py；来源边界登记 docs/update/source-ownership.json。下一步优先修复Ubuntu未接入服务时的能力/状态显示，再完成真实Provider和签名amd64包链；板子既有稳定性及系统验收保持未通过。
