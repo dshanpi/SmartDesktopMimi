@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Implement safe saved-input kernel reconstruction and guarded activation",
+  "context": "Tina in-tree kernel cache requires independent component replay; current SDK032 and passive trace stay untouched",
+  "next_steps": "Prepare actual pinned kernel source in independent delivery stage; activate only after old SDK job terminal, then rebuild kernel and product gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "Tool and integrity/atomic activation guards",
+      "invariants": "Preserve source/config/unknown inputs; no live-SDK replacement; no cached build files in prepared component",
+      "paths": [
+        "tools/update/replay_kernel_component.py",
+        "tests/test_replay_kernel_component.py",
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-kernel-replay-036-implementation.json"
+      ],
+      "checks": [
+        {
+          "name": "reconstruction and activation integrity",
+          "status": "passed",
+          "scope": "13 actual Git/tar/temp-directory cases, not real SDK or device",
+          "evidence": "output/replay-kernel-tests-20261014-r2.log"
+        },
+        {
+          "name": "actual SDK replay and clean kernel/product",
+          "status": "not_run",
+          "scope": "Fixed saved kernel inputs and original SDK job",
+          "reason": "Tool just implemented; live job not interrupted",
+          "evidence": "output/kernel-clean-replay-20261014"
+        }
+      ]
+    }
+  ]
+}

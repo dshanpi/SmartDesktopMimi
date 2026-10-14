@@ -7,3 +7,6 @@
 安全不变量：不在活跃SDK构建中清理/替换内核，不改任何Boot0/U-Boot等八个保护输入；不覆盖旧失败或032记录。路径必须在同一.delivery根内、无符号链接跳转，旧目录保留恢复，任何校验失败不激活。tar仅允许已登记且哈希/类型/模式符合的文件，拒绝路径越界、Git元数据覆盖和外逃链接；从旧仓库只读取得固定Git对象，不拿旧编译缓存或原未保存源码充当恢复来源。补充.config按保存摘要固定，不猜默认配置。独立源准备不等于编译/镜像/真机通过。
 
 实现计划tools/update/replay_kernel_component.py及针对实际Git/tar/激活守卫的测试；证据output/kernel-clean-replay-20261014，独立准备.delivery/kernel-clean-component-20261014，激活旧树恢复路径.delivery/sdk-cache-before-clean-20261014/kernel-source-cache。适用UPDATE001/TRACE001、用户SDK overlay和关键备份要求。当前not_run：工具、保存输入独立重放、终止后激活/全编译/产品门禁；设备/发布仍未验收。下一步不重启SDK032或被动UART035，等待各自真实结果。
+
+
+工具实施：prepare独立clone固定组件并从已保存patch/tar/config恢复，原SDK只读；activate要求旧构建真实terminal、原PID和childPID消失，且无其他SDK编译进程，重新逐项核对原源输入/模式/config及新树无非源缓存，再原子移动保留旧树；第二步rename失败恢复原位。13项真实Git/tar/临时目录测试passed（源码/config重放、旧cache排除、错pin/源漂移/未捕获新源/容器内坏内容/越界/.git覆盖/外逃链接/活跃job/PID/符号链接/带cache激活拒绝、实际终止后保留旧树激活）。首次测试两条失败是预期拒绝原因断言及fixture缺vmlinux忽略规则，守卫均拒绝，原log保留；修正fixture/断言后r2通过。实际SDK单组件重放/激活/全编译仍not_run，不复用fixture作为SDK验收。
