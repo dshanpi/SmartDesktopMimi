@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "事前记录原有authorizedADB临时模式及复原与签名OTA接续",
+  "context": "FESfailed，使用既有USB服务另一传输途径；不把替代途径等同FES修复",
+  "next_steps": "读取原mode/keys，安全tmpfsbind和恢复timer，验证固定serial/身份再传输及升级",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-051",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-051.md",
+      "scope": "临时服务模式和可信OTA流程，非新产品USB协议",
+      "invariants": "no unauthdevelopment/no keyreplacement/no UARTpackage; fixedtarget and exactoriginalrestore",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-051.md",
+        "docs/change-gates/batches/20261015-system051-prerecord.json"
+      ],
+      "checks": [
+        {
+          "name": "授权USB接续及恢复",
+          "status": "not_run",
+          "scope": "before implementation/actual device observation",
+          "evidence": "output/system-baseline-rc2-20261015/system050-recovery-readback.json",
+          "reason": "needs actual original-config and scoped authentication evidence"
+        }
+      ]
+    }
+  ]
+}
