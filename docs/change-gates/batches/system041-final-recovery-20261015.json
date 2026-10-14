@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "真实原生RAM重连失败后，原rc17及关键分区一致性最终读回。",
+  "context": "实际flash1791995033620116300失败于写入之前，所有失败及source/hash保存。",
+  "next_steps": "核查当前0.2.11 libefex/FES loader/Windows重连；同guard保留串口诊断方案需单独门禁，不重复本次failed任务。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "任务失败后原A133恢复/无写入读回",
+      "invariants": "不冒充新kernel安装或升级数据验收，原钥/绑定/HDMIoff/数据保持，失败不删。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/system041-final-recovery-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "实际原rc17恢复及GPT/private/数据分区容量",
+          "status": "passed",
+          "scope": "A133V1.2,原快照逐字节摘要，serial25closed",
+          "evidence": "output/system-first-install-20261015/final-recovery.json"
+        },
+        {
+          "name": "新内核与升级矩阵",
+          "status": "not_run",
+          "scope": "完整系统安装/升级回退/断电/数据",
+          "evidence": "output/system-first-install-20261015/result-terminal.json",
+          "reason": "实际worker在RAM FES重连failed，新系统未写入"
+        }
+      ]
+    }
+  ]
+}
