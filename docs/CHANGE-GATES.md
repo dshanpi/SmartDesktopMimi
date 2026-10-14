@@ -104,3 +104,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-SYSTEM-040](change-gates/REQ-MIMI-SYSTEM-040.md)：当前rc17小型关键数据刷新和严格PID恢复。
 
 - [REQ-MIMI-SYSTEM-041](change-gates/REQ-MIMI-SYSTEM-041.md)：已验签第一系统基线、同布局保留数据分区模式安装。
+
+- [REQ-MIMI-SYSTEM-042](change-gates/REQ-MIMI-SYSTEM-042.md)：实际持久数据范围、精简恢复备份及写入前边界。

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "先建立真实持久数据全范围清点与恢复资料，不凭关键备份推定全数据保留。",
+  "context": "041模板容量和当前二进制版本未完全核对，先做安装前必要恢复边界。",
+  "next_steps": "读取实际持久挂载和数据存量，取得精简但覆盖真实数据的备份，另记写入计划。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-042",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-042.md",
+      "scope": "A133实际rootfs_data/UDISK范围只读基线与受限备份",
+      "invariants": "不flash/erase，不改绑定/可信钥，不删未知数据，原授权与自有资源清理。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-042.md",
+        "docs/change-gates/batches/20261014-system042-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "数据范围/备份/读回",
+          "status": "not_run",
+          "scope": "真实A133 MainBoardV1.2",
+          "evidence": "output/system-data-baseline-20261014/result.json",
+          "reason": "实施前记录，尚未操作设备"
+        }
+      ]
+    }
+  ]
+}
