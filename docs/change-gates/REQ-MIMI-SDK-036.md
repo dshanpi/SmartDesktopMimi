@@ -16,3 +16,6 @@
 
 
 repo overlay补充实现及17项测试passed：prepare CLI显式要求overlay路径与固定commit；manifest必须与该commit Git blob一致、LFS/文件实际摘要可用，kernel重叠来源内容冲突拒绝，合法新增下载包合入恢复清单。原树tracked文件非执行权限因先前恢复umask与overlay不同，只读验证保留字节/执行位；准备新树按overlay完整mode恢复且再次检查，原树不改。新增测试真实保留snapshot之外archive、错误overlay commit、缺少LFS body、来源冲突拒绝，原13项回归仍通过。首个真实prepare的pre-clone拒绝保留，r2将使用完整保存材料；没有忽略该下载包或复制未登记活跃源码。
+
+
+真实r2在clone前拒绝schema差异：旧snapshot 149个重叠条目只有mode/hash，repo overlay另有size，字典全等错误将新增元数据认成内容冲突。源哈希与mode实际一致，旧失败保留。按实际保存schema修正：重叠严格比较类型/内容hash/link/mode，两侧都有size才比较size，overlay size用于丰富恢复条目；旧tar无size字段时仍验哈希并限制单文件512MiB，不放弃完整性检查。fixture改为真实旧schema，17项r4passed且验证合法archive/重叠、实际内容冲突依旧拒绝。r3实际准备待运行，原SDK/旧job不动。

@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Handle actual captured SDK descriptor schema without dropping integrity checks",
+  "context": "Real saved untracked descriptors omit size while repo overlay includes it; r2 blocked before clone on metadata-only differences",
+  "next_steps": "Retry actual reconstruction with corrected compatible descriptors; retain true content/mode conflict rejection and original failure evidence",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-036",
+      "record": "docs/change-gates/REQ-MIMI-SDK-036.md",
+      "scope": "Actual snapshot/overlay schema compatibility",
+      "invariants": "Hash/type/mode/link remain exact; optional size is not a content change; no SDK mutation",
+      "paths": [
+        "tools/update/replay_kernel_component.py",
+        "tests/test_replay_kernel_component.py",
+        "docs/change-gates/REQ-MIMI-SDK-036.md",
+        "docs/change-gates/batches/20261014-kernel-replay-036-schema.json"
+      ],
+      "checks": [
+        {
+          "name": "actual-schema integrity regression",
+          "status": "passed",
+          "scope": "17 real Git/tar/temp-directory cases with original no-size descriptors",
+          "evidence": "output/replay-kernel-tests-20261014-r4.log"
+        },
+        {
+          "name": "actual r2 preparation",
+          "status": "failed",
+          "scope": "Saved kernel materials",
+          "reason": "Metadata-only size addition falsely treated as conflict before clone",
+          "evidence": "output/kernel-clean-replay-20261014/prepare-r2-result.json"
+        },
+        {
+          "name": "r3 physical reconstruction/activation/build",
+          "status": "not_run",
+          "scope": "Actual fixed SDK saved inputs",
+          "reason": "Not launched, current SDK032 live",
+          "evidence": "output/kernel-clean-replay-20261014"
+        }
+      ]
+    }
+  ]
+}

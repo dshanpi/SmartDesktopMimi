@@ -45,6 +45,8 @@ class KernelReplayTests(unittest.TestCase):
         data = (self.kernel / 'driver.c').read_bytes()
         self.inputs = {'tracked_patch_sha256': hashlib.sha256(patch).hexdigest(),
                        'untracked': {'driver.c': self.desc(data)}}
+        # The captured SDK snapshot stores mode/hash; overlay adds file size.
+        self.inputs['untracked']['driver.c'].pop('size')
         self.archive(self.folder / 'untracked.tar.gz', {'driver.c': data})
         self.component = {'path': replay.COMPONENT, 'commit': self.commit,
                           'snapshot_directory': '000', 'local_inputs_sha256': '',
@@ -133,7 +135,8 @@ class KernelReplayTests(unittest.TestCase):
         (self.kernel / 'firmware.tar.gz').write_bytes(data)
         (self.kernel / 'firmware.tar.gz').chmod(0o600)
         overlay, commit = self.overlay({'firmware.tar.gz': data,
-                                        'kernel.c': b'saved modification\n'})
+                                        'kernel.c': b'saved modification\n',
+                                        'driver.c': b'saved untracked source\n'})
         record = self.prepare(overlay=overlay, overlay_commit=commit)
         self.assertEqual(record['overlay_commit'], commit)
         self.assertEqual((self.stage / 'firmware.tar.gz').read_bytes(), data)

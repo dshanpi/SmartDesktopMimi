@@ -75,7 +75,8 @@ def extract(archive, expected, destination, selected=None):
                     raise ValueError('archive link escapes component')
                 output.symlink_to(target)
             else:
-                if not member.isfile() or member.size != desc['size']:
+                if not member.isfile() or member.size > 512 * 1024**2 or (
+                        'size' in desc and member.size != desc['size']):
                     raise ValueError('archive input type or size changed')
                 with stream.extractfile(member) as source, output.open('xb') as out:
                     shutil.copyfileobj(source, out)
@@ -209,8 +210,11 @@ def prepare(sdk, stage, snapshot, snapshot_pin, supplement, supplement_pin,
     tracked = set(git(sdk / COMPONENT, 'ls-files', '-z').decode().split('\0'))
     saved_untracked = dict(inputs['untracked'])
     for name, desc in entries.items():
-        if name in saved_untracked and saved_untracked[name] != desc:
-            raise ValueError('snapshot and overlay input conflict')
+        if name in saved_untracked:
+            previous = saved_untracked[name]
+            if any(previous.get(key) != desc.get(key) for key in ('mode', 'sha256', 'link')) or (
+                    'size' in previous and 'size' in desc and previous['size'] != desc['size']):
+                raise ValueError('snapshot and overlay input conflict')
         if name not in tracked:
             saved_untracked[name] = desc
     record = dict(requirement='REQ-MIMI-SDK-036', component=COMPONENT,
