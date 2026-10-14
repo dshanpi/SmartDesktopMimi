@@ -94,3 +94,5 @@ REQ-MIMI-STABILITY-034：[桌面进程隔离](change-gates/REQ-MIMI-STABILITY-03
 REQ-MIMI-STABILITY-035：[A133自行重启被动追踪](change-gates/REQ-MIMI-STABILITY-035.md)，事前门禁，实际追踪not_run。
 
 REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，032范围纠正后事前门禁，工具和重放未执行。
+
+- [REQ-MIMI-STABILITY-037](change-gates/REQ-MIMI-STABILITY-037.md)：固定SWU传输与全程被动UART取证，未更改候选或运行设置。

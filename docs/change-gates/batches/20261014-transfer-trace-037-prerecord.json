@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Prerecord bounded SWU transfer with passive serial fault capture",
+  "context": "Previous tmpfs transfer failed before installation; passive idle alone did not reproduce",
+  "next_steps": "Run exact candidate transfer and capture, then final health and cleanup",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-037",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+      "scope": "A133 MainBoard V1.2 rc17, existing r11 SWU transfer diagnostic only",
+      "invariants": "No install, no trusted-key replacement or binding reset; original runtime settings, exact own handles and temporary auth cleanup",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+        "docs/change-gates/batches/20261014-transfer-trace-037-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "device bounded transfer and trace",
+          "status": "not_run",
+          "scope": "Fixed SWU hash/size and A133 target",
+          "reason": "Prerecorded before execution",
+          "evidence": "output/a133-transfer-trace-20261014"
+        }
+      ]
+    }
+  ]
+}
