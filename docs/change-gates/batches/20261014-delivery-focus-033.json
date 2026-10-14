@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Focus delivery on A133 release blockers and eliminate repeated candidate/build/test work",
+  "context": "User reports unacceptable delay and authorizes simplification/optimization",
+  "next_steps": "Update existing heartbeat cadence, finish current build and A133 fault isolation without duplicate jobs",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-033",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-033.md",
+      "scope": "Execution priority, candidate freeze and scheduling plan",
+      "invariants": "Required A133 acceptance still mandatory, no unsupported claims or release uploads",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-033.md",
+        "docs/change-gates/batches/20261014-delivery-focus-033.json"
+      ],
+      "checks": [
+        {
+          "name": "scheduling update",
+          "status": "not_run",
+          "scope": "Existing mimi heartbeat and current thread",
+          "reason": "Record change before tool update",
+          "evidence": "docs/change-gates/REQ-MIMI-DELIVERY-033.md"
+        }
+      ]
+    }
+  ]
+}
