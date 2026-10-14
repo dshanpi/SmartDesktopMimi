@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "记录FES RAM重连诊断和同guard串口取证方案，固定包/工具，不盲烧。",
+  "context": "041安装任务在FES重连前失败，原系统恢复健康，启动串口日志缺失是证据缺口。",
+  "next_steps": "先检查实际源码和加载器配置，再用原生同guard保持UART取证验证安装路径。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-043",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-043.md",
+      "scope": "A133项目4/设备4/COM17/固定USB，FES和原生guard",
+      "invariants": "原工具/原包/原钥/原绑定保持，不旁路MCP，不破坏active任务，失败和未执行阶段如实保留。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-043.md",
+        "docs/change-gates/batches/20261015-system043-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "源码/加载器/串口取证与安装",
+          "status": "not_run",
+          "scope": "真实A133V1.2",
+          "evidence": "output/system-fes-trace-20261015/result.json",
+          "reason": "事前记录；后续操作逐项追加真实结果"
+        }
+      ]
+    }
+  ]
+}
