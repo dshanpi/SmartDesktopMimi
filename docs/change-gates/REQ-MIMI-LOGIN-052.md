@@ -37,3 +37,7 @@ services/mimi-ubuntu-provider/login.py；packaging/mimi-ubuntu-login/mimi-ubuntu
 ## 输入、版本与接续
 基准 source fbcba42f19655b32b8bcfd294de2f60f4f404a2b，Ubuntu20.04/x86_64已登记；当前签名rc22包616065f1acfe1f75f0672e9502056de5e2b88dc5b728a81876b0242c8cc3d06e。本轮仅独立平台工具，不发新应用号、不上传。证据保存 output/ubuntu-login-20261015，关键增量进入 .delivery。
 ADBbinding尚缺，A133主线保留；可独立实施Ubuntu。外部云设备/语音/账号和全部发布门禁继续保留。
+
+## 实现与第一次回归（2026-10-15）
+独立登录桥接与 systemd 模板已实现；Go UbuntuSession 增加可选 login_session，旧显式显示配置保持兼容，新增入口独立检查 logind 并 BindsTo/After 对应登录 scope。桥接对短期配置写入/停止使用共享更新锁，启动仍由 start-selected 重新验签；不混入应用包。
+Python边界第一次 failed：测试夹具在group-writable开发目录内，祖先检查真实拒绝；未放宽守卫，改为安全用户home临时fixture，第二次13项（含旧会话6项）passed。Go Ubuntu/StartSelected scope及事务锁回归passed。源码尚未正式平台安装；真实登录/数据/升级仍not_run。日志 output/ubuntu-login-20261015，失败日志保留。

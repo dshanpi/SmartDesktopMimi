@@ -17,6 +17,7 @@ import (
 
 type UbuntuSession struct {
 	Schema         int    `json:"schema_version"`
+	LoginSession   string `json:"login_session,omitempty"`
 	UID            uint32 `json:"uid"`
 	GID            uint32 `json:"gid"`
 	Unit           string `json:"unit"`
@@ -31,11 +32,16 @@ type UbuntuSession struct {
 	XAuthority     string `json:"xauthority"`
 }
 
+var ubuntuLoginID = regexp.MustCompile(`^[A-Za-z0-9]{1,32}$`)
+
 var ubuntuUnit = regexp.MustCompile(`^mimi-ubuntu-[a-z0-9-]{1,32}\.service$`)
 var ubuntuDisplay = regexp.MustCompile(`^:[0-9]{1,5}(?:\.[0-9])?$`)
 var ubuntuScreen = regexp.MustCompile(`^[1-9][0-9]{2,3}x[1-9][0-9]{2,3}$`)
 
 func (s UbuntuSession) validate() error {
+	if s.LoginSession != "" && !ubuntuLoginID.MatchString(s.LoginSession) {
+		return fmt.Errorf("invalid graphical login session")
+	}
 	if s.Schema != 1 || s.UID == 0 || s.GID == 0 || !ubuntuUnit.MatchString(s.Unit) || !ubuntuDisplay.MatchString(s.Display) || !ubuntuScreen.MatchString(s.Screen) {
 		return fmt.Errorf("invalid Ubuntu session scope")
 	}
@@ -120,7 +126,41 @@ func (s UbuntuSession) environment() ([]string, error) {
 	}
 	return []string{"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "HOME=" + u.HomeDir, "DISPLAY=" + s.Display, "XAUTHORITY=" + s.XAuthority}, nil
 }
+func checkUbuntuLoginProperties(s UbuntuSession, values map[string]string) error {
+	expected := map[string]string{"Id": s.LoginSession, "User": strconv.FormatUint(uint64(s.UID), 10), "Class": "user", "Type": "x11", "Remote": "no", "Active": "yes", "Seat": "seat0", "Display": s.Display, "Scope": "session-" + s.LoginSession + ".scope"}
+	for k, v := range expected {
+		if values[k] != v {
+			return fmt.Errorf("graphical login scope differs: %s", k)
+		}
+	}
+	return nil
+}
+func (s UbuntuSession) readyLogin() error {
+	if s.LoginSession == "" {
+		return nil
+	}
+	program, err := ubuntuProgram("/usr/bin/loginctl")
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, program, "show-session", s.LoginSession, "--property=Id,User,Class,Type,Remote,Active,Seat,Display,Scope")
+	cmd.Env = []string{"PATH=/usr/bin:/bin", "LANG=C"}
+	raw, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("graphical login no longer available")
+	}
+	values, err := unitProperties(raw)
+	if err != nil {
+		return err
+	}
+	return checkUbuntuLoginProperties(s, values)
+}
 func (s UbuntuSession) readyInputs() error {
+	if err := s.readyLogin(); err != nil {
+		return err
+	}
 	if err := trustedPinnedFile(s.Script, s.ScriptSHA256); err != nil {
 		return err
 	}
@@ -277,7 +317,11 @@ func ubuntuStart(c Config, s UbuntuSession, description, dir string) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"--quiet", "--collect", "--unit=" + s.Unit, "--service-type=exec", "--property=Description=" + description, "--property=User=" + strconv.FormatUint(uint64(s.UID), 10), "--property=Group=" + strconv.FormatUint(uint64(s.GID), 10), "--property=KillMode=control-group", "--property=TimeoutStopSec=5s", "--property=NoNewPrivileges=yes", "--property=UMask=0077", "--property=Restart=no", "--property=StandardOutput=journal", "--property=StandardError=journal", envProgram, "-i"}
+	args := []string{"--quiet", "--collect", "--unit=" + s.Unit, "--service-type=exec", "--property=Description=" + description, "--property=User=" + strconv.FormatUint(uint64(s.UID), 10), "--property=Group=" + strconv.FormatUint(uint64(s.GID), 10), "--property=KillMode=control-group", "--property=TimeoutStopSec=5s", "--property=NoNewPrivileges=yes", "--property=UMask=0077", "--property=Restart=no", "--property=StandardOutput=journal", "--property=StandardError=journal"}
+	if s.LoginSession != "" {
+		args = append(args, "--property=BindsTo=session-"+s.LoginSession+".scope", "--property=After=session-"+s.LoginSession+".scope")
+	}
+	args = append(args, envProgram, "-i")
 	args = append(args, env...)
 	args = append(args, python, "-I", s.Script, "run", "--release", dir, "--provider", s.Provider, "--runtime", s.Runtime, "--settings", s.Settings, "--screen", s.Screen)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "summary": "Implement trusted fixed-user graphical login platform bridge",
+  "context": "Prerecorded a9e190c; no application payload or trust changes; real login not performed",
+  "next_steps": "Build native and ARM64 updater; install root-controlled service and inspect actual no-login state; then actual graphical login",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Independent platform startup code and regression",
+      "invariants": "Fixed UID/logind/safe auth/shared lock/signatures; no GDMautologin/apppackage changes",
+      "paths": [
+        "services/mimi-ubuntu-provider/login.py",
+        "services/mimi-ubuntu-provider/README.md",
+        "packaging/mimi-ubuntu-login/mimi-ubuntu-login.service",
+        "services/mimi-update/update/ubuntu_session.go",
+        "services/mimi-update/update/ubuntu_session_test.go",
+        "tests/sdkbuild/test_ubuntu_login.py",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/batches/20261015-login052-implementation.json"
+      ],
+      "checks": [
+        {
+          "name": "Python authorization fixture first run",
+          "status": "failed",
+          "scope": "group-writable SDK directory correctly refused",
+          "evidence": "output/ubuntu-login-20261015/python-boundaries.log",
+          "reason": "Wrong fixture location, guard not relaxed"
+        },
+        {
+          "name": "Python13 boundary regressions",
+          "status": "passed",
+          "scope": "Local function/process tests, not graphical login",
+          "evidence": "output/ubuntu-login-20261015/python-boundaries-r2.log"
+        },
+        {
+          "name": "Go Ubuntu and StartSelected",
+          "status": "passed",
+          "scope": "Scope and shared-lock regressions, not actual graphical login",
+          "evidence": "output/ubuntu-login-20261015/go-session-regression-r2.log"
+        },
+        {
+          "name": "Service deployment and ordinary graphical login",
+          "status": "not_run",
+          "scope": "No actual platform deployment or graphical login yet",
+          "evidence": "output/ubuntu-login-20261015",
+          "reason": "Next step"
+        }
+      ]
+    }
+  ]
+}

@@ -148,3 +148,35 @@ to use the existing updater journal, admission and rollback logic.
 Integration code alone does not qualify a deployed session or a complete update
 transaction. See the gate record for actual tests and remaining physical/system
 acceptance. Automatic graphical-login integration is a separate pending step.
+
+## Enrolled local graphical login (REQ-MIMI-LOGIN-052)
+
+`login.py` is an independent root platform service, never an application payload
+or `.deb` maintainer script. Its root-controlled configuration pins the updater,
+updater configuration, and fixed-user session profile. The supplied systemd
+unit runs it at graphical.target; platform provisioning installs those files,
+trust, enrollment and Provider separately. It does not modify GDM autologin.
+
+The profile contains the existing UbuntuSession fields except display and
+xauthority. The updater configuration fixes a generated session.json under a
+root-owned `/run/mimi-ubuntu-login-NAME` directory and the profile runtime must
+be its `session` child. Persistent settings remain outside that directory.
+Configuration keys are schema_version, updater, updater_sha256,
+updater_config and session_profile. `--probe` checks actual logind without
+launching or writing any runtime configuration.
+
+Only the fixed user's unique active local X11 session on seat0/class=user can
+start the selected signed application. GDM uses the fixed user GDM Xauthority;
+LightDM uses that user's .Xauthority. The service reads through no-follow
+parent descriptors and makes a private temporary copy. It never logs cookies,
+reads another user's authorization or selects SSH/greeter/Wayland sessions.
+Wayland support remains unqualified. An optional login_session platform field
+adds an independent updater check and binds the non-root transient desktop
+unit to its logind session scope. Logout stops the desktop; starting a failed
+or manually closed desktop is not automatically repeated within that login.
+
+Runtime profile changes/stop use the existing application/system transaction
+lock; start-selected retains its own signature and live enrollment check.
+Unknown login/platform inputs fail without replacing trust or another unit.
+Actual ordinary graphical login/logout and update/data acceptance must be
+recorded separately from service installation or the no-login waiting state.

@@ -1,0 +1,20 @@
+[Unit]
+Description=SmartDesktopMimi enrolled local graphical login bridge
+After=systemd-logind.service display-manager.service
+Requires=systemd-logind.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -I /usr/lib/smartdesktopmimi-platform/login.py --config /etc/smartdesktopmimi-platform/login.json
+User=root
+Group=root
+UMask=0077
+Restart=no
+KillMode=control-group
+TimeoutStopSec=55s
+NoNewPrivileges=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target

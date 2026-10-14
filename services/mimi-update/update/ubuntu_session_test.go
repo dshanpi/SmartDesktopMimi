@@ -80,3 +80,38 @@ func TestUbuntuProcessMustMatchRealOwnerStartAndParent(t *testing.T) {
 		}
 	}
 }
+
+func TestUbuntuGraphicalLoginScope(t *testing.T) {
+	s := sessionFixture()
+	s.LoginSession = "42"
+	values := map[string]string{"Id": "42", "User": "1000", "Class": "user", "Type": "x11", "Remote": "no", "Active": "yes", "Seat": "seat0", "Display": ":110", "Scope": "session-42.scope"}
+	if err := s.validate(); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkUbuntuLoginProperties(s, values); err != nil {
+		t.Fatal(err)
+	}
+	for key, bad := range map[string]string{"Id": "43", "User": "125", "Class": "greeter", "Type": "wayland", "Remote": "yes", "Active": "no", "Seat": "seat1", "Display": ":0", "Scope": "session-c1.scope"} {
+		t.Run(key, func(t *testing.T) {
+			old := values[key]
+			values[key] = bad
+			defer func() { values[key] = old }()
+			if checkUbuntuLoginProperties(s, values) == nil {
+				t.Fatal("foreign or inactive login accepted")
+			}
+		})
+	}
+	for _, bad := range []string{"../1", "1 --all", "1.scope", "", "1\n"} {
+		if bad == "" {
+			continue
+		}
+		s.LoginSession = bad
+		if s.validate() == nil {
+			t.Fatal("invalid login ID")
+		}
+	}
+	s.LoginSession = ""
+	if err := s.validate(); err != nil {
+		t.Fatal("legacy explicit session changed", err)
+	}
+}
