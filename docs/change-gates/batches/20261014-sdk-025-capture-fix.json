@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Fix native SDK dependency resolution on multiarch Ubuntu",
+  "context": "Real capture rejected a missing native libstdc++ target because i386 package metadata overwrote amd64 entry",
+  "next_steps": "Capture again from clean source and run actual pinned SDK builds; no signed activation claimed",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-025",
+      "record": "docs/change-gates/REQ-MIMI-SDK-025.md",
+      "scope": "Capture architecture filter and regression tests",
+      "invariants": "Only amd64/all; missing native dependency refuses rather than host fallback; no host package changes",
+      "paths": [
+        "docs/change-gates/batches/20261014-sdk-025-capture-fix.json",
+        "docs/change-gates/REQ-MIMI-SDK-025.md",
+        "tools/sdkbuild/capture_ubuntu_sdk.py",
+        "tests/sdkbuild/test_ubuntu_sdk.py"
+      ],
+      "checks": [
+        {
+          "name": "First real capture",
+          "status": "failed",
+          "scope": "3397882 native input capture",
+          "evidence": "output/ubuntu-sdk-20261014/capture.log",
+          "reason": "i386 metadata overwrote amd64 dependency; missing target rejected"
+        },
+        {
+          "name": "Regression",
+          "status": "passed",
+          "scope": "10 Ubuntu SDK/deb/capture tests",
+          "evidence": "output/ubuntu-sdk-20261014/ubuntu-sdk-r2.log"
+        },
+        {
+          "name": "Actual fixed capture/build",
+          "status": "not_run",
+          "scope": "Native SDK and application",
+          "evidence": "docs/change-gates/REQ-MIMI-SDK-025.md",
+          "reason": "Await clean commit"
+        }
+      ]
+    }
+  ]
+}

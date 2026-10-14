@@ -25,11 +25,11 @@ ROOT_PACKAGES=('gcc-9','g++-9','binutils-x86-64-linux-gnu','libc6-dev',
                'libasound2-dev','libjson-c-dev','libcurl4-openssl-dev','base-files')
 
 def installed_inputs():
-    raw=subprocess.check_output(['dpkg-query','-W','-f=${binary:Package}\t${Version}\t${db:Status-Status}\t${Depends}\t${Pre-Depends}\t${Provides}\n'],text=True)
+    raw=subprocess.check_output(['dpkg-query','-W','-f=${binary:Package}\t${Version}\t${db:Status-Status}\t${Depends}\t${Pre-Depends}\t${Provides}\t${Architecture}\n'],text=True)
     packages={};providers={}
     for line in raw.splitlines():
-        name,version,status,depends,pre,provides=line.split('\t')
-        if status=='installed':
+        name,version,status,depends,pre,provides,architecture=line.split('\t')
+        if status=='installed' and architecture in ('amd64','all'):
             packages[name.split(':')[0]]=(name,version,','.join([depends,pre]))
             for item in provides.split(','):
                 virtual=re.split(r'[:\s(]',item.strip())[0]

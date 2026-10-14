@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 import test_deb as fixtures
 from sdk_targets import target_spec
+import capture_ubuntu_sdk as capture
 
 class UbuntuSDKTests(unittest.TestCase):
     def setUp(self):
@@ -77,5 +78,23 @@ class UbuntuDebTests(unittest.TestCase):
             identity[key]=old
         self.manifest['targets'][0]['capabilities']=['target-os:ubuntu:22.04']
         with self.assertRaises(ValueError):self.check()
+
+
+
+class CaptureDependencyTests(unittest.TestCase):
+    def inputs(self,raw):
+        def output(command,**kwargs):
+            return raw if '-W' in command else ''
+        with patch.object(capture,'ROOT_PACKAGES',('compiler',)),patch.object(capture.subprocess,'check_output',side_effect=output):
+            return capture.installed_inputs()[0]
+    def test_other_architecture_cannot_overwrite_same_package_name(self):
+        raw='compiler\t1\tinstalled\tlibc, awk\t\t\tamd64\nlibc:amd64\t2\tinstalled\t\t\t\tamd64\nlibc:i386\t3\tinstalled\t\t\t\ti386\nmawk\t1\tinstalled\t\t\tawk\tamd64\n'
+        selected=self.inputs(raw);self.assertEqual(selected['libc']['package'],'libc:amd64');self.assertIn('mawk',selected)
+    def test_wrong_arch_only_dependency_is_not_a_fallback(self):
+        raw='compiler\t1\tinstalled\tlibc\t\t\tamd64\nlibc:i386\t3\tinstalled\t\t\t\ti386\n'
+        with self.assertRaisesRegex(ValueError,'Unresolved'):self.inputs(raw)
+    def test_installed_alternative_and_dependency_cycle(self):
+        raw='compiler\t1\tinstalled\tabsent | helper\t\t\tamd64\nhelper\t1\tinstalled\tcompiler\t\t\tall\n'
+        self.assertEqual(set(self.inputs(raw)),{'compiler','helper'})
 
 if __name__=='__main__':unittest.main()

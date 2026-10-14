@@ -27,3 +27,8 @@ tools/update/application_sdk.py、application_build.py、cmake/application-sdk.c
 ## 提交前回归
 passed：SDK/服务54项（sdk-tests-r1.log），新增Ubuntu目标/前缀/OS拒绝及真实amd64 deb档案检查；此deb使用明确fixture verifier，不是签名安装。后续环境隔离/架构记录修改后重跑原15项和新增7项均passed。架构74项passed。更新/发布工具首轮因PATH未包含既有Go失败（update-tests.log），补构建PATH后116项passed（update-tests-r2.log），未改产品逻辑绕过。冻结V1和公开源码审计通过。
 捕获预检最初遇到dpkg虚拟依赖awk，改为解析已安装Provides闭包；不安装新包。预检所需空间小于1GB，主机可用45GB。限制捕获头文件、链接库/对象/pkg-config、GCC内部输入和os-release，排除普通服务配置/可执行文件；编译器宿主运行库锁定并由verify_sdk复核。实际捕获和新SDK编译仍待固定源码后执行。
+
+### 实际捕获失败与修复计划（先记后修）
+3397882首次捕获failed，capture.log：GCC的libstdc++.so链接目标不在已选输入中。调查发现主机同时安装amd64/i386的同名libstdc++6，依赖索引按去架构包名覆盖，误选i386；不能跳过链接/清单检查。下一步将捕获严格限定amd64/all，新增多架构同名包和虚拟依赖回归，再生成新输入。原目标未生成，临时材料自动清理，未修改主机。
+
+多架构修复回归passed：ubuntu-sdk-r2.log 10项（新增amd64/i386同名不覆盖、只有错误架构不得回退、虚拟/候选依赖与循环解析）。实际新捕获和构建not_run，接续本轮。
