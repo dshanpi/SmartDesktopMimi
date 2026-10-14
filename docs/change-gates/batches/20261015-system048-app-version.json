@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "为新系统rc2兼容性验收建立独立应用rc23，原签名包不改。",
+  "context": "源码UI/硬件接口代码未变；新version是新的测试兼容输入与factory所需，不是文档触发重编。",
+  "next_steps": "固定实际app sourcecommit和现存A133 SDK pin构建，再用原产品key签名本地候选。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-048",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+      "scope": "本地A133 rc23应用与sysrc2测试配对",
+      "invariants": "已装rc17/旧包不改，不扩大平台或运行库范围，旧信任/绑定不变，不上传应用/Release。",
+      "paths": [
+        "VERSION",
+        "docs/change-gates/batches/20261015-system048-app-version.json"
+      ],
+      "checks": [
+        {
+          "name": "rc23构建/签名及实机",
+          "status": "not_run",
+          "scope": "source commit随后固定，旧SDK pin保持",
+          "evidence": "output/system-baseline-rc2-20261015",
+          "reason": "事前版本变更，接续实际构建"
+        }
+      ]
+    }
+  ]
+}
