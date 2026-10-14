@@ -6,8 +6,11 @@ endif()
 set(CMAKE_C_STANDARD 11)
 set(ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 set(APP ${ROOT}/apps/lv_port_linux/src)
-add_executable(mimi-ubuntu-provider provider.c ${APP}/ipc/ipc_socket.c
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JSONC REQUIRED IMPORTED_TARGET json-c)
+add_executable(mimi-ubuntu-provider provider.c v2_server.c ${APP}/ipc/ipc_v2.c ${APP}/ipc/ipc_socket.c
   ${APP}/system/config/app_config.c ${APP}/system/log/app_log.c)
-target_include_directories(mimi-ubuntu-provider PRIVATE ${APP})
+target_include_directories(mimi-ubuntu-provider PRIVATE ${APP} ${ROOT}/core/ports)
+target_link_libraries(mimi-ubuntu-provider PRIVATE PkgConfig::JSONC)
 target_compile_definitions(mimi-ubuntu-provider PRIVATE _GNU_SOURCE)
 target_compile_options(mimi-ubuntu-provider PRIVATE -Wall -Wextra -Werror)

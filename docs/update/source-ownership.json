@@ -334,6 +334,12 @@
     },
     "services/mimi-ubuntu-provider/provider.c": {
       "owner": "platform"
+    },
+    "services/mimi-ubuntu-provider/v2_server.c": {
+      "owner": "platform"
+    },
+    "services/mimi-ubuntu-provider/v2_server.h": {
+      "owner": "platform"
     }
   },
   "migration_complete": false,

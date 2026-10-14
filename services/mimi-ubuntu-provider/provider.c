@@ -1,6 +1,7 @@
 /* Ubuntu session service. It never loads a board driver or changes host settings.
  * V1 message definitions are shared with the unchanged desktop contract. */
 #include "ipc/ipc_socket.h"
+#include "v2_server.h"
 #include "middleware/middleware.h"
 #include "system/backend_types.h"
 #include <arpa/inet.h>
@@ -153,14 +154,17 @@ int main(int argc,char **argv) {
     if(argc!=3 || strcmp(argv[1],"--socket")) {fputs("usage: mimi-ubuntu-provider --socket PRIVATE_DIRECTORY/ipc.sock\n",stderr);return 2;}
     umask(0077);signal(SIGINT,stop);signal(SIGTERM,stop);signal(SIGPIPE,SIG_IGN);
     int lock=endpoint_lock(argv[2]);if(lock<0) {fputs("Provider refused: private directory, endpoint or single-instance lock invalid\n",stderr);return 1;}
-    int server=socket(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK,0);int rc=1;bool bound=false;struct stat owned={0};
+    int server=socket(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK,0);int rc=1;bool bound=false, v2_started=false;struct stat owned={0};
     struct sockaddr_un addr={.sun_family=AF_UNIX};snprintf(addr.sun_path,sizeof(addr.sun_path),"%s",argv[2]);
     if(server<0 || bind(server,(struct sockaddr*)&addr,sizeof(addr)))goto done;
     bound=true;if(lstat(argv[2],&owned) || chmod(argv[2],0600) || listen(server,CLIENTS))goto done;
+    if(ubuntu_v2_start(argv[2]))goto done;
+    v2_started=true;
     struct client clients[CLIENTS];for(int i=0;i<CLIENTS;i++){memset(&clients[i],0,sizeof(clients[i]));clients[i].fd=-1;}
     fputs("Ubuntu session provider ready (local network observation; board and cloud controls unavailable)\n",stdout);fflush(stdout);
     int64_t next=ticks()+2000;
     while(!stopping) {
+        if(ubuntu_v2_step())break;
         struct pollfd fds[CLIENTS+1]={{.fd=server,.events=POLLIN}};
         for(int i=0;i<CLIENTS;i++){fds[i+1].fd=clients[i].fd;fds[i+1].events=POLLIN;}
         int polled=poll(fds,CLIENTS+1,100);
@@ -186,6 +190,7 @@ int main(int argc,char **argv) {
     for(int i=0;i<CLIENTS;i++)disconnect(&clients[i]);
     rc=stopping?0:1;
 done:
+    if(v2_started)ubuntu_v2_stop();
     if(server>=0)close(server);
     if(bound){struct stat s;if(!lstat(argv[2],&s) && s.st_dev==owned.st_dev && s.st_ino==owned.st_ino)unlink(argv[2]);}
     close(lock);return rc;

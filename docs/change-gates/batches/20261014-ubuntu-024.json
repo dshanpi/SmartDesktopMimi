@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu private V2 query endpoint and real service regression",
+  "context": "Ubuntu independent provider lacked ping/descriptor; add existing V2 query contract without board controls or app UI changes",
+  "next_steps": "Build committed source and verify actual SDL plus Provider; qualified Ubuntu SDK/deb and A133 hardware qualification remain incomplete",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTU-024",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTU-024.md",
+      "scope": "Ubuntu platform service and native integration checks",
+      "invariants": "Frozen V1 and A133 unchanged; same UID/private endpoints; no controls or credentials; no release uploads",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UBUNTU-024.md",
+        "docs/change-gates/batches/20261014-ubuntu-024.json",
+        "docs/update/source-ownership.json",
+        "services/mimi-ubuntu-provider/CMakeLists.txt",
+        "services/mimi-ubuntu-provider/README.md",
+        "services/mimi-ubuntu-provider/provider.c",
+        "services/mimi-ubuntu-provider/v2_server.c",
+        "services/mimi-ubuntu-provider/v2_server.h",
+        "tests/sdkbuild/test_ubuntu_provider_v2.py",
+        "tests/sdkbuild/ubuntu_window_smoke.py"
+      ],
+      "checks": [
+        {
+          "name": "Host protocol/architecture validation",
+          "status": "passed",
+          "scope": "47 SDK tests, 74 architecture tests, frozen V1 and ownership/public audit",
+          "evidence": "output/ubuntu-v2-20261014/sdk-tests-final2.log; architecture.log; contracts.log; ownership.log; public-audit.json"
+        },
+        {
+          "name": "Fixed source build and actual native integration",
+          "status": "not_run",
+          "scope": "New Provider with unchanged desktop",
+          "evidence": "output/ubuntu-v2-20261014/",
+          "reason": "Pending clean source commit and build"
+        },
+        {
+          "name": "Full delivery",
+          "status": "blocked",
+          "scope": "Ubuntu deb and A133 system acceptance/publication",
+          "evidence": "docs/change-gates/REQ-MIMI-UBUNTU-024.md; REQ-MIMI-STABILITY-023.md",
+          "reason": "Ubuntu qualified platform/activation incomplete; A133 instability unresolved"
+        }
+      ]
+    }
+  ]
+}

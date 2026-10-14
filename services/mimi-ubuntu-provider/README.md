@@ -35,7 +35,28 @@ the offending connection; partial frames expire after five seconds. At most
 eight clients are retained, and inactive clients expire after twenty seconds.
 UI heartbeats keep active sessions connected. Payload bodies are never logged.
 
-V2 capability discovery, complete unavailable-control UX, session startup hooks,
+Complete capability-aware desktop UX, session startup hooks,
 trusted platform identity, Ubuntu SDK capture and signed amd64 deb installation,
 upgrade, rollback and data-preservation acceptance are still pending. Do not
 present this foundation or an SDL screenshot as completion of those gates.
+
+## V2 query endpoint (REQ-MIMI-UBUNTU-024)
+
+The service also owns `ABSOLUTE_SOCKET_PATH.v2` in the same private directory.
+Both endpoints must be ready before startup succeeds. V2 uses the existing
+4-byte big-endian length plus UTF-8 JSON envelope (schemaVersion 2, max64KiB).
+Only same-UID requests are accepted. Send `system.ping` or `platform.describe`
+with an empty object payload and a requestId. Responses echo the requestId.
+Unknown topics return UNKNOWN_TOPIC; query arguments return INVALID_ARGUMENT.
+Malformed envelopes, unsupported schemas, events/responses sent as requests,
+invalid UTF-8 and framing errors disconnect only that peer. The service uses
+json-c strict parsing and the shared V2 validator, with bounded receive/send
+buffers, 8 V2 peers, 5-second frame/reply deadlines and 20-second idle expiry.
+V1 has its own peer capacity; no payload is logged.
+
+The descriptor identifies ubuntu-host/x86_64, Provider0.2.0, Ports ABI2 and
+capabilities=0. SDL rendering belongs to the desktop, not this Provider.
+localNetworkObservation=true only describes the V1 getifaddrs snapshot; it does
+not claim Wi-Fi control, internet connectivity or a network V2 topic. This is
+not a signed installation identity. Ping means this process responds, not that
+the desktop, cloud binding or complete upgrade health check passed.

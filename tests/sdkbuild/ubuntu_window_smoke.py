@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import struct
 import subprocess
 import threading
 import time
@@ -73,6 +74,23 @@ def main():
     processes=[];result={'scope':('native desktop with real Ubuntu session provider; unsupported board/cloud controls remain unavailable' if provider else 'native desktop window with IPC sink; no real platform services'),'checks':[]}
     try:
         assert display!=':' and xvfb.poll() is None
+        if provider:
+            with socket.socket(socket.AF_UNIX) as query:
+                query.settimeout(3);query.connect(str(sock_path)+'.v2')
+                for topic in ('system.ping','platform.describe'):
+                    request=dict(schemaVersion=2,messageType='request',topic=topic,requestId='window-check',payload={})
+                    body=json.dumps(request).encode();query.sendall(struct.pack('>I',len(body))+body)
+                    def exact(n):
+                        b=b''
+                        while len(b)<n:
+                            part=query.recv(n-len(b));assert part;b+=part
+                        return b
+                    size=struct.unpack('>I',exact(4))[0];assert 0<size<=65536
+                    reply=json.loads(exact(size));assert reply['schemaVersion']==2 and reply['messageType']=='response'
+                    assert reply['requestId']=='window-check' and reply['topic']==topic and 'error' not in reply
+                    if topic=='system.ping':assert reply['payload']['alive'] is True
+                    else:assert reply['payload']['platformId']=='ubuntu-host' and reply['payload']['capabilities']==0
+                    result.setdefault('provider_v2',{})[topic]=reply['payload']
         for width,height in [(1024,768),(480,800),(800,480),(640,480)]:
             name=f'{width}x{height}';log=(out/(name+'.log')).open('w')
             env=dict(os.environ,DISPLAY=display,LV_PORT_LINUX_CONFIG=str(cfg),LV_SETTINGS_FILE=str(out/(name+'.settings')),SDL_AUDIODRIVER='dummy')
@@ -120,10 +138,11 @@ def main():
             provider.terminate();provider.wait(timeout=5);provider_log.close()
             result['provider_shutdown_exit']=provider.returncode
             result['provider_socket_removed']=not sock_path.exists()
+            result['provider_v2_socket_removed']=not Path(str(sock_path)+'.v2').exists()
         xvfb.terminate();xvfb.wait(timeout=5);xlog.close()
         (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         sock_path.unlink(missing_ok=True)
-        if provider and (result['provider_shutdown_exit'] != 0 or not result['provider_socket_removed']):
+        if provider and (result['provider_shutdown_exit'] != 0 or not result['provider_socket_removed'] or not result['provider_v2_socket_removed']):
             result.update(status='failed',error='Provider did not shut down cleanly')
             (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
             raise RuntimeError(result['error'])
