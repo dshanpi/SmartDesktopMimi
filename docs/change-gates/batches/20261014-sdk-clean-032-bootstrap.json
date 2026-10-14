@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Verify fresh metadata bootstrap and empty package/kernel caches before full build",
+  "context": "First supervisor rejected fresh host staging before launching product build",
+  "next_steps": "Match exact4 files and25 trusted host tool links, then complete clean build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-032",
+      "record": "docs/change-gates/REQ-MIMI-SDK-032.md",
+      "scope": "Actual preflight and fixed fresh bootstrap",
+      "invariants": "No old cached packages; original failures retained; no signing/boot gate bypass",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-032.md",
+        "docs/change-gates/batches/20261014-sdk-clean-032-bootstrap.json"
+      ],
+      "checks": [
+        {
+          "name": "clean preparation and five-package metadata",
+          "status": "passed",
+          "scope": "97 fixed components, preserved old caches",
+          "evidence": "output/sdk-clean-product-20261014/metadata-result.json"
+        },
+        {
+          "name": "first supervisor start",
+          "status": "failed",
+          "scope": "Pre-build only",
+          "reason": "Fresh metadata staging exists; no product build started",
+          "evidence": "output/sdk-clean-product-20261014/supervisor-r1.log"
+        }
+      ]
+    }
+  ]
+}

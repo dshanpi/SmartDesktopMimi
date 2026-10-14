@@ -9,3 +9,5 @@
 不变量：Boot0/U-Boot/BL31等受保护输入只读，不重编启动链；原SDK和所有已生成r11产物保持。用当前已通过的包索引检查器补充历史构建脚本的预检，记录独立checker来源与hash，不修改历史源码或伪造干净提交。旧factory13专供这个系统复现，不能覆盖板上rc17或冒充最新应用发版。工厂数据/设备凭据/单机身份和私钥不复制入公开包。T527/RK3576仍未验收。A133031省电观察不被重建触碰。
 
 本批开发文件：本门禁、索引及不可变批次。实际构建脚本/输入摘要/原始日志存output/sdk-clean-product-20261014，恢复缓存和构建产物都在.delivery。当前not_run：工作树check-only、缓存移动和完整clean构建；不提前标完成。后续真实镜像升级回退/断电/数据继续独立门禁，禁止发布。
+
+准备实际结果：首次check-only缺固定epoch被拒，r2绑定1791932282后passed。97组件HEAD/现有差异和八个启动输入已绑定；out/kernel output原子移至.delivery/sdk-cache-before-clean-20261014，未删除。新pack输入、黄金镜像及新生成五包索引passed。首次build supervisor在产品启动前拒绝staging_dir存在。复核为本轮metadata预检生成的4个regular host bootstrap文件及25个/usr/bin工具链接，目标均root拥有不可普通用户写，固定resolved/哈希；不含原build_dir/staging包缓存。两次汇总断言区分regular/link的日志说明保留；后续仅完全匹配fresh-bootstrap-files.json才启动，不泛化接受未知缓存。kernel output仍空、build_dir仍无。
