@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "summary": "记录真实authorizedUSB空key拒绝/安全复原和签名OTA主机门禁",
+  "context": "没有knownkey或新版本安装，MCP保存ADBbinding空已请用户补，sourcecandidate保持冻结",
+  "next_steps": "等待并核对设备4ADBbinding，新的临时authorized session正向认证/受控USB传输后再app23/OTA与完整真机；其他可执行项继续",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-051",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-051.md",
+      "scope": "ActualtemporaryUSB authentication observation/restoration and hostOTA verification",
+      "invariants": "no unauthdevelopment/keyregeneration/signtrustbindingreset/otherADBdevice/UARTpackage, exactconfigabsence andHID restored",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-051.md",
+        "docs/change-gates/batches/20261015-system051-auth-ota-progress.json"
+      ],
+      "checks": [
+        {
+          "name": "空allowlist与fixedUSB观察",
+          "status": "passed",
+          "scope": "serialmatchedphysicalslot; hostADB unauthorized; notknownkeypositivetest",
+          "evidence": "work/system051-bound-usb-current.json private and hostreadonlyADB output"
+        },
+        {
+          "name": "MCPADB接入",
+          "status": "blocked",
+          "scope": "saveddevice4 adbSerial empty, actualscope error, userresource askedonce",
+          "evidence": "output/system-baseline-rc2-20261015/system051-empty-key-shell-result.json",
+          "reason": "Requires user savedADBbinding to exactverifiedserial, no MCPbindingmutationcapability available"
+        },
+        {
+          "name": "公钥配置流程旧timerPIDguard",
+          "status": "failed",
+          "scope": "stopped beforepublickeywrite when exactownedPIDcmdline didnotmatch; nopidkill",
+          "evidence": "output/system-baseline-rc2-20261015/system051-public-key-config-result.json and TCANCEL51 private log",
+          "reason": "oldtimercheck mismatch retained; newtimerarmed, originalrestored and ownedscriptnoop afterverification"
+        },
+        {
+          "name": "原配置HID桌面恢复",
+          "status": "passed",
+          "scope": "actualabsence/HIDtest/healthidle0, closed41/42 and own futuretimer noop",
+          "evidence": "output/system-baseline-rc2-20261015/system051-restoration-result.json and system051-timer-noop.json"
+        },
+        {
+          "name": "Host signedOTA and3 negativecases",
+          "status": "passed",
+          "scope": "oldkey/two systemversions/factory/SWU plus genuineold17/newSys2 rejection; notphysical",
+          "evidence": "output/system-baseline-rc2-20261015/ota-admission-result.json and ota-pairing-negative-checks.json"
+        },
+        {
+          "name": "knownkey认证、实际传输和升级全矩阵",
+          "status": "not_run",
+          "scope": "no positiveauth/filetransfer/newapp/newkernelinstalled",
+          "evidence": "output/system-baseline-rc2-20261015",
+          "reason": "requires scopedbinding/auth and actualtrustedtransaction"
+        }
+      ]
+    }
+  ]
+}
