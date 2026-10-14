@@ -7,3 +7,6 @@
 与041方式的差异必须先明确：只有串口可见性与原生guard生命周期变化，镜像与工具不变。新一轮允许原MCP受控安装目标modepartition/verifytrue/postreboot，只有专用模式已证明同绑定online才写，未到阶段not_run；失败保留日志/最后阶段，不能自动反复调用同参数或以增加重连超时藏缺陷。若只捕获RAM加载器，必须使用已有受控能力并保留无介质写入边界，不能用诊断环境变量或裸CLI绕过MCP。
 
 不变量：不停止其他任务、不在任何activeflash时重启/断电/关闭通道，不修改USB绑定/vendorPolicy/可信钥/设备绑定，不替换flasher，不清理原失败或partial。UART原文0600并限大小，普通记录只有脱敏阶段/摘要；文件和图片经网络。诊断与新内核安装/稳定性/系统升级/回退/断电/全数据验收分开；未做不算通过。若发现包/SDK加载器问题，单独预记源码和受影响构建/签名门禁后修复，不能擅自重建受保护Boot0/U-Boot。当前源码分析、取证、模式/安装/GPT/数据/恢复均not_run，无上传。
+
+实际atomic请求（同guard、uboot_serial_efex、serial26 monitor保留、原包/工具）在介质写入前返回ALLWINNER_FEL_NOT_STABLE，没有创建flash task。串口明确当前U-Boot efex→BOOT0→eraly jump fel，同次随后独立扫描固定USB10/1online；不能把false确认当未进入FEL，也不在此误报后重复同请求。header/run/work_mode与当前SDK结构吻合，FES1和黄金Boot0的32项DRAM参数完全相同；未发现头解析错位证据。原SDK旧45bc镜像与新552镜像的FES1/sysconfig/board相同，UBoot/DTB不同；旧UBoot7bfa不等于黄金d461，不能把这个未验证旧包当恢复替代或因差异直接改受保护启动链。历史MCP两条成功task的version同0.2.11，仅提供历史，不推定本轮通过。SDK主机VMware未列出1F3A设备，尚不能证明所有USB归属原因。
+原root历史1008000限频已在早期SWU64978944B处失败，因此禁止重复限频实验。下一步独立核查先前未做的显示扫描隔离，与034“仅暂停UI”的失败条件对照；此诊断单独预记需求，镜像、SDK输入和flasher保持冻结，不将显示关闭当交付目标。

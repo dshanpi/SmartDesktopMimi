@@ -108,3 +108,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-SYSTEM-042](change-gates/REQ-MIMI-SYSTEM-042.md)：实际持久数据范围、精简恢复备份及写入前边界。
 
 - [REQ-MIMI-SYSTEM-043](change-gates/REQ-MIMI-SYSTEM-043.md)：FES加载器重连和原生同guard串口取证。
+
+- [REQ-MIMI-STABILITY-044](change-gates/REQ-MIMI-STABILITY-044.md)：显示扫描关闭与网络/内存写入隔离，结束恢复显示。

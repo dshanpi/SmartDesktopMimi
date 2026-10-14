@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "先检查显示扫描接口，复用UI暂停基线，隔离此前未测试的显示DMA与网络写入。",
+  "context": "UI-only及低CPU已失败，043未安装；不得重复同测试或把暂时黑屏当修复。",
+  "next_steps": "先恢复原系统、读取fb/disp/clock接口，只有可验证扫描关闭才临时隔离，最终恢复/健康。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-044",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-044.md",
+      "scope": "真实A133显示扫描隔离，非产品功能变更",
+      "invariants": "不变CPU/WiFi/SDK/包/信任；只有明确同instance恢复，未验证扫描停用不得继续对照，活跃observer不重启。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-044.md",
+        "docs/change-gates/batches/20261015-stability044-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "恢复/接口/显示扫描隔离",
+          "status": "not_run",
+          "scope": "A133V1.2实际显示驱动",
+          "evidence": "output/a133-display-isolation-20261015/result.json",
+          "reason": "实施前记录，先核对真实接口后决定是否可执行"
+        }
+      ]
+    }
+  ]
+}
