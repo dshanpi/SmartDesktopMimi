@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Gate clean kernel/rootfs product rebuild from restored private SDK",
+  "context": "Existing restored97 components and incrementalr11 do not qualify clean rebuild",
+  "next_steps": "Pinned worktree/check-only and reversible cache separation, clean build with protected boot chain",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-032",
+      "record": "docs/change-gates/REQ-MIMI-SDK-032.md",
+      "scope": "Pre-implementation clean reproduction plan",
+      "invariants": "No old source/tag overwrite, no bootloader rebuild, retain cache recovery and original inputs",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SDK-032.md",
+        "docs/change-gates/batches/20261014-sdk-clean-032.json"
+      ],
+      "checks": [
+        {
+          "name": "clean full product rebuild",
+          "status": "not_run",
+          "scope": "Fixed old system baseline, not device acceptance",
+          "reason": "Gate recorded before setup/build",
+          "evidence": "docs/change-gates/REQ-MIMI-SDK-032.md"
+        }
+      ]
+    }
+  ]
+}
