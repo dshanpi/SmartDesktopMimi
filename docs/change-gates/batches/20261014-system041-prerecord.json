@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Prerecord signed baseline installation using scoped partition mode with retained data",
+  "context": "Clean image/native inspect/FEL and current critical snapshot verified; no firmware written yet",
+  "next_steps": "Scoped FEL readback, partition-only native flash verification, actual new kernel and data acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "A133V1.2 fixed project4/device4/USB, newimage55297181 and originalrc17 data",
+      "invariants": "No erasing persistent data/B slots or raw whole-disk, no unverified transition or policy bypass, real task phase evidence only",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/20261014-system041-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "real signed initial system install and data verification",
+          "status": "not_run",
+          "scope": "Actual selected candidate and board",
+          "reason": "Prerecorded before any firmware write",
+          "evidence": "output/system-clean-flash-20261014"
+        }
+      ]
+    }
+  ]
+}
