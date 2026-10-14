@@ -17,6 +17,7 @@ import tarfile
 import tempfile
 
 from configure import validate, check_sdk
+from sdk_targets import target_spec
 from application_sdk import verify_sdk
 from application_build import load
 
@@ -121,6 +122,7 @@ def build_deb(profile_path, sdk, bundle, verifier, trust, device, output, epoch,
         if digest(payload/'application.tar.gz') != manifest['package_sha256']:
             raise ValueError('Archive hash changed')
         (payload/'build-profile.json').write_text(json.dumps(profile, sort_keys=True, indent=2)+'\n')
+        deb_arch=target_spec(profile['platform_id'],profile['architecture'],profile['target_os'])['deb_architecture']
         package = 'smartdesktopmimi-bundle-' + profile['platform_id']
         version = deb_version(manifest['version'])
         control = stage/'DEBIAN'; control.mkdir()
@@ -129,7 +131,7 @@ def build_deb(profile_path, sdk, bundle, verifier, trust, device, output, epoch,
 Version: {version}
 Section: misc
 Priority: optional
-Architecture: arm64
+Architecture: {deb_arch}
 Maintainer: {maintainer}
 Installed-Size: {installed_size}
 Description: Signed SmartDesktopMimi application transport bundle
@@ -156,12 +158,13 @@ verified release hash. Its inner signature covers the application, not dpkg meta
             os.utime(path, (epoch, epoch))
         os.utime(stage, (epoch, epoch))
         result = temp/'result'; result.mkdir()
-        archive = result/f'{package}_{version}_arm64.deb'
+        archive = result/f'{package}_{version}_{deb_arch}.deb'
         subprocess.run(['dpkg-deb', '--root-owner-group', '-Zgzip', '--build', str(stage), str(archive)],
                        env={**os.environ, 'SOURCE_DATE_EPOCH': str(epoch)}, check=True)
         lock = dict(schema_version=1, kind='application-deb-transport', source_commit=manifest['commit'],
                     application_version=manifest['version'], deb_version=version,
                     platform_id=profile['platform_id'], target_os=profile['target_os'],
+                    architecture=profile['architecture'], deb_architecture=deb_arch,
                     target_os_version=sdk_record['target_os_version'], sdk_lock_sha256=profile['sdk_lock_sha256'],
                     application_sha256=manifest['package_sha256'], manifest_sha256=digest(payload/'manifest.json'),
                     deb_sha256=digest(archive), source_date_epoch=epoch,

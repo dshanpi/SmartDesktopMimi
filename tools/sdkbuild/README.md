@@ -97,3 +97,27 @@ in the [Debian maintainer-script policy](https://www.debian.org/doc/debian-polic
 
 ## Native Ubuntu session service foundation
 `native_ubuntu.py` builds and records a separate `provider-build/mimi-ubuntu-provider` beside the native desktop. See [its scope and runtime isolation](../../services/mimi-ubuntu-provider/README.md). Run window verification with `tests/sdkbuild/ubuntu_window_smoke.py --binary DESKTOP --provider PROVIDER --output NEW_DIRECTORY` to use this actual process rather than the sink fixture. Network snapshots and explicit unsupported responses are implemented; complete Ubuntu platform capabilities, trustworthy SDK/identity, signed amd64 deb activation, upgrade and data acceptance remain pending. This service must not be included in a pure application update package.
+
+## Ubuntu x86_64 pinned SDK development target
+
+REQ-MIMI-SDK-025 adds the explicit ubuntu-host/x86_64/ubuntu tuple to the
+schema2 SDK, profile, independent build receipt and amd64 deb transport path.
+A133 keeps its aarch64 target; no T527/RK3576 or arbitrary mixed tuple is added.
+The native development receipt from native_ubuntu.py is still not an SDK lock.
+
+On an Ubuntu x86_64 GCC9 host, capture_ubuntu_sdk.py --output NEW_DIRECTORY
+--baseline BASELINE_ID captures installed package-owned build headers/libraries
+and compiler inputs. --dry-run reports size first. No package installation or
+host configuration changes are made. The snapshot records package versions,
+actual file hashes, capture recipe and compiler host runtime hashes; builds
+reject modified inputs or a different host runtime. This is an input snapshot,
+not an official package mirror, a redistribution licence audit or platform
+qualification. Use the returned sdk-lock.json hash externally with configure.py;
+select --platform ubuntu-host --target-os ubuntu. Build choices remain CLI-only.
+
+The .deb stages a previously signed application bundle. It does not install the
+platform Provider, trust or identity and has no activation maintainer scripts.
+Real signed amd64 installation/activation, rollback, startup, data preservation
+and release acceptance remain separate gates; fixture archive tests do not pass
+them. Never relabel an A133 receipt or native development binary as a qualified
+Ubuntu application build.

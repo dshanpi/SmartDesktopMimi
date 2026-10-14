@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "Explicit Ubuntu x86_64 pinned SDK and amd64 transport tuple",
+  "context": "User chose Ubuntu development host; existing SDK and deb tools were hardcoded A133/ARM64",
+  "next_steps": "Capture real package-owned SDK inputs and compile exact source; trusted platform and actual signed deb activation remain pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-025",
+      "record": "docs/change-gates/REQ-MIMI-SDK-025.md",
+      "scope": "SDK input capture, exact tuple validation, compiler and receipt binding, amd64 transport metadata",
+      "invariants": "A133 behavior preserved; no mixed targets or host input fallback; no credentials/Provider in app payload; no upload",
+      "paths": [
+        "cmake/application-sdk.cmake",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SDK-025.md",
+        "docs/change-gates/batches/20261014-sdk-025.json",
+        "tests/sdkbuild/test_ubuntu_sdk.py",
+        "tools/sdkbuild/README.md",
+        "tools/sdkbuild/capture_ubuntu_sdk.py",
+        "tools/sdkbuild/configure.py",
+        "tools/sdkbuild/package_deb.py",
+        "tools/update/application_build.py",
+        "tools/update/application_sdk.py",
+        "tools/update/sdk_targets.py"
+      ],
+      "checks": [
+        {
+          "name": "SDK and archive tests",
+          "status": "passed",
+          "scope": "54 suite then affected15+7 rerun; real fixture amd64 archive, not actual signed package",
+          "evidence": "output/ubuntu-sdk-20261014/sdk-tests-r1.log; deb-final.log; ubuntu-sdk-final.log"
+        },
+        {
+          "name": "Architecture and update regression",
+          "status": "passed",
+          "scope": "74 architecture and116 update tests; initial PATH failure retained",
+          "evidence": "output/ubuntu-sdk-20261014/architecture-r1.log; update-tests.log; update-tests-r2.log"
+        },
+        {
+          "name": "Actual SDK capture/build and signed installation",
+          "status": "not_run",
+          "scope": "Ubuntu real inputs and actual activation",
+          "evidence": "docs/change-gates/REQ-MIMI-SDK-025.md",
+          "reason": "Commit capture recipe and build against pinned real input first"
+        }
+      ]
+    }
+  ]
+}

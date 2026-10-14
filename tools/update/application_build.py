@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 import source_ownership
+from sdk_targets import target_spec
 
 
 def digest(path):
@@ -84,7 +85,7 @@ def verify_receipt(receipt, desktop, root):
     if receipt.is_symlink() or not receipt.is_file():raise ValueError('build receipt must be a regular file')
     r=load(receipt)
     if r.get('schema_version')!=1 or r.get('kind')!='application-build':raise ValueError('unknown application build receipt')
-    if r.get('platform_id')!='a133' or r.get('architecture')!='aarch64':raise ValueError('unqualified application build platform')
+    target_spec(r.get('platform_id'),r.get('architecture'),r.get('target_os','tina'))
     for value in [r.get('sdk_lock_sha256',''),r.get('desktop_sha256',''),r.get('build',{}).get('compile_commands_sha256','')]:
         if not re.fullmatch('[a-f0-9]{64}',value):raise ValueError('missing build input/output hash')
     if not re.fullmatch('[a-f0-9]{40}',r.get('source',{}).get('commit','')) or type(r['source'].get('dirty')) is not bool:

@@ -13,8 +13,9 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools/update'))
 from application_sdk import verify_sdk, sdk_target, compiler_environment
+from sdk_targets import target_spec
 
-PLATFORMS = {'a133': 'integrated', 't527': 'pending', 'rk3576': 'pending'}
+PLATFORMS = {'a133': 'integrated', 'ubuntu-host': 'integrated', 't527': 'pending', 'rk3576': 'pending'}
 FORMATS = {'tina': 'mimi-application', 'debian': 'deb', 'ubuntu': 'deb'}
 
 
@@ -45,8 +46,7 @@ def validate(profile):
         raise ValueError('Platform requires its SDK, Provider and board qualification first')
     if profile['target_os'] not in FORMATS or profile['package_format'] != FORMATS[profile['target_os']]:
         raise ValueError('Package format does not match target OS')
-    if profile['architecture'] != 'aarch64':
-        raise ValueError('Unsupported architecture for the selected platform')
+    target_spec(profile['platform_id'],profile['architecture'],profile['target_os'])
     if not re.fullmatch(r'[a-f0-9]{64}', profile['sdk_lock_sha256']):
         raise ValueError('SDK must have an externally pinned SHA256')
     if not isinstance(profile['system_baseline'],str) or not profile['system_baseline']:
@@ -75,16 +75,18 @@ def check_sdk(profile, sdk, link_probe=True):
             raise ValueError('SDK/profile mismatch: ' + field)
     if profile['target_os'] != target_os:
         raise ValueError('SDK target OS does not match the package target; Tina SDK cannot produce a Debian delivery')
+    spec=target_spec(profile['platform_id'],profile['architecture'],profile['target_os'])
+    multiarch=spec['multiarch']
     required = ['alsa/asoundlib.h','json-c/json.h','curl/curl.h',
-                'libevdev-1.0/libevdev/libevdev.h']
-    include_roots = [sdk/'sysroot/usr/include', sdk/'sysroot/usr/include/aarch64-linux-gnu']
+                'SDL2/SDL.h' if spec['native'] else 'libevdev-1.0/libevdev/libevdev.h']
+    include_roots = [sdk/'sysroot/usr/include', sdk/'sysroot/usr/include'/multiarch]
     missing = [p for p in required if not any((root/p).is_file() for root in include_roots)]
     prefix = sdk_target(record, sdk)['compiler_prefix']
     compiler = sdk/'toolchain/bin'/(prefix+'gcc')
     if not compiler.is_file(): missing.append('toolchain/bin/'+prefix+'gcc')
     if missing: raise ValueError('Missing SDK inputs: ' + ', '.join(missing))
     machine = subprocess.check_output([str(compiler),'-dumpmachine'],text=True,env=compiler_environment()).strip()
-    machines = ('aarch64-openwrt-linux', 'aarch64-openwrt-linux-gnu') if target_os == 'tina' else ('aarch64-linux-gnu',)
+    machines = ('aarch64-openwrt-linux', 'aarch64-openwrt-linux-gnu') if target_os == 'tina' else (multiarch,)
     if machine not in machines:
         raise ValueError('Compiler target differs from locked SDK')
     if link_probe:
@@ -92,7 +94,11 @@ def check_sdk(profile, sdk, link_probe=True):
             p=Path(temporary)
             (p/'probe.c').write_text('#include <alsa/asoundlib.h>\n#include <curl/curl.h>\n#include <json-c/json.h>\n#include <libevdev/libevdev.h>\nint main(void){CURL*c=curl_easy_init();curl_easy_cleanup(c);struct libevdev *d=libevdev_new();libevdev_free(d);struct json_object *j=json_object_new_object();json_object_put(j);return snd_asoundlib_version()==0;}\n')
             sysroot=sdk/'sysroot'
-            command=[str(compiler),f'--sysroot={sysroot}',f'-I{sysroot}/usr/include',f'-I{sysroot}/usr/include/aarch64-linux-gnu',f'-I{sysroot}/usr/include/libevdev-1.0',str(p/'probe.c'),f'-L{sysroot}/usr/lib/aarch64-linux-gnu',f'-L{sysroot}/usr/lib',f'-Wl,-rpath-link,{sysroot}/lib',f'-Wl,-rpath-link,{sysroot}/usr/lib',f'-Wl,-rpath-link,{sysroot}/lib/aarch64-linux-gnu',f'-Wl,-rpath-link,{sysroot}/usr/lib/aarch64-linux-gnu','-lasound','-ljson-c','-levdev','-lcurl','-o',str(p/'probe')]
+            if spec['native']:
+                (p/'probe.c').write_text('#include <SDL2/SDL.h>\n#include <SDL2/SDL_image.h>\n#include <alsa/asoundlib.h>\n#include <curl/curl.h>\n#include <json-c/json.h>\nint main(void){struct json_object*j=json_object_new_object();json_object_put(j);CURL*c=curl_easy_init();curl_easy_cleanup(c);SDL_Quit();return IMG_Linked_Version()==0 || snd_asoundlib_version()==0;}\n')
+            command=[str(compiler),f'--sysroot={sysroot}',f'-I{sysroot}/usr/include',f'-I{sysroot}/usr/include/{multiarch}',f'-I{sysroot}/usr/include/libevdev-1.0',str(p/'probe.c'),f'-L{sysroot}/usr/lib/{multiarch}',f'-L{sysroot}/usr/lib',f'-Wl,-rpath-link,{sysroot}/lib',f'-Wl,-rpath-link,{sysroot}/usr/lib',f'-Wl,-rpath-link,{sysroot}/lib/{multiarch}',f'-Wl,-rpath-link,{sysroot}/usr/lib/{multiarch}','-lasound','-ljson-c','-levdev','-lcurl','-o',str(p/'probe')]
+            if spec['native']:
+                command.remove('-levdev');command.extend(['-lSDL2','-lSDL2_image'])
             result=subprocess.run(command,env={**compiler_environment(),'STAGING_DIR':str(sdk)},stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
             if result.returncode: raise ValueError('Target dependency link failed:\n'+result.stdout[-4000:])
     return {'sdk_verified':True,'compiler':machine,'dependency_link':'passed' if link_probe else 'not_run',
@@ -103,7 +109,7 @@ def configure(args):
     if args.interactive:
         args.sdk=Path(input('SDK directory: ').strip())
         args.sdk_sha256=input('Reviewed sdk-lock.json SHA256: ').strip()
-        args.platform=input('Platform [a133; t527/rk3576 pending]: ').strip() or 'a133'
+        args.platform=input('Platform [a133/ubuntu-host; t527/rk3576 pending]: ').strip() or 'a133'
         args.target_os=input('Target OS [tina/debian/ubuntu]: ').strip() or 'tina'
         args.screen=(input('Screen list, comma separated [1024x768]: ').strip() or '1024x768').split(',')
     if not args.sdk or not args.sdk_sha256 or not args.screen:

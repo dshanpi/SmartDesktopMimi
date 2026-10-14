@@ -12,6 +12,8 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import platform
+from sdk_targets import target_spec
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -20,7 +22,9 @@ def compiler_environment():
     # Host search overrides must not leak headers, libraries or helper tools
     # into a build attributed to the pinned target SDK.
     excluded = {'CPATH', 'C_INCLUDE_PATH', 'CPLUS_INCLUDE_PATH', 'OBJC_INCLUDE_PATH',
-                'LIBRARY_PATH', 'COMPILER_PATH', 'GCC_EXEC_PREFIX', 'PKG_CONFIG_PATH'}
+                'LIBRARY_PATH', 'COMPILER_PATH', 'GCC_EXEC_PREFIX', 'PKG_CONFIG_PATH',
+                'LD_LIBRARY_PATH', 'LD_PRELOAD', 'LD_AUDIT', 'CC', 'CXX', 'CFLAGS',
+                'CXXFLAGS', 'CPPFLAGS', 'LDFLAGS', 'PKG_CONFIG_LIBDIR', 'PKG_CONFIG_SYSROOT_DIR'}
     return {key: value for key, value in os.environ.items() if key not in excluded}
 
 
@@ -58,13 +62,14 @@ def inventory(root):
 
 def sdk_target(record, sdk):
     """Validate compiler and OS provenance without executing target code."""
+    spec = target_spec(record.get('platform_id'), record.get('architecture'), record.get('target_os','tina'))
     if record.get('schema_version') == 1:
         if record.get('target_os', 'tina') != 'tina':
             raise ValueError('legacy SDK target OS is Tina only; use schema 2')
-        return {'target_os': 'tina', 'compiler_prefix': 'aarch64-openwrt-linux-'}
+        return {'target_os': 'tina', **spec}
     if record.get('schema_version') != 2 or record.get('target_os') not in ('debian', 'ubuntu'):
         raise ValueError('unsupported SDK target/schema')
-    if record.get('compiler_prefix') != 'aarch64-linux-gnu-':
+    if record.get('compiler_prefix') != spec['compiler_prefix']:
         raise ValueError('unsupported Debian compiler prefix')
     version = record.get('target_os_version', '')
     if not isinstance(version, str) or not re.fullmatch(r'[0-9]+(?:\.[0-9]+){0,2}', version):
@@ -83,9 +88,9 @@ def sdk_target(record, sdk):
     if fields.get('ID') != record['target_os'] or fields.get('VERSION_ID') != version:
         raise ValueError('SDK target OS differs from sysroot os-release')
     for name in ('gcc', 'g++', 'ar', 'ranlib', 'strip'):
-        tool = sdk/'toolchain/bin'/('aarch64-linux-gnu-' + name)
+        tool = sdk/'toolchain/bin'/(spec['compiler_prefix'] + name)
         if not tool.is_file(): raise ValueError('SDK compiler tool missing: ' + name)
-    return {key: record[key] for key in ('target_os', 'target_os_version', 'compiler_prefix')}
+    return {**spec, **{key: record[key] for key in ('target_os', 'target_os_version', 'compiler_prefix')}}
 
 
 def verify_sdk(sdk, expected=None):
@@ -94,12 +99,25 @@ def verify_sdk(sdk, expected=None):
     if expected is not None and (not re.fullmatch('[a-f0-9]{64}',expected) or digest(lock)!=expected):
         raise ValueError('SDK lock does not match externally pinned SHA256')
     record=load(lock)
-    if record.get('schema_version') not in (1,2) or record.get('platform_id')!='a133' or record.get('architecture')!='aarch64':
+    if record.get('schema_version') not in (1,2):
         raise ValueError('unsupported SDK target/schema')
+    target_spec(record.get('platform_id'), record.get('architecture'), record.get('target_os','tina'))
     if not isinstance(record.get('system_baseline'),str) or not re.fullmatch('[A-Za-z0-9][A-Za-z0-9._-]{0,191}',record['system_baseline']):
         raise ValueError('missing/invalid SDK system baseline')
     if inventory(sdk)!=record['files']:raise ValueError('SDK input differs from its lock')
     sdk_target(record, sdk)
+    capture=record.get('capture')
+    if capture is not None:
+        if record['platform_id']!='ubuntu-host' or capture.get('kind')!='installed-package-input-snapshot':
+            raise ValueError('Unknown SDK capture recipe')
+        runtime=capture.get('host_runtime')
+        if not isinstance(runtime,dict) or not runtime:
+            raise ValueError('SDK compiler host runtime lock required')
+        for name,want in runtime.items():
+            if not isinstance(name,str) or not name.startswith(('/lib/','/lib64/','/usr/lib/','/usr/lib64/')) or '..' in Path(name).parts or not re.fullmatch('[a-f0-9]{64}',want):
+                raise ValueError('Invalid SDK compiler host runtime input')
+            if not Path(name).is_file() or digest(Path(name))!=want:
+                raise ValueError('SDK compiler host runtime changed: '+name)
     return record
 
 
@@ -110,6 +128,8 @@ def main():
     p.add_argument('--toolchain',type=Path)
     p.add_argument('--sysroot',type=Path)
     p.add_argument('--baseline')
+    p.add_argument('--platform',choices=['a133','ubuntu-host'],default='a133')
+    p.add_argument('--architecture',choices=['aarch64','x86_64'],default='aarch64')
     p.add_argument('--target-os',choices=['tina','debian','ubuntu'],default='tina')
     p.add_argument('--target-os-version',help='Required for Debian/Ubuntu; must match target sysroot os-release')
     p.add_argument('--expected-sdk-sha256',help='externally pinned sdk-lock.json hash; required for build')
@@ -118,6 +138,7 @@ def main():
     if a.operation=='build' and not a.expected_sdk_sha256:p.error('build requires --expected-sdk-sha256 from the selected SDK version')
     if a.operation=='export':
         if not a.toolchain or not a.sysroot or not a.baseline:p.error('export requires --toolchain, --sysroot and --baseline')
+        selected=target_spec(a.platform,a.architecture,a.target_os)
         if sdk.exists():p.error('SDK destination already exists')
         sdk.parent.mkdir(parents=True,exist_ok=True)
         with tempfile.TemporaryDirectory(prefix='.sdk-',dir=sdk.parent) as temporary:
@@ -138,10 +159,10 @@ def main():
                     destination=staging/'sysroot'/relative
                     destination.parent.mkdir(parents=True,exist_ok=True)
                     shutil.copytree(source,destination,symlinks=True)
-            record={'schema_version':1,'platform_id':'a133','architecture':'aarch64','system_baseline':a.baseline,'excluded':excluded,'files':inventory(staging)}
+            record={'schema_version':1,'platform_id':a.platform,'architecture':a.architecture,'system_baseline':a.baseline,'excluded':excluded,'files':inventory(staging)}
             if a.target_os != 'tina':
                 record.update(schema_version=2,target_os=a.target_os,target_os_version=a.target_os_version,
-                              compiler_prefix='aarch64-linux-gnu-')
+                              compiler_prefix=selected['compiler_prefix'])
             sdk_target(record, staging)
             (staging/'sdk-lock.json').write_text(json.dumps(record,indent=2,sort_keys=True)+'\n')
             os.rename(staging,sdk)
@@ -154,8 +175,14 @@ def main():
         # A failed rebuild must not leave an earlier successful receipt usable.
         (a.build_dir/'application-build.json').unlink(missing_ok=True)
         target=sdk_target(record,sdk)
+        if target['native'] and (platform.system()!='Linux' or platform.machine()!='x86_64'):
+            p.error('Ubuntu-host SDK requires a Linux x86_64 build host')
         env={**compiler_environment(),'MIMI_SDK_ROOT':str(sdk),'STAGING_DIR':str(sdk),
-             'MIMI_COMPILER_PREFIX':target['compiler_prefix']}
+             'MIMI_COMPILER_PREFIX':target['compiler_prefix'], 'MIMI_SDK_ARCHITECTURE':record['architecture']}
+        compiler=sdk/'toolchain/bin'/(target['compiler_prefix']+'gcc')
+        machine=subprocess.check_output([str(compiler),'-dumpmachine'],env=compiler_environment(),text=True).strip()
+        allowed=('aarch64-openwrt-linux','aarch64-openwrt-linux-gnu') if target['target_os']=='tina' else (target['multiarch'],)
+        if machine not in allowed:p.error('SDK compiler target does not match selected platform')
         screens=os.environ.get('MIMI_DISPLAY_PROFILES','1024x768')
         if not re.fullmatch(r'[1-9][0-9]{2,3}x[1-9][0-9]{2,3}(,[1-9][0-9]{2,3}x[1-9][0-9]{2,3}){0,15}',screens):
             p.error('invalid build-time display profile list')
@@ -168,7 +195,7 @@ def main():
         # the backend target or its private source/library requirements.
         subprocess.run(['cmake','-S',str(ROOT/'apps/lv_port_linux'),'-B',str(a.build_dir),
                         '-DCMAKE_TOOLCHAIN_FILE='+str(ROOT/'cmake/application-sdk.cmake'),
-                        '-DAITVBOX_ENABLE_100ASK_CLOUD=OFF','-DAITVBOX_PLATFORM=a133',
+                        '-DAITVBOX_ENABLE_100ASK_CLOUD=OFF','-DAITVBOX_PLATFORM='+record['platform_id'],
                         '-DMIMI_APPLICATION_ONLY=ON','-DMIMI_DISPLAY_PROFILES='+screens,'-DMIMI_ENABLE_VOICE_CONTROL='+voice],env=env,check=True)
         subprocess.run(['cmake','--build',str(a.build_dir),'--target','lvglsim','-j4'],env=env,check=True)
         verify_sdk(sdk,a.expected_sdk_sha256)
