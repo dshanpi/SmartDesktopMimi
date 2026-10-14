@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Bound network probe at host because target curl is absent",
+  "context": "Actual wget has timeout and proxy-disable; no client installation",
+  "next_steps": "Validate fixed-path server then actual bounded baseline and restore",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-031",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+      "scope": "Pre-test bounded equivalent transport",
+      "invariants": "One fixed safe payload,64KiB/s and90sec deadline; no directory serving",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+        "docs/change-gates/batches/20261014-stability-031-server-bound.json"
+      ],
+      "checks": [
+        {
+          "name": "curl capability",
+          "status": "blocked",
+          "scope": "Actual A133 tools",
+          "reason": "curl unavailable; fixed server-throttled wget follows same upper bound",
+          "evidence": "output/a133-stability-20261014-r4/wget-capabilities.log"
+        }
+      ]
+    }
+  ]
+}
