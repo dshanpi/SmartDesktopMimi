@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Prerecord fixed 64-bit toolchain bootstrap and fresh kernel build",
+  "context": "Actual clean SDK app build failed because out/toolchain not initialized from captured prebuilt archive",
+  "next_steps": "Compile only clean kernel with vendor toolchain preparation, then rerun affected product stages",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-038",
+      "record": "docs/change-gates/REQ-MIMI-SDK-038.md",
+      "scope": "A133 saved GCC5.3.1 archive and activated clean kernel source",
+      "invariants": "No bootchain rebuild, no live build mutation, no alternate compiler or UI configuration, original failure retained",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-038.md",
+        "docs/change-gates/batches/20261014-toolchain038-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "fresh kernel and toolchain bootstrap",
+          "status": "not_run",
+          "scope": "Actual fixed saved SDK inputs",
+          "reason": "Prerecorded before execution",
+          "evidence": "output/kernel-clean-build-20261014"
+        }
+      ]
+    }
+  ]
+}
