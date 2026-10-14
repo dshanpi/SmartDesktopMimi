@@ -51,11 +51,16 @@ func run() error {
 		return json.NewEncoder(os.Stdout).Encode(map[string]any{"device": d, "enrollment": enrollment, "scope": "read-only host candidate; not installed or activation-qualified"})
 	}
 	if op == "platform" {
-		c, e := u.LoadConfig("/etc/smartdesktopmimi/updater.json")
+		f := flag.NewFlagSet(op, flag.ContinueOnError)
+		config := f.String("config", "/etc/smartdesktopmimi/updater.json", "root-owned platform configuration")
+		if e := f.Parse(os.Args[2:]); e != nil {
+			return e
+		}
+		c, e := u.LoadConfig(*config)
 		if e != nil {
 			return e
 		}
-		return u.PlatformOperation(c, os.Args[2:])
+		return u.PlatformOperation(c, f.Args())
 	}
 	f := flag.NewFlagSet(op, flag.ContinueOnError)
 	config := f.String("config", "/etc/smartdesktopmimi/updater.json", "root-owned platform configuration")

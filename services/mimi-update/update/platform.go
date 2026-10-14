@@ -277,6 +277,9 @@ func PlatformOperation(c Config, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("missing provider operation")
 	}
+	if c.UbuntuSessionFile != "" && args[0] != "identity" && args[0] != "storage-health" {
+		return ubuntuOperation(c, args)
+	}
 	switch args[0] {
 	case "storage-health":
 		if len(args) != 1 {

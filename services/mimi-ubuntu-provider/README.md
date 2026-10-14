@@ -123,3 +123,28 @@ components for the shared SemVer matcher; full Debian revision/epoch and
 actual library contents remain bound by the mandatory digest. Old hardware-only
 ENROLL027 records must not qualify application installation. Generate a new
 controlled record after review; do not silently overwrite the previous one.
+
+## Trusted updater integration (REQ-MIMI-ACTIVATE-029)
+
+A root-owned updater configuration may declare `ubuntu_session_file`. That file
+fixes the desktop UID/GID, a dedicated `mimi-ubuntu-*.service` unit, pinned
+platform session script and Provider, private runtime and persistent settings,
+local display authorization and a supported screen. It cannot come from an
+application bundle. Without this field, the existing A133 platform remains
+unchanged. `mimi-update platform --config ROOT_CONFIG ...` supports a separate
+controlled installation while the previous default config path remains valid.
+
+The Ubuntu start hook independently verifies live enrollment and the selected
+signed application tree, then uses a transient systemd unit to run the desktop
+as its non-root user with an explicit environment. It only grants read/traverse
+access to verified version directories; journals and trust files remain private.
+The health hook checks the owning systemd unit, actual UID/PID/start time/exe and
+parent-child relationships, then invokes the pinned health script as the same
+user for real UI heartbeats and the Provider0.2.0 handshake. Idle requires fresh
+complete non-busy activity; stop addresses only the configuration-bound unit.
+Persistent data is outside selected versions. Signature transactions continue
+to use the existing updater journal, admission and rollback logic.
+
+Integration code alone does not qualify a deployed session or a complete update
+transaction. See the gate record for actual tests and remaining physical/system
+acceptance. Automatic graphical-login integration is a separate pending step.

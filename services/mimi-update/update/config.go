@@ -12,21 +12,22 @@ import (
 )
 
 type Config struct {
-	Schema           int    `json:"schema_version"`
-	Root             string `json:"root"`
-	Factory          string `json:"factory"`
-	Lock             string `json:"lock"`
-	Socket           string `json:"socket"`
-	DeviceFile       string `json:"device_file"`
-	TrustFile        string `json:"trust_file"`
-	Provider         string `json:"provider"`
-	Repository       string `json:"repository"`
-	SystemRepository string `json:"system_repository,omitempty"`
-	SystemDeviceFile string `json:"system_device_file,omitempty"`
-	Channel          string `json:"channel"`
-	EnrollmentFile   string `json:"enrollment_file"`
-	AutoDownload     bool   `json:"auto_download"`
-	InstallWhenIdle  bool   `json:"install_when_idle"`
+	Schema            int    `json:"schema_version"`
+	UbuntuSessionFile string `json:"ubuntu_session_file,omitempty"`
+	Root              string `json:"root"`
+	Factory           string `json:"factory"`
+	Lock              string `json:"lock"`
+	Socket            string `json:"socket"`
+	DeviceFile        string `json:"device_file"`
+	TrustFile         string `json:"trust_file"`
+	Provider          string `json:"provider"`
+	Repository        string `json:"repository"`
+	SystemRepository  string `json:"system_repository,omitempty"`
+	SystemDeviceFile  string `json:"system_device_file,omitempty"`
+	Channel           string `json:"channel"`
+	EnrollmentFile    string `json:"enrollment_file"`
+	AutoDownload      bool   `json:"auto_download"`
+	InstallWhenIdle   bool   `json:"install_when_idle"`
 }
 
 func ReadJSON(p string, out any) error {
@@ -70,6 +71,11 @@ func LoadConfig(p string) (Config, error) {
 	for _, p := range []string{c.Root, c.Factory, c.Lock, c.Socket, c.DeviceFile, c.TrustFile, c.Provider, c.EnrollmentFile} {
 		if !filepath.IsAbs(p) || filepath.Clean(p) != p {
 			return c, fmt.Errorf("invalid configured path")
+		}
+	}
+	if c.UbuntuSessionFile != "" {
+		if !filepath.IsAbs(c.UbuntuSessionFile) || filepath.Clean(c.UbuntuSessionFile) != c.UbuntuSessionFile {
+			return c, fmt.Errorf("invalid Ubuntu session configuration path")
 		}
 	}
 	if _, e := NewGitHub(c.Repository); e != nil {

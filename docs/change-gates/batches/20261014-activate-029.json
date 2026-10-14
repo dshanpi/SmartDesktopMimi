@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Trusted Ubuntu session hooks for application updater",
+  "context": "Signed rc19 transport exists but no root-controlled activation hooks",
+  "next_steps": "Deploy separate controlled baseline, actual signed factory startup and upgrade/rollback tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-ACTIVATE-029",
+      "record": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+      "scope": "Ubuntu systemd lifecycle, platform config/CLI, health version check and tests",
+      "invariants": "A133 defaults unchanged; root-controlled fixed platform inputs, non-root app, signed selected tree and actual process ownership; no uploads",
+      "paths": [
+        "services/mimi-update/update/config.go",
+        "services/mimi-update/update/platform.go",
+        "services/mimi-update/update/ubuntu_session.go",
+        "services/mimi-update/update/ubuntu_session_test.go",
+        "services/mimi-update/cmd/mimi-update/main.go",
+        "services/mimi-ubuntu-provider/session.py",
+        "services/mimi-ubuntu-provider/README.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+        "docs/change-gates/batches/20261014-activate-029.json"
+      ],
+      "checks": [
+        {
+          "name": "Go and session boundary regressions",
+          "status": "passed",
+          "scope": "Full Go suite plus6 Python session boundary tests",
+          "evidence": "output/ubuntu-activation-20261014/go-r2.log; session-boundary.log"
+        },
+        {
+          "name": "Actual activation and transactions",
+          "status": "not_run",
+          "scope": "Fixed build and root-controlled actual SDL/Provider sessions",
+          "reason": "Awaiting committed deployment",
+          "evidence": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md"
+        }
+      ]
+    }
+  ]
+}

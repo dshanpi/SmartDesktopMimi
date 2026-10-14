@@ -124,7 +124,7 @@ def health(runtime,release,starting=False):
     if query(runtime/'ipc.sock.v2','system.ping').get('alive') is not True:
         raise ValueError('Provider did not answer ping')
     d=query(runtime/'ipc.sock.v2','platform.describe')
-    if d.get('platformId')!='ubuntu-host' or d.get('architecture')!='x86_64' or d.get('abiVersion')!=2 or d.get('capabilities')!=0:
+    if d.get('platformId')!='ubuntu-host' or d.get('architecture')!='x86_64' or d.get('abiVersion')!=2 or d.get('capabilities')!=0 or d.get('providerVersion')!='0.2.0':
         raise ValueError('Unexpected Ubuntu foundation provider')
     return h
 
