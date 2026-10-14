@@ -23,3 +23,5 @@ MCP核对保存project4/device4/COM17与绑定USB，通道空闲后执行cycle/o
 2026-10-14 SDK025构建期间复查：两条UART命令空响应、ping192.168.1.46失败，无新设备传输/安装。已核对project4/device4/COM17/USB固定绑定，硬件通道空闲。原故障failed，版本未确认；沿用已有授权执行30秒继电器恢复，后读版本/health/内存/系统日志。此次不是升级断电验收，不改变密钥/身份/驱动/频率。
 
 SDK025本次恢复结果：rc17/previousrc16/trialfalse、health0和ext4p7错误0已实际核对，serial-1关闭，未改身份密钥/HDMI/频率或安装候选。output/ubuntu-sdk-20261014/a133-recovery-result.json；初始失联failed、重启恢复passed、根因未解决。
+
+2026-10-14 ACTIVATE029结束后只读核对：LYNX仍project4/device4/COM17/原USB绑定，但hardwareSafety.busy=true，活动为另一COM18串口。按本门禁不打开串口、不恢复电源、不传输；本轮A133实测blocked，版本仍仅沿用最后rc17记录。继续Ubuntu独立deb链路，不能宣称本轮A133健康。

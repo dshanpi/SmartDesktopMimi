@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "summary": "Start actual installed deb payload activation acceptance",
+  "context": "Signed archive transactions passed; installed deb activation path still untested",
+  "next_steps": "Build rc22, sign, install deb and activate installed bytes through trusted platform",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DEBACTIVATE-030",
+      "record": "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md",
+      "scope": "Clean candidate pin and installed transport acceptance plan",
+      "invariants": "No relabelled receipt or root service/key replacement; actual activation separate from dpkg",
+      "paths": [
+        "VERSION",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md",
+        "docs/change-gates/REQ-MIMI-STABILITY-023.md",
+        "docs/change-gates/batches/20261014-debactivate-030.json"
+      ],
+      "checks": [
+        {
+          "name": "installed deb activation chain",
+          "status": "not_run",
+          "scope": "Actual Ubuntu enrolled host",
+          "reason": "Pre-implementation gate; candidate not yet built",
+          "evidence": "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md"
+        }
+      ]
+    }
+  ]
+}
