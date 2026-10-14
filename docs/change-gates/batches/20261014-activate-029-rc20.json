@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Local rc20 candidate for actual signed Ubuntu upgrade",
+  "context": "Actual rc19 trusted factory started; a distinct clean-source package is required for upgrade validation",
+  "next_steps": "Build and sign rc20, then real update; rc21 separate failure-recovery candidate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-ACTIVATE-029",
+      "record": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+      "scope": "Version pin and pre-test requirements",
+      "invariants": "No UI or business redesign; new build receipt required; no relabelled old package or uploads",
+      "paths": [
+        "VERSION",
+        "docs/change-gates/REQ-MIMI-ACTIVATE-029.md",
+        "docs/change-gates/batches/20261014-activate-029-rc20.json"
+      ],
+      "checks": [
+        {
+          "name": "rc20 build and real upgrade",
+          "status": "not_run",
+          "scope": "New fixed-source native full application",
+          "reason": "Version pin precedes actual build",
+          "evidence": "docs/change-gates/REQ-MIMI-ACTIVATE-029.md"
+        }
+      ]
+    }
+  ]
+}
