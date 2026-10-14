@@ -641,7 +641,7 @@ int main(int argc,char**argv) {
    puts("PASS IoT host fixture: explicit confirmation, cancel sends nothing, one command, no false state confirmation");
   }
  }else if(strcmp(argv[1],"pairing")==0){
-  app_pairing.init();cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};
+  app_pairing.init();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"— — — — — —":"- - - - - -"));cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};
   strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
   assert(find_label(lv_scr_act(),"123456"));
   lv_tick_inc(61000);pump();assert(!find_label(lv_scr_act(),"123456"));

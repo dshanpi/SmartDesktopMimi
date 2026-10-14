@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu session Provider foundation and real desktop integration",
+  "context": "Native desktop previously used an IPC sink. Add a separate platform service with real local network observations and explicit unavailable controls; fix discovered English pairing placeholder glyphs.",
+  "next_steps": "Commit and build exact source, run real-provider window tests; V2/capability UI, trusted Ubuntu SDK/identity and signed deb activation remain pending. No upload or A133 installation.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTU-022",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTU-022.md",
+      "scope": "Separate Ubuntu service, native build integration and isolated process/window verification",
+      "invariants": "No board driver, host setting or secret access; private same-UID socket; service excluded from pure app payload; absent capability never succeeds",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UBUNTU-022.md",
+        "docs/change-gates/batches/20261014-ubuntu-022.json",
+        "docs/update/source-ownership.json",
+        "services/mimi-ubuntu-provider/CMakeLists.txt",
+        "services/mimi-ubuntu-provider/README.md",
+        "services/mimi-ubuntu-provider/provider.c",
+        "tests/sdkbuild/test_ubuntu_provider.py",
+        "tests/sdkbuild/ubuntu_window_smoke.py",
+        "tools/sdkbuild/README.md",
+        "tools/sdkbuild/native_ubuntu.py"
+      ],
+      "checks": [
+        {
+          "name": "Service and SDK regressions",
+          "status": "passed",
+          "scope": "14 real provider process tests plus 21 existing SDK tests",
+          "evidence": "output/ubuntu-provider-20261014/sdk-tests-final.log"
+        },
+        {
+          "name": "Architecture and frozen ABI",
+          "status": "passed",
+          "scope": "74 host tests and mimi-ipc-v1.1 contract",
+          "evidence": "output/ubuntu-provider-20261014/architecture-final.log; contracts.log"
+        },
+        {
+          "name": "Fixed-source native build and window",
+          "status": "not_run",
+          "scope": "New source after commit",
+          "evidence": "output/ubuntu-provider-20261014/",
+          "reason": "Commit required before clean build; precommit window demonstrated correct unavailable state but exposed glyph issue"
+        },
+        {
+          "name": "Qualified Ubuntu platform/deb and remote release",
+          "status": "not_run",
+          "scope": "Actual activation, upgrade, rollback, SDK identity and release",
+          "evidence": "docs/change-gates/REQ-MIMI-UBUNTU-022.md",
+          "reason": "V2, capability UI, SDK and trusted installation chain incomplete"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-PAIR-020",
+      "record": "docs/change-gates/REQ-MIMI-PAIR-020.md",
+      "scope": "English placeholder glyph only, local rc18 candidate; A133 remains rc17",
+      "invariants": "No layout, Chinese placeholder, backend, credential or binding logic changes",
+      "paths": [
+        "VERSION",
+        "apps/lv_port_linux/src/apps/pairing/pairing_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-PAIR-020.md"
+      ],
+      "checks": [
+        {
+          "name": "Placeholder and pairing render regressions",
+          "status": "passed",
+          "scope": "12 renders, 3 geometries, Chinese/English, light/dark; actual pointer manager and pairing states",
+          "evidence": "output/ubuntu-provider-20261014/render.log"
+        },
+        {
+          "name": "New source A133 cross build and actual Ubuntu window",
+          "status": "not_run",
+          "scope": "Postcommit candidate",
+          "evidence": "output/ubuntu-provider-20261014/",
+          "reason": "Pending clean source builds; no device activation yet"
+        }
+      ]
+    }
+  ]
+}

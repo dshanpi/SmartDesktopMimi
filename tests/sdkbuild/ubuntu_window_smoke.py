@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the compiled desktop in an isolated X server with an IPC sink.
+"""Exercise the compiled desktop in an isolated X server with an IPC sink or an explicitly selected real provider.
 This sink provides no hardware/service replies and cannot qualify a Provider.
 """
 import argparse
@@ -35,31 +35,42 @@ def close_window(display, window):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--binary',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args()
-    out=a.output.absolute();out.mkdir(parents=True,exist_ok=False)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--binary',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--provider',type=Path);a=p.parse_args()
+    out=a.output.absolute();out.mkdir(parents=True,exist_ok=False);out.chmod(0o700)
     sock_path=out/'ipc.sock'
     if len(str(sock_path).encode())>=104: raise ValueError('Test socket path too long')
     cfg=out/'desktop.conf';cfg.write_text('ipc.socket_path='+str(sock_path)+'\n')
-    sock=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);sock.bind(str(sock_path));sock.listen(4);sock.settimeout(.5)
     stop=threading.Event()
-    def sink():
-        while not stop.is_set():
-            try: conn,_=sock.accept()
-            except socket.timeout: continue
-            except OSError: return
-            with conn:
-                conn.settimeout(.5)
-                while not stop.is_set():
-                    try:
-                        if not conn.recv(65536):break
-                    except socket.timeout:pass
-                    except OSError:break
-    thread=threading.Thread(target=sink,daemon=True);thread.start()
+    provider=None;provider_log=None;sock=None;thread=None
+    if not a.provider:
+        sock=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM);sock.bind(str(sock_path));sock.listen(4);sock.settimeout(.5)
+        def sink():
+            while not stop.is_set():
+                try: conn,_=sock.accept()
+                except socket.timeout: continue
+                except OSError: return
+                with conn:
+                    conn.settimeout(.5)
+                    while not stop.is_set():
+                        try:
+                            if not conn.recv(65536):break
+                        except socket.timeout:pass
+                        except OSError:break
+        thread=threading.Thread(target=sink,daemon=True);thread.start()
+    else:
+        provider_log=(out/'provider.log').open('w')
+        provider=subprocess.Popen([str(a.provider.resolve()),'--socket',str(sock_path)],stdout=provider_log,stderr=subprocess.STDOUT)
+        for _ in range(100):
+            if sock_path.exists() and 'Ubuntu session provider ready' in (out/'provider.log').read_text():break
+            if provider.poll() is not None:provider_log.close();raise RuntimeError('Provider startup failed')
+            time.sleep(.02)
+        else:
+            provider.terminate();provider.wait(timeout=5);provider_log.close();raise RuntimeError('Provider startup timeout')
     read_fd,write_fd=os.pipe();xlog=(out/'xvfb.log').open('w')
     xvfb=subprocess.Popen(['Xvfb','-displayfd',str(write_fd),'-screen','0','1920x1080x24','-nolisten','tcp'],pass_fds=(write_fd,),stdout=xlog,stderr=subprocess.STDOUT)
     os.close(write_fd)
     with os.fdopen(read_fd) as f: display=':'+f.readline().strip()
-    processes=[];result={'scope':'native desktop window with IPC sink; no real platform services','checks':[]}
+    processes=[];result={'scope':('native desktop with real Ubuntu session provider; unsupported board/cloud controls remain unavailable' if provider else 'native desktop window with IPC sink; no real platform services'),'checks':[]}
     try:
         assert display!=':' and xvfb.poll() is None
         for width,height in [(1024,768),(480,800),(800,480),(640,480)]:
@@ -82,6 +93,18 @@ def main():
             subprocess.run(['import','-window',str(window),str(out/(name+'.png'))],env=env,check=True,timeout=10)
             im=Image.open(out/(name+'.png'));assert im.size==(width,height)
             assert len(im.convert('RGB').getcolors(width*height))>30
+            if provider and width==1024:
+                # Exercise real SDL pointer routing to the existing pairing page.
+                def move(x,y):
+                    subprocess.run(['xdotool','mousemove','--window',str(window),str(x),str(y)],env=env,check=True)
+                move(850,635);subprocess.run(['xdotool','mousedown','1'],env=env,check=True);time.sleep(.1)
+                for px in range(825,249,-25):move(px,635);time.sleep(.025)
+                subprocess.run(['xdotool','mouseup','1'],env=env,check=True);time.sleep(.5)
+                move(400,635);subprocess.run(['xdotool','mousedown','1'],env=env,check=True);time.sleep(.1)
+                subprocess.run(['xdotool','mouseup','1'],env=env,check=True);time.sleep(1)
+                subprocess.run(['import','-window',str(window),str(out/'pairing-provider.png')],env=env,check=True,timeout=10)
+                result['pairing_screenshot']='pairing-provider.png (requires visual review)'
+                assert provider.poll() is None
             close_window(display,window);assert process.wait(timeout=10)==0;log.close()
             result['checks'].append({'resolution':name,'window':'passed','close':'passed'})
         result['status']='passed'
@@ -90,10 +113,20 @@ def main():
     finally:
         for process in processes:
             if process.poll() is None:process.terminate();process.wait(timeout=5)
-        stop.set();sock.close();thread.join(timeout=2)
+        stop.set()
+        if sock:sock.close()
+        if thread:thread.join(timeout=2)
+        if provider:
+            provider.terminate();provider.wait(timeout=5);provider_log.close()
+            result['provider_shutdown_exit']=provider.returncode
+            result['provider_socket_removed']=not sock_path.exists()
         xvfb.terminate();xvfb.wait(timeout=5);xlog.close()
         (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         sock_path.unlink(missing_ok=True)
+        if provider and (result['provider_shutdown_exit'] != 0 or not result['provider_socket_removed']):
+            result.update(status='failed',error='Provider did not shut down cleanly')
+            (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+            raise RuntimeError(result['error'])
 
 
 if __name__=='__main__':main()

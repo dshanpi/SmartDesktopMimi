@@ -94,3 +94,6 @@ tests remain pending. Host fixture tests verify archive structure and rejection
 behavior only; their stub verifier is not cryptographic or hardware acceptance.
 The packaging lifecycle follows the distinction between unpacking and configuring
 in the [Debian maintainer-script policy](https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html).
+
+## Native Ubuntu session service foundation
+`native_ubuntu.py` builds and records a separate `provider-build/mimi-ubuntu-provider` beside the native desktop. See [its scope and runtime isolation](../../services/mimi-ubuntu-provider/README.md). Run window verification with `tests/sdkbuild/ubuntu_window_smoke.py --binary DESKTOP --provider PROVIDER --output NEW_DIRECTORY` to use this actual process rather than the sink fixture. Network snapshots and explicit unsupported responses are implemented; complete Ubuntu platform capabilities, trustworthy SDK/identity, signed amd64 deb activation, upgrade and data acceptance remain pending. This service must not be included in a pure application update package.

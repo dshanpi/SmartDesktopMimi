@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.16)
+project(mimi_ubuntu_provider C)
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux" OR NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  message(FATAL_ERROR "This provider development target requires native Linux x86_64")
+endif()
+set(CMAKE_C_STANDARD 11)
+set(ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set(APP ${ROOT}/apps/lv_port_linux/src)
+add_executable(mimi-ubuntu-provider provider.c ${APP}/ipc/ipc_socket.c
+  ${APP}/system/config/app_config.c ${APP}/system/log/app_log.c)
+target_include_directories(mimi-ubuntu-provider PRIVATE ${APP})
+target_compile_definitions(mimi-ubuntu-provider PRIVATE _GNU_SOURCE)
+target_compile_options(mimi-ubuntu-provider PRIVATE -Wall -Wextra -Werror)

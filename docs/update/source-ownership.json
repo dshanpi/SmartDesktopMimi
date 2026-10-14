@@ -157,6 +157,10 @@
     "apps/lv_port_linux/src/platform/platform_capabilities.h": {
       "owner": "platform"
     },
+    "apps/lv_port_linux/src/platform/ubuntu/desktop_controls.c": {
+      "owner": "platform-client-frozen",
+      "sha256": "c6ad7659e92562ee5323e17b096c4884726a8b1729127fd3bc8e47d60d49b204"
+    },
     "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.c": {
       "owner": "platform"
     },
@@ -328,9 +332,8 @@
     "apps/lv_port_linux/src/system/wifi_hal_types.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/platform/ubuntu/desktop_controls.c": {
-      "owner": "platform-client-frozen",
-      "sha256": "c6ad7659e92562ee5323e17b096c4884726a8b1729127fd3bc8e47d60d49b204"
+    "services/mimi-ubuntu-provider/provider.c": {
+      "owner": "platform"
     }
   },
   "migration_complete": false,
@@ -343,7 +346,8 @@
     "apps/lv_port_linux/src/ipc",
     "apps/lv_port_linux/src/middleware",
     "apps/lv_port_linux/src/lib",
-    "apps/lv_port_linux/src/draw"
+    "apps/lv_port_linux/src/draw",
+    "services/mimi-ubuntu-provider"
   ],
   "sdk_repository": "100askTeam/A133-AIDesktop-Tina5"
 }

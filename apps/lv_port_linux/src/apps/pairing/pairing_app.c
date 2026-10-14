@@ -33,7 +33,7 @@ static void render_status(void)
     uint32_t remaining = elapsed < snapshot.bind_token_expires_in ? snapshot.bind_token_expires_in - elapsed : 0;
     bool unavailable = snapshot.state == CLOUD_STATE_UNAVAILABLE;
     bool usable = received && remaining && valid_code(snapshot.bind_token) && !snapshot.bind_token_refreshing;
-    lv_label_set_text(code_label, usable ? snapshot.bind_token : "— — — — — —");
+    lv_label_set_text(code_label, usable ? snapshot.bind_token : tr("— — — — — —", "- - - - - -"));
     if (usable) lv_label_set_text_fmt(expiry_label, ui_i18n_is_zh() ? "有效期 %02u:%02u" : "Expires in %02u:%02u", remaining/60, remaining%60);
     else lv_label_set_text(expiry_label, received && valid_code(snapshot.bind_token) && !remaining ? tr("绑定码已过期，请刷新", "Code expired. Refresh to continue.") : "");
     const char *state;

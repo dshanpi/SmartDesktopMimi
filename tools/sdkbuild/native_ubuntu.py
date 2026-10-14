@@ -78,7 +78,10 @@ def main():
                      '-DMIMI_APPLICATION_ONLY=ON', '-DAITVBOX_PLATFORM=ubuntu-host',
                      '-DMIMI_ENABLE_VOICE_CONTROL='+('ON' if a.voice_control else 'OFF'),
                      '-DMIMI_DISPLAY_PROFILES='+selected],
-                    ['cmake', '--build', str(output/'build'), '-j4', '--target', 'lvglsim']]
+                    ['cmake', '--build', str(output/'build'), '-j4', '--target', 'lvglsim'],
+                    ['cmake', '-S', str(ROOT/'services/mimi-ubuntu-provider'), '-B', str(output/'provider-build'),
+                     '-DCMAKE_C_COMPILER=/usr/bin/gcc', '-DCMAKE_BUILD_TYPE=Release'],
+                    ['cmake', '--build', str(output/'provider-build'), '-j4']]
         for i, command in enumerate(commands):
             with (output/f'build-{i}.log').open('w') as log:
                 subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True)
@@ -98,6 +101,8 @@ def main():
         record.update(schema_version=1, kind='native-desktop-development-build', source_commit=source,
                       source_dirty=dirty, screens=screens, voice_control=a.voice_control,
                       desktop_sha256=sha(binary), compiler_sha256=sha('/usr/bin/gcc'),
+                      provider_sha256=sha(output/'provider-build/mimi-ubuntu-provider'),
+                      provider_kind='ubuntu-session-foundation', provider_in_application_payload=False,
                       runtime_libraries=libraries, source_ownership=ownership, provider_acceptance='not_run',
                       deb_install_acceptance='not_run', release_qualified=False)
         (output/'native-build.json').write_text(json.dumps(record, sort_keys=True, indent=2)+'\n')
