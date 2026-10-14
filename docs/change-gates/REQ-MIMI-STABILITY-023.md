@@ -19,3 +19,7 @@ failed：串口空响应与网络超时，output/ubuntu-provider-20261014/a133-e
 
 ### 恢复实际结果
 MCP核对保存project4/device4/COM17与绑定USB，通道空闲后执行cycle/offTimeMs30000，回执state=on。BOOT0/U-Boot/Linux/ext4启动片段保留。第一次命令在getty尚未就绪时被消费，没有MIMI_RECOVERED标记，明确not_run；出现root提示后重新执行只读检查，确认current rc17/包34fc809a…beed8、previous rc16、trial=false。健康命令真实退出0，ext4 p7错误0，恢复passed；serial-9关闭，未开临时SSH。证据recovery-status-r2.log、recovery-health.log、recovery-result.json。没有新包传输/安装，根因和长稳继续未通过，不将本次电源恢复记为升级事务断电验收。
+
+2026-10-14 SDK025构建期间复查：两条UART命令空响应、ping192.168.1.46失败，无新设备传输/安装。已核对project4/device4/COM17/USB固定绑定，硬件通道空闲。原故障failed，版本未确认；沿用已有授权执行30秒继电器恢复，后读版本/health/内存/系统日志。此次不是升级断电验收，不改变密钥/身份/驱动/频率。
+
+SDK025本次恢复结果：rc17/previousrc16/trialfalse、health0和ext4p7错误0已实际核对，serial-1关闭，未改身份密钥/HDMI/频率或安装候选。output/ubuntu-sdk-20261014/a133-recovery-result.json；初始失联failed、重启恢复passed、根因未解决。

@@ -32,3 +32,10 @@ passed：SDK/服务54项（sdk-tests-r1.log），新增Ubuntu目标/前缀/OS拒
 3397882首次捕获failed，capture.log：GCC的libstdc++.so链接目标不在已选输入中。调查发现主机同时安装amd64/i386的同名libstdc++6，依赖索引按去架构包名覆盖，误选i386；不能跳过链接/清单检查。下一步将捕获严格限定amd64/all，新增多架构同名包和虚拟依赖回归，再生成新输入。原目标未生成，临时材料自动清理，未修改主机。
 
 多架构修复回归passed：ubuntu-sdk-r2.log 10项（新增amd64/i386同名不覆盖、只有错误架构不得回退、虚拟/候选依赖与循环解析）。实际新捕获和构建not_run，接续本轮。
+
+## 实际固定输入构建结果
+源码 `4674523552fac6c997748454ceb342d916a581a7`；SDK SHA256 `d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740`。捕获passed：4280个输入，源文件822933428字节，仅一份SDK保存在.delivery/application-sdk-ubuntu-x86_64；不重复大备份。来源为已安装包实际文件，不等于发行版官方包字节证明；公开许可审计not_run。
+Ubuntu完整应用构建passed（桌面、Web、资源树、SBOM、构建后SDK与源码复核）；桌面SHA256 `dfbfa7ce52b38e61468287db328099b8cec3e2d987e4fa2a2cc9cc39d75d849f`，receipt为output/ubuntu-sdk-20261014/ubuntu-application-build.json。真实SDK链接预检passed；原生窗体验收三分辨率/未编译分辨率拒绝/V2查询/退出清理passed，实际配对截图正确；Xvfb不代替实体屏。
+A133 SDK `bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261` 回归编译passed，桌面SHA256 `1abae4491a05b15245cfe483aa6461462894ef69cfb59273d9b394ba6a32a269` 与前序rc18相同；不安装到设备、不把旧包当成本轮新包。
+实际签名amd64 deb、Ubuntu可信登记/平台会话启动/激活/升级回退数据仍not_run；现有amd64 deb测试是夹具归档验证。全发布未完成、未上传。
+A133通道空闲后本轮读健康再次failed（串口空两次+ping超时），按STABILITY-023已有授权恢复，实际确认原rc17/current34fc809a/previousrc16/trialfalse/health0，内存可用约1.8GB、ext4p7错误0、恢复后温度50.210摄氏度、频率1512000kHz。首条命令在getty就绪前not_run，第二条实际执行；serial-1已关闭、无临时SSH。根因仍未定，不以启动后读数排除故障原因或宣称稳定性通过。
