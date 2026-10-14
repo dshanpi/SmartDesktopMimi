@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "事前补录产品/纯SDK环境转换的空metadata缓存",
+  "context": "actual scanner缓存四个无Package定义条目，正确product env也未重扫；checker已拒绝",
+  "next_steps": "固定五个generated文件失效化，回归只删允许缓存，然后真实索引checker重验",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-049",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+      "scope": "生成型产品metadata缓存，不修改源码/其他包/构建缓存",
+      "invariants": "仅五个固定路径单文件unlink，原SDK/启动输入/签名应用不变，失败不吞",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-049.md",
+        "docs/change-gates/batches/20261015-system049-cache-prerecord.json"
+      ],
+      "checks": [
+        {
+          "name": "缓存失效化与真实重生",
+          "status": "not_run",
+          "scope": "before implementation",
+          "evidence": "output/system-baseline-rc2-20261015/metadata-make-real-result-r3.json",
+          "reason": "空缓存已确认，需受限清理并重验"
+        }
+      ]
+    }
+  ]
+}
