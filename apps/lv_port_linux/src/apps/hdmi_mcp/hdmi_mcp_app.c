@@ -4,6 +4,7 @@
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
 #include "../../ui/ui_i18n.h"
+#include "../../ui/desktop_capabilities.h"
 
 #include <errno.h>
 #include <json-c/json.h>
@@ -45,6 +46,7 @@ static int write_all(int fd, const void *data, size_t length)
 
 static json_object *control_request(const char *request)
 {
+    if (!desktop_hdmi_supported()) { errno = ENOTSUP; return NULL; }
     int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (fd < 0) return NULL;
     struct timeval timeout = {.tv_sec = 0, .tv_usec = 200000};
@@ -249,7 +251,7 @@ static void monitor_cb(lv_timer_t *timer)
 
 void hdmi_mcp_app_monitor_start(void)
 {
-    if (monitor_timer) return;
+    if (!desktop_hdmi_supported() || monitor_timer) return;
     monitor_timer = lv_timer_create(monitor_cb, 500, NULL);
     lv_timer_ready(monitor_timer);
 }
@@ -318,6 +320,18 @@ void hdmi_mcp_app_init(void)
     lv_obj_set_style_pad_all(screen, 0, 0);
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
     ui_create_app_header(screen, ui_tr(UI_STR_APP_HDMI_MCP), back_event, false, NULL);
+    if (!desktop_hdmi_supported()) {
+        lv_obj_t *message = lv_label_create(screen);
+        lv_label_set_text(message, ui_tr(UI_STR_HDMI_UNSUPPORTED_HINT));
+        lv_obj_set_width(message, lv_pct(85));
+        lv_label_set_long_mode(message, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_font(message, UI_TEXT_BODY_MD, 0);
+        lv_obj_set_style_text_color(message, UI_TEXT_PRIMARY, 0);
+        lv_obj_set_style_text_align(message, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_center(message);
+        lv_scr_load(screen);
+        return;
+    }
 
     lv_obj_t *content = lv_obj_create(screen);
     int32_t screen_w = lv_display_get_horizontal_resolution(NULL);

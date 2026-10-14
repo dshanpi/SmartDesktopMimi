@@ -756,6 +756,9 @@ set(MIMI_DISPLAY_PROFILES "1024x768" CACHE STRING "Compiled screen geometries, s
 if(NOT MIMI_DISPLAY_PROFILES MATCHES "^[0-9]+x[0-9]+(,[0-9]+x[0-9]+)*$")
     message(FATAL_ERROR "Invalid MIMI_DISPLAY_PROFILES")
 endif()
+if(AITVBOX_PLATFORM STREQUAL "ubuntu-host")
+    target_compile_definitions(lvglsim PRIVATE MIMI_HDMI_SUPPORTED=0)
+endif()
 target_compile_definitions(lvglsim PRIVATE MIMI_ENABLE_VOICE_CONTROL=$<BOOL:${MIMI_ENABLE_VOICE_CONTROL}>)
 target_compile_definitions(lvglsim PRIVATE MIMI_DISPLAY_PROFILES="${MIMI_DISPLAY_PROFILES}")
 

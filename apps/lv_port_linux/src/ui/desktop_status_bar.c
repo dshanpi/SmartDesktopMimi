@@ -3,6 +3,7 @@
 #include "theme/theme.h"
 #include "desktop_home_tokens.h"
 #include "ui_i18n.h"
+#include "desktop_capabilities.h"
 #include "../system/app_manager.h"
 #include "../system/settings.h"
 #include "../system/backend_types.h"
@@ -285,7 +286,7 @@ static void control_center_build(void)
     lv_obj_clear_flag(hdmi_card, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *hdmi_eyebrow = lv_label_create(hdmi_card);
-    lv_label_set_text(hdmi_eyebrow, ui_i18n_is_zh() ? "视频输入" : "Video input");
+    lv_label_set_text(hdmi_eyebrow, desktop_hdmi_supported() ? (ui_i18n_is_zh() ? "视频输入" : "Video input") : ui_tr(UI_STR_HDMI_UNSUPPORTED));
     lv_obj_align(hdmi_eyebrow, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_style_text_font(hdmi_eyebrow, ui_font_body_md(), 0);
     lv_obj_set_style_text_color(hdmi_eyebrow, lv_color_hex(0xAEB7CB), 0);
@@ -668,6 +669,10 @@ static void hdmi_pending_timeout_cb(lv_timer_t *timer)
 static void hdmi_switch_apply_visual(lv_obj_t *sw, bool enabled)
 {
     if (!sw || !lv_obj_is_valid(sw)) return;
+    if (!desktop_hdmi_supported()) {
+        enabled = false;
+        lv_obj_add_state(sw, LV_STATE_DISABLED);
+    }
     bool checked = lv_obj_has_state(sw, LV_STATE_CHECKED);
     if (checked == enabled) return;
 
@@ -688,6 +693,10 @@ static void hdmi_switch_sync(bool enabled)
 
 static void hdmi_send_enable(bool on)
 {
+    if (!desktop_hdmi_supported()) {
+        hdmi_switch_sync(false);
+        return;
+    }
     hdmi_toggle_pending = true;
     hdmi_toggle_target = on;
 
@@ -808,6 +817,10 @@ static void hdmi_overlay_build(lv_obj_t *screen)
 void hdmi_ui_handle_status(const hdmi_preview_status_t *status)
 {
     if (!status) return;
+    if (!desktop_hdmi_supported()) {
+        hdmi_switch_sync(false);
+        return;
+    }
 
     if (hdmi_toggle_pending) {
         if (status->enabled == hdmi_toggle_target) {

@@ -199,6 +199,9 @@ typedef enum {
     UI_STR_APP_PAIRING,
     UI_STR_APP_IOT,
     UI_STR_APP_VOICE,
+    UI_STR_HDMI_UNSUPPORTED,
+    UI_STR_HDMI_UNSUPPORTED_HINT,
+    UI_STR_HDMI_DETAILS,
     UI_STR_COUNT
 } ui_string_id_t;
 

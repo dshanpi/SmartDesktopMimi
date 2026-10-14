@@ -15,6 +15,7 @@
 #include "src/ui/desktop_home_tokens.h"
 #include "src/ui/desktop_status_bar.h"
 #include "src/ui/desktop_clock.h"
+#include "src/ui/desktop_capabilities.h"
 #include "src/ui/desktop_dock.h"
 #include "src/ui/lockscreen.h"
 #include "src/system/settings.h"
@@ -46,9 +47,12 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
 }
 /* A local socket pair supplies the idle response; no device service is used. */
 static bool review_hdmi_idle;
+static int hdmi_control_connections, hdmi_mutations;
+extern lv_obj_t *hdmi_switch_obj;
 static int review_control_peer = -1;
 int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
  (void)length;
+ if(address->sa_family == AF_UNIX && !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock"))hdmi_control_connections++;
  if (review_hdmi_idle && address->sa_family == AF_UNIX &&
      !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock")) {
   int pair[2];
@@ -94,6 +98,7 @@ static int connect_count, ai_exit_count, ota_commands, last_ota_command, pairing
 static wifi_cmd_t last_connect;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
+ if(t==TOPIC_HDMI_COMMAND && n==sizeof(hdmi_cmd_t) && ((const hdmi_cmd_t*)d)->action!=HDMI_CMD_GET_STATUS)hdmi_mutations++;
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
  if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
@@ -349,7 +354,7 @@ static void test_responsive_home(void) {
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
  lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
  lv_obj_t *brand=find_label(home,"Mimi");assert(brand);pump();assert(lv_obj_get_height(brand)<=62);
- const ui_string_id_t actions[]={UI_STR_HOME_TALK_MIMI,UI_STR_HOME_OPEN_KVM};
+ const ui_string_id_t actions[]={UI_STR_HOME_TALK_MIMI,desktop_hdmi_supported()?UI_STR_HOME_OPEN_KVM:UI_STR_HDMI_DETAILS};
  for(int i=0;i<2;i++) {
   lv_obj_t *label=find_label(home,ui_tr(actions[i]));assert(label);
   lv_obj_t *button=lv_obj_get_parent(label);
@@ -377,7 +382,23 @@ int main(int argc,char**argv) {
  settings.appearance_mode=strcmp(argv[3],"light")==0?SYS_APPEARANCE_LIGHT:SYS_APPEARANCE_DARK;
  lv_display_t*d=lv_display_create(review_width,review_height);lv_display_set_color_format(d,LV_COLOR_FORMAT_XRGB8888);
  static uint8_t buf[1920*100*4];lv_display_set_buffers(d,buf,NULL,sizeof(buf),LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,flush);
+ if(!desktop_hdmi_supported())settings.hdmi_enabled=true; /* persisted legacy ON must not enable unsupported hardware */
  ui_init();
+ if(!desktop_hdmi_supported()){
+  pump();int before=saves;
+  assert(find_label(lv_scr_act(),ui_tr(UI_STR_HDMI_UNSUPPORTED)));
+  assert(!find_label(lv_scr_act(),ui_tr(UI_STR_READY)));
+  assert(lv_obj_has_state(hdmi_switch_obj,LV_STATE_DISABLED));
+  assert(!lv_obj_has_state(hdmi_switch_obj,LV_STATE_CHECKED));
+  lv_obj_send_event(lv_obj_get_parent(hdmi_switch_obj),LV_EVENT_CLICKED,NULL);
+  lv_obj_add_state(hdmi_switch_obj,LV_STATE_CHECKED);
+  lv_obj_send_event(hdmi_switch_obj,LV_EVENT_VALUE_CHANGED,NULL);
+  hdmi_preview_status_t status={.enabled=true,.active=true,.signal_locked=true};
+  lv_obj_t*home=lv_scr_act();hdmi_ui_handle_status(&status);pump();
+  assert(lv_scr_act()==home && !lv_obj_has_state(hdmi_switch_obj,LV_STATE_CHECKED));
+  assert(saves==before && settings.hdmi_enabled && hdmi_mutations==0 && hdmi_control_connections==0);
+  puts("PASS unavailable HDMI: persisted ON, direct row/switch event and unsolicited active status cannot activate, save, or connect");
+ }
 #ifdef REVIEW_REAL_APP_MANAGER
  test_home_navigation();
  test_responsive_home();
@@ -410,6 +431,15 @@ int main(int argc,char**argv) {
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
   tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_indev_delete(pointer);
   lv_obj_t *title=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));assert(title && lv_obj_is_visible(title));
+  if(!desktop_hdmi_supported()){
+   lv_obj_t *caption=find_label(lv_layer_top(),ui_tr(UI_STR_HDMI_DISPLAY));assert(caption);
+   lv_obj_t *sw=lv_obj_get_child(lv_obj_get_parent(caption),-1);
+   assert(lv_obj_check_type(sw,&lv_switch_class));
+   assert(lv_obj_has_state(sw,LV_STATE_DISABLED) && !lv_obj_has_state(sw,LV_STATE_CHECKED));
+   int before=saves;lv_obj_add_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);
+   assert(!lv_obj_has_state(sw,LV_STATE_CHECKED) && saves==before && hdmi_mutations==0);
+   puts("PASS control center: unsupported HDMI disabled; forced event sends nothing");
+  }
  }
  else if(strcmp(argv[1],"desktop-update")==0){
   app_setting.init();
@@ -479,7 +509,12 @@ int main(int argc,char**argv) {
  else if(strcmp(argv[1],"user")==0){app_user.init();}
  else if(strcmp(argv[1],"hdmi")==0 || strcmp(argv[1],"hdmi-idle")==0){
   review_hdmi_idle=!strcmp(argv[1],"hdmi-idle");app_hdmi_mcp.init();
-  if(review_hdmi_idle) {
+  if(!desktop_hdmi_supported()) {
+   assert(find_label(lv_scr_act(),ui_tr(UI_STR_HDMI_UNSUPPORTED_HINT)));
+   assert(!find_label(lv_scr_act(),ui_tr(UI_STR_STOP)));
+   assert(hdmi_control_connections==0 && hdmi_mutations==0);
+   puts("PASS unavailable HDMI app: clear reason and no agent connection/control");
+  }else if(review_hdmi_idle) {
    assert(find_label(lv_scr_act(),ui_tr(UI_STR_READY)));
    assert(find_label(lv_scr_act(),ui_tr(UI_STR_MCP_EMPTY)));
    lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);

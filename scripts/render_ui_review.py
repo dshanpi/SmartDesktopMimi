@@ -29,6 +29,7 @@ def main():
     parser.add_argument('--pages', nargs='+', default=['home', 'control-center', 'apps', 'settings', 'desktop-update', 'wifi', 'password', 'bt', 'bt-connected', 'bt-details', 'bt-rename', 'video', 'video-library', 'ota', 'ota-error', 'ota-downloading', 'ai', 'ai-pairing', 'ai-offline', 'ai-speaking', 'ai-free-chat', 'user', 'hdmi'])
     parser.add_argument('--resolutions', nargs='+', default=['1024x768'],
                         help='Host render sizes only; does not qualify physical displays')
+    parser.add_argument('--without-hdmi', action='store_true', help='Exercise unsupported build capability; no provider qualification')
     args = parser.parse_args()
     resolutions = []
     for value in args.resolutions:
@@ -38,7 +39,8 @@ def main():
         if not (480 <= w <= 1920 and 480 <= h <= 1920):
             parser.error('host review sizes must be between 480 and 1920')
         resolutions.append((w, h))
-    build = ROOT / 'build/ui-review'
+    build = ROOT / ('build/ui-review-no-hdmi' if args.without_hdmi else 'build/ui-review')
+    capability_flags = ['-DMIMI_HDMI_SUPPORTED=0'] if args.without_hdmi else []
     build.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -78,7 +80,7 @@ def main():
                     for p in dependencies)):
                 run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
                      f'-DLV_CONF_PATH="{config_path}"', f'-I{APP}', f'-I{APP / "lvgl"}',
-                     '-DMIMI_ENABLE_VOICE_CONTROL=1', '-MMD', '-MF', dep, '-c', source, '-o', obj], log)
+                     '-DMIMI_ENABLE_VOICE_CONTROL=1', *capability_flags, '-MMD', '-MF', dep, '-c', source, '-o', obj], log)
             return obj
 
         with ThreadPoolExecutor(max_workers=4) as pool:
@@ -87,7 +89,7 @@ def main():
              build / 'lvgl/lib/liblvgl.a', '-lm', '-lpthread', '-ljson-c', '-lcurl', '-o', build / 'review'], log)
         manager_fixture = build / 'review_manager_fixture.o'
         run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
-             '-DREVIEW_REAL_APP_MANAGER', '-DMIMI_ENABLE_VOICE_CONTROL=1', f'-DLV_CONF_PATH="{config_path}"',
+             '-DREVIEW_REAL_APP_MANAGER', '-DMIMI_ENABLE_VOICE_CONTROL=1', *capability_flags, f'-DLV_CONF_PATH="{config_path}"',
              f'-I{APP}', f'-I{APP / "lvgl"}', '-c', sources[0], '-o', manager_fixture], log)
         manager = compile_one(APP / 'src/system/app_manager.c')
         run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', manager_fixture,

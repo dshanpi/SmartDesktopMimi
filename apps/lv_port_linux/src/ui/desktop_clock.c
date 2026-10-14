@@ -5,6 +5,7 @@
 #include "theme/theme.h"
 #include "ui_fonts.h"
 #include "ui_i18n.h"
+#include "desktop_capabilities.h"
 #include "../system/app_manager.h"
 #include "../apps/app.h"
 
@@ -330,15 +331,20 @@ static void create_monitor_preview(lv_obj_t *parent)
     lv_obj_set_style_pad_all(stand, 0, 0);
     make_noninteractive(stand);
 
-    if (preview_height < 200) {
+    if (preview_height < 200 || !desktop_hdmi_supported()) {
         lv_obj_add_flag(monitor, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(stand, LV_OBJ_FLAG_HIDDEN);
     }
-    lv_obj_t *ready = create_text(preview, ui_tr(UI_STR_HOME_READY_CONTROL),
+    lv_obj_t *ready = create_text(preview, ui_tr(desktop_hdmi_supported() ? UI_STR_HOME_READY_CONTROL : UI_STR_HDMI_UNSUPPORTED),
                                   ui_font_h2(), HOME_DARK_TEXT);
-    lv_obj_align(ready, LV_ALIGN_BOTTOM_MID, 0, -47);
-    lv_obj_t *hint = create_text(preview, ui_tr(UI_STR_HOME_SECURE_HDMI),
+    lv_obj_align(ready, desktop_hdmi_supported() ? LV_ALIGN_BOTTOM_MID : LV_ALIGN_TOP_MID, 0, desktop_hdmi_supported() ? -47 : 18);
+    lv_obj_t *hint = create_text(preview, ui_tr(desktop_hdmi_supported() ? UI_STR_HOME_SECURE_HDMI : UI_STR_HDMI_UNSUPPORTED_HINT),
                                  ui_font_body_md(), HOME_DARK_TEXT_MUTED);
+    if (!desktop_hdmi_supported()) {
+        lv_obj_set_width(hint, hdmi_width - 64);
+        lv_label_set_long_mode(hint, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
+    }
     lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -20);
 }
 
@@ -358,22 +364,26 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
     lv_obj_set_size(live_dot, 10, 10);
     lv_obj_align(live_dot, LV_ALIGN_TOP_RIGHT, -110, 28);
     lv_obj_set_style_radius(live_dot, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(live_dot, HOME_CYAN, 0);
+    lv_obj_set_style_bg_color(live_dot, desktop_hdmi_supported() ? HOME_CYAN : HOME_TEXT_MUTED, 0);
     lv_obj_set_style_bg_opa(live_dot, LV_OPA_COVER, 0);
     lv_obj_set_style_shadow_color(live_dot, HOME_CYAN, 0);
     lv_obj_set_style_shadow_opa(live_dot, LV_OPA_50, 0);
-    lv_obj_set_style_shadow_width(live_dot, 8, 0);
+    lv_obj_set_style_shadow_width(live_dot, desktop_hdmi_supported() ? 8 : 0, 0);
     lv_obj_set_style_border_width(live_dot, 0, 0);
     lv_obj_set_style_pad_all(live_dot, 0, 0);
     make_noninteractive(live_dot);
 
-    lv_obj_t *live = create_text(card, ui_tr(UI_STR_READY),
-                                 ui_font_body_md(), HOME_CYAN);
+    lv_obj_t *live = create_text(card, ui_tr(desktop_hdmi_supported() ? UI_STR_READY : UI_STR_HDMI_UNSUPPORTED),
+                                 ui_font_body_md(), desktop_hdmi_supported() ? HOME_CYAN : HOME_TEXT_MUTED);
     lv_obj_align(live, LV_ALIGN_TOP_RIGHT, -22, 22);
+    if (!desktop_hdmi_supported()) {
+        lv_obj_add_flag(live_dot, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(live, LV_OBJ_FLAG_HIDDEN);
+    }
 
     create_monitor_preview(card);
     hdmi_action_button = create_action_button(card, LV_SYMBOL_VIDEO,
-                                               ui_tr(UI_STR_HOME_OPEN_KVM), HOME_BLUE,
+                                               ui_tr(desktop_hdmi_supported() ? UI_STR_HOME_OPEN_KVM : UI_STR_HDMI_DETAILS), HOME_BLUE,
                                                hdmi_width - 48, HOME_ACTION_HDMI);
     lv_obj_align(hdmi_action_button, LV_ALIGN_BOTTOM_MID, 0, -20);
     return card;
