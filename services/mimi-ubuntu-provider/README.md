@@ -106,3 +106,20 @@ evidence. Host records cannot be installed as A133 identity. The expected
 Provider0.2.0/Ports2 profile is a controlled contract; the independent session
 handshake is still required before any activation is healthy. Trusted startup
 integration and signed deb activation remain unfinished.
+
+## Ubuntu runtime closure (REQ-MIMI-RUNTIME-028)
+
+`mimi-update inspect-ubuntu-runtime` reads the fixed desktop/Provider dependency
+roots and their ELF DT_NEEDED closure without executing libraries. It requires
+root-controlled system library paths, ELF64 little-endian x86_64, matching
+SONAMEs, unambiguous installed amd64 dpkg ownership, complete package versions,
+and SHA256 of each file. Path/bytes and package metadata are rechecked to reject
+concurrent replacement. Optional dynamically loaded plugins are outside this
+closure and do not become qualified by its existence.
+
+`inspect-ubuntu` and live enrollment checks now include SONAME versions and a
+`runtime-bundle-sha256` capability. Versions normalize the upstream numeric
+components for the shared SemVer matcher; full Debian revision/epoch and
+actual library contents remain bound by the mandatory digest. Old hardware-only
+ENROLL027 records must not qualify application installation. Generate a new
+controlled record after review; do not silently overwrite the previous one.

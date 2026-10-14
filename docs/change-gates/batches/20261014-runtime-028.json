@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu dynamic runtime closure and exact compatibility fingerprint",
+  "context": "ENROLL027 lacks actual application SONAME dependencies; first probe exposed version suffix parser error",
+  "next_steps": "Fixed native/arm64 builds, actual host enrollment and signed rc19 amd64 bundle verification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-RUNTIME-028",
+      "record": "docs/change-gates/REQ-MIMI-RUNTIME-028.md",
+      "scope": "Fixed runtime inspection, enrollment integration, CLI and tests",
+      "invariants": "No A133 behavioral change; no library execution/copy or key replacement; full package versions and bytes bound; no uploads",
+      "paths": [
+        "services/mimi-update/update/ubuntu_runtime.go",
+        "services/mimi-update/update/ubuntu_runtime_test.go",
+        "services/mimi-update/update/ubuntu_identity.go",
+        "services/mimi-update/cmd/mimi-update/main.go",
+        "services/mimi-ubuntu-provider/README.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-RUNTIME-028.md",
+        "docs/change-gates/batches/20261014-runtime-028.json"
+      ],
+      "checks": [
+        {
+          "name": "Initial real probe",
+          "status": "failed",
+          "scope": "86 libraries captured but OpenSSL numeric prefix lost patch digit",
+          "reason": "Regex backtracked on alphabetic version suffix; fixed with separate validation and prefix parsing",
+          "evidence": "output/ubuntu-runtime-20261014/runtime-r1.json"
+        },
+        {
+          "name": "Go regression and suffix fix",
+          "status": "passed",
+          "scope": "Whole Go updater tests including new runtime checks",
+          "evidence": "output/ubuntu-runtime-20261014/go-tests-r2.log"
+        },
+        {
+          "name": "Actual fixed binary registration/signing",
+          "status": "not_run",
+          "scope": "Committed updater and actual signed Ubuntu candidate",
+          "reason": "Awaiting fixed build",
+          "evidence": "docs/change-gates/REQ-MIMI-RUNTIME-028.md"
+        }
+      ]
+    }
+  ]
+}

@@ -25,6 +25,16 @@ func run() error {
 		return fmt.Errorf("usage: mimi-update {match|verify|pack|sign-index|verify-index|serve|select|install-offline|install-offline-index|status|check|download|install|cancel} [options]")
 	}
 	op := os.Args[1]
+	if op == "inspect-ubuntu-runtime" {
+		if len(os.Args) != 2 {
+			return fmt.Errorf("unexpected runtime inspector arguments")
+		}
+		libs, e := u.InspectUbuntuRuntime()
+		if e != nil {
+			return e
+		}
+		return json.NewEncoder(os.Stdout).Encode(libs)
+	}
 	if op == "inspect-ubuntu" {
 		f := flag.NewFlagSet(op, flag.ContinueOnError)
 		baseline := f.String("baseline", "", "controlled system baseline identifier")

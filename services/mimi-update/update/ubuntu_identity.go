@@ -165,7 +165,16 @@ func InspectUbuntu(baseline string) (Device, Enrollment, error) {
 	if err = trustedFile(loader); err != nil {
 		return d, enrollment, err
 	}
-	return ubuntuRecords(baseline, string(name), strings.TrimSpace(string(libc)), osRelease, nodes)
+	d, enrollment, err = ubuntuRecords(baseline, string(name), strings.TrimSpace(string(libc)), osRelease, nodes)
+	if err != nil {
+		return d, enrollment, err
+	}
+	libs, err := InspectUbuntuRuntime()
+	if err != nil {
+		return d, enrollment, err
+	}
+	err = bindUbuntuRuntime(&d, libs)
+	return d, enrollment, err
 }
 
 func compareUbuntuEnrollment(d Device, actual Enrollment, expectedDevice Device, expected Enrollment) error {
