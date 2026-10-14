@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "绑定新镜像实际FES失败与只读USB缓存诊断及旧板恢复",
+  "context": "actualflash terminal8%0mediawrite; no interface/bootchain changes; rootcause unknown",
+  "next_steps": "核查现有authorizedADB/受控USB传输接入与恢复门禁；可信app升级后走签名SWUpdate OTA，不把FES失败清零",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-050",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-050.md",
+      "scope": "HostUSBcached metadata and actualfailedfirstflash recovery only",
+      "invariants": "Hardware control stillMCP, no rawbulk/portreset/register/driver/CLI modification, fixedhubport and VIDPID,rawprivate",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-050.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+        "docs/change-gates/batches/20261015-system050-fes-failure.json"
+      ],
+      "checks": [
+        {
+          "name": "新618首装",
+          "status": "failed",
+          "scope": "taskflash1792017286420130700 reconnect8%, media0, noverify/partitions",
+          "evidence": "output/system-baseline-rc2-20261015/system048-native-flash-status-terminal.json",
+          "reason": "exactbound efex_init USB transferfailed"
+        },
+        {
+          "name": "HostUSB缓存元数据",
+          "status": "passed",
+          "scope": "Get-only cachedhubinfo fixedport; not proof of protocol or cause",
+          "evidence": "output/system-baseline-rc2-20261015/system050-usb-cache-result.json"
+        },
+        {
+          "name": "原板正常恢复和GPT/private字节摘要",
+          "status": "passed",
+          "scope": "rc17/signedcurrenthash/trialfalse/healthidle0/auth0/capturefalse; exact040 GPT/private hash; serialclosed",
+          "evidence": "output/system-baseline-rc2-20261015/system050-recovery-readback.json"
+        },
+        {
+          "name": "FES修复与新系统/OTA/全矩阵",
+          "status": "not_run",
+          "scope": "USBmetadata doesnotprove rootcause; newkernelnotinstalled",
+          "evidence": "output/system-baseline-rc2-20261015",
+          "reason": "must continue full goal, next evaluate supportedauthorizedUSB path"
+        }
+      ]
+    }
+  ]
+}
