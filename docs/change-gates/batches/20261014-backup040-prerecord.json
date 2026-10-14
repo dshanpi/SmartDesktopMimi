@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Prerecord refreshed rc17 critical device snapshot before any firmware writes",
+  "context": "Verified clean image/FEL channel; historical snapshots must not substitute current data",
+  "next_steps": "Normal boot, bounded critical snapshot/readback and actual service/auth restoration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-040",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+      "scope": "A133 V1.2 currentrc17 data and private recovery materials only",
+      "invariants": "No unowned PID signals, no keys in code/logs, no full SDK/cache backup, no flashing before successful snapshot/restoration",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "docs/change-gates/batches/20261014-backup040-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "critical snapshot and restoration",
+          "status": "not_run",
+          "scope": "Current actual board data",
+          "reason": "Prerecorded before backup",
+          "evidence": ".delivery/pre-system-flash-20261014-rc17"
+        }
+      ]
+    }
+  ]
+}

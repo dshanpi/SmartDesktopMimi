@@ -100,3 +100,5 @@ REQ-MIMI-SDK-036：[内核空缓存重放](change-gates/REQ-MIMI-SDK-036.md)，0
 - [REQ-MIMI-SDK-038](change-gates/REQ-MIMI-SDK-038.md)：空输出SDK的64位工具链初始化与应用构建提前拒绝。
 
 - [REQ-MIMI-SYSTEM-039](change-gates/REQ-MIMI-SYSTEM-039.md)：真正干净内核后的镜像门禁及绑定安装通道复核。
+
+- [REQ-MIMI-SYSTEM-040](change-gates/REQ-MIMI-SYSTEM-040.md)：当前rc17小型关键数据刷新和严格PID恢复。
