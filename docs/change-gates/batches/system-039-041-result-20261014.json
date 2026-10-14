@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "summary": "记录真实干净镜像复核、迟到FEL、关键备份及GPT容量差异，未刷写。",
+  "context": "接续SDK032/038/039/040/041和STABILITY037；固件冻结，主机成功不替代真机。",
+  "next_steps": "确认本版本原生烧录模式保留GPT与UDISK，再受控装板/稳定性和系统矩阵。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-037",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+      "scope": "只读runtimePM判断，unsupported不能当有效可切换因素",
+      "invariants": "原钥/绑定/HDMIoff保持；只读核对不等于升级通过；历史失败不覆盖，真实刷写与最终发布未执行。",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/20261014-backup040-prerecord.json",
+        "docs/change-gates/batches/20261014-system039-prerecord.json",
+        "docs/change-gates/batches/20261014-system041-prerecord.json",
+        "docs/change-gates/batches/system-039-041-result-20261014.json"
+      ],
+      "checks": [
+        {
+          "name": "runtimePM",
+          "status": "passed",
+          "scope": "实际driver/status只读",
+          "evidence": "output/a133-transfer-trace-20261014/runtimepm-summary.json"
+        },
+        {
+          "name": "永久稳定性修复",
+          "status": "not_run",
+          "scope": "设备旧内核候选",
+          "evidence": "output/a133-transfer-trace-20261014/completion-summary.json",
+          "reason": "既有失联原因未解决，尚无新修复后对照"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SYSTEM-039",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+      "scope": "干净镜像复核及同次迟到FEL和SFTP",
+      "invariants": "原钥/绑定/HDMIoff保持；只读核对不等于升级通过；历史失败不覆盖，真实刷写与最终发布未执行。",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/20261014-backup040-prerecord.json",
+        "docs/change-gates/batches/20261014-system039-prerecord.json",
+        "docs/change-gates/batches/20261014-system041-prerecord.json",
+        "docs/change-gates/batches/system-039-041-result-20261014.json"
+      ],
+      "checks": [
+        {
+          "name": "镜像来源/文件系统/签名",
+          "status": "passed",
+          "scope": "冻结source640c026/factory13及97 SDK",
+          "evidence": "output/system-clean-admission-20261014/source-closure-readback.json"
+        },
+        {
+          "name": "首个FEL返回",
+          "status": "failed",
+          "scope": "专用固定recipe",
+          "evidence": "output/system-clean-admission-20261014/fel-attempt.json",
+          "reason": "短超时返回未发现设备，原始失败保留"
+        },
+        {
+          "name": "同次迟到FEL",
+          "status": "passed",
+          "scope": "绑定project4/device4固定USB",
+          "evidence": "output/system-clean-admission-20261014/late-fel-device-readback.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SYSTEM-040",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+      "scope": "rc17一致性恢复备份/清理",
+      "invariants": "原钥/绑定/HDMIoff保持；只读核对不等于升级通过；历史失败不覆盖，真实刷写与最终发布未执行。",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/20261014-backup040-prerecord.json",
+        "docs/change-gates/batches/20261014-system039-prerecord.json",
+        "docs/change-gates/batches/20261014-system041-prerecord.json",
+        "docs/change-gates/batches/system-039-041-result-20261014.json"
+      ],
+      "checks": [
+        {
+          "name": "初次备份脚本",
+          "status": "failed",
+          "scope": "最后GPT尺寸读取",
+          "evidence": "output/system-clean-admission-20261014/backup-rc17-run.log",
+          "reason": "Tina无blockdev；原失败保留，未覆盖已有快照"
+        },
+        {
+          "name": "实际续做快照及清理",
+          "status": "passed",
+          "scope": "3590667B/76 regular，原4PID恢复/空授权/health/idle",
+          "evidence": "output/system-clean-admission-20261014/backup40-completion.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "写入前实际GPT容量核对",
+      "invariants": "原钥/绑定/HDMIoff保持；只读核对不等于升级通过；历史失败不覆盖，真实刷写与最终发布未执行。",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-STABILITY-037.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/20261014-backup040-prerecord.json",
+        "docs/change-gates/batches/20261014-system039-prerecord.json",
+        "docs/change-gates/batches/20261014-system041-prerecord.json",
+        "docs/change-gates/batches/system-039-041-result-20261014.json"
+      ],
+      "checks": [
+        {
+          "name": "分区布局一致",
+          "status": "blocked",
+          "scope": "UDISK实际16GB vs8GB模板",
+          "evidence": "output/system-clean-admission-20261014/incoming-gpt-layout-review.json",
+          "reason": "UDISK结束不同，需证明原生保留模式或容量适配行为"
+        },
+        {
+          "name": "实际flash/系统验收",
+          "status": "not_run",
+          "scope": "A133仍旧rc17/旧kernel",
+          "evidence": "output/next-phase-20261013/progress.json",
+          "reason": "未发写入，升级回退断电全数据验收尚未执行"
+        }
+      ]
+    }
+  ]
+}
