@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "summary": "Require a traceable requirement and scoped verification record for every changed file",
+  "context": "User requires every UI, backend, build, tool and documentation change to preserve readable context. Existing manual records remain authoritative; new range checks prevent omissions.",
+  "next_steps": "Verify this committed diff; retain actual host evidence, then continue Ubuntu Provider/deb and system device acceptance. Remote CI/upload and historical backfill remain pending.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-TRACE-021",
+      "record": "docs/change-gates/REQ-MIMI-TRACE-021.md",
+      "scope": "Host checker and CI configuration only, from source 8b25105; no firmware bytes or device state changed",
+      "invariants": "Immutable historical batches; exact changed-path coverage including deletes/rename sides; no execution of record content or hardware calls; no promotion to product acceptance",
+      "paths": [
+        ".github/workflows/change-gates.yml",
+        "scripts/check_change_gates.py",
+        "tests/architecture/test_change_gates.py",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-TRACE-021.md",
+        "docs/change-gates/batches/20261014-trace-021.json"
+      ],
+      "checks": [
+        {
+          "name": "Coverage checker regression",
+          "status": "passed",
+          "scope": "Real temporary Git repositories; 24 positive/negative cases",
+          "evidence": "output/change-gates-20261014/architecture.log"
+        },
+        {
+          "name": "Full architecture suite",
+          "status": "passed",
+          "scope": "Host architecture tests, 74 cases",
+          "evidence": "output/change-gates-20261014/architecture.log"
+        },
+        {
+          "name": "Actual committed diff",
+          "status": "not_run",
+          "scope": "8b25105 through resulting source commit",
+          "evidence": "output/change-gates-20261014/",
+          "reason": "Must run after this source commit exists"
+        },
+        {
+          "name": "Remote CI and historical backfill",
+          "status": "not_run",
+          "scope": "Remote workflow and all pre-baseline history",
+          "evidence": "docs/change-gates/REQ-MIMI-TRACE-021.md",
+          "reason": "No uploads before mandatory device acceptance; no retrospective qualification claim"
+        }
+      ]
+    }
+  ]
+}

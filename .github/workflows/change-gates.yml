@@ -1,0 +1,46 @@
+name: Change traceability coverage
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Reviewed ancestor commit for this change batch
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  traceability:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Regression tests for the coverage checker
+        run: python3 -m unittest discover -s tests/architecture -p test_change_gates.py
+      - name: Require records for the actual committed change
+        env:
+          EVENT_KIND: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
+          MANUAL_BASE: ${{ inputs.base }}
+        run: |
+          set -eu
+          case "$EVENT_KIND" in
+            pull_request) base=$(git merge-base "$PR_BASE" HEAD) ;;
+            push) base="$PUSH_BASE" ;;
+            workflow_dispatch) base="$MANUAL_BASE" ;;
+            *) echo 'No reviewed comparison baseline'; exit 1 ;;
+          esac
+          # First imports have no parent tree. Fail clearly instead of claiming
+          # all historical implementation/acceptance was covered by this check.
+          if [ -z "$base" ] || [ "$base" = 0000000000000000000000000000000000000000 ]; then
+            echo 'Initial import has no comparison baseline; complete the initial-source review and run with a reviewed ancestor.'
+            exit 1
+          fi
+          python3 scripts/check_change_gates.py --base "$base" --head HEAD
