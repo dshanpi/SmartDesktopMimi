@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Prerecord fixed product artifact admission and scoped installation channel readback",
+  "context": "Productr2 live; existing transfer/FEL failures remain, no installed new system",
+  "next_steps": "Read actual final build then signed artifact/target gates and legal scoped channel",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-039",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+      "scope": "Frozen system baseline reproduction and A133 MainBoard V1.2",
+      "invariants": "No flash before artifact/data/restore gates; no policy bypass or release upload; old failures retained",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-039.md",
+        "docs/change-gates/batches/20261014-system039-prerecord.json",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "actual artifact and channel admission",
+          "status": "not_run",
+          "scope": "Productr2 and bound MCP4/4",
+          "reason": "Prerecorded before verification",
+          "evidence": "output/system-clean-admission-20261014"
+        }
+      ]
+    }
+  ]
+}
