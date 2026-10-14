@@ -1,0 +1,8 @@
+
+
+## 2026-10-15 SYSTEM048 新候选及工厂基线实际结果
+应用source a37a63db5ca145c9ae700b2c0a1356d2e70b5439/version1.0.8-rc.23已构建和原钥签名，包27292543B/hashc22c01e10424dc76323af621ffee0d1c9ae8ce9d580a3cb786638f88ba802f78。首轮npm缺PATH failed，成功desktop收据和SHA核对后只接续Web/资源阶段passed，没有重编已成功desktop。
+主机真实验签/归档及硬件兼容passed：接受rc1和主机rc2目标夹具，实际拒绝rc2.1、rc3和错误V1.1修订。第一次错误未登记factory夹具及两次错误identity关联核对不当作边界验收通过；最终r4按冻结硬件7字段与实际040备份enrollment关联通过，不改变板卡登记。
+独立冻结系统source worktree .delivery/system-rc2-source-20261015与AArch64当前更新器、签名rc23工厂基线准备passed，factory lock89d2908dd9fe9c76f7f83e2f23612d7db040b74d5bbe82c7d15b76ac4d9dcd5d；系统版本1.0.0-rc.2是构建目标，非已装系统。首轮未知baseline_id字段被严格拒绝，历史failed保留，r2改用已定义system_baseline字段，受控硬件其余约束/原信任不变，通用镜像不含单机enrollment_id。
+完整rc2产品supervisor968196开始输入/环境核对；实际最终状态读取output/system-baseline-rc2-20261015/product-build-result.json，尚不得写镜像或实机passed。新产品必须核对面板配置/ELF/Image/实际完整img boot payload、文件系统、签名factory和版本，旧552镜像不能冒充新修复。SDK047私有overlay1fb已远端回读，应用与Release仍未上传。
+当前首要未完：完整新镜像与系统升级包、原生FES握手及新内核装板、显示修复对照和失联根因、升级回退/断电/数据/功能矩阵；其余Ubuntu真实登录数据、源码拆分收尾、配对归属/新绑定、真实语音/Tuya资源和统一发布远端复验保留。证据范围严格区分host/physical，整套交付未完成。

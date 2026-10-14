@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "记录rc23真实构建验签和rc2签名factory，启动完整产品输入核对",
+  "context": "接续SYS048事前版本，独立freeze source a37，历史npm和fixture/schema失败保留；不以主机验签当作新系统装板",
+  "next_steps": "先读取supervisor结果，不重复启动；完整packed boot/kernel/rootfs/签名版本通过后推进原生FES和全部必需真机矩阵",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-048",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+      "scope": "本地候选与工厂基线及真实进度，非产品发布资格",
+      "invariants": "旧key/设备绑定不改，版本约束严格，HDMIoff，失败历史不改，不上传应用/Release",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-048.md",
+        "docs/change-gates/batches/20261015-system048-factory-progress.json"
+      ],
+      "checks": [
+        {
+          "name": "rc23构建与原钥主机验签",
+          "status": "passed",
+          "scope": "actual a37/packagec22 two explicit system targets and real wrongrevision/version rejection",
+          "evidence": "output/system-baseline-rc2-20261015/application-resume-result.json and application-sign-verify-r4.json"
+        },
+        {
+          "name": "通用工厂基线",
+          "status": "passed",
+          "scope": "signed rc23 current AArch64 updater, host-only rc2 descriptor; enrollment ID absent; trust unchanged",
+          "evidence": "output/system-baseline-rc2-20261015/factory-prepare-result-r2.json"
+        },
+        {
+          "name": "最初构建/验签/工厂夹具尝试",
+          "status": "failed",
+          "scope": "npm missingPATH/unenrolled and incorrectly hashed identity/unknown baseline_id; no device/key changes",
+          "evidence": "output/system-baseline-rc2-20261015 historical failure logs",
+          "reason": "原失败保留，受限修正接续后分别重验，不移记通过"
+        },
+        {
+          "name": "完整新产品及真机",
+          "status": "not_run",
+          "scope": "supervisor968196正在输入核对；全部真实系统/稳定性矩阵另验",
+          "evidence": "output/system-baseline-rc2-20261015/product-build-result.json",
+          "reason": "当前尚未完成，不能以factory签名代替"
+        }
+      ]
+    }
+  ]
+}
