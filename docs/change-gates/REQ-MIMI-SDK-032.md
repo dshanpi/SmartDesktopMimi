@@ -13,3 +13,6 @@
 准备实际结果：首次check-only缺固定epoch被拒，r2绑定1791932282后passed。97组件HEAD/现有差异和八个启动输入已绑定；out/kernel output原子移至.delivery/sdk-cache-before-clean-20261014，未删除。新pack输入、黄金镜像及新生成五包索引passed。首次build supervisor在产品启动前拒绝staging_dir存在。复核为本轮metadata预检生成的4个regular host bootstrap文件及25个/usr/bin工具链接，目标均root拥有不可普通用户写，固定resolved/哈希；不含原build_dir/staging包缓存。两次汇总断言区分regular/link的日志说明保留；后续仅完全匹配fresh-bootstrap-files.json才启动，不泛化接受未知缓存。kernel output仍空、build_dir仍无。
 
 完整干净产品重建已实际启动：supervisor3623310/child3623311，output/sdk-clean-product-20261014/build-result.json phase=running；正在从新目录编译工具/产品依赖，最终kernel/rootfs/镜像门禁仍not_run。旧缓存保留恢复用，8GiB动态磁盘保留线触发会停止并记录失败；源码固定640c026与旧factory13，不是板端新安装或最新应用发版。下一轮读取现有job结果，禁止再启动另一个SDK构建。
+
+
+构建等待期间补充只读输入核对（实施前）：按私有repo overlay manifest逐项核对4114个真实文件/链接在当前SDK中的内容摘要，补充97组件tracked diff检查未覆盖的未跟踪输入。原SDK组件快照/57项supplement/独立build-fix仍是恢复权威；overlay差异只列出并逐项关联原材料和产品注入，不自动认作丢失或修改构建中的文件。输出output/sdk-clean-product-20261014/overlay-input-readback.json，既有文件不覆盖，秘密/文件正文不打印。所有差异未解释前full input closure保持not_run，不以核对数量替代干净构建及真机验收。

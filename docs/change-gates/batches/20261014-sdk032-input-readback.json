@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Pre-record read-only verification of expanded overlay inputs during existing build",
+  "context": "Full input closure includes untracked sources beyond component tracked diff hashes",
+  "next_steps": "Compare all manifest files without changing SDK; review differences against pinned restore inputs and additive product recipes",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-032",
+      "record": "docs/change-gates/REQ-MIMI-SDK-032.md",
+      "scope": "Read-only untracked input verification",
+      "invariants": "No SDK mutation or duplicate build; overlay differences are not blindly restored",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-032.md",
+        "docs/change-gates/batches/20261014-sdk032-input-readback.json"
+      ],
+      "checks": [
+        {
+          "name": "expanded overlay input verification",
+          "status": "not_run",
+          "scope": "4114 manifest entries, source/config/download/firmware",
+          "reason": "Pre-implementation record",
+          "evidence": "output/sdk-clean-product-20261014/overlay-input-readback.json"
+        }
+      ]
+    }
+  ]
+}
