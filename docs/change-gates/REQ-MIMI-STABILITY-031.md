@@ -13,3 +13,5 @@
 2026-10-14 对照前故障：主机固定响应/404拒绝/4MiB字节摘要和64.008秒限速校准passed。板端尚未下发下载启动命令，预检已无响应（单NUL随后空），ping失败，原始记录baseline-new-path.log/baseline-followup.log。基线传输not_run，空闲失联failed；不是4MiB下载导致。调整后续受控诊断：按既有授权恢复同一rc17，先复核健康/版本/省电原值，仅临时将iw Wi-Fi powersave关闭（sysfs device power/control仍auto，不改第二变量），记录读回，再做同受限文件测试及持续只读网络监测。根因/永久修复仍未确认；验收结束恢复原on，失败则恢复后核对on，无持久配置修改。若省电off也失联，则记录否定证据，不反复用重启冒充通过。
 
 省电off单次4MiB网络下载和SHA256读回passed，仍sysfs PM=auto；尚不能视为根因修复。首个background命令串接出现&;语法错误，未启动；off-download-launch.log保留，正确r2才产生PID/下载与退出0，失败未改写。后续空闲对照延长43分钟，开发主机每15秒只读ping/固定静态页面/已验证MAC摘要；监测进程仅读取，不重试硬件/继电器。板端设置独立45分钟自动恢复on的一次性诊断timer（原值为on）；显式复核后清理。若板子失联，timer不保证执行，下一次授权恢复后必须读回on。用户/其他任务操作会使对照证据失效，不能据此直接持久关闭省电。结束后释放专用串口，下载文件和HTTP服务清理；计时脚本不进入生产镜像/配置。
+
+本轮保存：43分钟只读监测已启动，初始MAC摘要/签名静态页面摘要/ping一致；当前运行中，不记最终passed。板端45分钟自动恢复on timer已启动，恢复截止2026-10-14T10:53:43.142526+00:00；尚需实际读回确认。省电off仅临时诊断，无应用/系统/驱动安装。原子命令完成标记用于绑定异步UART回包，原语法失败保留。自有HTTP server已核对PID/cmdline后停止，诊断下载文件已删除，serial-5关闭。详情output/a133-stability-20261014-r4/result.json、idle-observer-{status,result}.json和逐样本jsonl。下一轮先读observer结果，再复核scope空闲、timer回执/on、真实rc17健康/数据状态并清理timer脚本；若未到截止且observer运行，不把它当完成或重启覆盖测试。整套交付未完成。

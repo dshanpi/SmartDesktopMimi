@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Persist actual bounded transfer and running idle comparison handoff",
+  "context": "Originalon idle failure, temporaryoff transfer passed, deadline timer restores original setting",
+  "next_steps": "Read observer result, verify originalon/identity/health and clean timer; no permanent-fix or release claim",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-STABILITY-031",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+      "scope": "Actual diagnostic evidence and timed continuation",
+      "invariants": "Running test not passed; original restoration requires readback; no upload",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-STABILITY-031.md",
+        "docs/change-gates/batches/20261014-stability-031-pending-evidence.json"
+      ],
+      "checks": [
+        {
+          "name": "temporaryoff4MiB transfer and cleanup",
+          "status": "passed",
+          "scope": "Actual A133 and fixed host limit",
+          "evidence": "output/a133-stability-20261014-r4/result.json"
+        },
+        {
+          "name": "idle observation and original-state readback",
+          "status": "not_run",
+          "scope": "43min temporary runtime comparison",
+          "reason": "Observer still running and final UART readback pending",
+          "evidence": "docs/change-gates/REQ-MIMI-STABILITY-031.md"
+        }
+      ]
+    }
+  ]
+}
