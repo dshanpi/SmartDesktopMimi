@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "事前记录固定目标USB元数据只读取证",
+  "context": "actual newimage618 same nativeFES reconnect failed beforemediawrite; PNP stillOK",
+  "next_steps": "只读匹配hubport缓存descriptor，记录实际结果和权限错误，保留旧失败，用MCP恢复旧板",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-050",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-050.md",
+      "scope": "Windowsmetadata only, not direct device protocol/control",
+      "invariants": "no bulk/boot/port reset/driver replacement/CLI or protectedboot edits, fixedparent and VIDPID",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-050.md",
+        "docs/change-gates/batches/20261015-system050-prerecord.json"
+      ],
+      "checks": [
+        {
+          "name": "只读metadata与恢复",
+          "status": "not_run",
+          "scope": "prerecord only",
+          "evidence": "work/system048-fes-pnp.json",
+          "reason": "diagnostic to be implemented"
+        }
+      ]
+    }
+  ]
+}
