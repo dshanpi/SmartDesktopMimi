@@ -14,3 +14,7 @@
 原实施前段落“九分区名字/大小/顺序和实际GPT对照一致”是未完成比对时的假设，现明确纠正；不覆盖该历史文本。前八分区名字/start/end一致，UDISK起点一致但结束不同：incoming 15269854，实测30535646；incoming GPT backupLBA15269887对应约8GB模板，实板约16GB。证据 output/system-clean-admission-20261014/incoming-gpt-layout-review.json、current-gpt-partitions.json。差异状态 review_required；尚未下发任何flash/erase写入，设备仍原rc17，串口已关闭。
 
 必须先证明当前原生MCP mode对实际GPT/UDISK的保留或容量适配行为，再选择安装路径；不得以没有UDISK downloadfile推定分区表不变，也不得以3.6MB关键备份覆盖全部UDISK媒体数据。MCP广告command/partition等与已装CLI0.2.11帮助keep_data的对应关系需要真实实现证据，未知时不得猜测。若需要新包调整，重新签名并重跑受影响构建/匹配/布局门禁；原冻结包和失败历史保留。当前完整系统安装、数据保留和稳定性均not_run/failed，禁止上传。
+
+### 分区容量路径只读分析
+固定SDK U-Boot组件c77c46bdd5669689ca5ad1452971d6734a2adeb7的sprite/sprite_download.c:558/618/644及938/954显示从实际存储总扇区设置GPT backupLBA/last_usable_lba，末分区结束采用实际last_usable；这解释8GB打包模板与16GB现盘差异可能是运行时容量适配，不直接改包重建。主机算式30535680-34=30535646与实际UDISK结束吻合。需继续核对本次FES加载器配置/实际对应二进制和0.2.11原生行为；源码分析不等于真机保留已通过。
+公开OpenixCLI upstream固定aeee88d/0.2.4及100askTeam fork ea0e305/0.1.3显示partition会跳过erase但仍下发MBR和Boot0/Boot1；不能声称partition完全不写GPT/启动链。两源不是当前已装CLI0.2.11的等价证据，不凭名字冒充版本核对。来源/算式/路径及限制见gpt-dynamic-capacity-source-review.json，尚未执行刷写。

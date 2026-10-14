@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "补充SDK真实容量适配源码路径，同时明确版本差异与未验证边界。",
+  "context": "041实际UDISK16GB与模板8GB不同，在任何写入前只读分析。",
+  "next_steps": "固定实际原生CLI/加载器行为及数据基线后再受控安装。",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "只读固定源分析和版本边界",
+      "invariants": "不把源码推断当二进制或真机通过；原包/可信钥/设备绑定保持，未flash/erase。",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/system-041-capacity-review-20261014.json"
+      ],
+      "checks": [
+        {
+          "name": "SDK容量适配源路径",
+          "status": "passed",
+          "scope": "固定SDK组件c77c46b源码只读",
+          "evidence": "output/system-clean-admission-20261014/gpt-dynamic-capacity-source-review.json"
+        },
+        {
+          "name": "本次原生二进制数据保留",
+          "status": "not_run",
+          "scope": "CLI0.2.11/实际FES loader",
+          "evidence": "output/system-clean-admission-20261014/gpt-dynamic-capacity-source-review.json",
+          "reason": "已读公共源版本不同，尚未证实当前本次路径，不发写入"
+        }
+      ]
+    }
+  ]
+}
