@@ -104,8 +104,12 @@ def discover(uid):
         fields = row.split()
         if len(fields) < 2 or not ID.fullmatch(fields[0]) or fields[1] != str(uid):
             continue
-        p = command(['/usr/bin/loginctl', 'show-session', fields[0], '--property=Id,User,Seat,Remote,Active,Class,Type,Display,Scope,Service'])
-        sessions.append(properties(p))
+        keys = ['Id', 'User', 'Seat', 'Remote', 'Active', 'Class', 'Type', 'Display', 'Scope', 'Service']
+        p = command(['/usr/bin/loginctl', 'show-session', fields[0], *['--property=' + k for k in keys]])
+        values = properties(p)
+        if set(values) != set(keys) or values['Id'] != fields[0] or values['User'] != str(uid):
+            raise ValueError('incomplete or changed logind projection')
+        sessions.append(values)
     return select_session(sessions, uid)
 
 

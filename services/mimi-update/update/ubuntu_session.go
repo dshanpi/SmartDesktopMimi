@@ -145,7 +145,11 @@ func (s UbuntuSession) readyLogin() error {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, program, "show-session", s.LoginSession, "--property=Id,User,Class,Type,Remote,Active,Seat,Display,Scope")
+	args := []string{"show-session", s.LoginSession}
+	for _, key := range []string{"Id", "User", "Class", "Type", "Remote", "Active", "Seat", "Display", "Scope"} {
+		args = append(args, "--property="+key)
+	}
+	cmd := exec.CommandContext(ctx, program, args...)
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "LANG=C"}
 	raw, err := cmd.Output()
 	if err != nil {

@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Fix Ubuntu20.04 loginctl property argument compatibility discovered on realhost",
+  "context": "First installed bridge read zero-empty properties and could not prove filtering; original deployment retained, stopped before repair",
+  "next_steps": "Rebuild updater, update only independent loginplatform and verify actual logind attributes; graphical login still required",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Compatibility defect and fail-closed property projection",
+      "invariants": "No CLI success without complete metadata; no change to app/key/enrollment",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/batches/20261015-login052-cli-fix.json",
+        "services/mimi-ubuntu-provider/login.py",
+        "services/mimi-update/update/ubuntu_session.go",
+        "tests/sdkbuild/test_ubuntu_login.py"
+      ],
+      "checks": [
+        {
+          "name": "First property projection",
+          "status": "failed",
+          "scope": "Actual Ubuntu20.04 loginctl zero return with empty stdout for comma flags",
+          "evidence": "output/ubuntu-login-20261015/deployment-result.json plus gate narrative",
+          "reason": "Unrecognized comma property names; corrected repeated arguments"
+        },
+        {
+          "name": "14 Python boundary regressions",
+          "status": "passed",
+          "scope": "Includes empty projection refusal and existing session regressions",
+          "evidence": "output/ubuntu-login-20261015/python-boundaries-r4.log"
+        },
+        {
+          "name": "Actual ordinary graphical login",
+          "status": "not_run",
+          "scope": "Current c1 Waylandgreeter is not user graphical login",
+          "evidence": "output/ubuntu-login-20261015",
+          "reason": "User local X11 login needed"
+        }
+      ]
+    }
+  ]
+}

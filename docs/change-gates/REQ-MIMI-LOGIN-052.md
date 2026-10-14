@@ -41,3 +41,8 @@ ADBbinding尚缺，A133主线保留；可独立实施Ubuntu。外部云设备/�
 ## 实现与第一次回归（2026-10-15）
 独立登录桥接与 systemd 模板已实现；Go UbuntuSession 增加可选 login_session，旧显式显示配置保持兼容，新增入口独立检查 logind 并 BindsTo/After 对应登录 scope。桥接对短期配置写入/停止使用共享更新锁，启动仍由 start-selected 重新验签；不混入应用包。
 Python边界第一次 failed：测试夹具在group-writable开发目录内，祖先检查真实拒绝；未放宽守卫，改为安全用户home临时fixture，第二次13项（含旧会话6项）passed。Go Ubuntu/StartSelected scope及事务锁回归passed。源码尚未正式平台安装；真实登录/数据/升级仍not_run。日志 output/ubuntu-login-20261015，失败日志保留。
+
+## 真实CLI兼容缺陷（实现后实际读取发现，保留失败）
+首次部署的无启动/数据保持检查实际通过，但登录属性读取不合格：Ubuntu20.04 loginctl 对单个 `--property=Id,User,...` 返回0却空正文，不能把该输出当真实过滤验收。必须修复为逐个 `--property` 并拒绝缺失属性，新增真实本机登录属性读取验收；原部署记录保留，仅证明服务未启动桌面，不证明过滤正确。A133/应用与签名密钥不变。
+
+修复已完成：逐字段property参数且缺字段/会话Id改变拒绝。真实c1属性已读出 User125/Classgreeter/Typewayland/seat0，真实固定UID1000会话筛选None；14项Python边界passed。CLI缺陷不改变原服务确实未启动UI/数据未改事实，但过滤验收必须以后续真实完整属性证据为准。

@@ -28,6 +28,18 @@ class LoginTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             login.select_session([good, dict(good, Id='43', Scope='session-43.scope')], os.getuid())
 
+    def test_real_logind_projection_and_zero_empty_output(self):
+        raw = b'42 1000 ubuntu seat0 tty2\n'
+        props = ('\n'.join(k+'='+v for k,v in session().items())+'\n').encode()
+        with patch.object(login, 'command', side_effect=[raw, props]) as command:
+            self.assertEqual(login.discover(1000)['Id'], '42')
+            args = command.call_args_list[1][0][0]
+            self.assertIn('--property=Id', args)
+            self.assertFalse(any(',' in a for a in args))
+        with patch.object(login, 'command', side_effect=[raw, b'']):
+            with self.assertRaises(ValueError):
+                login.discover(1000)
+
     def test_gdm_authorization_has_fixed_user_path(self):
         self.assertEqual(str(login.authority_source(session(), 1000)), '/run/user/1000/gdm/Xauthority')
         with self.assertRaises(ValueError):
