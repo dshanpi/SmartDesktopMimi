@@ -21,7 +21,8 @@
           "name": "Candidate build and baselines",
           "status": "not_run",
           "scope": "New source and independently pinned SDK",
-          "evidence": "output/system-product-20261015"
+          "evidence": "output/system-product-20261015",
+          "reason": "Prerecorded before actual rc24 compilation and baseline preparation"
         },
         {
           "name": "Physical and deployed account acceptance",
