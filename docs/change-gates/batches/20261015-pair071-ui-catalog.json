@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Record reviewed pairing UI source and explicit optional-state scenarios",
+  "context": "Remote update gate38730596624 correctly rejected stale UI catalog after new pairing implementation",
+  "next_steps": "Read new remote CI; full app package and physical binding remain not_run",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PAIR-071",
+      "record": "docs/change-gates/REQ-MIMI-PAIR-071.md",
+      "scope": "UI inventory only; no runtime or artifact modification",
+      "invariants": "Do not bypass catalog gate; host render cannot stand for physical acceptance; old artifacts remain immutable",
+      "paths": [
+        "tools/update/ui_catalog.py",
+        "tests/update/ui-catalog.json",
+        "docs/change-gates/REQ-MIMI-PAIR-071.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261015-pair071-ui-catalog.json"
+      ],
+      "checks": [
+        {
+          "name": "Reviewed UI catalog",
+          "status": "passed",
+          "scope": "Only pairing page source changed;16hostvariants and ABI/countdown tests from preceding batch passed",
+          "evidence": "docs/validation/pairing-client-071.json"
+        },
+        {
+          "name": "Actual physical pairing scenarios",
+          "status": "not_run",
+          "scope": "New4 pairing scenarios",
+          "reason": "No backend deployment or device install; board blackscreen unresolved",
+          "evidence": "docs/change-gates/REQ-MIMI-PAIR-071.md"
+        }
+      ]
+    }
+  ]
+}

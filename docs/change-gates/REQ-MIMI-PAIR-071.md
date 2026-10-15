@@ -25,3 +25,7 @@ not_run：后台线上部署（补丁83e7de7由用户后续合并）、真实账
 
 ### IPC门禁拦截与兼容审查
 首次check_contracts主动拦截middleware头SHA变化（contracts-r1.log保留），没有跳过门禁。复核旧源码dispatcher对topic>=TOPIC_MAX直接返回而不写数组/断连；V1结构原字节、命令编号不变，新增仅topic22/32字节schema1；实际旧V1与新可选状态UI fixtures及ABI断言通过。显式锁更新mimi-ipc-v1.2，保留最小兼容mimi-ipc-v1.1/base Ports，新增头纳入SHA锁。真实旧UI/新Provider双进程及实体混版仍not_run，不把源码审查写成实机通过。未重建不受影响后端/旧产物。
+
+
+### 远端UI清单门禁失败与修复
+原627e1ef的Application update gates（38730596624）在UI coverage inventory失败，原因新配对页源SHA未同步ui-catalog，非已通过主机项或设备状态改变。先比较原/现清单，变化仅pairing_app.c，真实16变体与页面断言已经覆盖；现补authoritative-bound、unknown-ownership、reject-optional-schema、same-code-poll-no-renewal四场景，再显式record清单。清单只绑定源码/场景，实体四项保持not_run；保留远端失败，不改旧包、不重编无关代码。私有f80bbfb的CI已success，SDK实际默认master已快进fa0d799，初次同步额外main同值引用保留未删。
