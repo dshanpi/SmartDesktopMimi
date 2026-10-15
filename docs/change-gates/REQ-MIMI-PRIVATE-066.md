@@ -12,3 +12,5 @@
 进一步核对发现SDK service_ai_runtime.c在拉起Tuya前独立读取factory授权，故隔离范围必须含后端三个reader函数。已建立公共ABI/固定禁用实现、私有重试初始化C和原字节reader函数头及来源锁；这只是组件阶段，尚未改当前SDK/主程序/packaging调用链，不能宣称整个公共产品已禁用。后续SDK公共/私有recipe与源码闭包必须一起更新并真实编译验证。
 
 公共ABI/两固定禁用stub已加入integrations/tuyaopen/pairing，2个实际native编译/运行检查passed：公共运行stub无需链接任何设备授权/网络API，公共reader调用open即abort的探针未发生IO。仍尚未替换当前SDK/主入口，不能冒充整个产品已禁用。
+
+组件阶段真实结果：4个对象使用原A133 GCC和真实Tuya SDK头编译，public/private runtime分别149输入、private/public reader分别71/4输入，公开组件无私有依赖，全部ELF64 AArch64且前后输入SHA稳定。公共2/私有2 native探针passed（reader14场景），详见a133-objects.json/verified-result.json。这里只编译适配对象，主程序/当前SDK/打包尚未接入，完整程序/镜像与物理not_run；不能把这个阶段改写为产品隔离通过。

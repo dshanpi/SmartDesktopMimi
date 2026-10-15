@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Tuya组件native和真实A133对象结果",
+  "context": "两层授权路径组件已验证，旧SDK/主程序/打包未接线",
+  "next_steps": "继续同一PRIVATE066完成SDK新源/recipe与Provider、Tuya入口及系统启动安装profile",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "真实组件证据和下一步边界",
+      "invariants": "不将对象编译称完整镜像/运行通过，冻结旧产物和设备不变",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/private066-component-results-20261015.json",
+        "docs/update/EDITION-SOURCE-MAP.md"
+      ],
+      "checks": [
+        {
+          "name": "native/A133组件",
+          "status": "passed",
+          "scope": "4native探针/14reader场景，4真实A133对象/闭包/ABI",
+          "evidence": "output/private-tuya-adapter-20261015/verified-result.json"
+        },
+        {
+          "name": "SDK/主入口/打包接线及物理",
+          "status": "not_run",
+          "scope": "现产品路径尚未切换",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "下一阶段接续，物理用户延期"
+        }
+      ]
+    }
+  ]
+}

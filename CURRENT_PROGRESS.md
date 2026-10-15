@@ -1,3 +1,11 @@
+# 当前进度（2026-10-15，PRIVATE066组件已编译，主链未切换）
+
+100ask PRIVATE065已完成实际公共30/private32TU构建、189更新+75架构0skip及两仓CI和源码回读，旧产物不变。Tuya PRIVATE066已抽出私有授权初始化C与原后端reader头，公共ABI和两固定禁用stub已建立；公共2/私有2 native探针（含14reader场景）通过，4个组件均用真实A133工具链/真实Tuya SDK头编译为ELF64 AArch64，依赖闭包及源前后SHA核对passed。源45324b4/私有f3b2809，证据output/private-tuya-adapter-20261015/verified-result.json。
+
+重要剩余：当前SDK service_ai_runtime、tuya_main、prepare/build及系统packaging仍使用旧路径，尚未切到组件；公共整个产品仍不能称已禁止授权读取。下一步同一PRIVATE066接续SDK公共stub/私有reader来源、新recipe/Provider组合，Tuya主入口提前禁用与暂存源检查、系统安装启动profile、实际完整Tuya/Provider构建及最终产品锁。不能只改聊天程序，因为后端也会先读授权。
+
+本批没有改当前SDK或真实设备，不重建rc2/rc23/旧25草稿，可信钥/绑定不变；A133安装升级断电等按用户后置，Ubuntu登录及真实云/语音/账号未验收。整体未完成，原mimi循环ACTIVE。
+
 # 当前进度（2026-10-15，PRIVATE065 Provider组合通过）
 
 用户重启后已明确继续，原mimi循环ACTIVE，无重复构建。100ask两原C私有497468c与锁9bcd9a60已成为新私有编译的显式来源；公共入口拒绝私有输入，SDK旧副本不作回退。代码25112c7实际公共30TU/private32TU独立编译/链接/依赖闭包通过，分别84af5217/8a8b3a45与原程序同字节、ELF64 AArch64。189更新+75架构0skip/10拒绝边界、源码审计及实际build_apps --clean缺组件清理前拒绝passed，旧输出/SDK配置/原rc2/rc23 SHA不变。证据output/private-100ask-adapter-20261015/verified-result.json。
