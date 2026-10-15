@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "summary": "Record real dualprofile SDK component replay, private source upload and independent readback",
+  "context": "Only authorized privateSDK source exception; newcomponent in actualSDK without oldinput overwrite; candidate/app/Release not published",
+  "next_steps": "Wire productentry toSDK source, remove public legacy implementations, finish source/applicationSDK and physical matrix; externaldevice/input resources pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-053",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+      "scope": "Real sourcecheckpoint and builds, not final migration/image or physical acceptance",
+      "invariants": "Standardrepooverlay, no privatevendor/secret copy, no existingSDK overwrite, oldcandidate locks unchanged",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/update/SOURCE-OWNERSHIP.md",
+        "docs/change-gates/batches/20261015-split053-sdk-checkpoint.json"
+      ],
+      "checks": [
+        {
+          "name": "Dualprofile/4248overlay/95baseline replay",
+          "status": "passed",
+          "scope": "Actualcomponent builds/targetcopy, no fullSDK rebuild",
+          "evidence": "output/a133-provider-split-20261015/sdk-overlay-replay.json and replayed-results"
+        },
+        {
+          "name": "PrivateSDK push and independentremote4248 readback",
+          "status": "passed",
+          "scope": "Private source only, no application/Release",
+          "evidence": "output/a133-provider-split-20261015/sdk-source-upload.json and sdk-remote-readback.json"
+        },
+        {
+          "name": "SDK additivecopy exactmode first",
+          "status": "failed",
+          "scope": "New134files only; body hashes okay, Git0664 inherited",
+          "evidence": "output/a133-provider-split-20261015/actual-sdk-component-copy-failure.json",
+          "reason": "Fixed newlyadded134 modes to manifest without overwriting older source"
+        },
+        {
+          "name": "ActualSDK installedcomponent compile",
+          "status": "passed",
+          "scope": "New134sources + private32TU, originalbackend identical",
+          "evidence": "output/a133-provider-split-20261015/actual-sdk-component-installed.json and actual-sdk-build-result.json"
+        },
+        {
+          "name": "Productentry/publicsource removal/full physical matrix",
+          "status": "not_run",
+          "scope": "Still incomplete whole migration and delivery",
+          "evidence": "output/next-phase-20261013/progress.json",
+          "reason": "Next stage + savedADB/localXorg user resources"
+        }
+      ]
+    }
+  ]
+}

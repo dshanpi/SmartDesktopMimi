@@ -52,3 +52,15 @@ stage-r3实际passed，复制66个项目源码/头文件、32TU（31项目C+1外
 现有系统可选100ask私有插件ON与公开stub OFF，拆分不得删除OFF能力。先在同一冻结来源的新外置CMake目录真实配置/编译OFF（不动现有build），再扩展材料生成器为显式private/public profile：分别严格32/30TU并检查cloud源码组合、公开profile不得引用私有源或头。两配置分别提取/独立编译，输入和字节对照各归各，不把私有构建结果给公开版。
 
 公开OFF原始参考构建已实际完成（外置CMake，仅lv_backend目标，未覆盖私有参考）；13边界回归passed。工具增加显式profile与外置build-dir、严格32/30TU及cloud源组合，公开profile不能读取外置private输入；编译器/SDK/私有输入编译后自动再核hash。下一步两profile各自新输出重取闭包/编译，原r3工具/配方保留，不移记结果。
+
+## 标准SDK overlay接入准备（实施前）
+两profile已独立编译，各自与对应原始参考程序逐字节相同；private32TU/66文件8a8...，public30TU/64文件84af...，public通过不存在的private根执行，确无厂商输入。下一步把这两个已锁定组件及同hash构建器放进私有仓库overlay/openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider；使用真实canonical双层OpenWrt路径，避免SDK openwrt/package别名被安全copy拒绝。更新overlay完整文件manifest和单独derived-source来源记录，保留原repo_status和95基准语义，不伪造新capture。
+重放用新小型95 Git基准引用fixture（实际SDK object-store/pinnedcommit，不复制objects或未变SDK），仍沿用scripts/apply_overlay.sh。只证明overlay源码复制/哈希/组件基准；编译依然使用实际已恢复SDK工具链和staging，不能把fixture当完整SDK。系统入口接入/公共旧实现移除/最终镜像仍not_run；本轮不推应用/Release。
+
+## 2026-10-15 双配置、标准overlay与实际SDK sourcecheckpoint
+双profile工具 source dec9eb3b(实际完整commit由source-correlation记录)；private32TU/66文件后端8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3；public30TU/64文件后端84af521753b943908838a03db64ed53c1c755bc5f292144df621d50094119701。两者各与对应frozen-source原始参考逐字节相同。public使用不存在的private输入根，闭包没有private依赖，外置厂商实现未复制。13边界回归及真实两profile重提取/编译passed，不把旧r3证据移给新recipe。
+134文件组件已进入标准私有SDK overlay canonical openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider；95实际SDK commit的对象引用fixture不复制objects/未变源码，原scripts/apply_overlay.sh实际4248文件hash/mode回读passed，95源基准核对passed。随后从重放组件的真实位置执行public/private独立编译再次与各自参考字节一致。该fixture仍不是完整SDK重建。
+私有SDK958c62f739c86fcc1128fb2d838faa25c550aaa9（parent1fb03f3）已按既有私有SDK上传例外push master；独立已有readback checkout通过authenticated fetch+ff-only取得958，并验证全部4248已hydrated源payload、新两profile源/recipe与实际构建一致。未上传应用、镜像、升级包或Release。GitHub App只读metadata404、Ubuntu没有gh且HTTPScredential-fill无凭据的初次preflight保留blocked；既有SSH已验证固定origin/master父提交，匿名API404、用户指定私有目标不改visibility；实际SSH push和独立读回passed，不请求新凭据、不打印已有SSH/credential秘密。
+在实际恢复SDK中只新增已验证134文件source组件，不覆盖已有4114源、reviewed补充输入、kernel/boot/config。第一次copytree继承Gitcheckout0664模式，内容hash全对但exactmode failed；只对新增134文件按manifest644/755修复，未重复制或删旧目录，后读回passed。实际SDK组件位置执行private32TU编译passed，仍相同8a8后端；不是新的全SDK/产品镜像，旧sysrc2/app23候选不变。
+证据 output/a133-provider-split-20261015/{sdk-overlay-replay,sdk-component-sensitive-screen,sdk-source-upload,sdk-remote-readback,actual-sdk-component-copy-failure,actual-sdk-component-installed,actual-sdk-build-result}.json及dual/replayed日志。SDK trackedcommit仅134source和来源/manifest/README相关meta，原meta/delivery-inputs.json、sdk-inputs untracked资料未触碰。
+后续必须完成系统build entry调用SDK后端、公共旧平台源移除及最终应用SDK/业务归属；migration_complete仍false。A133 ADB保存binding及Ubuntu普通Xorg登录仍待用户资源；全部真机/数据/断电/远端Release门禁保留。旧frozen系统构建锁仍正确引用其实际1fb输入，不因958 sourcecheckpoint倒改历史锁。

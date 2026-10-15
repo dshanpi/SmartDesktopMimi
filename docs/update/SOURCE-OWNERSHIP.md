@@ -42,3 +42,19 @@
 
 平台源码物理迁移、应用 SDK 内的平台客户端交付、真实设备对旧后端的兼容验收，
 以及最终镜像、升级、断电和发布验证仍需继续。本文不为 T527/RK3576 提供支持证明。
+
+
+## SPLIT053 独立SDK sourcecheckpoint（2026-10-15）
+
+私有SDK `958c62f739c86fcc1128fb2d838faa25c550aaa9` 已增加
+`overlay/openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider`，
+内含private/public独立source profile、真实依赖闭包配方和原SHA构建器。
+两profile均已独立编译且与各自旧参考字节一致；标准overlay95基准/4248文件
+重放及私有repo独立远端读回通过。实际恢复SDK新增该组件并编译private版本通过。
+厂商100ask实现仍外置，公开stub不读私有依赖。
+
+这一步没有把源码登记当完成：系统build entry尚未切换到SDK组件，应用工作候选
+仍有旧平台实现和冻结客户端，最终应用SDK/业务归属也未收尾。
+`migration_complete=false` 继续保留。详细证据与失败历史见SPLIT053门禁。
+冻结sysrc2来源锁继续指向构建当时实际1fb输入；958为新的sourcecheckpoint，
+不得倒填旧镜像、复制其真机结论或提前上传应用/Release。

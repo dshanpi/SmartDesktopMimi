@@ -56,3 +56,8 @@ SPLIT053事前：从真实sysrc2后端32TU构建记录提取源/头闭包，独�
 从冻结sysrc2 source d7c8572提取66个源码/头闭包，独立32TU编译/链接passed；不读旧应用源、不借用旧对象、不复制私有SDK。新lv_backend407240B/hash8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3与原后端逐字节相同；299个SDK与2个外置私有依赖后置hash全一致，真实ELF/loader/20依赖读回passed。12边界回归passed，两次实际guard失败保留。
 仍未完成物理迁移：独立组件待SDK-overlay接入/重放，cloud OFF公开stub配方、系统构建入口切换、公共旧平台源移除及最终应用SDK仍需做；migration_complete=false。没有改动冻结app23/sysrc2、SDK1fb底层提交或设备。证据 output/a133-provider-split-20261015；门禁SPLIT053，关键source/evidence小型增量备份。
 ADB保存binding仍空，Ubuntu服务实际active等待普通Xorg登录；相关输入已询问，不重复。全部必需真机和最终发布仍未完成，未上传应用/Release。
+
+## 2026-10-15 SPLIT053 双配置及SDK sourcecheckpoint已上传
+private32/public30独立组件各与参考后端逐字节一致；public不需要privateSDK。新增134文件到标准SDK overlay后，总4248源文件/95实际基准的原apply_overlay入口重放passed；两个重放后的组件再次真实编译一致。私有SDK958c62f739c86fcc1128fb2d838faa25c550aaa9已push并独立fetch/完整4248文件及两组件源码复核passed，原driver1fb历史不改。
+实际恢复SDK只新增该134文件，不覆盖旧source/kernel/boot/补充输入；第一次Gitmode继承失配failed保留并修复新增文件exact644/755。SDK真实位置private32编译passed/仍8a8后端。13边界回归passed，秘密screen无发现、未复制私有厂商实现。应用/镜像/升级包/Release未上传。
+仍未完成系统构建入口切换、公共旧平台源移除/最终应用SDK与业务归属；迁移false。旧app23/sysrc2保持原hash和其实际private1fb输入锁。A133安装/失联根因与必需矩阵、Ubuntu普通登录/全数据等继续未验收；ADB/登录资源pending。证据 output/a133-provider-split-20261015。
