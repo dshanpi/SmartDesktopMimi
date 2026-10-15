@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "首次上传后远端工作流/旧UI清单失败修复",
+  "context": "原远端失败保留，发布YAML冒号和旧8应用清单纠正；现有UI不改",
+  "next_steps": "查看本提交远端CI结果，继续附件下载复核",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-CI-060",
+      "record": "docs/change-gates/REQ-MIMI-CI-060.md",
+      "scope": "发布配置解析和已批准UI的源/场景清单",
+      "invariants": "不改二进制/业务/钥/标签，not_run报告不冒充验收，工作流仍手动",
+      "paths": [
+        ".github/workflows/application-publish.yml",
+        "tools/update/ui_catalog.py",
+        "tests/update/ui-catalog.json",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-CI-060.md",
+        "docs/change-gates/batches/ci060-workflow-inventory-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "本地受影响检查",
+          "status": "passed",
+          "scope": "5 YAML/11应用58源/原冻结IPC/11语言回归",
+          "evidence": "output/delivery-sync-20261015/ci060-ui-review.json; ci060-ui-regression.log"
+        },
+        {
+          "name": "实际远端CI",
+          "status": "not_run",
+          "scope": "本提交",
+          "evidence": "GitHub Actions",
+          "reason": "上传后等待实际运行"
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Prepared release tag: vX.Y.Z or system-a133-vX.Y.Z
+        description: "Prepared release tag: vX.Y.Z or system-a133-vX.Y.Z"
         required: true
         type: string
       stage:

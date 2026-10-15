@@ -9,7 +9,7 @@ import re
 ROOT=Path(__file__).resolve().parents[2]
 CATALOG=ROOT/'tests/update/ui-catalog.json'
 SCENARIOS={
- 'desktop':['topbar-hit-target','control-center','dock-routing','all-apps','back-navigation','modal-focus'],
+ 'desktop':['topbar-hit-target','control-center','inline-app-routing','all-apps','inline-horizontal-pages','page-line-indicators','no-duplicate-footer','back-navigation','modal-focus'],
  'setting':['sliders-persist','language-theme','network-navigation','application-update','system-update'],
  'wifi':['scan','wrong-password','connect','disconnect','reconnect','cancel'],
  'bt':['enable-disable','scan-pair','rename-cancel','audio-playback','progress','reconnect'],
@@ -18,6 +18,9 @@ SCENARIOS={
  'ota':['check','download','cancel-download','apply','error','back-to-settings'],
  'user':['empty-list','install','invalid-signature','permissions','launch-exit','upgrade-data','uninstall'],
  'hdmi_mcp':['source-preview','hotplug','task-state','cancel','keyboard-mouse','release-on-disconnect'],
+ 'pairing':['existing-bound-no-token','refresh','new-code','expiry','offline','no-credential-display'],
+ 'iot':['unconfigured','device-list','device-status','confirm-control','provider-error','control-readback'],
+ 'voice':['optional-disabled','text-edit','transcript-preview','confirm-command','cancel','unsafe-command-rejection','real-speech'],
  'web':['login','same-origin','settings','video','keyboard-mouse','blur-release','mobile-layout','apps','update'],
 }
 
@@ -59,7 +62,7 @@ def main():
         p.exit(1,'UI inventory changed: review new/changed bindings and scenarios before --record\n')
     if a.report:
         report={'schema_version':1,'kind':'test-inventory','results':[
-            {'id':area+'.'+case,'result':'not_run','method':'physical-device' if area in {'ai','wifi','bt','video','hdmi_mcp'} else 'unassigned'}
+            {'id':area+'.'+case,'result':'not_run','method':'physical-device' if area in {'ai','wifi','bt','video','hdmi_mcp','pairing','iot','voice'} else 'unassigned'}
             for area,cases in SCENARIOS.items() for case in cases]}
         a.report.parent.mkdir(parents=True,exist_ok=True);a.report.write_text(json.dumps(report,indent=2)+'\n')
     print(f'PASS inventory: {len(actual["application_ids"])} applications, {len(actual["surfaces"])} interactive sources; no hardware execution implied')

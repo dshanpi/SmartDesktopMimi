@@ -4,10 +4,13 @@
     "APP_ID_AI",
     "APP_ID_BT",
     "APP_ID_HDMI_MCP",
+    "APP_ID_IOT",
     "APP_ID_OTA",
+    "APP_ID_PAIRING",
     "APP_ID_SETTING",
     "APP_ID_USER_APPS",
     "APP_ID_VIDEO",
+    "APP_ID_VOICE",
     "APP_ID_WIFI"
   ],
   "surfaces": {
@@ -495,11 +498,17 @@
       ]
     },
     "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c": {
-      "sha256": "e28156769705696c133c1abda08f4cd95dd806bae2dccf776a2e1306a60eb63f",
+      "sha256": "d89dfbb177379fd33f620c652a25dc1cf24aabd51b201f279e5b3cfe2e6a86e8",
       "bindings": [
         "confirm, stop_confirmed, LV_EVENT_CLICKED, box",
         "cancel, stop_cancelled, LV_EVENT_CLICKED, box",
         "button, callback, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/apps/iot/iot_app.c": {
+      "sha256": "9ef8c68ae0f16ed085f9d237c7cab83bb08271529fcc2256847e5abb64891487",
+      "bindings": [
+        "b, cb, LV_EVENT_CLICKED, data"
       ]
     },
     "apps/lv_port_linux/src/apps/ota/ota_app.c": {
@@ -508,8 +517,14 @@
         "btn, cb, LV_EVENT_CLICKED, NULL"
       ]
     },
+    "apps/lv_port_linux/src/apps/pairing/pairing_app.c": {
+      "sha256": "35434fa69b15665423e0d76f24b711775389d95611c5279aa9baaeeb680c90b5",
+      "bindings": [
+        "refresh_button,refresh_cb,LV_EVENT_CLICKED,NULL"
+      ]
+    },
     "apps/lv_port_linux/src/apps/setting/setting_app.c": {
-      "sha256": "ec3e0060856a36b721a7ac75146af68e6fb6aacc782db92a817d7624e108173e",
+      "sha256": "ad6dffc670e96e69a24f0138d1a8f92b5fdc5639a8f17eb920f3a318640c658f",
       "bindings": [
         "button, callback, LV_EVENT_CLICKED, (void *)value",
         "slider, callback, LV_EVENT_VALUE_CHANGED, value_label",
@@ -517,7 +532,7 @@
         "slider, callback, LV_EVENT_PRESS_LOST, value_label",
         "sw, follow_time_switch_cb, LV_EVENT_VALUE_CHANGED, NULL",
         "dot, color_event_cb, LV_EVENT_CLICKED, &preset_ids[i]",
-        "bind_code_item, bind_token_click_cb, LV_EVENT_CLICKED, NULL",
+        "pairing_item, pairing_open_cb, LV_EVENT_CLICKED, NULL",
         "preview, desktop_update_event, LV_EVENT_CLICKED, NULL"
       ]
     },
@@ -542,6 +557,16 @@
         "playlist_mask, playlist_mask_click_cb, LV_EVENT_CLICKED, NULL"
       ]
     },
+    "apps/lv_port_linux/src/apps/voice/voice_app.c": {
+      "sha256": "2ef49ac0e6638007773f100dfaee5feed0a6bf4a3222d37c4af8028417f890e3",
+      "bindings": [
+        "b, cb, LV_EVENT_CLICKED, NULL",
+        "entry, edited, LV_EVENT_VALUE_CHANGED, NULL",
+        "entry, focus, LV_EVENT_FOCUSED, NULL",
+        "entry, focus, LV_EVENT_CLICKED, NULL",
+        "keyboard, keyboard_event, LV_EVENT_ALL, NULL"
+      ]
+    },
     "apps/lv_port_linux/src/apps/wifi/wifi_app.c": {
       "sha256": "500f854b7f842cbb7507bce882e0403383ea90108a8923a60d3cc88082e40ae6",
       "bindings": [
@@ -563,32 +588,36 @@
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_all_apps.c": {
-      "sha256": "12ec48e9ab2968e8149d85d63282e3b054bccbb13c4480d5a43f2f5ba3b564ce",
+      "sha256": "e8d1906dec22a58773f210022776493d0934dfe942c798d60f27159abf1fb370",
       "bindings": [
         "card, app_click_cb, LV_EVENT_CLICKED, (void *)entry",
+        "all_apps_overlay, shade_click_cb, LV_EVENT_CLICKED, NULL",
+        "grip, close_click_cb, LV_EVENT_CLICKED, NULL",
+        "grip, grip_gesture_cb, LV_EVENT_GESTURE, NULL",
         "all_apps_grid, grid_key_cb, LV_EVENT_KEY, NULL"
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_clock.c": {
-      "sha256": "187f25ecac74d240a9c1c7106098e685a4070fdd02d871a210fdba55ad9bc2a7",
+      "sha256": "2c4279bd59d272a76ad00b0d80dd98d091d5406c1f1ec45e7737c9be08ba3253",
       "bindings": [
         "button, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
         "card, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)HOME_ACTION_AI",
         "card, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)HOME_ACTION_HDMI",
-        "tile, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
         "home_screen, home_screen_event_cb, LV_EVENT_SCREEN_UNLOADED, NULL",
         "home_screen, home_screen_event_cb, LV_EVENT_SCREEN_LOADED, NULL"
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_dock.c": {
-      "sha256": "6125c05f5f66a8e69a53851797198ca1c515b2630ae679385f8cd41fb7d9204b",
+      "sha256": "9db2d8da17af69deec10abe35d9b36d2ce06be11f1c970e755d1cc542d78c8d1",
       "bindings": [
-        "item, nav_item_event, LV_EVENT_CLICKED, (void *)(intptr_t)index",
-        "nav_root, nav_key_event, LV_EVENT_KEY, NULL"
+        "card,open_app,LV_EVENT_CLICKED,(void *)entry",
+        "card,card_key,LV_EVENT_KEY,(void *)entry",
+        "card,card_focused,LV_EVENT_FOCUSED,NULL",
+        "strip,page_changed,LV_EVENT_SCROLL_END,pager"
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_status_bar.c": {
-      "sha256": "904d205c3fcdadcab6559f052bf2f6d9d2403d3994096fbdeb9a22a33f7240b6",
+      "sha256": "8b3336d3954d17e3ef8b30c865f41e38af1a21b2f3a3192dd4179b7c117955db",
       "bindings": [
         "card, control_center_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
         "control_center_overlay, control_center_overlay_event, LV_EVENT_CLICKED, NULL",
@@ -610,7 +639,7 @@
       ]
     },
     "apps/lv_port_linux/src/ui/mimi_ui.c": {
-      "sha256": "7cb2f36159e725ac8348b74f7e9a94769dd7fc8a06621fa03533d01b3d973db4",
+      "sha256": "b53c113efcdee519b89d4fd9fb6dec004e8c0aa83370988a3dda0b13f1277e27",
       "bindings": [
         "back, back_cb, LV_EVENT_CLICKED, NULL"
       ]
@@ -626,8 +655,11 @@
     "desktop": [
       "topbar-hit-target",
       "control-center",
-      "dock-routing",
+      "inline-app-routing",
       "all-apps",
+      "inline-horizontal-pages",
+      "page-line-indicators",
+      "no-duplicate-footer",
       "back-navigation",
       "modal-focus"
     ],
@@ -694,6 +726,31 @@
       "cancel",
       "keyboard-mouse",
       "release-on-disconnect"
+    ],
+    "pairing": [
+      "existing-bound-no-token",
+      "refresh",
+      "new-code",
+      "expiry",
+      "offline",
+      "no-credential-display"
+    ],
+    "iot": [
+      "unconfigured",
+      "device-list",
+      "device-status",
+      "confirm-control",
+      "provider-error",
+      "control-readback"
+    ],
+    "voice": [
+      "optional-disabled",
+      "text-edit",
+      "transcript-preview",
+      "confirm-command",
+      "cancel",
+      "unsafe-command-rejection",
+      "real-speech"
     ],
     "web": [
       "login",

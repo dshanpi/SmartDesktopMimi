@@ -156,3 +156,5 @@ SPLIT056更新：五系统兼容服务8源/许可证迁SDKd9、4260/95标准重�
 SPLIT057完成受影响主机验证：171项0skip、实际stage2同字节、SDK7ed标准4267/95及独立读回passed；物理按058后置，整体未完成。
 
 - [REQ-MIMI-TRACE-059](change-gates/REQ-MIMI-TRACE-059.md)：首次远端全区间212路径历史覆盖补记，保留初次覆盖失败，不冒充历史事前记录或功能验收。
+
+- [REQ-MIMI-CI-060](change-gates/REQ-MIMI-CI-060.md)：远端失败后的发布YAML/现有UI清单修复，5 YAML/11应用58源和11回归本地passed，真实远端待验，未改产物。
