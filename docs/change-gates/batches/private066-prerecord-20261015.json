@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Tuya一机一码运行隔离实施前记录",
+  "context": "公共源不可因残留凭据启用，私有显式固定组件",
+  "next_steps": "先源组件/审计回读，再实际集成、编译及启动边界验证",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "Tuya授权启动路径与构建选择",
+      "invariants": "公共不读授权/不启动网络、私有显式组件、无旧工作树回退、秘密不入Git",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/private066-prerecord-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "实施与实际编译",
+          "status": "not_run",
+          "scope": "实施前要求",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+          "reason": "尚未修改运行/构建代码"
+        }
+      ]
+    }
+  ]
+}

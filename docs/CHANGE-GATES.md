@@ -172,3 +172,5 @@ SPLIT061系统入口完成：原5上层源已退休，实际video目标/原ELF/A
 - REQ-MIMI-PRIVATE-064：私有生产工具独立来源，实际构建/回读与公共退休逐项核对。
 
 - REQ-MIMI-PRIVATE-065：100ask产品私有适配独立来源和显式组合，公共Provider保持禁用。
+
+- REQ-MIMI-PRIVATE-066：Tuya产品授权适配、公共提前禁用及暂存源/构建核对。
