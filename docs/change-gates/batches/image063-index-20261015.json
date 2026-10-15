@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "IMAGE063实施前索引覆盖补记",
+  "context": "原范围检查拒绝未覆盖的索引，保留历史批",
+  "next_steps": "重跑实际范围检查和受影响回归",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-IMAGE-063",
+      "record": "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+      "scope": "追溯索引和本批记录",
+      "invariants": "历史批不可变，范围检查不放宽",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+        "docs/change-gates/batches/image063-index-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "首次范围检查",
+          "status": "failed",
+          "scope": "933a214以来索引遗漏",
+          "evidence": "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+          "reason": "实施前索引路径未覆盖"
+        }
+      ]
+    }
+  ]
+}
