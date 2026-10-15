@@ -109,17 +109,19 @@ class SignedCollectionTests(unittest.TestCase):
             destination['runtime']['system']=lock['version'];destination['system_baseline']='host-next'
             (root/'factory-manifest.json').write_bytes((root/'manifest.json').read_bytes())
             (root/'factory-manifest.sig').write_bytes((root/'manifest.sig').read_bytes())
-            (root/'system.img.gz').write_bytes(b'host-image-not-flashable')
+            from system_image import image_name
+            image_asset=image_name(lock['version'])
+            (root/image_asset).write_bytes(b'host-image-not-flashable')
             (root/'system.swu').write_bytes(b'host-ota-not-flashable')
             device=dict(device=source,bootloader='1.0.0',partition_sha256='e'*64,storage='emmc',storage_bytes=2048,boot_mode='ab')
             (root/'device.json').write_text(json.dumps(device))
             system=dict(schema_version=1,policy=gate.POLICY,release_type='system',version=lock['version'],commit=lock['source_commit'],
-                        key_id='host-test',sequence=2,image_sha256=gate.sha(root/'system.img.gz'),image_bytes=(root/'system.img.gz').stat().st_size,
+                        key_id='host-test',sequence=2,image_sha256=gate.sha(root/image_asset),image_bytes=(root/image_asset).stat().st_size,
                         targets=app['targets'],bootloader=dict(min='1.0.0',max_exclusive='2.0.0',exclude=[]),partition_sha256='e'*64,
                         storage='emmc',min_storage_bytes=1024,boot_mode='ab',factory_manifest_sha256=gate.sha(root/'factory-manifest.json'),
                         factory_application_sha256=app['package_sha256'],
                         ota=dict(channel='testing',package_sha256=gate.sha(root/'system.swu'),package_bytes=(root/'system.swu').stat().st_size,destination_device=destination))
-            lock.update(release_type='system',platform_id='a133',tag='system-a133-v'+lock['version'],hardware_commit='a'*40,
+            lock.update(release_type='system',platform_id='a133',image_asset=image_asset,tag='system-a133-v'+lock['version'],hardware_commit='a'*40,
                         factory_application_commit=app['commit'],factory_application_sha256=app['package_sha256'],partition_sha256='e'*64)
             provenance_fixture.system(root,system,lock,app)
             (root/'system-manifest.json').write_text(json.dumps(system))
@@ -128,7 +130,7 @@ class SignedCollectionTests(unittest.TestCase):
             lock['assets']={p.name:gate.sha(p) for p in root.iterdir() if p.name!='release-lock.json'}
             (root/'release-lock.json').write_text(json.dumps(lock))
             gate.check(root,'prerelease',self.checker,self.trust)
-            names=preparation.COMMON | preparation.SYSTEM | {'device.json','system.swu'}
+            names=preparation.COMMON | preparation.SYSTEM | {'device.json','system.swu',image_asset}
             plan=dict(schema_version=1,release_type='system',device_files=['device.json'],
                       assets={n:dict(path='system/'+n,sha256=gate.sha(root/n)) for n in names})
             preparation.write(root.parent/'plan.json',plan)

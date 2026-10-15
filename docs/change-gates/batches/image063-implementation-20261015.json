@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "产品名镜像输出与新命名发布链",
+  "context": "EDITION062文件名要求，保持旧快照/内部硬件身份；44针对性项含真实RSA通过",
+  "next_steps": "完整受影响更新/架构回归与源审计，再同步代码；不重建旧候选",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-IMAGE-063",
+      "record": "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+      "scope": "未来归档/系统记录/发布准备与完整名称绑定",
+      "invariants": "无芯片在文件名、硬件匹配与原签名不变、历史不覆盖、主机不冒充实机",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+        "docs/change-gates/batches/image063-implementation-20261015.json",
+        "docs/update/IMPLEMENTATION.md",
+        "docs/update/RELEASE-RUNBOOK.md",
+        "scripts/build_release.sh",
+        "tests/update/provenance_fixture.py",
+        "tests/update/test_prepare_release.py",
+        "tests/update/test_release_collection.py",
+        "tests/update/test_system_image.py",
+        "tests/update/test_system_record.py",
+        "tools/update/build_provenance.py",
+        "tools/update/github_release.py",
+        "tools/update/prepare_release.py",
+        "tools/update/release_gate.py",
+        "tools/update/system_image.py",
+        "tools/update/system_record.py"
+      ],
+      "checks": [
+        {
+          "name": "针对性与实际归档段",
+          "status": "passed",
+          "scope": "44主机项，真实RSA系统准备/验签，确定性gzip与名称/来源拒绝",
+          "evidence": "output/system-image-name-20261015/regression-r5.log; actual-archive-block.log"
+        },
+        {
+          "name": "全回归/物理",
+          "status": "not_run",
+          "scope": "本提交全更新检查待运行，SDK整镜像/设备后置",
+          "evidence": "output/system-image-name-20261015",
+          "reason": "先固定代码，硬件等待新SDK Ubuntu环境"
+        }
+      ]
+    }
+  ]
+}

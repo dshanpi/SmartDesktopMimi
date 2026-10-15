@@ -100,7 +100,7 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - `build_application.py` 串联干净应用源码、公开审计、冻结接口、锁定应用 SDK、桌面编译、device Web 构建、资源整理、依赖锁及 SBOM。构建目录必须在源码外；失败保留 BUILD-INCOMPLETE 和日志。它不重建 Tina、不签名、不上传。
 - `application-build.yml` 在独立 `mimi-build` runner 上执行上述流程，只读源码、无发布令牌。需预装 Python 3.11、Node 22、npm、CMake、pkg-config 和主机依赖；SDK 位于 `/srv/mimi-sdks/<sdk_id>`，外部预期哈希必须来自审核过的 SDK 记录。产物保留在 `/srv/mimi-builds/`，尚未配置或触发真实远端 runner。
 - `prepare_release.py --inputs PLAN.json --output NEW_DIRECTORY --checker HOST_CHECKER --trust EXTERNAL_TRUST` 组装已经签名的应用或系统产物。输入计划严格包含 schema_version=1、release_type、device_files 和 assets；每个 assets 条目为 `{ "path": "输入路径", "sha256": "外部预期哈希" }`，相对路径以计划文件为基准。上传文件名必须为单层文件名。
-- 应用必须提供 application.tar.gz、manifest.json/.sig、application-build.json、sdk-lock.json、dependency-lock.json；系统必须提供 system.img.gz、system-manifest.json/.sig、system-build.json、sdk-components.json、factory-manifest.json/.sig、dependency-lock.json，声明 OTA 时还须 system.swu。两者均需 source.tar.gz、sbom.spdx.json、platform-contract-lock.json 和 device_files 列举的设备描述。
+- 应用必须提供 application.tar.gz、manifest.json/.sig、application-build.json、sdk-lock.json、dependency-lock.json；新系统必须提供 SmartDesktopMimi-SystemImage-v<系统版本>.img.gz、system-manifest.json/.sig、system-build.json、sdk-components.json、factory-manifest.json/.sig、dependency-lock.json，声明 OTA 时还须 system.swu。两者均需 source.tar.gz、sbom.spdx.json、platform-contract-lock.json 和 device_files 列举的设备描述。
 - 有真实验收报告时提供 validation.json 及其引用的证据附件；缺失时自动生成全部 not_run 的报告，不能用于上传。构建锁从签名清单和实际构建记录生成，组装前后核对输入哈希，再执行共用签名、匹配和来源门禁；失败不留下可用候选，不覆盖已有目录。
 - `publish_draft.py` 和 `promote_release.py` 在任何 GitHub 请求前要求每个目标全部验收 passed；远端下载后再次执行相同要求。该附加上传限制不改变测试通道和稳定通道的类型，也不把本地候选标为验收通过。
 
@@ -141,7 +141,7 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 - 计划严格包含 schema_version=1、build_manifest_sha256、hardware_commit、sdk_baseline、sdk_local_inputs_sha256、toolchain_sha256、sysroot_sha256、partition_sha256、inputs。所有 SHA256 和私有硬件完整提交来自已审核构建输入，不在发布现场从任意文件生成后自行视为合格。inputs 仅包含 sdk-components.json 和 dependency-lock.json，条目格式为 {path, sha256}，路径相对计划文件。私有 SDK 输入闭合、分区几何与源码审计仍须实际核对。
 - public SDK inventory 仅允许 schema_version、sdk_baseline、manifest_sha256、components；每组件仅 path、commit、local_inputs_sha256。拒绝私有补丁、归档路径及未知字段，且 SDK manifest 哈希必须与实际构建清单相同。
 - 工具读取构建校验和，复核完整镜像、启动链门禁日志与工厂基线附件；独立验签工厂应用，核对最终封存的文件摘要。临时匹配描述只用于主机校验，不产生或安装设备登记。镜像使用固定 gzip 时间戳压缩，并解压读回核对原镜像哈希。
-- 输出仅 system.img.gz、system-build.json、公开 SDK 清单、依赖锁及工厂应用清单/签名。system-build.json 额外记录 system_version、build_manifest_sha256、raw_image_sha256；后续发布门禁强制核对系统构建版本和签名系统清单版本相同。
+- 新输出仅 SmartDesktopMimi-SystemImage-v<系统版本>.img.gz、system-build.json、公开 SDK 清单、依赖锁及工厂应用清单/签名。system-build.json 额外记录 system_version、build_manifest_sha256、raw_image_sha256；后续发布门禁强制核对系统构建版本和签名系统清单版本相同。
 - 这些输出尚未签署系统清单、未生成通过验收、没有上传资格；签名系统清单后继续通过 prepare_release.py 组装来源和实际验收资料。构建日志与本地私有计划不自动复制到公开产物。
 
 ## 文件系统完整性前置检查（2026-10-13）
@@ -191,3 +191,6 @@ sdk-components.json 使用 schema_version=1、sdk_baseline、manifest_sha256 和
 应从空的临时索引目录重建包/目标信息，确认产品包完整后再比较配置；不能仅凭
 两个配置在同一个残缺索引上得到相同结果就认定输入闭环。保留原 SDK 配置和索引，
 核对操作前后配置未改。此验证只覆盖配置生成，完整 SDK 干净重建仍须单独验收。
+
+## IMAGE063 对外镜像名（2026-10-15）
+新构建在原启动链门禁通过后，将SDK内部raw压缩成SmartDesktopMimi-SystemImage-v<系统版本>.img.gz，不含芯片代号；内部SYSTEM_TAG/硬件身份/SDK路径保持。BUILD-MANIFEST固定SYSTEM_IMAGE_FILE、RAW_SHA256、RAW_BYTES、ARCHIVE_SHA256，元数据image-archive.json与SHA256SUMS一并保存。系统记录支持这条新输入和历史raw构建输入，输出只用产品名；发布锁image_asset必须按版本计算，错误版本/别名双份拒绝，验证报告/构建来源/远端下载使用同一名。历史无image_asset的锁仍可只读核验旧system.img.gz；prepare_release新生成路径不接受旧名。原已上传rc2/rc23不覆盖或改签，新正式镜像/真机仍待新SDK环境验证。

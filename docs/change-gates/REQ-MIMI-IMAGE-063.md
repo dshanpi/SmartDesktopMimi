@@ -11,3 +11,8 @@
 ## 实现及验证
 计划tools/update/system_image.py、system_record.py、prepare_release.py、release_gate.py、build_provenance.py、github_release.py及scripts/build_release.sh，现有系统/准备/发布/集合回归和独立压缩/篡改/名字拒绝测试。
 源码起点933a214，证据output/system-image-name-20261015；主机夹具不是真实镜像。实际新完整SDK镜像、设备安装、正式公开发布均not_run，A133物理按用户最新要求后置。当前实际实现/回归待执行；完成后绑定代码、测试、版本和产物回执。
+
+## 实现与首轮结果
+system_image统一安全版本名/确定性gzip、原源前后检查/解压限额读回与禁止覆盖；build_release仅未来原启动链门禁后的归档输出改为产品名，BUILD-MANIFEST另外固定名/raw SHA/raw bytes/archive SHA。system_record可读取新压缩构建输入并核对该外部钉住的manifest/回执，也可将历史raw构建记录生成新名；prepare_release只生成规范image_asset，release_gate/构建来源/远端下载同名校验，历史无字段旧锁只读仍可验证。普通应用与集合原边界不改变；当前集合只支持application，未虚构系统多镜像集合支持。
+已执行真实未来归档段的主机夹具：只输出SmartDesktopMimi-SystemImage-v9.8.7-rc.1.img.gz，raw9000字节/80字节gzip，原raw未改，明确not_run物理；不是完整SDK镜像。44针对性项passed，含真实Go共享checker+RSA签名的新名系统候选准备/验签、旧锁读取、错误版本/旧名新计划拒绝、双名/路径/覆盖/输入变化/限额、确定性和工厂/SDK关联。首轮tests模块路径缺失、次轮Go PATH缺失、旧签名夹具仍用旧名而被新生成器拒绝均保留日志；补齐执行环境和更新夹具到新格式后通过，未放宽命名规则。一次脚本尝试重排不存在的Path import而assert中止，其前序改动保留并已核查，后续正确重排通过。
+全更新回归/架构检查待固定当前代码后运行，实际新SDK系统构建/设备/公开发布均not_run；冻结618/cdf/c22不动，未重签或更换可信钥。

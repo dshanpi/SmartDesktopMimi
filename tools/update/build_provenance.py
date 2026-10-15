@@ -2,6 +2,7 @@
 import hashlib
 import json
 from release_identity import HARDWARE_REPOSITORY
+from system_image import release_image
 
 
 def inventory_digest(files, prefix):
@@ -82,7 +83,9 @@ def system(directory, lock, manifest, factory, load):
     # Public records contain only hashes, never private patches or vendor trees.
     if not fullmatch('[a-f0-9]{64}',record.get('sdk_local_inputs_sha256','')) or record['sdk_local_inputs_sha256']!=lock.get('sdk_local_inputs_sha256'):
         raise ValueError('missing private SDK local-input snapshot hash')
-    if record.get('image_sha256')!=assets['system.img.gz'] or record.get('partition_sha256')!=lock['partition_sha256']:
+    if record.get('image_asset', release_image(lock)) != release_image(lock):
+        raise ValueError('system build image asset differs from release lock')
+    if record.get('image_sha256')!=assets[release_image(lock)] or record.get('partition_sha256')!=lock['partition_sha256']:
         raise ValueError('system build image/partition mismatch')
     if record.get('factory_application')!={'commit':factory['commit'],'version':factory['version'],'sha256':factory['package_sha256']}:
         raise ValueError('system build factory application mismatch')

@@ -65,16 +65,36 @@ class SystemRecordTests(unittest.TestCase):
         with patch.object(record.subprocess, 'run') as checker:
             result = self.prepare()
             self.assertEqual(checker.call_args.args[0][1], 'verify-manifest')
-        self.assertEqual(gzip.decompress((self.output/'system.img.gz').read_bytes()), b'HOST FIXTURE ONLY')
-        self.assertEqual(result['image_sha256'], record.digest(self.output/'system.img.gz'))
+        self.assertEqual(gzip.decompress((self.output/record.image_name('2.0.0')).read_bytes()), b'HOST FIXTURE ONLY')
+        self.assertEqual(result['image_sha256'], record.digest(self.output/record.image_name('2.0.0')))
         self.assertEqual(result['source_commit'], 'c'*40)
         self.assertEqual(result['system_version'], '2.0.0')
         self.assertEqual(result['factory_application'], dict(commit='a'*40, version='1.2.0', sha256='b'*64))
         self.assertFalse((self.output/'validation.json').exists())
         self.assertFalse((self.output/'factory-device.json').exists())
-        previous = (self.output/'system.img.gz').read_bytes(); self.output = self.root/'second'
+        previous = (self.output/record.image_name('2.0.0')).read_bytes(); self.output = self.root/'second'
         with patch.object(record.subprocess, 'run'): self.prepare()
-        self.assertEqual(previous, (self.output/'system.img.gz').read_bytes())
+        self.assertEqual(previous, (self.output/record.image_name('2.0.0')).read_bytes())
+
+    def test_new_product_build_archive_and_raw_pin_binding(self):
+        from system_image import archive
+        raw = self.build/'firmware/a133_linux_b6_uart0.img'
+        packed = archive(raw, self.build/'firmware', '2.0.0', record.digest(raw))
+        raw.unlink()
+        record.write(self.build/'metadata/image-archive.json', packed)
+        self.manifest.update(SYSTEM_IMAGE_FILE=packed['filename'], SYSTEM_IMAGE_RAW_SHA256=packed['raw_sha256'],
+                             SYSTEM_IMAGE_RAW_BYTES=str(packed['raw_bytes']), SYSTEM_IMAGE_ARCHIVE_SHA256=packed['archive_sha256'])
+        self.refresh()
+        with patch.object(record.subprocess, 'run'):
+            result = self.prepare()
+        self.assertEqual(result['image_asset'], record.image_name('2.0.0'))
+        self.assertEqual((self.output/result['image_asset']).read_bytes(), (self.build/'firmware'/packed['filename']).read_bytes())
+        self.output = self.root/'bad-output'
+        self.manifest['SYSTEM_IMAGE_RAW_SHA256'] = '0'*64
+        self.refresh()
+        with patch.object(record.subprocess, 'run'), self.assertRaisesRegex(ValueError, 'pinned build record'):
+            self.prepare()
+        self.assertFalse(self.output.exists())
 
     def test_incomplete_dirty_wrong_platform_tag_and_missing_baseline_rejected(self):
         for key, value in [('PRODUCT_DIRTY','1'), ('PRODUCT_TRACKED_DIRTY','1'),
@@ -84,6 +104,13 @@ class SystemRecordTests(unittest.TestCase):
             self.assertFalse(self.output.exists()); self.manifest[key] = old
         self.refresh(); (self.build/'BUILD-INCOMPLETE').touch()
         with self.assertRaisesRegex(ValueError, 'incomplete'): self.prepare()
+
+    def test_new_manifest_wrong_product_filename_is_rejected(self):
+        self.manifest['SYSTEM_IMAGE_FILE']='SmartDesktopMimi-SystemImage-v99.0.0.img.gz'
+        self.refresh()
+        with self.assertRaisesRegex(ValueError,'name/version mismatch'):
+            self.prepare()
+        self.assertFalse(self.output.exists())
 
     def test_changed_image_and_external_pin_are_rejected(self):
         (self.build/'firmware/a133_linux_b6_uart0.img').write_text('changed')
@@ -127,7 +154,7 @@ class SystemRecordTests(unittest.TestCase):
     def test_midflight_input_change_and_existing_output_rejected(self):
         def mutate(*args,**kwargs): (self.build/'firmware/a133_linux_b6_uart0.img').write_text('changed')
         with patch.object(record.subprocess, 'run', side_effect=mutate):
-            with self.assertRaisesRegex(ValueError, 'readback differs'): self.prepare()
+            with self.assertRaisesRegex(ValueError, 'raw image differs'): self.prepare()
         self.assertFalse(self.output.exists()); self.output.mkdir()
         with self.assertRaisesRegex(ValueError, 'already exists'): self.prepare()
 

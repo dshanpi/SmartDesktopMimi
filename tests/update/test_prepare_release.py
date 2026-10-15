@@ -13,6 +13,7 @@ import release_gate as gate
 import publish_draft
 import promote_release
 import test_release_gate as fixtures
+from system_image import image_name
 
 
 class PreparationTests(unittest.TestCase):
@@ -22,8 +23,15 @@ class PreparationTests(unittest.TestCase):
             fixtures.ReleaseEvidenceTests().fixture(source)
         else:
             fixtures.SystemDestinationEvidenceTests().system_fixture(source)
+            manifest=gate.load(source/'system-manifest.json')
+            name=image_name(manifest['version'])
+            (source/'system.img.gz').rename(source/name)
+            build=gate.load(source/'system-build.json');build['image_asset']=name
+            prepare.write(source/'system-build.json',build)
+            manifest['build_provenance_sha256']=gate.sha(source/'system-build.json')
+            prepare.write(source/'system-manifest.json',manifest)
         names = prepare.COMMON | (prepare.APPLICATION if kind=='application' else prepare.SYSTEM) | {'device.json'}
-        if kind=='system':names |= {'system.swu'}
+        if kind=='system':names |= {'system.swu', image_name(manifest['version'])}
         if validation:names |= {'validation.json', 'host.log'}
         plan=dict(schema_version=1,release_type=kind,device_files=['device.json'],
                   assets={name:dict(path='inputs/'+name,sha256=gate.sha(source/name)) for name in names})
@@ -39,8 +47,21 @@ class PreparationTests(unittest.TestCase):
                 tags.append(lock['tag'])
                 report=gate.load(root/'candidate/validation.json')
                 self.assertTrue(all(e['result']=='not_run' for e in report['targets'][0]['checks'].values()))
-                self.assertEqual(report['artifact_sha256'],lock['assets']['application.tar.gz' if kind=='application' else 'system.img.gz'])
+                self.assertEqual(report['artifact_sha256'],lock['assets']['application.tar.gz' if kind=='application' else lock['image_asset']])
             self.assertNotEqual(*tags)
+
+    def test_new_system_plan_rejects_legacy_or_wrong_version_image_before_checker(self):
+        for replacement in ['system.img.gz', image_name('99.0.0')]:
+            with self.subTest(replacement=replacement), tempfile.TemporaryDirectory() as temp:
+                root=Path(temp);path,plan=self.plan(root,'system')
+                manifest=gate.load(root/'inputs/system-manifest.json');name=image_name(manifest['version'])
+                (root/'inputs'/name).rename(root/'inputs'/replacement)
+                entry=plan['assets'].pop(name);entry['path']='inputs/'+replacement
+                plan['assets'][replacement]=entry;prepare.write(path,plan)
+                with patch.object(gate.subprocess,'run') as checker, self.assertRaisesRegex(ValueError,'missing canonical'):
+                    prepare.prepare(path,root/'candidate',Path('/checker'),Path('/trust'))
+                checker.assert_not_called()
+                self.assertFalse((root/'candidate').exists())
 
     def test_pinned_input_rejects_modification_and_leaves_no_output(self):
         with tempfile.TemporaryDirectory() as temp:

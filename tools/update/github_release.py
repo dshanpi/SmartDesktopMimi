@@ -98,6 +98,6 @@ def verify_remote(client, release, directory, lock, destination):
     assets = client.assets(release)
     if set(assets) != set(expected): raise ValueError('remote asset inventory differs from reviewed release')
     for name,digest in expected.items():
-        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,200}',name): raise ValueError('invalid release asset name')
+        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._+-]{0,200}',name): raise ValueError('invalid release asset name')
         client.download(assets[name], destination/name,(directory/name).stat().st_size,digest)
     return asset_snapshot(assets)

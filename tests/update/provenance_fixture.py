@@ -34,8 +34,9 @@ def system(directory, manifest, lock, factory):
         components=[dict(path='host/component',commit='a'*40,local_inputs_sha256='b'*64)]))
     manifest['sdk_components_sha256']=sha(directory/'sdk-components.json')
     record={key:lock[key] for key in ['source_commit','hardware_commit','platform_id','hardware_repository','sdk_baseline','sdk_local_inputs_sha256','partition_sha256','toolchain_sha256','sysroot_sha256','dependency_lock_sha256']}
-    record.update(schema_version=1,kind='system-build',system_version=manifest['version'],image_sha256=sha(directory/'system.img.gz'),sdk_components_sha256=sha(directory/'sdk-components.json'),
+    record.update(schema_version=1,kind='system-build',system_version=manifest['version'],image_sha256=sha(directory/lock.get('image_asset','system.img.gz')),sdk_components_sha256=sha(directory/'sdk-components.json'),
                   factory_application=dict(commit=factory['commit'],version=factory['version'],sha256=factory['package_sha256']))
+    if 'image_asset' in lock:record['image_asset']=lock['image_asset']
     write(directory/'system-build.json',record)
     manifest['build_provenance_sha256']=sha(directory/'system-build.json')
 

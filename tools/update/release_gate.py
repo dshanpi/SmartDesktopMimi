@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 from release_identity import check_identity, HARDWARE_REPOSITORY
 import build_provenance
+from system_image import release_image
 
 POLICY = 'MIMI-UPDATE-001/1.0.0'
 AUTOMATED = {'source_audit', 'build', 'compatibility', 'signature', 'archive_safety',
@@ -56,11 +57,12 @@ def check(directory, stage, checker, trust):
         if not re.fullmatch(r'[0-9a-f]{64}', lock[field]):
             raise ValueError(f'{field} missing or invalid')
     assets = lock['assets']
+    image_asset = release_image(lock) if kind == 'system' else 'application.tar.gz'
     required = {'source.tar.gz', 'sbom.spdx.json', 'validation.json', 'platform-contract-lock.json'}
     if kind == 'application':
         required |= {'application.tar.gz', 'manifest.json', 'manifest.sig'}
     else:
-        required |= {'system.img.gz', 'system-manifest.json', 'system-manifest.sig',
+        required |= {image_asset, 'system-manifest.json', 'system-manifest.sig',
                      'sdk-components.json', 'factory-manifest.json', 'factory-manifest.sig'}
         for key in ['hardware_commit', 'factory_application_commit']:
             if not re.fullmatch(r'[0-9a-f]{40}', lock[key]):
@@ -82,7 +84,7 @@ def check(directory, stage, checker, trust):
     report = load(directory / 'validation.json')
     if report.get('schema_version') != 1 or report['source_commit'] != lock['source_commit']:
         raise ValueError('validation source mismatch')
-    tested_hash = assets['application.tar.gz' if kind == 'application' else 'system.img.gz']
+    tested_hash = assets[image_asset]
     if report['artifact_sha256'] != tested_hash:
         raise ValueError('validation does not describe this artifact')
     if not report['targets']:
@@ -119,7 +121,7 @@ def check(directory, stage, checker, trust):
         if kind == 'system':
             system_manifest = load(directory/'system-manifest.json')
             subprocess.run([str(checker), 'verify-system', '--manifest', str(directory/'system-manifest.json'),
-                            '--signature', str(directory/'system-manifest.sig'), '--archive', str(directory/'system.img.gz'),
+                            '--signature', str(directory/'system-manifest.sig'), '--archive', str(directory/image_asset),
                             '--device', str(directory/device), '--trust', str(trust)], check=True)
             # A system signature does not replace the independent application signature.
             # Validate the factory app with external platform trust and target-system facts.

@@ -18,13 +18,14 @@ import tempfile
 from build_provenance import inventory_digest
 from release_gate import AUTOMATED, HARDWARE, POLICY, check, load, sha
 from release_identity import PUBLIC_REPOSITORY, HARDWARE_REPOSITORY, tag_for
+from system_image import image_name
 
-NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,140}')
+NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+-]{0,140}')
 HASH = re.compile(r'[a-f0-9]{64}')
 COMMON = {'source.tar.gz', 'sbom.spdx.json', 'platform-contract-lock.json'}
 APPLICATION = {'application.tar.gz', 'manifest.json', 'manifest.sig',
                'application-build.json', 'sdk-lock.json', 'dependency-lock.json', 'source-ownership.json'}
-SYSTEM = {'system.img.gz', 'system-manifest.json', 'system-manifest.sig',
+SYSTEM = { 'system-manifest.json', 'system-manifest.sig',
           'system-build.json', 'sdk-components.json', 'factory-manifest.json',
           'factory-manifest.sig', 'dependency-lock.json'}
 
@@ -35,7 +36,7 @@ def write(path, record):
 
 
 def initial_validation(directory, kind, devices, commit):
-    artifact = 'application.tar.gz' if kind == 'application' else 'system.img.gz'
+    artifact = 'application.tar.gz' if kind == 'application' else image_name(load(directory/'system-manifest.json')['version'])
     return dict(schema_version=1, source_commit=commit, artifact_sha256=sha(directory/artifact),
                 targets=[dict(device_file=name, checks={case: dict(
                     result='not_run', method='physical-device' if case in HARDWARE else 'host',
@@ -56,6 +57,9 @@ def make_lock(directory, kind):
                     sysroot_sha256=inventory_digest(sdk['files'], 'sysroot'),
                     dependency_lock_sha256=sha(directory/'dependency-lock.json'))
     else:
+        lock['image_asset'] = image_name(lock['version'])
+        if not (directory/lock['image_asset']).is_file():
+            raise ValueError('missing canonical product system image')
         record = load(directory/'system-build.json')
         for field in ['platform_id', 'hardware_commit', 'sdk_baseline', 'sdk_local_inputs_sha256',
                       'toolchain_sha256', 'sysroot_sha256', 'partition_sha256']:
@@ -100,6 +104,10 @@ def prepare(plan_path, output, checker, trust):
         if path.is_symlink() or not path.is_file() or sha(path) != entry['sha256']:
             raise ValueError('input changed or is not a regular file: ' + name)
         sources[name] = path
+    if kind == 'system':
+        required |= {image_name(load(sources['system-manifest.json'])['version'])}
+        if not required <= sources.keys() or set(devices) & required:
+            raise ValueError('missing canonical or reserved system image input')
     # No private keys or arbitrary SDK attachments: extra files must be named by
     # acceptance evidence, and the complete release gate still validates them.
     allowed = required | set(devices) | {'validation.json'}

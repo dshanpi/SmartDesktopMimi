@@ -16,6 +16,7 @@ import tempfile
 from application_build import load, digest
 from release_identity import HARDWARE_REPOSITORY, tag_for
 from prepare_release import write
+from system_image import image_name, archive as archive_image, raw_digest
 
 HASH = re.compile(r'[a-f0-9]{64}')
 COMMIT = re.compile(r'[a-f0-9]{40}')
@@ -105,10 +106,17 @@ def prepare(build, plan_path, output, checker, trust):
         raise ValueError('build manifest differs from external pin')
     manifest = build_manifest(manifest_path)
     sums = checksums(build)
-    names = ['BUILD-MANIFEST.txt', 'firmware/a133_linux_b6_uart0.img',
+    canonical = image_name(manifest['SYSTEM_VERSION'])
+    named = manifest.get('SYSTEM_IMAGE_FILE')
+    if named is not None and named != canonical:
+        raise ValueError('build system image name/version mismatch')
+    image_input = 'firmware/' + (canonical if named else 'a133_linux_b6_uart0.img')
+    names = ['BUILD-MANIFEST.txt', image_input,
              'metadata/baseline-lock.json', 'metadata/factory-manifest.json',
              'metadata/factory-manifest.sig', 'metadata/factory-device.json',
              'logs/50-bootchain-gate.log']
+    if named:
+        names.append('metadata/image-archive.json')
     selected = {name: regular(build, name) for name in names}
     for name, path in selected.items():
         if sums.get(name) != digest(path):
@@ -157,22 +165,34 @@ def prepare(build, plan_path, output, checker, trust):
             shutil.copyfile(path, directory/name)
         for name in ['factory-manifest.json', 'factory-manifest.sig']:
             shutil.copyfile(selected['metadata/'+name], directory/name)
-        image = selected['firmware/a133_linux_b6_uart0.img']
-        with image.open('rb') as source, (directory/'system.img.gz').open('wb') as dest:
-            with gzip.GzipFile(filename='', mode='wb', fileobj=dest, mtime=0) as compressed:
-                shutil.copyfileobj(source, compressed, 1024*1024)
-        raw = hashlib.sha256()
-        with gzip.open(directory/'system.img.gz', 'rb') as stream:
-            for chunk in iter(lambda: stream.read(1024*1024), b''):raw.update(chunk)
-        if raw.hexdigest() != sums['firmware/a133_linux_b6_uart0.img']:
-            raise ValueError('compressed system image readback differs')
+        image = selected[image_input]
+        if named:
+            packed = load(selected['metadata/image-archive.json'])
+            if (packed.get('kind') != 'system-image-archive' or packed.get('filename') != canonical or
+                    packed.get('system_version') != manifest['SYSTEM_VERSION'] or
+                    packed.get('archive_sha256') != sums[image_input] or
+                    packed.get('archive_sha256') != manifest.get('SYSTEM_IMAGE_ARCHIVE_SHA256') or
+                    packed.get('raw_sha256') != manifest.get('SYSTEM_IMAGE_RAW_SHA256') or
+                    str(packed.get('raw_bytes')) != manifest.get('SYSTEM_IMAGE_RAW_BYTES') or
+                    packed.get('archive_bytes') != image.stat().st_size or
+                    not isinstance(packed.get('raw_bytes'), int) or packed['raw_bytes'] <= 0):
+                raise ValueError('product image archive differs from pinned build record')
+            raw_sha, raw_size = raw_digest(image, packed['raw_bytes'])
+            if raw_sha != packed['raw_sha256'] or raw_size != packed['raw_bytes']:
+                raise ValueError('product image raw readback mismatch')
+            shutil.copyfile(image, directory/canonical)
+            if digest(directory/canonical) != sums[image_input]:
+                raise ValueError('product image changed while copying')
+        else:
+            packed = archive_image(image, directory, manifest['SYSTEM_VERSION'], sums[image_input])
+            raw_sha = packed['raw_sha256']
         record = {key: plan[key] for key in ['hardware_commit', 'sdk_baseline', 'sdk_local_inputs_sha256',
                    'toolchain_sha256', 'sysroot_sha256', 'partition_sha256']}
         record.update(schema_version=1, kind='system-build', platform_id='a133',
                       system_version=manifest['SYSTEM_VERSION'],
-                      build_manifest_sha256=plan['build_manifest_sha256'], raw_image_sha256=raw.hexdigest(),
+                      build_manifest_sha256=plan['build_manifest_sha256'], raw_image_sha256=raw_sha, image_asset=canonical,
                       source_commit=manifest['PRODUCT_COMMIT'], hardware_repository=HARDWARE_REPOSITORY,
-                      image_sha256=digest(directory/'system.img.gz'),
+                      image_sha256=digest(directory/canonical),
                       sdk_components_sha256=digest(directory/'sdk-components.json'),
                       dependency_lock_sha256=digest(directory/'dependency-lock.json'),
                       factory_application={key: factory[value] for key,value in

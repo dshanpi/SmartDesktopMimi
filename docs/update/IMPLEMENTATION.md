@@ -142,7 +142,7 @@ scripts/build_release.sh --system-version 1.0.0 --application-updates /path/to/T
   `destination_device` 描述新 rootfs 的运行时，不能携带单机登记号或改变硬件身份/数据 schema。
   目标 system 版本必须等于系统清单版本，目标基线必须不同于源基线。
 - Release 同时携带 `system.swu`、系统清单及签名、工厂应用清单及独立签名。
-  完整 `system.img.gz` 和 SWU 分别绑定哈希，不能互相替代。
+  完整产品名 `.img.gz`（历史 `system.img.gz` 仍可读取）和 SWU 分别绑定哈希，不能互相替代。
   下载最多 4 GiB，预留 64 MiB 空间；先完整验签、配对和校验下载，随后才准许安装。
 - 工厂应用按目标运行时验证，不再按源系统运行时误判。当前持久应用也必须同时兼容
   源/目标系统；否则先通过应用发布升级到过渡兼容版本，再更新系统。

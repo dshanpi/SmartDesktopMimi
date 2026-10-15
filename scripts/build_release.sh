@@ -275,7 +275,14 @@ python3 "$PRODUCT_ROOT/tools/update/pack_inputs.py" "$SDK" \
     --expect "$OUTPUT_DIR/metadata/pack-inputs.json"
 
 echo "==> 归档发布产物"
-cp --reflink=auto --preserve=timestamps "${FIRMWARE_IMAGE}" "${OUTPUT_DIR}/firmware/"
+SYSTEM_IMAGE_RAW_SHA256="$(sha256sum "${FIRMWARE_IMAGE}" | awk '{print $1}')"
+SYSTEM_IMAGE_RAW_BYTES="$(stat -c %s "${FIRMWARE_IMAGE}")"
+python3 "${PRODUCT_ROOT}/tools/update/system_image.py" \
+    --input "${FIRMWARE_IMAGE}" --directory "${OUTPUT_DIR}/firmware" \
+    --version "${MIMI_SYSTEM_VERSION}" --expected-raw-sha256 "${SYSTEM_IMAGE_RAW_SHA256}" \
+    --record "${OUTPUT_DIR}/metadata/image-archive.json"
+SYSTEM_IMAGE_FILE="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["filename"])' "${OUTPUT_DIR}/metadata/image-archive.json")"
+SYSTEM_IMAGE_ARCHIVE_SHA256="$(sha256sum "${OUTPUT_DIR}/firmware/${SYSTEM_IMAGE_FILE}" | awk '{print $1}')"
 cp --preserve=timestamps \
     "${PRODUCT_ROOT}/build/aitvbox-version" \
     "${PRODUCT_ROOT}/build/aitvbox-tuya-pid" \
@@ -338,6 +345,10 @@ SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
     echo "APPLICATION_VERSION=${VERSION}"
     echo "SYSTEM_VERSION=${MIMI_SYSTEM_VERSION}"
     echo "SYSTEM_TAG=system-a133-v${MIMI_SYSTEM_VERSION}"
+    echo "SYSTEM_IMAGE_FILE=${SYSTEM_IMAGE_FILE}"
+    echo "SYSTEM_IMAGE_RAW_SHA256=${SYSTEM_IMAGE_RAW_SHA256}"
+    echo "SYSTEM_IMAGE_RAW_BYTES=${SYSTEM_IMAGE_RAW_BYTES}"
+    echo "SYSTEM_IMAGE_ARCHIVE_SHA256=${SYSTEM_IMAGE_ARCHIVE_SHA256}"
     echo "PRODUCT_BRANCH=${BRANCH}"
     echo "PRODUCT_COMMIT=${COMMIT}"
     echo "PRODUCT_TRACKED_DIRTY=$([[ -n "${TRACKED_STATUS}" ]] && echo 1 || echo 0)"
@@ -396,7 +407,7 @@ trap - EXIT
 
 echo
 echo "Release build complete: ${OUTPUT_DIR}"
-echo "Flash image: ${OUTPUT_DIR}/firmware/$(basename "${FIRMWARE_IMAGE}")"
+echo "System image: ${OUTPUT_DIR}/firmware/${SYSTEM_IMAGE_FILE}"
 echo "Checksums:  ${OUTPUT_DIR}/SHA256SUMS"
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     echo "OTA image:  ${OUTPUT_DIR}/ota/$(basename "${SWU_IMAGE}")"
