@@ -137,6 +137,13 @@ elif [[ -n "${PRIVATE_100ASK_SDK_ROOT}" || -n "${PRIVATE_PRODUCT_ROOT}" ]]; then
     die "Public provider forbids private SDK or product inputs"
 fi
 python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
+export MIMI_PRODUCT_EDITION="${PROVIDER_PROFILE}"
+export MIMI_PRODUCT_SOURCE_ROOT="${PRODUCT_ROOT}"
+PAIRING_ARGS=(--profile "${PROVIDER_PROFILE}")
+if [[ "${PROVIDER_PROFILE}" == "private" ]]; then
+    PAIRING_ARGS+=(--private-product-root "${PRIVATE_PRODUCT_ROOT}")
+fi
+python3 "${SELF_DIR}/tuya_pairing_sources.py" check "${PAIRING_ARGS[@]}"
 python3 "${SELF_DIR}/build_a133_services.py" --sdk "${SDK}" --check
 python3 "${SELF_DIR}/build_a133_hdmi.py" --sdk "${SDK}" --check
 python3 "${SELF_DIR}/build_a133_capture.py" --sdk "${SDK}" --check
@@ -383,12 +390,14 @@ if [[ ! -f "${TUYAOPEN_BUILD_ROOT}/platform/LINUX/tuyaos_adapter/src/tkl_audio/l
         "Re-run: ${PREPARE_TUYAOPEN} --clean --build-root ${TUYAOPEN_BUILD_ROOT}"
 fi
 
+python3 "${SELF_DIR}/tuya_pairing_sources.py" verify "${PAIRING_ARGS[@]}" --build-root "${TUYAOPEN_BUILD_ROOT}"
 APP_DIR="${TUYAOPEN_BUILD_ROOT}/apps/tuya.ai/your_chat_bot"
 (cd "${APP_DIR}" && ./build_a133.sh "${TUYAOPEN_BUILD_ROOT}" "${SDK}") \
     || die "TuyaOpen chatbot 构建失败" "看上方 tos.py build 错误输出" \
            "可单独跑：cd ${APP_DIR} && ./build_a133.sh ${TUYAOPEN_BUILD_ROOT} ${SDK}" \
            "若联网/venv 问题，先排查 prepare_tuyaopen_build_root.sh"
 cp -f "${APP_DIR}/dist/your_chat_bot_1.0.1/your_chat_bot_QIO_1.0.1.bin" "${BUILD_OUT}/tuyaopen/"
+cp -f "${TUYAOPEN_BUILD_ROOT}/.mimi-pairing/build-result.json" "${BUILD_OUT}/tuyaopen/pairing-build-result.json"
 
 # 固件必须显式携带实际编译 PID，供出厂助手与量产云交叉校验，避免工位配置
 # 指向另一个产品的 License 池。PID 唯一来源为本次构建使用的 A133_B6.config。

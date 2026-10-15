@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "summary": "Wire explicit Tuya edition through main, source staging and direct/product build.",
+  "context": "PRIVATE066 SDK Provider source selection already compiled; preserve original snapshots and physical deferral.",
+  "next_steps": "Actual full public/private Tuya builds; edition-aware system packaging/init and final product locks.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "Main delegates private license/init; public returns before SDK/CLI/network; staged provenance before destructive work and output collection.",
+      "invariants": "No keys or credential reads in public runtime adapter; no implicit private enablement or stale-tree fallback; original release artifacts and devices untouched.",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/20261015-private066-tuya-staging.json",
+        "scripts/tuya_pairing_sources.py",
+        "tests/update/test_tuya_pairing_sources.py",
+        "scripts/prepare_tuyaopen_build_root.sh",
+        "scripts/build_apps.sh",
+        "integrations/tuyaopen/build_a133.sh",
+        "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c"
+      ],
+      "checks": [
+        {
+          "name": "Tuya staging boundaries",
+          "status": "passed",
+          "scope": "6 native checks: profile switch, source/receipt/alias tamper, missing private before clean, direct entry before bootstrap",
+          "evidence": "output/private-tuya-adapter-20261015/tuya-staging-tests.log"
+        },
+        {
+          "name": "Provider programs and host regression",
+          "status": "passed",
+          "scope": "Actual public30/private32 TU; 194 update checks combined, architecture75 with explicit SDK",
+          "evidence": "output/private-tuya-adapter-20261015/provider-sdk-configured-corrected.log"
+        },
+        {
+          "name": "Full Tuya programs/install/package",
+          "status": "not_run",
+          "scope": "Actual full Tuya binary build and product packaging",
+          "reason": "Fix source first; package and full acceptance follow.",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-066.md"
+        }
+      ]
+    }
+  ]
+}

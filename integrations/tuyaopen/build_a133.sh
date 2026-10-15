@@ -44,6 +44,16 @@ if [[ ! -f "${TUYAOPEN_ROOT}/tos.py" ]]; then
     echo "error: tos.py not found under TUYAOPEN_ROOT: ${TUYAOPEN_ROOT}" >&2
     exit 1
 fi
+# Both direct builds and skip-prepare builds must use the trusted product checker.
+PRODUCT_SOURCE="${MIMI_PRODUCT_SOURCE_ROOT:-$(cd "${APP_DIR}/../.." && pwd)}"
+PAIRING_CHECKER="${PRODUCT_SOURCE}/scripts/tuya_pairing_sources.py"
+[[ -f "${PAIRING_CHECKER}" ]] || { echo "TUYA PAIRING BLOCKED: set MIMI_PRODUCT_SOURCE_ROOT to product source" >&2; exit 1; }
+PAIRING_ARGS=(--profile "${MIMI_PRODUCT_EDITION:-public}")
+if [[ -n "${MIMI_PRIVATE_PRODUCT_ROOT:-}" ]]; then
+    PAIRING_ARGS+=(--private-product-root "${MIMI_PRIVATE_PRODUCT_ROOT}")
+fi
+python3 "${PAIRING_CHECKER}" verify "${PAIRING_ARGS[@]}" --build-root "${TUYAOPEN_ROOT}"
+
 # venv 自包含于产品仓库：缺失则用 TuyaOpen 自带的 export.sh 本地重建（不联网）。
 if [[ ! -x "${VENV_ROOT}/bin/python" ]]; then
     echo "venv not found at ${VENV_ROOT}, rebuilding via ${TUYAOPEN_ROOT}/export.sh ..."
@@ -106,3 +116,6 @@ mkdir -p "${TUYAOPEN_ROOT}/.cache"
 touch "${TUYAOPEN_ROOT}/.cache/.dont_prompt_update_platform"
 
 "${VENV_ROOT}/bin/python" "${TUYAOPEN_ROOT}/tos.py" build "${BUILD_ARGS[@]}"
+
+# Inputs changed during configuration/build cannot produce a qualified collection.
+python3 "${PAIRING_CHECKER}" record "${PAIRING_ARGS[@]}" --build-root "${TUYAOPEN_ROOT}"

@@ -23,6 +23,7 @@
 #include "tal_api.h"
 #include "tuya_config.h"
 #include "tuya_iot.h"
+#include "mimi_device_pairing.h"
 #include "tuya_iot_dp.h"
 #include "dp_schema.h"
 #include "netmgr.h"
@@ -78,7 +79,6 @@ tuya_iot_license_t license;
 #define DPID_BUS_POWER         110
 #define DPID_ASSISTANT_STATE   111
 #define DPID_FREE_CHAT         112
-#define LICENSE_RETRY_INTERVAL_MS 5000
 
 /*
  * The cloud schema and MQTT session are not guaranteed to be ready for a DP
@@ -732,6 +732,8 @@ bool user_network_check(void)
 
 void user_main(void)
 {
+    /* Public edition must stop before SDK, CLI, timers or network startup. */
+    if (!mimi_tuya_pairing_enabled()) return;
     int ret = OPRT_OK;
 
     //! open iot development kit runtim init
@@ -770,23 +772,10 @@ void user_main(void)
 
     reset_netconfig_start();
 
-    ret = tuya_iot_license_read(&license);
-    if (ret != OPRT_OK) {
-        PR_ERR("Tuya device license unavailable; waiting for factory provisioning.");
-        do {
-            tal_system_sleep(LICENSE_RETRY_INTERVAL_MS);
-            ret = tuya_iot_license_read(&license);
-        } while (ret != OPRT_OK);
-    }
-    PR_NOTICE("Tuya device license loaded from protected runtime storage.");
-
-    /* Initialize Tuya device configuration */
-    ret = tuya_iot_init(&ai_client, &(const tuya_iot_config_t){
+    /* Explicit product adapter owns runtime one-device authorization. */
+    ret = mimi_tuya_pairing_init(&ai_client, &license, &(const tuya_iot_config_t){
                                         .software_ver = PROJECT_VERSION,
                                         .productkey   = TUYA_PRODUCT_ID,
-                                        .uuid         = license.uuid,
-                                        .authkey      = license.authkey,
-                                        // .firmware_key      = TUYA_DEVICE_FIRMWAREKEY,
                                         .event_handler = user_event_handler_on,
                                         .network_check = user_network_check,
                                     });

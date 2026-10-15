@@ -61,6 +61,13 @@ require_dir "${TOOLS_ROOT}/python" \
 require_dir "${VENDOR_ROOT}" \
     "vendor 库缺失，检查 vendor/tuyaopen-a133-b6-libs 是否完整"
 
+# Product edition preflight must precede --clean and rsync --delete.
+PAIRING_ARGS=(--profile "${MIMI_PRODUCT_EDITION:-public}")
+if [[ -n "${MIMI_PRIVATE_PRODUCT_ROOT:-}" ]]; then
+    PAIRING_ARGS+=(--private-product-root "${MIMI_PRIVATE_PRODUCT_ROOT}")
+fi
+python3 "${SELF_DIR}/tuya_pairing_sources.py" check "${PAIRING_ARGS[@]}" --build-root "${BUILD_ROOT}"
+
 # TuyaOpen 与 platform/LINUX 定制已固化进 third_party/TuyaOpen（原 patches/、
 # platform-patches 已归档到 patches-archive/）。本脚本不再构建时打补丁，直接
 # rsync 已含定制的 vendored 源。升级 TuyaOpen 上游须重跑 vendor_tuyaopen.sh
@@ -134,6 +141,9 @@ chmod +x "${APP_DIR}/build_a133.sh"
 #    逐台写入 /factory/tuya/license.env，运行时通过 tuya_iot_license_read() 加载。
 echo "==> Tuya device credentials: runtime provisioning (not embedded in firmware)"
 
+# Select exactly one implementation, then bind the staging receipt to this edition.
+python3 "${SELF_DIR}/tuya_pairing_sources.py" stage "${PAIRING_ARGS[@]}" --build-root "${BUILD_ROOT}"
+
 # 5) .venv：用本地 .tools 建（uv/python 不下载）。若 vendored 了 uv-cache，指向它离线 sync。
 if [[ ${RUN_EXPORT} -eq 1 ]]; then
     # vendored uv-cache（可选）→ 100% 离线 uv sync
@@ -167,6 +177,6 @@ cat <<DONE
 TuyaOpen build root is ready (offline):
   ${BUILD_ROOT}
 
-Next build command:
+Next build command (keep MIMI_PRODUCT_EDITION and MIMI_PRIVATE_PRODUCT_ROOT consistent):
   TUYAOPEN_BUILD_ROOT=${BUILD_ROOT} ${PRODUCT_ROOT}/scripts/build_apps.sh <sdk-root>
 DONE
