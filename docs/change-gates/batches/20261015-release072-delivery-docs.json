@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "summary": "Synchronize completed controlled draft delivery and current product boundaries",
+  "context": "Three actual drafts have56 fully verified assets; old readmes still described25 assets and pending image builds. Document real pending device failure separately.",
+  "next_steps": "Keep frozen artifacts and actual build sources; finish authoritative pairing client and external/physical acceptance, no stable promotion.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-RELEASE-072",
+      "record": "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+      "scope": "Document completed remote verification, fixed provenance and public/private boundary only",
+      "invariants": "No product rebuild/version/tag/asset/key/device changes; no private source or raw UART; host results never substitute physical qualification",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "README.en.md",
+        "README.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+        "docs/update/PRODUCT-EDITIONS.md",
+        "docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md",
+        "docs/delivery/controlled-snapshots-20261015.json",
+        "docs/change-gates/batches/20261015-release072-delivery-docs.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual completed draft inventory and documentation links",
+          "status": "passed",
+          "scope": "123 relative link/image destinations;56 asset metadata identical to completed actual download/signature/hash/association proof; documentation-only changed paths",
+          "evidence": "docs/delivery/controlled-snapshots-20261015.json;docs/change-gates/REQ-MIMI-RELEASE-072.md"
+        },
+        {
+          "name": "New physical installation and qualification",
+          "status": "not_run",
+          "scope": "New candidate device installation and full physical matrix",
+          "reason": "User deferred; existing board black-screen recovery remains unresolved",
+          "evidence": "docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-STABILITY-023",
+      "record": "docs/change-gates/REQ-MIMI-STABILITY-023.md",
+      "scope": "Read-only boot-stage and panel-registration correlation plus user transient recovery/black-screen recurrence",
+      "invariants": "No additional board reset/config/firmware change; root cause not proven; raw UART and SSID remain private",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-STABILITY-023.md"
+      ],
+      "checks": [
+        {
+          "name": "Read-only captured failure correlation",
+          "status": "passed",
+          "scope": "Previously saved boot stages, registration source and later user report; not physical repair proof",
+          "evidence": "docs/change-gates/REQ-MIMI-STABILITY-023.md"
+        },
+        {
+          "name": "Physical black-screen repair",
+          "status": "failed",
+          "scope": "User reported transient recovery followed by spontaneous picture disappearance; captured serial/network lost response",
+          "reason": "No permanent root-cause fix or controlled replacement-kernel comparison yet",
+          "evidence": "docs/change-gates/REQ-MIMI-STABILITY-023.md"
+        }
+      ]
+    }
+  ]
+}

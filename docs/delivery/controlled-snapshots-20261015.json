@@ -1,0 +1,345 @@
+{
+  "complete_delivery": false,
+  "physical": "deferred_not_run",
+  "releases": [
+    {
+      "additional": {},
+      "assets": 16,
+      "automatic_update_eligible": false,
+      "checks": {
+        "SHA256SUMS": {
+          "bytes": 1269,
+          "sha256": "c25978d910ace9d77d8210f8fe07e2a95709dd22c247fed77620f15966fc3b68",
+          "status": "passed"
+        },
+        "application-build.json": {
+          "bytes": 1004,
+          "sha256": "740ff2bbbe44c8c0c893900252f05062d259f6fbb38ca26d62030fccf0145904",
+          "status": "passed"
+        },
+        "application.tar.gz": {
+          "bytes": 27292549,
+          "sha256": "c3339a5299d0f35fd26f724fb6997f956d902087908dc4b39d6cf15d98723375",
+          "status": "passed"
+        },
+        "delivery-snapshot.json": {
+          "bytes": 3313,
+          "sha256": "3908094bdf198bd09a3b0105a79ad2b326781a162a596af22e1e1d7d78623f3d",
+          "status": "passed"
+        },
+        "dependency-lock.json": {
+          "bytes": 325,
+          "sha256": "f7f88a86e61acaf53c657b83cf605a22cd073a9a26276f00949f3b584c7f87cc",
+          "status": "passed"
+        },
+        "device-private.json": {
+          "bytes": 1200,
+          "sha256": "a8b709e96458cc8e985b00de0060e4b13ea7d58ea3b76e184ea9e78df8c061d1",
+          "status": "passed"
+        },
+        "device-public.json": {
+          "bytes": 1198,
+          "sha256": "b4061e86d6ba516fda273168ebc327ccbf042a5d4c9508229f213ffa75307a8f",
+          "status": "passed"
+        },
+        "manifest.json": {
+          "bytes": 9696,
+          "sha256": "eb4fa178adba4b76b5a1f4f46293a2bf0220b281997a429c409ad61f9730dc40",
+          "status": "passed"
+        },
+        "manifest.sig": {
+          "bytes": 384,
+          "sha256": "2394a9b956087091888f6f7537572dcb0302845ab6a5729e72626628d56ec95a",
+          "status": "passed"
+        },
+        "platform-contract-lock.json": {
+          "bytes": 741,
+          "sha256": "6fd2bc8c51dbfb15d45f3b20c338f848e8f626faaac5097e4c286af7c7119c3a",
+          "status": "passed"
+        },
+        "release-lock.json": {
+          "bytes": 1885,
+          "sha256": "90c3e90376c3c8dcabe7603ceaf72c6efe4920ed9cf8ab19a17da6535d9b0fcf",
+          "status": "passed"
+        },
+        "sbom.spdx.json": {
+          "bytes": 3398,
+          "sha256": "714b58d8a434eecad7f00da55eeabfce9914ff541c69f8883ac0aa9434ea36c7",
+          "status": "passed"
+        },
+        "sdk-lock.json": {
+          "bytes": 3593647,
+          "sha256": "bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261",
+          "status": "passed"
+        },
+        "source-ownership.json": {
+          "bytes": 21268,
+          "sha256": "3c4bb2f651b75729448cb8abf18c6bab931f3a7816b1fd150f3fe6f59906f98a",
+          "status": "passed"
+        },
+        "source.tar.gz": {
+          "bytes": 66435720,
+          "sha256": "b1abe897dc4349fe914d65f733e414fdca9f124edf721bc3f8d971147f9810c0",
+          "status": "passed"
+        },
+        "validation.json": {
+          "bytes": 8030,
+          "sha256": "477a03f5636817fed9d7c7adc1635dd54446c3cd034739e52ed4f1a0707416b4",
+          "status": "passed"
+        }
+      },
+      "physical": "deferred_not_run",
+      "producer_source": "34bb57b0f7f4e7e2cbac4b115ad5a271102fc41b",
+      "production_qualified": false,
+      "release_type": "application",
+      "requirement": "REQ-MIMI-DELIVERY-058",
+      "source": "bedf1a864e2c8c8b0745330349634b0f29f31431",
+      "status": "passed_remote_draft_readback",
+      "tag": "v1.0.8-rc.24",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8e1aa2d1b816adbd5fca"
+    },
+    {
+      "additional": {
+        "raw_bytes": 556318720,
+        "raw_image_sha256": "fdd27b6196521c5051af509afdc01a982bd7401d9ba095f30d2f84b524ffdfe8",
+        "rootfs_sha256": "1d7313b88e29b96a5e50b9271504d114ab9fca1839d6855b11645ab0f0353ae9",
+        "swu_signature": "passed:downloaded CPIO description and signature"
+      },
+      "assets": 20,
+      "automatic_update_eligible": false,
+      "checks": {
+        "SHA256SUMS": {
+          "bytes": 1669,
+          "sha256": "3e810b4205f81dbab2b921fae636f1a1e545dd02b7a4bb994fb45cc8c305e0cf",
+          "status": "passed"
+        },
+        "SmartDesktopMimi-SystemImage-v1.0.0-rc.3.img.gz": {
+          "bytes": 92134557,
+          "sha256": "ea3682b868af338839f4474eb843de30ea77f1e01576becf4c63a16afcf64a7c",
+          "status": "passed"
+        },
+        "delivery-snapshot.json": {
+          "bytes": 3935,
+          "sha256": "eb5c5952ce2b01676cbaf2c7fbbccebad1ecc40bb2d25748f1fb5ff18964c2a4",
+          "status": "passed"
+        },
+        "dependency-lock.json": {
+          "bytes": 325,
+          "sha256": "c13f3bcd5716cda30b84dba61dd03ee2915178ec8c85275e1de3e5219768fb22",
+          "status": "passed"
+        },
+        "factory-manifest.json": {
+          "bytes": 9696,
+          "sha256": "eb4fa178adba4b76b5a1f4f46293a2bf0220b281997a429c409ad61f9730dc40",
+          "status": "passed"
+        },
+        "factory-manifest.sig": {
+          "bytes": 384,
+          "sha256": "2394a9b956087091888f6f7537572dcb0302845ab6a5729e72626628d56ec95a",
+          "status": "passed"
+        },
+        "platform-contract-lock.json": {
+          "bytes": 741,
+          "sha256": "6fd2bc8c51dbfb15d45f3b20c338f848e8f626faaac5097e4c286af7c7119c3a",
+          "status": "passed"
+        },
+        "platform-product-lock.json": {
+          "bytes": 30912,
+          "sha256": "6ba3ed0b4e20d13d975facb853cd3d1b96abcdfbbe154e0c44f0b294ce3e704a",
+          "status": "passed"
+        },
+        "product-rootfs-check.json": {
+          "bytes": 447,
+          "sha256": "f1f79697b66c7130d2d179937e70ece9c598a5570bae8d3284c0c0804c57c624",
+          "status": "passed"
+        },
+        "release-lock.json": {
+          "bytes": 2846,
+          "sha256": "7cb26f9c9de32b2bddc132a9aac050c44a2fe22989bb8f1a0d64521401984072",
+          "status": "passed"
+        },
+        "sbom.spdx.json": {
+          "bytes": 3398,
+          "sha256": "21a13696867af949aba1a518fbd97e8c2a314544ef15f513e7e5e60d9b4458a4",
+          "status": "passed"
+        },
+        "sdk-components.json": {
+          "bytes": 21654,
+          "sha256": "90b8172a71a9262a80a0d2aee74249000d7676fe4a5cc45207c19b1d14333812",
+          "status": "passed"
+        },
+        "source.tar.gz": {
+          "bytes": 66443377,
+          "sha256": "3c7814e773cb759fd3a4e86c7120993d0d6c3276f3cf53164c5994b50aad2c72",
+          "status": "passed"
+        },
+        "swu-build.json": {
+          "bytes": 1244,
+          "sha256": "b77e42d731516ac2cadbaed3ca79caca6063eeb61cc2177e6543a11434f00b03",
+          "status": "passed"
+        },
+        "system-build.json": {
+          "bytes": 1793,
+          "sha256": "e8fe52e59ec1812f463411176994661128a97472b49f1e8408acd002c7022b28",
+          "status": "passed"
+        },
+        "system-device-host-public.json": {
+          "bytes": 1530,
+          "sha256": "fdfab51c3f9975bfc3a829773dfb441deefc48a7261e711a549f5e12caf9130f",
+          "status": "passed"
+        },
+        "system-manifest.json": {
+          "bytes": 3291,
+          "sha256": "3bbb0881e30ebf68c1ca721c310ef169f40933e01a488ffdf7eeaa3edd9002e0",
+          "status": "passed"
+        },
+        "system-manifest.sig": {
+          "bytes": 384,
+          "sha256": "15d0ab2137e0f8f4b1eb02ab523c0aba3e8b3319f156dc88d04932e8ebba5c20",
+          "status": "passed"
+        },
+        "system.swu": {
+          "bytes": 96818688,
+          "sha256": "8f64df9b95ded924562f36a2c9d1a7c365b108e78b269417abfc8891aba4b7fe",
+          "status": "passed"
+        },
+        "validation.json": {
+          "bytes": 4125,
+          "sha256": "9c6e03c9619fc73011008da4e5a89bce4b5cc971a0c74e4c4a23d3ccff5e6261",
+          "status": "passed"
+        }
+      },
+      "physical": "deferred_not_run",
+      "producer_source": "34bb57b0f7f4e7e2cbac4b115ad5a271102fc41b",
+      "production_qualified": false,
+      "release_type": "system",
+      "requirement": "REQ-MIMI-DELIVERY-058",
+      "source": "a6e7a3bb180e8d26c9c8d63ece1a3f417e68421a",
+      "status": "passed_remote_draft_readback",
+      "tag": "system-a133-v1.0.0-rc.3",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8d087a4b10568e890cf2"
+    },
+    {
+      "additional": {
+        "raw_bytes": 556318720,
+        "raw_image_sha256": "d74b6aede3597037a7bd102fb7cb8d63647693d7acced6d2d9c8f29a867dc80c",
+        "rootfs_sha256": "adf9fadb4327402b10efc7d28809b49432a16390b37f96187a1b9294e3061405",
+        "swu_signature": "passed:downloaded CPIO description and signature"
+      },
+      "assets": 20,
+      "automatic_update_eligible": false,
+      "checks": {
+        "SHA256SUMS": {
+          "bytes": 1670,
+          "sha256": "2c848ea2cf9adab0cc39f0d3f8a6001660e86c4032ded504560de99eb2d6cf84",
+          "status": "passed"
+        },
+        "SmartDesktopMimi-SystemImage-v1.0.0-rc.4.img.gz": {
+          "bytes": 94613528,
+          "sha256": "7d5648a48574502dccffcec759c3b26c207be874580820e0bab8f3fa2788f7c2",
+          "status": "passed"
+        },
+        "delivery-snapshot.json": {
+          "bytes": 3937,
+          "sha256": "653ec05f0cf112fb5986a1f60f82f54e89507fa16f54cc214ce163a68b469620",
+          "status": "passed"
+        },
+        "dependency-lock.json": {
+          "bytes": 325,
+          "sha256": "c13f3bcd5716cda30b84dba61dd03ee2915178ec8c85275e1de3e5219768fb22",
+          "status": "passed"
+        },
+        "factory-manifest.json": {
+          "bytes": 9696,
+          "sha256": "eb4fa178adba4b76b5a1f4f46293a2bf0220b281997a429c409ad61f9730dc40",
+          "status": "passed"
+        },
+        "factory-manifest.sig": {
+          "bytes": 384,
+          "sha256": "2394a9b956087091888f6f7537572dcb0302845ab6a5729e72626628d56ec95a",
+          "status": "passed"
+        },
+        "platform-contract-lock.json": {
+          "bytes": 741,
+          "sha256": "6fd2bc8c51dbfb15d45f3b20c338f848e8f626faaac5097e4c286af7c7119c3a",
+          "status": "passed"
+        },
+        "platform-product-lock.json": {
+          "bytes": 32319,
+          "sha256": "34697ca268adb148d144dddbf8b48fce37794439b67e22d286ed58fb573aa35d",
+          "status": "passed"
+        },
+        "product-rootfs-check.json": {
+          "bytes": 448,
+          "sha256": "cc9bc0e2f2dcd497e0a3f37b7df514aa59a8918613c1b67348f69b690b68f75b",
+          "status": "passed"
+        },
+        "release-lock.json": {
+          "bytes": 2848,
+          "sha256": "77723284d4f4bf18887116120385d847a835da00bc31f7132612028ab94b0845",
+          "status": "passed"
+        },
+        "sbom.spdx.json": {
+          "bytes": 3398,
+          "sha256": "21a13696867af949aba1a518fbd97e8c2a314544ef15f513e7e5e60d9b4458a4",
+          "status": "passed"
+        },
+        "sdk-components.json": {
+          "bytes": 21654,
+          "sha256": "90b8172a71a9262a80a0d2aee74249000d7676fe4a5cc45207c19b1d14333812",
+          "status": "passed"
+        },
+        "source.tar.gz": {
+          "bytes": 66443377,
+          "sha256": "3c7814e773cb759fd3a4e86c7120993d0d6c3276f3cf53164c5994b50aad2c72",
+          "status": "passed"
+        },
+        "swu-build.json": {
+          "bytes": 1244,
+          "sha256": "ddc9fb9a351d0340f108b92ed7a8dc968c8184f5d460e0be5d9aa7c418b49b4f",
+          "status": "passed"
+        },
+        "system-build.json": {
+          "bytes": 1794,
+          "sha256": "18398d638e966ab71a99ab67d2c1fd36d02de494e6e8eeaaf3ea14f75852e4f5",
+          "status": "passed"
+        },
+        "system-device-host-private.json": {
+          "bytes": 1533,
+          "sha256": "24b0b0d3505a9646283862c959473dcca33c943ad8406a767f1ae51ff1b6f57f",
+          "status": "passed"
+        },
+        "system-manifest.json": {
+          "bytes": 3292,
+          "sha256": "40842024079345c3f31530cfbfefe5f5eb1ebd19f248251f90dce4d935c4c9b9",
+          "status": "passed"
+        },
+        "system-manifest.sig": {
+          "bytes": 384,
+          "sha256": "c3c0fe713198e96e430e8c8cd1516d028cba5702ef65d255c6a1904c9019120f",
+          "status": "passed"
+        },
+        "system.swu": {
+          "bytes": 99287040,
+          "sha256": "3546ba47263093457e7982e77767439587017790693a785fc0b3906809f9114e",
+          "status": "passed"
+        },
+        "validation.json": {
+          "bytes": 4126,
+          "sha256": "e6324614a7d8004c621fed8381c7ecb0fe612aaa62296d9829ec62b9d3d6ebdf",
+          "status": "passed"
+        }
+      },
+      "physical": "deferred_not_run",
+      "producer_source": "34bb57b0f7f4e7e2cbac4b115ad5a271102fc41b",
+      "production_qualified": false,
+      "release_type": "system-private",
+      "requirement": "REQ-MIMI-DELIVERY-058",
+      "source": "a6e7a3bb180e8d26c9c8d63ece1a3f417e68421a",
+      "status": "passed_remote_draft_readback",
+      "tag": "system-a133-v1.0.0-rc.4",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-193629348e38d1c7a4c1"
+    }
+  ],
+  "status": "passed_controlled_drafts_only"
+}

@@ -184,3 +184,5 @@ REQ-MIMI-SDK-069：[最终产品SDK输入核对](change-gates/REQ-MIMI-SDK-069.m
 REQ-MIMI-SYSTEM-070：[共用工厂应用和产品基线](change-gates/REQ-MIMI-SYSTEM-070.md)，实施前记录，新包/完整镜像尚未构建，物理验收后置。
 
 REQ-MIMI-RELEASE-072：[相同硬件不同runtime发布证据](change-gates/REQ-MIMI-RELEASE-072.md)，实施前记录，实际候选草稿拒绝已保留，作用域修正及验证not_run。
+
+2026-10-15 最新交付入口：[受控交付快照](delivery/CONTROLLED-SNAPSHOTS-20261015.md)及[56附件元数据](delivery/controlled-snapshots-20261015.json)，对应RELEASE072；三份完整远端复验已通过，原固定产物不变。STABILITY023补充用户Logo后黑屏与只读面板登记分析，原板仍rc17、实体修复和持续健康未通过。历史PAIR071后台“只读未实施”已被用户扩权和独立补丁分支取代，但未部署、桌面消费者未接。

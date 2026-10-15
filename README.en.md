@@ -1,4 +1,7 @@
-> PRIVATE064：生产/授权工具已迁至 [SmartDesktopMimi-Private](https://github.com/dshanpi/SmartDesktopMimi-Private)，本页相关工位命令须在该私有仓库执行，公共仓库不再提供旧脚本。历史设计说明保留；Tuya/100ask运行适配及完整双产品构建隔离仍在接续，不能将当前源码称已完成公共/私有运行隔离。
+> **2026-10-15 controlled drafts: all 56 assets downloaded and verified.**
+> [Application rc.24](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8e1aa2d1b816adbd5fca) · [Public system rc.3](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8d087a4b10568e890cf2) · [Private-feature system binary rc.4](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-193629348e38d1c7a4c1). Draft access requires an authorized repository account. These are not stable releases or automatic-update candidates.
+> See the [delivery record](docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md) for exact sources, compatibility, hashes and outstanding acceptance. Proprietary per-device Tuya/100ask pairing and factory tools remain in the private repository; the common desktop, ordinary apps and generic updates remain public. Credentials are never distributed in generic images or source.
+> The old rc23/rc2 assets remain unchanged. The existing test board still runs rc17 and has unresolved black-screen/response-loss failures; the new drafts have not been installed on it.
 
 # AI-DeskTopBox / Smart Desktop Mimi
 
@@ -55,7 +58,7 @@ SVGs and high-resolution PNGs are provided.
 The approved [layering and update release policy](docs/application-update-policy.md)
 (Chinese) separates application and system releases and requires explicit hardware,
 runtime and interface matching for A133 and future T527/RK3576 targets. Independent
-desktop updates and their automated compatibility gates remain to be implemented.
+desktop updates and automated signature/compatibility/release gates have host-verified implementations. Full physical installation, upgrade/rollback, power-interruption and data acceptance remain incomplete.
 
 The system separates product use cases from hardware and vendor SDKs:
 

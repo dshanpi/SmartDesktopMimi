@@ -1,10 +1,8 @@
-> PRIVATE064：生产/授权工具已迁至 [SmartDesktopMimi-Private](https://github.com/dshanpi/SmartDesktopMimi-Private)，本页相关工位命令须在该私有仓库执行，公共仓库不再提供旧脚本。历史设计说明保留；Tuya/100ask运行适配及完整双产品构建隔离仍在接续，不能将当前源码称已完成公共/私有运行隔离。
-
-> **2026-10-15 开发候选已同步，真机验收待新 SDK Ubuntu 环境重做。**
-> 源码在本仓库，A133底层标准overlay在私有仓库[100askTeam/A133-AIDesktop-Tina5](https://github.com/100askTeam/A133-AIDesktop-Tina5)。
-> [应用1.0.8-rc.23草稿](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-a8a08684e749922ad799) · [系统1.0.0-rc.2草稿](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-50b14f8549a2da232a28)（需维护账号登录查看；25附件上传及完整下载复核通过）。
-> [本轮交付记录及待验收项](docs/delivery/20261015-snapshot.md)。
-> 镜像和升级包分别绑定实际构建提交，后续源码改动不冒充旧产物来源。A133安装、失联、升级/回退、断电和数据验收尚未完成，不能用于量产；非稳定发布，不参与自动更新。
+> **2026-10-15：三份受控草稿已同步并完成 56 个附件的远端下载复验。**
+> [共享应用 v1.0.8-rc.24](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8e1aa2d1b816adbd5fca)（16附件） · [公开系统 rc.3](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8d087a4b10568e890cf2)（20附件） · [私有功能系统二进制 rc.4](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-193629348e38d1c7a4c1)（20附件）。
+> 草稿需有对应仓库权限的 GitHub 账号登录查看；尚未发布为稳定版，不参与自动更新。完整获取、应用/系统配对、固定源码和未验收项见[交付说明](docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md)。
+> 公共版禁用涂鸦及 100ask 一机一码/自动配对；这些适配和生产工具的源码在私有仓库。普通桌面/应用/通用 IoT 与更新继续共享公开源码，详见[产品边界](docs/update/PRODUCT-EDITIONS.md)。真实凭据不进入任何源码或通用镜像。
+> 原 rc23/rc2 的 25 附件不覆盖。现有测试板仍运行旧 rc17，其上电黑屏/失联未修复；本批新产物未装板，不能用于量产或宣称实机合格。
 
 # 智能桌面小咪（Smart Desktop Mimi）
 
@@ -58,19 +56,14 @@ Mermaid 源码、SVG 和高清 PNG。
 
 上层应用独立发版、底层按平台适配，以及 A133 / 后续 T527、RK3576 的版本配对要求，
 统一记录在 [分层、版本配对与发布门禁](docs/application-update-policy.md)。
-该规范已确认；独立桌面更新器与自动兼容门禁尚待实现。
+独立桌面更新器、签名/兼容匹配与发布门禁已有实现和主机验证；真实系统安装、升级/回退、断电及完整数据/功能验收仍未完成。
 
-- 产品源码（`apps/`、TuyaOpen、vendor 库）**永远只在产品仓库**，不拷进 SDK。
-- 应用在产品仓库内 **out-of-tree 构建**，只借用 SDK 的交叉工具链 + staging_dir。
-- SDK 侧只保留四个薄包：`aitvbox-suite`、`aitvbox-platform`、
-  `aitvbox-usb-hid`、`aitvbox-ipkvm`。pack 时通过
-  `$AITVBOX_PRODUCT_BUILD` 读取产品产物，四个包默认全部关闭。
-- `sync_to_sdk.sh` 只拷薄包，**不搬源码、不打开产品包开关、不污染 SDK**。
-- `build_firmware.sh` 临时打开产品包，打包后恢复纯 SDK 模式并清理产品残留。
+- 共享桌面和普通应用保留在本仓库，使用 SDK 的工具链与 sysroot 在产品构建目录生成应用；应用包不替换板级服务。
+- A133 后端及底层服务由私有 SDK 仓库的独立组件构建；涂鸦/100ask 一机一码适配只从固定私有组件显式组合，公共构建不读取它们。
+- SDK 仍沿用标准 `overlay/`、`meta/`、`scripts/apply_overlay.sh` 差异入口；产品薄包及构建入口核对源码归属、依赖、产品版本和实际构建回执。
+- 完整镜像绑定 SDK、板型/硬件修订、预装应用及实际哈希。SDK、平台、屏幕分辨率和 deb/Tina 选择仅属于开发主机构建工具，不进入桌面 UI。
 
-这样 SDK 始终是纯净的上游快照（可 `distclean` 后随时替换），"单独编 SDK"与
-"编产品固件"两条路径彻底解耦。完整 A133 固件还需要合法取得的 Tina SDK 和受限
-依赖；公开仓库不会伪装成包含这些输入的全离线构建包。
+合法 Tina SDK、完整恢复输入和受限依赖仍需单独取得。公开仓库、组件摘要与源码包不冒充完整 SDK；当前固定输入和构建结果见[交付说明](docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md)。
 
 ## 目录结构
 
@@ -105,10 +98,10 @@ Mermaid 源码、SVG 和高清 PNG。
   [docs/ipkvm-user-guide.md](docs/ipkvm-user-guide.md)
 - 平台已实现模块、用户流程和安全边界：
   [docs/platform-feature-overview.md](docs/platform-feature-overview.md)
-- 最新 A133 固件烧录、恢复、冷启动和整机实测记录：
-  [docs/validation/implementation-20260925.md](docs/validation/implementation-20260925.md)
-- T527 移植交接、开发记录模板和强制门禁：
-  [docs/porting/t527/README.md](docs/porting/t527/README.md)
+- 应用更新器实现与验收边界：
+  [更新器实现记录](docs/update/IMPLEMENTATION.md)
+- A133 与未来 T527/RK3576 平台的接入边界：
+  [平台接入与未支持范围](docs/application-update-policy.md)
 - 系统启动、角色、信任链、APP/MCP 状态机和量产流程：
   [docs/platform-business-logic.md](docs/platform-business-logic.md)
 - 本分支架构决策、缺陷修复、验证和遗留事项：
@@ -256,7 +249,7 @@ SWUpdate A/B 双槽 OTA，LVGL UI 菜单触发，升级 kernel + rootfs（含 LV
 
 - A/B 双槽 + 回滚（bootcount + altbootcmd）是出厂地基，由 `scripts/inject_sdk_files.sh` 在构建 trap 窗口内注入 SDK、退出还原。**地基注入受 `AITVBOX_OTA=1` 门控**：`build_firmware.sh` 仅在该环境变量为 `1` 时同时执行 `toggle_ota.sh on` 与 `inject_sdk_files.sh apply`（trap 里对应 revert/off 还原），并开 `swupdate`/`uboot-envtools` 包。未设置 `AITVBOX_OTA` 时 `build_firmware.sh` 只出普通单槽固件，不会把 A/B 地基带进 SDK。所以编 OTA 固件须显式：`AITVBOX_OTA=1 ./scripts/build_firmware.sh <sdk-root>`。
 - 升级包由 `scripts/build_swu.sh` 生成（全量 + RSA 签名），产物落 `build/swu/`。
-- 设备端服务 `apps/lv_port_linux/src/system/service_ota.c`：CHECK → DOWNLOAD → APPLY → COMMIT，状态经 IPC 上报 UI。
+- 设备端服务由私有 SDK 的独立 A133 Provider 组件提供（原 `service_ota.c`）：CHECK → DOWNLOAD → APPLY → COMMIT，状态经 IPC 上报 UI。
 
 完整机制、验证步骤、已知风险见 [docs/ota.md](docs/ota.md)。
 
@@ -296,9 +289,7 @@ SWUpdate A/B 双槽 OTA，LVGL UI 菜单触发，升级 kernel + rootfs（含 LV
 
 ## Tuya 设备凭据（重要）
 
-Tuya 聊天机器人运行时需要真实设备凭据（UUID + AuthKey）才能连上 Tuya MQTT
-（`m2.tuyacn.com:8883`）。产品采用**一机一密、运行时加载**：通用固件只包含 PID，
-不包含任何 UUID/AuthKey。每台设备在产线烧录后写入唯一 License。
+私有功能版本的 Tuya 聊天机器人需要运行时设备凭据（UUID + AuthKey）才能连上 Tuya MQTT。私有通用固件不包含单机 UUID/AuthKey，每台设备在产线注入唯一 License；公共构建不提供这套一机一码接入。生产工具只在 SmartDesktopMimi-Private 中，不能在本公开仓库执行下列历史工位脚本。
 
 为当前设备准备一个仅包含以下两行的 `license.env`：
 
@@ -308,6 +299,7 @@ TUYA_OPENSDK_UUID=你的UUID
 TUYA_OPENSDK_AUTHKEY=你的AuthKey
 EOF
 
+cd /absolute/SmartDesktopMimi-Private
 ./scripts/provision_tuya_license.sh /secure/path/license.env
 ```
 
