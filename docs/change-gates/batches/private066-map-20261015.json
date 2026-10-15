@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Tuya归属清单与实际组件阶段同步",
+  "context": "前次整句替换未命中，纠正清单文案，不改代码",
+  "next_steps": "继续SDK/主入口和打包接线，CI以实际证据为准",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "归属阶段说明",
+      "invariants": "组件通过不等于全链完成，不因文档重建",
+      "paths": [
+        "docs/update/EDITION-SOURCE-MAP.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/private066-map-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "组件证据",
+          "status": "passed",
+          "scope": "沿用实际4native/4A133对象，私有CI已success",
+          "evidence": "output/private-tuya-adapter-20261015/verified-result.json; remote-source.json"
+        },
+        {
+          "name": "全链",
+          "status": "not_run",
+          "scope": "仍待接线",
+          "evidence": "docs/update/EDITION-SOURCE-MAP.md",
+          "reason": "仅阶段文案校正"
+        }
+      ]
+    }
+  ]
+}

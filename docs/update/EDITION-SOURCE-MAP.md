@@ -9,7 +9,7 @@ REQ-MIMI-EDITION-062；这是当前源码梳理，**两产品构建隔离尚未�
 | apps/lv_port_linux/src/apps/voice和通用对话界面 | 公共共享 | 可选语音文字控制继续公开，不把普通AI交互判为私有 |
 | SDK private/code/.../service_cloud.c、service_cloud_validation.c及外置100ask输入 | 专有适配转SmartDesktopMimi-Private | PRIVATE065已将两原C归私有adapters/100ask，以固定锁显式组合原SDK共享源；实际private32/public30TU均原字节、公共禁用实现和无旧副本回退passed。SDK旧源暂留历史，最终SDK退休/产品锁另记；Tuya隔离未完 |
 | scripts/factory_provision_device.sh、scripts/provision_tuya_license.sh、tools/factory-assistant | 产品私有生产工具候选 | PRIVATE064已迁62跟踪源+3授权CLI，固定原SHA/模式，私有上传独立回读68项含helper/许可passed，公共入口退休并反向审计拒绝；真实xlsx/凭据库/授权输入不进任何Git。运行适配另行拆分 |
-| third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c和app_chat_bot.c | 混合源按行为拆分 | 通用对话/上游许可保留；授权读取、一机一码初始化和生产接入归私有。不能把整个上游TuyaOpen或普通AI界面复制成私有版。尚未抽取 |
+| third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c和app_chat_bot.c | 混合源按行为拆分 | PRIVATE066已形成私有初始化C/后端reader头和公共固定禁用组件，4 native探针与4真实A133对象编译passed；当前SDK、主入口、prepare及打包尚未切换，完整隔离not_run。通用对话/上游许可保留，不复制上游库或桌面 |
 | A133采集/显示、后端、五平台兼容服务和板级适配 | 既有私有SDK标准overlay | 两产品通过接口消费；板级SDK与产品专有配对归属分别登记 |
 
 ## 必需验证与接续

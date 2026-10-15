@@ -14,3 +14,5 @@
 公共ABI/两固定禁用stub已加入integrations/tuyaopen/pairing，2个实际native编译/运行检查passed：公共运行stub无需链接任何设备授权/网络API，公共reader调用open即abort的探针未发生IO。仍尚未替换当前SDK/主入口，不能冒充整个产品已禁用。
 
 组件阶段真实结果：4个对象使用原A133 GCC和真实Tuya SDK头编译，public/private runtime分别149输入、private/public reader分别71/4输入，公开组件无私有依赖，全部ELF64 AArch64且前后输入SHA稳定。公共2/私有2 native探针passed（reader14场景），详见a133-objects.json/verified-result.json。这里只编译适配对象，主程序/当前SDK/打包尚未接入，完整程序/镜像与物理not_run；不能把这个阶段改写为产品隔离通过。
+
+清单接续校正：此前EDITION-SOURCE-MAP文案替换未命中旧整句，现按实际组件阶段同步，明确主链未切换，不改变代码或重跑已通过构建。私有753bc51远端CI已经success；公共c793fbe相关CI以remote-source.json实际状态为准，不提前记通过。
