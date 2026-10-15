@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 在产品仓库内 out-of-tree 构建全部应用，产物统一落到产品仓库 build/。
-# SDK 仅提供 toolchain + staging_dir（借工具链，不搬源码进 SDK）。
+# SDK 提供固定的独立 Provider 源码及工具链；桌面仅编译上层。
 #
 # 产物布局:
 #   build/lv_port_linux/{lv_backend,lvglsim}
@@ -123,6 +123,17 @@ if [[ "${ENABLE_100ASK_CLOUD}" == "ON" ]]; then
     require_file "${PRIVATE_100ASK_SDK_ROOT}/src/100ask_iot.c" \
         "私有 100ask SDK 缺少实现源码"
 fi
+
+# Validate the SDK-owned provider before cleaning outputs or preparing dependencies.
+PROVIDER_PROFILE=public
+if [[ "${ENABLE_100ASK_CLOUD}" == "ON" ]]; then
+    PROVIDER_PROFILE=private
+fi
+PROVIDER_ARGS=(--sdk "${SDK}" --profile "${PROVIDER_PROFILE}")
+if [[ "${PROVIDER_PROFILE}" == "private" ]]; then
+    PROVIDER_ARGS+=(--private-sdk "${PRIVATE_100ASK_SDK_ROOT}")
+fi
+python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
 
 # Dependency staging may temporarily enable package symbols. Preserve the
 # caller's SDK configuration exactly so an application-only build does not
@@ -320,7 +331,13 @@ echo "==> [1/5] lv_port_linux (out-of-tree)"
 (cd "${PRODUCT_ROOT}/apps/lv_port_linux" && ./build_openwrt.sh "${SDK}") \
     || die "lv_port_linux 构建失败" "看上方 cmake/make 错误输出" "可单独跑：cd apps/lv_port_linux && ./build_openwrt.sh ${SDK}"
 # build_openwrt.sh 产物在 apps/lv_port_linux/build/bin，归集到统一 build/
-cp -f "${PRODUCT_ROOT}/apps/lv_port_linux/build/bin/lv_backend"  "${BUILD_OUT}/lv_port_linux/"
+# Keep each failed/successful independent build receipt; never reuse old objects.
+PROVIDER_RUN="$(mktemp -d "${BUILD_OUT}/provider-${PROVIDER_PROFILE}.XXXXXX")"
+python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" \
+    --output "${PROVIDER_RUN}/compiled"
+cp -f "${PROVIDER_RUN}/compiled/lv_backend" "${BUILD_OUT}/lv_port_linux/"
+cp -f "${PROVIDER_RUN}/compiled/product-provider-result.json" \
+    "${BUILD_OUT}/lv_port_linux/provider-build-result.json"
 cp -f "${PRODUCT_ROOT}/apps/lv_port_linux/build/bin/lvglsim"    "${BUILD_OUT}/lv_port_linux/"
 
 echo "==> [2/5] hdmi_preview (out-of-tree)"

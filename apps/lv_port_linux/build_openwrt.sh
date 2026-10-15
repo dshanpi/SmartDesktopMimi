@@ -25,8 +25,6 @@ fi
 # Out-of-tree 构建：源码与产物留在本仓库，只借用 SDK 的 toolchain + staging_dir。
 # SDK 路径优先级：命令行参数 > 环境变量 AITVBOX_SDK_ROOT > 默认值。
 SDK_ROOT="${1:-${AITVBOX_SDK_ROOT:-/home/ubuntu/A133-Tina5.0-v0.9}}"
-CLOUD_ENABLED="${AITVBOX_ENABLE_100ASK_CLOUD:-OFF}"
-CLOUD_SDK_ROOT="${AITVBOX_100ASK_SDK_ROOT:-}"
 
 # 清理旧构建
 rm -rf build
@@ -40,13 +38,16 @@ export STAGING_DIR="${SDK_ROOT}/out/a133/b6/openwrt/staging_dir"
 cmake -B build -S . \
   -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake \
   -DA133_SDK_ROOT="${SDK_ROOT}" \
-  -DAITVBOX_ENABLE_100ASK_CLOUD="${CLOUD_ENABLED}" \
-  -DAITVBOX_100ASK_SDK_ROOT="${CLOUD_SDK_ROOT}" \
+  -DMIMI_APPLICATION_ONLY=ON \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DAITVBOX_ENABLE_100ASK_CLOUD=OFF \
   -DCMAKE_BUILD_TYPE=Release \
   -DWERROR=ON
 
 # 编译
-cmake --build build -j$(nproc)
+cmake --build build --target lvglsim -j$(nproc)
+python3 "${APP_DIR}/../../tools/update/source_ownership.py" \
+  --root "${APP_DIR}/../.." --commands "${APP_DIR}/build/compile_commands.json"
 
 # 验证
 TARGET_BIN=$(find build/bin -maxdepth 1 -type f -executable ! -name "*.so" | head -n 1)

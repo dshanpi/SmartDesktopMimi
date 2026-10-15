@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "产品构建入口切换SDK后端与上层桌面",
+  "context": "前置门禁004c8c6；17主机边界回归实际通过，实际编译尚未执行",
+  "next_steps": "运行实际双profile后端和A133上层编译；保留旧平台源码直到对照通过",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-054",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+      "scope": "SDK与上层构建来源边界",
+      "invariants": "既有契约/冻结候选/私有SDK隔离不变；前置拒绝保留原输出",
+      "paths": [
+        "scripts/build_a133_provider.py",
+        "scripts/build_apps.sh",
+        "apps/lv_port_linux/build_openwrt.sh",
+        "tests/update/test_product_provider.py",
+        "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+        "docs/change-gates/batches/split054-implementation-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "边界回归",
+          "status": "passed",
+          "scope": "17主机回归与Bash语法",
+          "evidence": "output/product-provider-20261015/regression.log"
+        },
+        {
+          "name": "实际A133编译/真机",
+          "status": "not_run",
+          "scope": "新入口",
+          "evidence": "output/product-provider-20261015",
+          "reason": "本提交后执行实际编译，不搬用053结果"
+        }
+      ]
+    }
+  ]
+}

@@ -27,3 +27,7 @@ flowchart TD
 - 实际A133仅上层编译及compile_commands归属检查：not_run。
 - 全系统重建、新产物真机/升级/断电/数据：not_run，本轮不沿用旧通过。
 证据目标output/product-provider-20261015；目标开发主机Ubuntu20.04/实际SDK，物理A133无改动。后续完成公共旧源移除和完整迁移；既有ADB绑定/Ubuntu登录待用户输入不重复询问。
+
+## 入口实现与主机拒绝回归
+已实现固定SDK工具/双配方哈希预检、源码/外部依赖/编译器关联核查；系统入口先check再清理和补依赖，后端使用SDK helper新输出；桌面仅lvglsim并检查compile_commands归属。后端成功且字节/收据一致才归集。SDK配方当前固定d7，不接受任意调用方覆盖来源。未修改VERSION、旧rc2/rc23和私有SDK源。
+17项主机回归passed（4新产品边界+13既有独立闭包/归属）：实际运行build_apps --clean缺组件分支且旧输出原字节保留；源码/SDK输入/工具/配方/编译器修改与外部同内容符号链接被拒绝；缺私有SDK/错误profile被拒绝。Bash语法passed。证据output/product-provider-20261015/regression.log。实际A133编译与真机仍not_run。
