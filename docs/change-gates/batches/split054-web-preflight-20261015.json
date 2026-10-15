@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "网页工具链检查提前至任何构建副作用之前",
+  "context": "真实完整入口因npm未在PATH失败，使用已有工具链前先修正早拒绝",
+  "next_steps": "固定源/前序收据与tail一致后接续第四阶段到结束，不重编前三段",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-054",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+      "scope": "前置node/npm检查",
+      "invariants": "只检查现有环境，不安装或修改用户profile；缺失不清输出；原失败保留",
+      "paths": [
+        "scripts/build_apps.sh",
+        "tests/update/test_product_provider.py",
+        "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+        "docs/change-gates/batches/split054-web-preflight-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "边界回归",
+          "status": "passed",
+          "scope": "19主机回归及Bash语法",
+          "evidence": "output/product-pipeline-20261015/preflight-regression.log"
+        },
+        {
+          "name": "恢复整链",
+          "status": "not_run",
+          "scope": "未执行",
+          "evidence": "output/product-pipeline-20261015/result-r2.json",
+          "reason": "本次提交后执行"
+        }
+      ]
+    }
+  ]
+}

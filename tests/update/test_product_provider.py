@@ -100,13 +100,45 @@ class ProductProviderTests(unittest.TestCase):
                 f.chmod(0o755)
             old = product / 'build/lv_port_linux/lv_backend'
             old.write_bytes(b'existing valid artifact')
-            env = dict(os.environ, AITVBOX_ENABLE_100ASK_CLOUD='OFF', AITVBOX_100ASK_SDK_ROOT='')
+            hostbin = root / 'hostbin'
+            hostbin.mkdir()
+            for name in ['node', 'npm']:
+                tool = hostbin / name
+                tool.write_text('#!/bin/sh\nexit 99\n')
+                tool.chmod(0o755)
+            env = dict(os.environ, AITVBOX_ENABLE_100ASK_CLOUD='OFF', AITVBOX_100ASK_SDK_ROOT='',
+                       PATH=str(hostbin) + os.pathsep + os.environ['PATH'])
             result = subprocess.run(['bash', str(product / 'scripts/build_apps.sh'), '--clean', str(sdk)],
                                     capture_output=True, text=True, env=env)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn('A133 SDK PROVIDER BLOCKED', result.stderr)
             self.assertEqual(old.read_bytes(), b'existing valid artifact')
             self.assertFalse(list(root.glob('product/build/provider-*')))
+
+    def test_missing_npm_rejected_before_source_audit_or_output_clean(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d).resolve()
+            product, sdk, hostbin = [root / n for n in ['product', 'sdk', 'hostbin']]
+            (product / 'scripts').mkdir(parents=True)
+            (product / 'build/lv_port_linux').mkdir(parents=True)
+            (sdk / '.repo').mkdir(parents=True)
+            hostbin.mkdir()
+            for name in ['build_apps.sh', 'lib.sh']:
+                shutil.copyfile(ROOT / 'scripts' / name, product / 'scripts' / name)
+            for name in ['bash', 'dirname', 'git', 'make', 'cmake', 'python3']:
+                (hostbin / name).symlink_to(shutil.which(name))
+            node = hostbin / 'node'
+            node.write_text('#!/bin/sh\nexit 99\n')
+            node.chmod(0o755)
+            old = product / 'build/lv_port_linux/lv_backend'
+            old.write_bytes(b'existing valid artifact')
+            env = dict(os.environ, AITVBOX_ENABLE_100ASK_CLOUD='OFF', PATH=str(hostbin))
+            result = subprocess.run(['/bin/bash', str(product / 'scripts/build_apps.sh'), '--clean', str(sdk)],
+                                    capture_output=True, text=True, env=env)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('missing command: npm', result.stderr)
+            self.assertEqual(old.read_bytes(), b'existing valid artifact')
+            self.assertFalse((product / 'build/hdmi_preview').exists())
 
 
 if __name__ == '__main__':

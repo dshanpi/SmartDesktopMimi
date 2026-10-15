@@ -78,6 +78,8 @@ require_cmd git "apt install git"
 require_cmd make "apt install make"
 require_cmd cmake "apt install cmake"   # build_openwrt.sh 用 cmake
 require_cmd python3 "apt install python3"
+require_cmd node "Node.js toolchain: add its bin directory to PATH"
+require_cmd npm "Node.js/npm toolchain: add its bin directory to PATH"
 
 python3 "${SELF_DIR}/audit_english_ui.py"
 
