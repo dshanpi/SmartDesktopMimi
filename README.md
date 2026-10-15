@@ -1,3 +1,8 @@
+> **2026-10-15 开发候选已同步，真机验收待新 SDK Ubuntu 环境重做。**
+> 源码在本仓库，A133底层标准overlay在私有仓库[100askTeam/A133-AIDesktop-Tina5](https://github.com/100askTeam/A133-AIDesktop-Tina5)。
+> [应用1.0.8-rc.23草稿](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-a8a08684e749922ad799) · [系统1.0.0-rc.2草稿](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-50b14f8549a2da232a28)（需维护账号登录查看；附件同步/远端核对状态见说明）。
+> 镜像和升级包分别绑定实际构建提交，后续源码改动不冒充旧产物来源。A133安装、失联、升级/回退、断电和数据验收尚未完成，不能用于量产；非稳定发布，不参与自动更新。
+
 # 智能桌面小咪（Smart Desktop Mimi）
 
 [English](README.en.md) | 中文（默认）

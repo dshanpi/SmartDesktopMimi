@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "统一仓库候选下载入口和真实同步阶段",
+  "context": "用户要求先上传，两个draft已创建、附件同步/下载进行中",
+  "next_steps": "完成25附件实际读回后逐项验签/哈希与版本关联，保存最终结果",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "README可见入口与已发生上传状态",
+      "invariants": "无稳定发布或安装，不假定下载通过，不改原候选",
+      "paths": [
+        "README.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/batches/delivery058-visible-index-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "源码及草稿存在",
+          "status": "passed",
+          "scope": "main实际推送、两个固定标签与GitHub草稿API实际返回",
+          "evidence": "output/delivery-sync-20261015/*-remote-draft.json; upload.log"
+        },
+        {
+          "name": "全部附件读回",
+          "status": "not_run",
+          "scope": "25附件",
+          "evidence": "output/delivery-sync-20261015/upload-parallel.log",
+          "reason": "远端传输/复核尚在运行"
+        }
+      ]
+    }
+  ]
+}
