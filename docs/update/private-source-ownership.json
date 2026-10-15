@@ -1,0 +1,471 @@
+{
+  "schema_version": 1,
+  "requirement": "REQ-MIMI-PRIVATE-064",
+  "private_repository": "dshanpi/SmartDesktopMimi-Private",
+  "private_commit": "286dcad968d032c49cd4503fb444341693c14522",
+  "source_commit": "d620bd96d9e1baddfecb049f299ef8ce2fd687ea",
+  "retired_production_sources": {
+    "scripts/factory_provision_device.sh": {
+      "source_path": "scripts/factory_provision_device.sh",
+      "git_mode": "100755",
+      "sha256": "a0d216d1e4cbd400d71a9be9a11aef18142a230fdd80a1843efddd1b6b9f1d3b",
+      "bytes": 15024,
+      "role": "production_tooling"
+    },
+    "scripts/provision_device.sh": {
+      "source_path": "scripts/provision_device.sh",
+      "git_mode": "100755",
+      "sha256": "91599cfb4ae2d8d5978dc2c8e78a0ca618df1cde8c474071f5f1b936afeb3154",
+      "bytes": 5987,
+      "role": "production_tooling"
+    },
+    "scripts/provision_tuya_license.sh": {
+      "source_path": "scripts/provision_tuya_license.sh",
+      "git_mode": "100755",
+      "sha256": "542eefbd20a231b6c3fc7c3a92fb545c377996b1e4e0fbec6b990dc66d6a5df3",
+      "bytes": 5094,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/.env.example": {
+      "source_path": "tools/factory-assistant/.env.example",
+      "git_mode": "100644",
+      "sha256": "ff6b265a75864efa999fd89c33700fb64ab6a1c5a173dc575fd3fbd89b0fb020",
+      "bytes": 701,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/.gitignore": {
+      "source_path": "tools/factory-assistant/.gitignore",
+      "git_mode": "100644",
+      "sha256": "a7398f9f011b1b5be72e90ef398ea6b97e2e4dfd87abe74ae3b04c1617846be1",
+      "bytes": 265,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/CREDENTIALS_V1.md": {
+      "source_path": "tools/factory-assistant/CREDENTIALS_V1.md",
+      "git_mode": "100644",
+      "sha256": "597364c9b6d91bf80147ad27606e42e7137cab9d4b1e4a5698e92ef34fbf3ef5",
+      "bytes": 1438,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/README.md": {
+      "source_path": "tools/factory-assistant/README.md",
+      "git_mode": "100644",
+      "sha256": "4f4420fbf9e0417e0a990a734e00b73ea953649debaa122b9bd17dcf70a66be9",
+      "bytes": 4530,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/assets/factory-assistant-icon-source.png": {
+      "source_path": "tools/factory-assistant/assets/factory-assistant-icon-source.png",
+      "git_mode": "100644",
+      "sha256": "31f29c478d175c3a670b3768fd6f70fbbafe74c2ede882ab9b30cef36be4302e",
+      "bytes": 937748,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/01-规格/factory-assistant-v1-credentials-spec.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/01-规格/factory-assistant-v1-credentials-spec.md",
+      "git_mode": "100644",
+      "sha256": "c9218843007c6054e6b21447930d1faf0a320c696faecd8fd23f458d229d041f",
+      "bytes": 32879,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/04-固件/README.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/04-固件/README.md",
+      "git_mode": "100644",
+      "sha256": "93e993b0f90742b0a74497592377e0615aec0f824a1bb677c4450fc5f3c92759",
+      "bytes": 779,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/04-固件/a133_linux_b6_uart0.img.sha256": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/04-固件/a133_linux_b6_uart0.img.sha256",
+      "git_mode": "100644",
+      "sha256": "9327bb7a93dd377f27e57e80bbf4a0c5cfb18d85532a6ce14c30ba65d73b2cfe",
+      "bytes": 65,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/04-固件/aitvbox-version.txt": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/04-固件/aitvbox-version.txt",
+      "git_mode": "100644",
+      "sha256": "74ea41567aea01e14f974e903e65d84c32bea555389d622cab1079e23596ad66",
+      "bytes": 97,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/04-固件/image-size.txt": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/04-固件/image-size.txt",
+      "git_mode": "100644",
+      "sha256": "44e42bb115437b17ba4c5b2c2d504dbb2fb1b55e2338fac2c2aba3f2e9e3ae06",
+      "bytes": 5,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/05-参考脚本/README.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/05-参考脚本/README.md",
+      "git_mode": "100644",
+      "sha256": "824f3a8d555f6f798aacfe41eb736be94e149dc8a49ef11c74157eb71bfd7bb4",
+      "bytes": 1615,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/05-参考脚本/lib.sh": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/05-参考脚本/lib.sh",
+      "git_mode": "100644",
+      "sha256": "a8c7247ba63d7c76af69f0d6daf38cac41c248d8fd739fffa4047abbe28eae63",
+      "bytes": 2852,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/05-参考脚本/provision_device.sh": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/05-参考脚本/provision_device.sh",
+      "git_mode": "100644",
+      "sha256": "39ccb97957b28c7592b2485edc53e266d2afe133ba2044abd069d0363f66279e",
+      "bytes": 5759,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/05-参考脚本/provision_tuya_license.sh": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/05-参考脚本/provision_tuya_license.sh",
+      "git_mode": "100644",
+      "sha256": "542eefbd20a231b6c3fc7c3a92fb545c377996b1e4e0fbec6b990dc66d6a5df3",
+      "bytes": 5094,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/05-参考脚本/sign_device.sh": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/05-参考脚本/sign_device.sh",
+      "git_mode": "100644",
+      "sha256": "bbe39dc7ec53d38963d32e03bbb96b83c84ba0cd9e9dc26ddf69e6d881583d91",
+      "bytes": 4764,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/06-设备文档/README.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/06-设备文档/README.md",
+      "git_mode": "100644",
+      "sha256": "417d5065c5f32c28d7bb243961452c24bcf62caf479da89e5eed652b151a66b9",
+      "bytes": 542,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/06-设备文档/cloud.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/06-设备文档/cloud.md",
+      "git_mode": "100644",
+      "sha256": "d7e6ffb62a4c7577ac9d3168ec615d23d773b779c2611a76dce822aef026c4b1",
+      "bytes": 27526,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/06-设备文档/ota.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/06-设备文档/ota.md",
+      "git_mode": "100644",
+      "sha256": "2e46188119ed6d6d0fcd14ca4645962ea4cc46aae86248707c8b4d554e57a109",
+      "bytes": 28379,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/06-设备文档/tuyaopen.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/06-设备文档/tuyaopen.md",
+      "git_mode": "100644",
+      "sha256": "a411176ff41f69a766fc43932fc32c70fd714e768369ca8042114c65eb3022d7",
+      "bytes": 9827,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/07-出厂助手样本路径/README.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/07-出厂助手样本路径/README.md",
+      "git_mode": "100644",
+      "sha256": "bf1078f7d5661eb8b7b9c09ec0495e1ba49fa0bdc7bb0bfacc003d9075886c27",
+      "bytes": 1240,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/README.md": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/README.md",
+      "git_mode": "100644",
+      "sha256": "891c268a4ab3db0d985651cb4a281f1824f75770e7e284781b402ba0956b3792",
+      "bytes": 1917,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/交接清单.txt": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/交接清单.txt",
+      "git_mode": "100644",
+      "sha256": "7ac73597fc82c9d2593b6d501e73e37b724eab6414842be75eeef851a491c7c1",
+      "bytes": 955,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-assistant-v1/环境说明.txt": {
+      "source_path": "tools/factory-assistant/factory-assistant-v1/环境说明.txt",
+      "git_mode": "100644",
+      "sha256": "e3825cc8fb161189ab4dd47660da51863e4cf58ec3f301069a4688f8f3b640c4",
+      "bytes": 3376,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/Cargo.lock": {
+      "source_path": "tools/factory-assistant/factory-core/Cargo.lock",
+      "git_mode": "100644",
+      "sha256": "dd19d92af18d7b6ff8bfa4d5b03cfd11525f6aa788e5006b1efb875387bf53bb",
+      "bytes": 27202,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/Cargo.toml": {
+      "source_path": "tools/factory-assistant/factory-core/Cargo.toml",
+      "git_mode": "100644",
+      "sha256": "2573be700e4b8422e9848140b40cea2bdd61620bbd616e724d63a6d58f1f9b8c",
+      "bytes": 708,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/adb.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/adb.rs",
+      "git_mode": "100644",
+      "sha256": "84909996981506ce5ef1810f4af799b8118b6917e2295c89a7f5d09b2d930f7f",
+      "bytes": 15965,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/bin/factory_cli.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/bin/factory_cli.rs",
+      "git_mode": "100644",
+      "sha256": "7b4782cfca8c1fc5bd756b24b87888c697a13969ac013e91528d9b0a94a4fda0",
+      "bytes": 7165,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/hardware.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/hardware.rs",
+      "git_mode": "100644",
+      "sha256": "83206acde0ba620e93681a0d4470b43cd4552ccda4678cb224410c6aeaa6c735",
+      "bytes": 30207,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/lib.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/lib.rs",
+      "git_mode": "100644",
+      "sha256": "9a195348ab7635195d08a420b939d81781ce104cd299857dcb633e1acc26f2b3",
+      "bytes": 121,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/license_store.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/license_store.rs",
+      "git_mode": "100644",
+      "sha256": "c4115e1133c36bed30747e8e210cc92285a2e57af0a1fa55b6219ba26395184a",
+      "bytes": 14643,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/model.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/model.rs",
+      "git_mode": "100644",
+      "sha256": "5e26648ddfcc26cb85687f551ba6ec4d6930039c7985e073585fca1a891f67c8",
+      "bytes": 3331,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/pipeline.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/pipeline.rs",
+      "git_mode": "100644",
+      "sha256": "d68980b3ffcc0d3dbdf6154b234e1f5cb8de35fb6b49ce7c705d46dcd12bad77",
+      "bytes": 12110,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/signing.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/signing.rs",
+      "git_mode": "100644",
+      "sha256": "0322f2ca7705f5c3daee8aa1ca067abddd7526db2cf86749dad2bee984619261",
+      "bytes": 5857,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/factory-core/src/station.rs": {
+      "source_path": "tools/factory-assistant/factory-core/src/station.rs",
+      "git_mode": "100644",
+      "sha256": "55e0a53a1b188cc8d050450b13fd91ba0f5371a65693be26b127764fe511a38d",
+      "bytes": 10125,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/index.html": {
+      "source_path": "tools/factory-assistant/index.html",
+      "git_mode": "100644",
+      "sha256": "40ac3b9cb8227544073951a5890a0b93387774198f1e152aeb199b4f2ef0bef3",
+      "bytes": 360,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/package-lock.json": {
+      "source_path": "tools/factory-assistant/package-lock.json",
+      "git_mode": "100644",
+      "sha256": "e62e412cee4e9fa85f94069379b33e763c02912e24e153d9322d041b2cc59ce7",
+      "bytes": 141732,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/package.json": {
+      "source_path": "tools/factory-assistant/package.json",
+      "git_mode": "100644",
+      "sha256": "064907e820e525550d1e4ee8302ee6a61423a90f70a2fbe725bfcd5e72c6c9ad",
+      "bytes": 637,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/reference/adb-device-test-console.html": {
+      "source_path": "tools/factory-assistant/reference/adb-device-test-console.html",
+      "git_mode": "100644",
+      "sha256": "115d8bd8c950baff5f8dcbd5757a7db030891db27ce878954907c11f93dbce5a",
+      "bytes": 69586,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/Cargo.lock": {
+      "source_path": "tools/factory-assistant/src-tauri/Cargo.lock",
+      "git_mode": "100644",
+      "sha256": "ffde268646ba2f6ecbac1967ff8f88f63d17f4a7a47364514cc9707df717a0f9",
+      "bytes": 107346,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/Cargo.toml": {
+      "source_path": "tools/factory-assistant/src-tauri/Cargo.toml",
+      "git_mode": "100644",
+      "sha256": "2d22ea2c84d221d644c4e30477030812ba7dbd568b9967ac0ffae44af6f49575",
+      "bytes": 505,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/build.rs": {
+      "source_path": "tools/factory-assistant/src-tauri/build.rs",
+      "git_mode": "100644",
+      "sha256": "487059eaf8a947b80f20a9aacac038a5047b2ad69d2401b827376c67d6fe847f",
+      "bytes": 39,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/capabilities/default.json": {
+      "source_path": "tools/factory-assistant/src-tauri/capabilities/default.json",
+      "git_mode": "100644",
+      "sha256": "76bc503f080a083ec8686a335f7aa139ad757f7b823829e9e16e36870e0da8a3",
+      "bytes": 225,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/icons/128x128.png": {
+      "source_path": "tools/factory-assistant/src-tauri/icons/128x128.png",
+      "git_mode": "100644",
+      "sha256": "b5437666de5f1a61a5318e9d0cdaa5bdeb38196fdcc379690475eae9833bee2f",
+      "bytes": 12671,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/icons/128x128@2x.png": {
+      "source_path": "tools/factory-assistant/src-tauri/icons/128x128@2x.png",
+      "git_mode": "100644",
+      "sha256": "b44a1acd067459d621488c0a22e5091fd981d147d2cfae05ef30458d6a8fde99",
+      "bytes": 53694,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/icons/32x32.png": {
+      "source_path": "tools/factory-assistant/src-tauri/icons/32x32.png",
+      "git_mode": "100644",
+      "sha256": "bbce1d0420ec4e1ec2c16559ecca84a959f55687537b1499a213319019ca8f41",
+      "bytes": 1246,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/icons/64x64.png": {
+      "source_path": "tools/factory-assistant/src-tauri/icons/64x64.png",
+      "git_mode": "100644",
+      "sha256": "f6e3bcce1295b496a12da3ec4650c331c1e79eed80361906e2d061d0d788ca79",
+      "bytes": 3597,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/icons/icon.ico": {
+      "source_path": "tools/factory-assistant/src-tauri/icons/icon.ico",
+      "git_mode": "100644",
+      "sha256": "293cfe4f8633b116b8a80b57fb380f2fb8fee4a5e08502eb07749cb978c292fe",
+      "bytes": 63467,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/icons/icon.png": {
+      "source_path": "tools/factory-assistant/src-tauri/icons/icon.png",
+      "git_mode": "100644",
+      "sha256": "74145a0c72951dd065db102d4f2c4d411ee8d68aa01976a9b4a4f254e694d535",
+      "bytes": 211337,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/src/lib.rs": {
+      "source_path": "tools/factory-assistant/src-tauri/src/lib.rs",
+      "git_mode": "100644",
+      "sha256": "5e15a803f101ade4ab4c9a8f456033073f2a501472112ff0fecd911046704ed9",
+      "bytes": 31165,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/src/main.rs": {
+      "source_path": "tools/factory-assistant/src-tauri/src/main.rs",
+      "git_mode": "100644",
+      "sha256": "2c5b43a93f9fd6aac07babdb5be29e67a7401b196fe5802e3c2ade47879b9f32",
+      "bytes": 124,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src-tauri/tauri.conf.json": {
+      "source_path": "tools/factory-assistant/src-tauri/tauri.conf.json",
+      "git_mode": "100644",
+      "sha256": "bb4b666aaf9a666d1c9aa22a586d3083fe88a4ce6759d8fa36aa7c75a4bb8e89",
+      "bytes": 1335,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src/App.tsx": {
+      "source_path": "tools/factory-assistant/src/App.tsx",
+      "git_mode": "100644",
+      "sha256": "2060273955b20172107bc58c18946f685346911f95725186819c9a4ef8305dfa",
+      "bytes": 50165,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src/lib/backend.ts": {
+      "source_path": "tools/factory-assistant/src/lib/backend.ts",
+      "git_mode": "100644",
+      "sha256": "13dea17492b42f4c708e709df1567dea0fd885b916562bdbd98a616de0588c29",
+      "bytes": 17090,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src/main.tsx": {
+      "source_path": "tools/factory-assistant/src/main.tsx",
+      "git_mode": "100644",
+      "sha256": "bc4d285fe89d9a2d3c2df64da87edbf65cf4e6cd6f92daaaec01faa5f748bd97",
+      "bytes": 1011,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src/styles.css": {
+      "source_path": "tools/factory-assistant/src/styles.css",
+      "git_mode": "100644",
+      "sha256": "4fb135c325c29edf46e5c19466d97f6cbce29198ce5cbeedd14437787218398b",
+      "bytes": 76549,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/src/types.ts": {
+      "source_path": "tools/factory-assistant/src/types.ts",
+      "git_mode": "100644",
+      "sha256": "0ea9fff9c606fb4244a966cdb0d38ed61f77f2bcd51fbc36ac4e3f27c6ccf77e",
+      "bytes": 1923,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/station/.gitignore": {
+      "source_path": "tools/factory-assistant/station/.gitignore",
+      "git_mode": "100644",
+      "sha256": "8b3a95b9b9454b2b5680b9521a7fccc1bd0542207ad1c81639119705ad6f340a",
+      "bytes": 148,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/station/README.txt": {
+      "source_path": "tools/factory-assistant/station/README.txt",
+      "git_mode": "100644",
+      "sha256": "b2ca658b6b056db64191d6f2a62721a5a2a17a6e5527da4a7c608171493302b6",
+      "bytes": 545,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/station/data/.gitkeep": {
+      "source_path": "tools/factory-assistant/station/data/.gitkeep",
+      "git_mode": "100644",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/station/keys/README.txt": {
+      "source_path": "tools/factory-assistant/station/keys/README.txt",
+      "git_mode": "100644",
+      "sha256": "eb4582bf7f7d6b2be7f5846589268375b37ea81b1f66cc934ac5967491433c9f",
+      "bytes": 149,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/tsconfig.json": {
+      "source_path": "tools/factory-assistant/tsconfig.json",
+      "git_mode": "100644",
+      "sha256": "83efc1798334967d5a907f26b8cba31fa213f16b5ac0ed5c02fd38e7cf0ceb66",
+      "bytes": 527,
+      "role": "production_tooling"
+    },
+    "tools/factory-assistant/vite.config.ts": {
+      "source_path": "tools/factory-assistant/vite.config.ts",
+      "git_mode": "100644",
+      "sha256": "c1b21bd521cccac31100b83799bd4ee6703835496150e8ca8f58ab3fb855c07c",
+      "bytes": 4052,
+      "role": "production_tooling"
+    }
+  },
+  "shared_copies": [
+    "scripts/lib.sh",
+    "LICENSE",
+    "LICENSE-COMMERCIAL.md"
+  ],
+  "runtime_adapter_split": "not_run",
+  "physical": "not_run"
+}

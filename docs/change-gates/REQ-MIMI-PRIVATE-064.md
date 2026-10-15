@@ -10,3 +10,7 @@
 
 ## 验收与证据
 逐文件回读和工作树字节/模式核对，脚本bash语法、缺资源时不得访问硬件、私有Web前端构建与Rust工位core可用工具链检查，公共源码审计与架构检查。缺工具链/平台依赖如实blocked/not_run，不改锁或用空实现冒充通过。证据output/private-tooling-split-20261015，实施/上传和运行尚not_run。
+
+私有远端已出现用户初始README提交fb44cec，空仓断言正确拒绝，未写入；改为克隆现有单README仓库并保留原文/历史继续。GitHub只读确认仍private且push权限。
+
+私有生产源68项已上传286dcad并独立clone/fetch，逐文件与公共d620原Git对象字节/模式一致。两次初检问题（umask模式语义、keys下README漏收）保留并追加回归，最终5拒绝检查通过。私有前端npm ci+tsc/vite正式构建passed；本机Rust锁版本blocked，远端CI待结果。此后才退休公共65专有生产源，保留共享lib与原许可，增加公开审计反向拒绝原目录/三个CLI，实际归属见private-source-ownership.json。两项运行适配仍未拆完，不宣称当前公共已隔离。一次迁移脚本Python字符串未闭合，在解析阶段拒绝、无文件改动，纠正后执行。

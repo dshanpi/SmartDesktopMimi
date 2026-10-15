@@ -1,3 +1,5 @@
+> PRIVATE064：生产/授权工具已迁至 [SmartDesktopMimi-Private](https://github.com/dshanpi/SmartDesktopMimi-Private)，本页相关工位命令须在该私有仓库执行，公共仓库不再提供旧脚本。历史设计说明保留；Tuya/100ask运行适配及完整双产品构建隔离仍在接续，不能将当前源码称已完成公共/私有运行隔离。
+
 # 100ask Cloud 云端 OTA
 
 > **量产身份标准说明：** 新量产协议统一以

@@ -18,6 +18,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_PATHS = (
+    re.compile(r"^tools/factory-assistant(?:/|$).*"),
+    re.compile(r"^scripts/(factory_provision_device|provision_tuya_license|provision_device)\.sh$"),
     re.compile(r"^\.delivery(?:/|$).*"),
     re.compile(r"^third_party/100ask-iot-sdk/.*"),
     re.compile(r"(^|/)factory-assistant-v1/(02-|03-|data/).*"),

@@ -319,6 +319,16 @@ class PlatformManifestTests(unittest.TestCase):
         self.assertIn("tools/public_release_audit.py", paths)
         self.assertIn("LICENSE", paths)
 
+    def test_private_production_sources_are_retired_and_blocked(self):
+        audit = load_module("private_production_source_guard", ROOT / "tools/public_release_audit.py")
+        ownership = json.loads((ROOT / "docs/update/private-source-ownership.json").read_text())
+        self.assertEqual(len(ownership["retired_production_sources"]), 65)
+        for name in ownership["retired_production_sources"]:
+            with self.subTest(path=name):
+                self.assertFalse((ROOT / name).exists())
+                self.assertEqual(audit.path_rule(name), "private-or-restricted-path")
+        self.assertTrue((ROOT / "scripts/lib.sh").is_file())
+
     def test_public_release_path_rules_distinguish_source_from_outputs(self):
         audit = load_module(
             "public_release_audit_path_rules",
@@ -348,7 +358,7 @@ class PlatformManifestTests(unittest.TestCase):
         )
         self.assertEqual(
             audit.path_rule("tools/factory-assistant/resources/adb.exe"),
-            "unclassified-binary",
+            "private-or-restricted-path",
         )
         self.assertIsNone(audit.path_rule("apps/ipkvm/upstream/native.go"))
         self.assertEqual(

@@ -1,3 +1,5 @@
+> PRIVATE064：生产/授权工具已迁至 [SmartDesktopMimi-Private](https://github.com/dshanpi/SmartDesktopMimi-Private)，本页相关工位命令须在该私有仓库执行，公共仓库不再提供旧脚本。历史设计说明保留；Tuya/100ask运行适配及完整双产品构建隔离仍在接续，不能将当前源码称已完成公共/私有运行隔离。
+
 > **2026-10-15 开发候选已同步，真机验收待新 SDK Ubuntu 环境重做。**
 > 源码在本仓库，A133底层标准overlay在私有仓库[100askTeam/A133-AIDesktop-Tina5](https://github.com/100askTeam/A133-AIDesktop-Tina5)。
 > [应用1.0.8-rc.23草稿](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-a8a08684e749922ad799) · [系统1.0.0-rc.2草稿](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-50b14f8549a2da232a28)（需维护账号登录查看；25附件上传及完整下载复核通过）。

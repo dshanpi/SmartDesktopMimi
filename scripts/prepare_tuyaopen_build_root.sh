@@ -130,7 +130,7 @@ cp -f "${INTEGRATION_DIR}/README_A133_B6.md" "${APP_DIR}/README_A133_B6.md"
 cp -f "${INTEGRATION_DIR}/config/A133_B6.config" "${APP_DIR}/config/A133_B6.config"
 chmod +x "${APP_DIR}/build_a133.sh"
 
-# 4) 设备 UUID/AuthKey 不进入构建树。量产时由 provision_tuya_license.sh
+# 4) 设备 UUID/AuthKey 不进入构建树。量产时由 SmartDesktopMimi-Private 的 provision_tuya_license.sh
 #    逐台写入 /factory/tuya/license.env，运行时通过 tuya_iot_license_read() 加载。
 echo "==> Tuya device credentials: runtime provisioning (not embedded in firmware)"
 
