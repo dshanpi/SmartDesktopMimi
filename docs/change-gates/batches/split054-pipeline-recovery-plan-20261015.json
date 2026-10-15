@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "保留npm缺失失败并事前记录早拒绝修复/分段接续",
+  "context": "完整入口前三阶段完成，第四阶段环境未载入已有Node；冻结候选/SDK配置不变",
+  "next_steps": "修复前置环境检查与真实拒绝回归，核对前三阶段与tail不变后只续跑剩余",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-054",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+      "scope": "环境检查和失败恢复",
+      "invariants": "原failed保留；前序源码/产物核对通过才复用；只加当前子进程PATH不修改用户环境",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+        "docs/change-gates/batches/split054-pipeline-recovery-plan-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "完整首轮",
+          "status": "failed",
+          "scope": "实际SDK第四阶段npm缺失",
+          "evidence": "output/product-pipeline-20261015/result.json",
+          "reason": "Node工具链未载入当前PATH"
+        },
+        {
+          "name": "受控接续",
+          "status": "not_run",
+          "scope": "代码/输入/前序产物不变后执行tail",
+          "evidence": "output/product-pipeline-20261015/result-r2.json",
+          "reason": "事前记录"
+        }
+      ]
+    }
+  ]
+}

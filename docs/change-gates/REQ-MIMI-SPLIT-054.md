@@ -39,3 +39,7 @@ flowchart TD
 
 ## 完整应用构建正向接续（实施前，2026-10-15）
 055退休23源后组件/前端已passed，完整build_apps正向归集仍not_run。接下来以当前源8e092d1之后的门禁提交、实际SDK958独立组件、外部原100ask SDK与原Tuya vendor执行build_apps（不--clean其他未变组件，已准备Tuya工作副本跳过重复prepare）。本命令仍会按既有入口重编前端及独立SDK后端，以验证整个stage/归集；不构建镜像、不签名、不安装、不上传。临时SDK配置依旧由原trap逐字节恢复；保护前后SDK配置与冻结候选哈希；失败日志单独保留，不借旧对象冒充后端通过。结果output/product-pipeline-20261015，现not_run。其他未变模块增量构建如实记录，不称完整SDK空缓存重建。
+
+## 完整入口失败与受控接续计划（变更前）
+第一次实际全入口source d5e5411在第四阶段IPKVM的npm命令缺失返回1；前三阶段已实际完成，SDK三配置和原镜像/SWU/签名包前后SHA不变、源clean。output/product-pipeline-20261015/result.json/build.log保留failed。已有Node22工具链在主机缓存，不是源码或SDK缺失，不安装新软件。
+追加修复：build_apps在任何清理/编译前显式检查node/npm，缺失提前给出真实原因；增加缺网页工具链时旧输出不动的实际Shell分支回归。接续前核对前三阶段归集产物/Provider收据、全部相关C/构建输入和当前源与d5仅前置检查/测试/文档差异；只在新进程PATH载入已有固定Node工具链，执行与原脚本逐字相同的第四阶段及后续tail，不重复编译已通过阶段。原failed不改，续跑写result-r2.json；配置与冻结候选继续前后保护。既有未改模块复用不叫空缓存重建。镜像/签名/安装/上传仍not_run。
