@@ -30,3 +30,5 @@ flowchart TD
 计划实现：公开/私有构建profile及能力契约、专有接入的源码/依赖迁移、打包白名单、公共包反向泄漏/功能拒绝检查、两类设备消费同一公共更新包的数据与接口验证、系统镜像命名生成器/发布工具和文档。
 当前本批只记录用户边界/梳理设计，迁移代码/新镜像命名落地/双产品实测均not_run；私有仓库目标访问与现有内容先只读核对，不初始化覆盖。实际证据output/edition-split-20261015，源码起点见本批Git记录。下一步列出公共共享、私有专有及板级SDK三种归属，核对当前100ask/Tuya实现和包依赖，再在不改变旧候选的前提下落实。
 A133安装/失联/升级/断电验收继续按用户要求后置到新SDK Ubuntu环境，不能用本设计记录或主机编译判为通过。整套交付未完成。
+
+只读实际核对：用户指定dshanpi/SmartDesktopMimi-Private存在、private=true、当前size_kb=0、main默认分支且当前登录具有push/admin权限。只读取仓库metadata，未初始化/推送内容或复制凭据。证据output/edition-split-20261015/repository-access.json。

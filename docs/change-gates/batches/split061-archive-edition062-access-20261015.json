@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "summary": "SDK共享采集源归档阶段完成及私有产品仓库只读确认",
+  "context": "新产品要求先理解记录，采集公共原源未删除，旧候选冻结",
+  "next_steps": "按062梳理专有接入归属，061上层系统入口/测试仍待收尾",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-061",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+      "scope": "原字节及SDK标准overlay归档/独立读回",
+      "invariants": "不改硬件行为，不声明系统入口已切换/实机通过",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/split061-archive-edition062-access-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "SDK归档/独立编译",
+          "status": "passed",
+          "scope": "4276/95/9新源、142编译28链接输入、程序同字节",
+          "evidence": "output/capture-source-split-20261015/archived-result.json; remote-verify.log"
+        },
+        {
+          "name": "上层构建/退休与实机",
+          "status": "not_run",
+          "scope": "061系统入口与实际设备",
+          "evidence": "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+          "reason": "先响应062新产品边界；未切换或删除旧源，真机后置"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-EDITION-062",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-062.md",
+      "scope": "目标私有仓库只读核对",
+      "invariants": "不初始化/覆盖用户仓库，不复制秘密",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-EDITION-062.md",
+        "docs/change-gates/batches/split061-archive-edition062-access-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "目标仓库",
+          "status": "passed",
+          "scope": "private=true/main/空仓库与push权限",
+          "evidence": "output/edition-split-20261015/repository-access.json"
+        }
+      ]
+    }
+  ]
+}
