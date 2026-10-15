@@ -36,3 +36,6 @@ flowchart TD
 产品入口wrapper在实际SDK重编private32/public30均passed，private后端8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3/public后端84af521753b943908838a03db64ed53c1c755bc5f292144df621d50094119701，分别与053及原后端逐字节一致；输入闭包审计无旧应用源码依赖，公有profile无privateSDK读取。
 实际build_openwrt.sh --target lvglsim AArch64编译passed，672编译源归属检查passed，无platform service TU；ELF4878416B/hash4891196a5e3134ddda967f2823ffe54111d8f97e3aa2588272d4e17c4e673045；临时LVGL patch已复原，源clean。17边界回归及33架构回归passed。
 证据output/product-provider-20261015/verified-result.json、build-result.json、public-build.log、private-build.log、frontend-build.log、architecture.log。新开发输出不覆盖原rc2/rc23；未重新签名或安装。完整build_apps其余阶段/归集正向整链、全系统重建、真机接口与升级验收均not_run，未以组件检查冒充整链通过。旧平台源码尚保留，完整拆分未完成。
+
+## 完整应用构建正向接续（实施前，2026-10-15）
+055退休23源后组件/前端已passed，完整build_apps正向归集仍not_run。接下来以当前源8e092d1之后的门禁提交、实际SDK958独立组件、外部原100ask SDK与原Tuya vendor执行build_apps（不--clean其他未变组件，已准备Tuya工作副本跳过重复prepare）。本命令仍会按既有入口重编前端及独立SDK后端，以验证整个stage/归集；不构建镜像、不签名、不安装、不上传。临时SDK配置依旧由原trap逐字节恢复；保护前后SDK配置与冻结候选哈希；失败日志单独保留，不借旧对象冒充后端通过。结果output/product-pipeline-20261015，现not_run。其他未变模块增量构建如实记录，不称完整SDK空缓存重建。

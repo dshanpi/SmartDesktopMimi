@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "完整应用构建入口正向接续事前门禁",
+  "context": "054/055组件通过，未执行完整stage归集；复用未改模块缓存，不碰冻结镜像",
+  "next_steps": "执行一次完整build_apps并读取结果、配置恢复和固定候选哈希",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-054",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+      "scope": "完整应用构建正向归集",
+      "invariants": "原钥/设备/冻结产物不变，SDK临时配置恢复；不签名安装上传",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+        "docs/change-gates/batches/split054-full-pipeline-plan-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "完整入口",
+          "status": "not_run",
+          "scope": "实际SDK，未改模块增量构建",
+          "evidence": "output/product-pipeline-20261015",
+          "reason": "执行前记录"
+        }
+      ]
+    }
+  ]
+}
