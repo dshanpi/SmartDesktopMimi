@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "私有生产工具迁移实施前记录",
+  "context": "用户EDITION062，不复制桌面或凭据",
+  "next_steps": "固定真实源清单、私有审计/构建/上传回读后退休公共入口",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-064",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-064.md",
+      "scope": "专有生产工具来源与公开边界",
+      "invariants": "原字节/许可/冻结候选保留，秘密不入Git",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-064.md",
+        "docs/change-gates/batches/private064-prerecord-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "实施与回读",
+          "status": "not_run",
+          "scope": "尚未复制或初始化私有源",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-064.md",
+          "reason": "实施前记录"
+        }
+      ]
+    }
+  ]
+}

@@ -168,3 +168,5 @@ DELIVERY058本轮完成：两类型25附件完整远端下载/原签名/版本�
 SPLIT061系统入口完成：原5上层源已退休，实际video目标/原ELF/ABI/保护哈希、180唯一主机项0skip passed。EDITION062实际源清单已提供，私有产品隔离仍未实施；下一步新镜像命名。
 
 - [REQ-MIMI-IMAGE-063](change-gates/REQ-MIMI-IMAGE-063.md)：未来产品名镜像生成/版本锁/发布链，事前门禁，待实现。
+
+- REQ-MIMI-PRIVATE-064：私有生产工具独立来源，实际构建/回读与公共退休逐项核对。
