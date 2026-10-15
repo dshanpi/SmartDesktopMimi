@@ -14,3 +14,7 @@
 私有SDKa49d1d11cc65e5832f77cb3cfcbd215054aa4641已推送并独立fetch/官方verify_overlay读回4276文件/95实际组件passed，旧4267项不变。9新增文本输入/原许可证及已知凭据签名筛查0finding；组件不含厂商4TU，仍固定SDK实际源/哈希。原fresh/staged/helper/重放后编译全部74ceb07同字节（81304字节）、142实际编译输入和28实际链接输入/脚本及别名固定。锁9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71。
 初诊旧binutils的-t库输出形式未识别，只列5项，诊断不完整；未将该锁上传。修正解析旧-lfoo(path)/archive形式，并加--verbose真实成功打开记录，完整28项后重新编译原字节passed；link-trace-correction.json保留纠正。
 用户同时提出EDITION062产品边界，当前先梳理该新要求；本批只完成SDK源归档，不删除公共apps/ipkvm/video，不安装新组件到开发SDK、不切换构建入口。余下上层入口/SDK显式测试/源码退休仍not_run，物理deferred_not_run，原rc2/rc23和25远端附件不动。
+
+## 上层入口与源退休实施
+本批接续SDK归档：只9新组件文件安装实际SDK，scripts/build_a133_capture.py固定原锁，产品build_apps在清理/依赖前预检；IPKVM all先检查固定组件，video新目录独立编译/归集收据，web目标仍独立。原5追踪实现/Makefile/补丁在SDK重编/远端回读后删除，退休路径/作用域守卫保留。实际make video入口passed，程序74ceb07同字节，不重编无关网页/桌面/Tuya或整镜像。
+测试显式MIMI_A133_CAPTURE_ROOT；缺SDK保持not_run。旧fixture读SDK头，保留监督测试并新增既有缓存syscall seam的自动执行，open/ioctl/close包装不接触设备。入口篡改/旧输出保留、GNU旧/新ld路径和脚本解析、make元字符、外来依赖逃逸等检查待运行；真机后置。一次接续文档脚本误以为apps/ipkvm/README.md已存在而中止，未影响构建/设备，后续新建该归属说明；已写入的测试不重复追加。

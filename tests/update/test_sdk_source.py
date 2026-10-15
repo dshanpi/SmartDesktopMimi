@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-from tests.sdk_source import provider_source, services_source
+from tests.sdk_source import provider_source, services_source, capture_source
 
 class SdkSourceTests(unittest.TestCase):
     def test_unconfigured_platform_check_is_explicitly_not_run(self):
@@ -37,3 +37,18 @@ class ServicesSdkSourceTests(unittest.TestCase):
             with patch.dict(os.environ, {'MIMI_A133_SERVICES_ROOT': str(root)}):
                 with self.assertRaisesRegex(ValueError, 'lock changed'):
                     services_source('src/mcpd.c')
+
+
+class CaptureSdkSourceTests(unittest.TestCase):
+    def test_unconfigured_capture_is_not_run(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(unittest.SkipTest, 'not_run'):
+                capture_source('main.cpp')
+
+    def test_changed_capture_lock_is_failure(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d).resolve()
+            (root / 'source-lock.json').write_text('{}')
+            with patch.dict(os.environ, {'MIMI_A133_CAPTURE_ROOT': str(root)}):
+                with self.assertRaisesRegex(ValueError, 'lock changed'):
+                    capture_source('main.cpp')

@@ -1,0 +1,2 @@
+# IPKVM业务与平台采集边界
+A133共享采集/编码源按REQ-MIMI-SPLIT-061迁入私有SDK标准overlay的smartdesktopmimi-a133-capture组件；此仓库video目标通过固定SDK构建入口生成程序。网页/Go业务仍在本目录，单独web目标不依赖采集源码；完整all先检查SDK组件。旧硬件源不回退读取，原协议与程序字节保持。主机编译/测试不打开真实视频设备，硬件验收单独记录。

@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "summary": "共享采集构建改用SDK源并退休上层硬件副本",
+  "context": "a49标准4276/95重放/独立读回、原ELF和新video入口同字节passed",
+  "next_steps": "固定代码后执行受影响架构/平台回归和入口提前拒绝，旧候选不动",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-061",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+      "scope": "固定SDK入口/原5源退休/显式SDK测试和自动缓存seam",
+      "invariants": "原协议/程序/钥/绑定不变，缺源无回退，不接触硬件，冻结25附件",
+      "paths": [
+        "apps/ipkvm/Makefile",
+        "apps/ipkvm/README.md",
+        "apps/ipkvm/video/Makefile",
+        "apps/ipkvm/video/capture_cache_sync.h",
+        "apps/ipkvm/video/capture_supervisor.h",
+        "apps/ipkvm/video/main.cpp",
+        "apps/ipkvm/video/patches/AWVidoeEncoder-aligned-input.patch",
+        "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+        "docs/change-gates/batches/split061-system-entry-20261015.json",
+        "docs/update/source-ownership.json",
+        "scripts/build_a133_capture.py",
+        "scripts/build_apps.sh",
+        "tests/platform/test_capture_cache_sync.cpp",
+        "tests/platform/test_host_integration.py",
+        "tests/sdk_source.py",
+        "tests/update/test_build_a133_capture.py",
+        "tests/update/test_sdk_source.py"
+      ],
+      "checks": [
+        {
+          "name": "受影响边界与原字节",
+          "status": "passed",
+          "scope": "34主机项0skip、实际make video SDK独立编译",
+          "evidence": "output/capture-source-split-20261015/boundary-regression.log; actual-video-entry.log"
+        },
+        {
+          "name": "整批回归与物理",
+          "status": "not_run",
+          "scope": "主机架构/平台本提交后执行；A133物理后置",
+          "evidence": "output/capture-source-split-20261015",
+          "reason": "先绑定当前代码提交，物理等待用户新SDK环境"
+        }
+      ]
+    }
+  ]
+}

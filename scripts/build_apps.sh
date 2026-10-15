@@ -136,6 +136,7 @@ fi
 python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
 python3 "${SELF_DIR}/build_a133_services.py" --sdk "${SDK}" --check
 python3 "${SELF_DIR}/build_a133_hdmi.py" --sdk "${SDK}" --check
+python3 "${SELF_DIR}/build_a133_capture.py" --sdk "${SDK}" --check
 
 # Dependency staging may temporarily enable package symbols. Preserve the
 # caller's SDK configuration exactly so an application-only build does not

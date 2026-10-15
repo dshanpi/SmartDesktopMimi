@@ -294,6 +294,31 @@
       "sha256": "6b12e41d7857cc177880591956e890c102d65eff87c7af10d671a22db2362e22",
       "source_lock_sha256": "7c6a78259a3dbb6b3b027235c7536349f6b50555c0aedecf9ec5bcf5cc05bdc5"
     },
+    "apps/ipkvm/video/Makefile": {
+      "sdk_component": "smartdesktopmimi-a133-capture",
+      "sha256": "c959f7aa439abd880f0c2a620a4739530911a8a9f1cbf8d447cf94edf53d02a3",
+      "source_lock_sha256": "9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71"
+    },
+    "apps/ipkvm/video/capture_cache_sync.h": {
+      "sdk_component": "smartdesktopmimi-a133-capture",
+      "sha256": "bb29ce1b09e97e68d5fd65e5ce5b7671933d2b877699b237254edcd12f70873f",
+      "source_lock_sha256": "9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71"
+    },
+    "apps/ipkvm/video/capture_supervisor.h": {
+      "sdk_component": "smartdesktopmimi-a133-capture",
+      "sha256": "009f8d8df2d15f20623818cb5045d805edffd56434de5ef5db915dea4bbd408a",
+      "source_lock_sha256": "9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71"
+    },
+    "apps/ipkvm/video/main.cpp": {
+      "sdk_component": "smartdesktopmimi-a133-capture",
+      "sha256": "5c0c3128bfa68d2d38a461e5c926cd8e618d0b5bebf4105d6e640fd5b6f44bad",
+      "source_lock_sha256": "9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71"
+    },
+    "apps/ipkvm/video/patches/AWVidoeEncoder-aligned-input.patch": {
+      "sdk_component": "smartdesktopmimi-a133-capture",
+      "sha256": "cb488d7fa0725a4cd0778f1b6cf182d7e57873df8fe1dd3383491cdce5ab29b9",
+      "source_lock_sha256": "9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71"
+    },
     "apps/lv_port_linux/src/apps/video/tplayer_wrapper.c": {
       "sdk_profiles": [
         "private",
@@ -495,7 +520,8 @@
   },
   "retired_scopes": [
     "apps/platform_services",
-    "apps/hdmi_preview"
+    "apps/hdmi_preview",
+    "apps/ipkvm/video"
   ],
   "schema_version": 1,
   "scopes": [

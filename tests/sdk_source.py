@@ -74,3 +74,23 @@ def hdmi_source(name):
     if path.resolve() != path or lock['files'].get('code/' + name) != digest(path):
         raise ValueError('configured HDMI source changed')
     return path
+
+
+CAPTURE_LOCK_SHA256 = '9f7d4f5e9535836bc570eb557c5ef26e840f4d6de033a6462101e564ba4aaa71'
+
+
+def capture_source(name):
+    value = os.environ.get('MIMI_A133_CAPTURE_ROOT')
+    if not value:
+        raise unittest.SkipTest('A133 capture implementation not_run: set MIMI_A133_CAPTURE_ROOT')
+    root = Path(value)
+    if not root.is_absolute() or root != root.resolve():
+        raise ValueError('configured capture root must be absolute and canonical')
+    lock_path = root / 'source-lock.json'
+    if lock_path.resolve() != lock_path or digest(lock_path) != CAPTURE_LOCK_SHA256:
+        raise ValueError('configured capture lock changed')
+    lock = json.loads(lock_path.read_text())
+    path = root / 'code' / name
+    if path.resolve() != path or lock['files'].get('code/' + name) != digest(path):
+        raise ValueError('configured capture source changed')
+    return path

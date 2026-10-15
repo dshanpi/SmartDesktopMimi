@@ -18,7 +18,7 @@ import tarfile
 import tempfile
 import threading
 import unittest
-from tests.sdk_source import hdmi_source, provider_source, services_source
+from tests.sdk_source import capture_source, hdmi_source, provider_source, services_source
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -79,8 +79,19 @@ class CaptureSupervisorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             executable = Path(temporary) / "capture-supervisor"
             run(["g++", "-std=c++11", "-Wall", "-Wextra", "-Werror", "-pthread",
-                 "-I" + str(REPO / "apps/ipkvm/video"),
+                 "-I" + str(capture_source("capture_supervisor.h").parent),
                  REPO / "tests/platform/test_capture_supervisor.cpp", "-o", executable])
+            subprocess.run([str(executable)], check=True, timeout=15)
+
+
+class CaptureCacheSyncTests(unittest.TestCase):
+    def test_exact_range_failures_and_descriptor_cleanup(self):
+        header = capture_source("capture_cache_sync.h")
+        with tempfile.TemporaryDirectory() as temporary:
+            executable = Path(temporary) / "capture-cache-sync"
+            run(["g++", "-std=c++11", "-Wall", "-Wextra", "-Werror",
+                 "-I" + str(header.parent), REPO / "tests/platform/test_capture_cache_sync.cpp",
+                 "-Wl,--wrap=open", "-Wl,--wrap=ioctl", "-Wl,--wrap=close", "-o", executable])
             subprocess.run([str(executable)], check=True, timeout=15)
 
 
@@ -723,7 +734,7 @@ int main(int argc, char **argv) {
             hdmi_source("src/main.cpp")
         ).read_text(encoding="utf-8")
         kvm_video = (
-            REPO / "apps/ipkvm/video/main.cpp"
+            capture_source("main.cpp")
         ).read_text(encoding="utf-8")
 
         for source in (preview, kvm_video):
@@ -733,7 +744,7 @@ int main(int argc, char **argv) {
 
     def test_shared_capture_is_the_only_video_device_owner(self):
         capture = (
-            REPO / "apps/ipkvm/video/main.cpp"
+            capture_source("main.cpp")
         ).read_text(encoding="utf-8")
         preview_service = (
             provider_source("apps/lv_port_linux/src/system/service_hdmi_preview.c")
@@ -760,7 +771,7 @@ int main(int argc, char **argv) {
 
     def test_shared_capture_prioritizes_the_low_latency_webrtc_branch(self):
         capture = (
-            REPO / "apps/ipkvm/video/main.cpp"
+            capture_source("main.cpp")
         ).read_text(encoding="utf-8")
         webrtc = (
             REPO / "apps/ipkvm/upstream/webrtc.go"

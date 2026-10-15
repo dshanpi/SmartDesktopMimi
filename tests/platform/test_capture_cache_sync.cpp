@@ -1,5 +1,5 @@
 // Host-only syscall seam: never opens a real camera or ION device.
-#include "../../apps/ipkvm/video/capture_cache_sync.h"
+#include "capture_cache_sync.h"
 #include <cassert>
 #include <cstdarg>
 #include <cstring>

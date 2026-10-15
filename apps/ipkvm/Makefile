@@ -5,11 +5,12 @@ NPM_REGISTRY ?= https://registry.npmjs.org
 BUILD_DIR ?= $(CURDIR)/build
 VERSION ?= 0.1.0
 UPSTREAM_DIR := $(CURDIR)/upstream
-VIDEO_DIR := $(CURDIR)/video
+CAPTURE_BUILDER := $(abspath $(CURDIR)/../../scripts/build_a133_capture.py)
 
-.PHONY: all frontend web video test clean
+.PHONY: all check-capture frontend web video test clean
 
-all: web video
+all: check-capture
+	$(MAKE) web video
 
 frontend:
 	cd $(UPSTREAM_DIR)/ui && \
@@ -24,13 +25,18 @@ web: frontend
 		-ldflags="-s -w -X kvm.builtAppVersion=$(VERSION)" \
 		-o $(BUILD_DIR)/aitvbox-ipkvmd ./cmd
 
-video:
-	$(MAKE) -C $(VIDEO_DIR) SDK_ROOT=$(SDK_ROOT) \
-		BUILD_DIR=$(BUILD_DIR) all
+check-capture:
+	python3 "$(CAPTURE_BUILDER)" --sdk "$(abspath $(SDK_ROOT))" --check
+
+video: check-capture
+	mkdir -p "$(BUILD_DIR)"
+	@run="$$(mktemp -d "$(BUILD_DIR)/capture.XXXXXX")" && \
+		python3 "$(CAPTURE_BUILDER)" --sdk "$(abspath $(SDK_ROOT))" --output "$$run/compiled" && \
+		cp -f "$$run/compiled/aitvbox-kvm-video" "$(BUILD_DIR)/aitvbox-kvm-video" && \
+		cp -f "$$run/compiled/build-result.json" "$(BUILD_DIR)/capture-build-result.json"
 
 test:
 	cd $(UPSTREAM_DIR) && $(GO) test ./...
 
 clean:
 	rm -rf $(BUILD_DIR)
-	$(MAKE) -C $(VIDEO_DIR) clean
