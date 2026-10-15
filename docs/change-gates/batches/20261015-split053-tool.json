@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Implement actual dependency-based standalone backend staging/build tool",
+  "context": "Prerecorded7640800; independent component step before SDK/public migration",
+  "next_steps": "Run actual fixed SDK preprocessor/32TU compile/link and compare original backend ABI/bytes; then integrate standard privateoverlay",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-053",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+      "scope": "Tool implementation and rejection regressions",
+      "invariants": "Only specified SDK compiler, no shell/response/plugin; external SDK/vendor inputs stay outside component; no oldsource fallback",
+      "paths": [
+        "tools/update/platform_provider.py",
+        "tests/update/test_platform_provider.py",
+        "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+        "docs/change-gates/batches/20261015-split053-tool.json"
+      ],
+      "checks": [
+        {
+          "name": "11boundary/sourceownership regressions",
+          "status": "passed",
+          "scope": "Host tests only",
+          "evidence": "output/a133-provider-split-20261015/boundaries.log"
+        },
+        {
+          "name": "Actual independent32TU build/SDKintegration",
+          "status": "not_run",
+          "scope": "Not executed yet",
+          "evidence": "output/a133-provider-split-20261015",
+          "reason": "next step"
+        }
+      ]
+    }
+  ]
+}
