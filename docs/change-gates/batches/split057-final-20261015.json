@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "HDMI SDK来源迁移受影响验证完成",
+  "context": "保留首轮stager/测试模块命令失败，实际代码3de8a9d回归通过",
+  "next_steps": "优先058受控上传和下载复核，真机待新环境",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-057",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-057.md",
+      "scope": "实际stage2/171回归及接续进度",
+      "invariants": "旧候选不重建，物理未执行不记通过",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-SPLIT-057.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/split057-final-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "主机及SDK来源",
+          "status": "passed",
+          "scope": "171/0skip、stage2同字节与4267/95回读",
+          "evidence": "output/hdmi-source-split-20261015/verified-result.json"
+        },
+        {
+          "name": "物理与新镜像",
+          "status": "not_run",
+          "scope": "A133",
+          "evidence": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+          "reason": "用户将物理验收后置"
+        }
+      ]
+    }
+  ]
+}

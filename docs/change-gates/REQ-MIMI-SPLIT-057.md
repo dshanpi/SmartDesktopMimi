@@ -15,3 +15,6 @@ HDMI默认关闭，主机编译不打开采集、不操作板卡。原C++代码�
 
 ## SDK保存与上层切换
 原源fresh编译及SDK组件/标准overlay重放后编译43f026同字节passed。固定219真实头、20实际链接输入及别名、GCC11 C++逻辑名与IOMMU选择；原源不改。初次stager误匹配Makefile多行LDFLAGS且trace把命令回显当路径，失败保留，修正后r2实际闭包与输出passed。4267文件/95组件标准重放、7新增文本/已知凭据签名筛查0finding、旧4260清单保持passed。私有SDK7ed3fdd779cfdd171ddf54063e63a5c074314c95已推送且独立fetch/官方verify读回passed。只新组件7文件复制到实际SDK。上层移除3原实现/Makefile，入口改固定SDK，退休作用域和显式SDK测试保持；代码实际stage2/回归本批后执行，not_run。物理/新镜像not_run，migration_complete=false。
+
+## 受影响验证完成
+代码3de8a9de6ed7b9c8995def1ec636aa642305e989：实际系统阶段2 SDK独立编译/归集与旧43f026程序同字节passed；24边界+74架构+73平台共171主机项全部passed、3实际SDK组件显式配置、0skip。首轮命令误写不存在test_build_a133_provider导致loader失败（不是代码失败）原日志保留，正确模块r2通过。公开候选敏感/许可审计passed、无finding。SDK新7源已回读，旧产物/采集状态未变；未重跑无关全镜像。物理验收按DELIVERY058用户要求后置，not_run；整套源迁移false，ipkvm/Tuya/混合业务等尚待收尾。证据output/hdmi-source-split-20261015/verified-result.json及各日志。

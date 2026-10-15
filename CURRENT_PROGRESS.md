@@ -1,3 +1,13 @@
+# 当前接续状态（2026-10-15，SPLIT057 / DELIVERY058）
+
+用户最新要求：A133失联、安装、升级/回退及断电验收暂缓，提供新SDK Ubuntu环境后集中重做；先上传源码、SDK overlay、现有镜像和应用升级包。此指示覆盖旧“真机未过禁止上传”当前阶段前置。只同步受控草稿快照，正式稳定发布与设备安装门禁不放宽。
+
+- HDMI源码归属收尾已完成：原实现与许可证保存私有SDK7ed3fdd，4267文件/95组件标准overlay与独立远端读回passed；上层移除3源/Makefile，系统stage2消费固定SDK，实际程序43f026与原fresh reference同字节。219头/20实际链接输入固定，171主机检查0skip passed。证据output/hdmi-source-split-20261015/verified-result.json。
+- 现有冻结产物：系统1.0.0-rc.2源d7c8572、raw618a5c…139a/SWUcdf623…2a1d；应用1.0.8-rc.23源a37a63d/包c22c01…f78。它们不包含后续源码归属变更；原签名不变，不因文档重建。
+- 正在执行DELIVERY058受控同步：统一dshanpi/SmartDesktopMimi源码与独立应用/系统draft，上传后逐附件下载、验签、SHA/版本关联复核。当前实际结果见output/delivery-sync-20261015，完成前不称已上传。
+- 当前不操作A133、不打开HDMI；物理相关deferred/not_run，不称已解决失联。Ubuntu用户暂时无法进入虚拟机控制台，真实Xorg验收blocked；Tuya云项目/设备尚无，真实语音/账号归属仍未验收。
+- 其余拆分仍未完成：ipkvm/Tuya、agentd混合业务和冻结接口/客户端、最终完整SDK/产品归属。整体交付未完成，保持mimi原循环，优先完成本轮真实上传并提供链接。
+
 # 当前接续状态（2026-10-15，SPLIT056）
 
 整套交付未完成。本批构建/回归已结束，无仍在运行的本批作业；应用源码和Release未上传。
