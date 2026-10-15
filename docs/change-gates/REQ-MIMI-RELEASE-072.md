@@ -26,3 +26,8 @@
 验收当前not_run：文档字段与原复验结果一致、链接落点、变更仅文档、追溯覆盖及远端源回读。已执行远端56附件passed不重跑大包；新系统真实安装和稳定发布仍deferred/not_run。旧测试板rc17黑屏诊断仍failed_unresolved，用户补充先有开机画面后黑屏，不是本批新产物已装板。
 
 本批文档检查：所有更新页面的相对链接/图片落点已实际检查（123项），公开56附件元数据与原远端复验结果逐字节一致；改动仅Markdown/JSON，无产品重建。首次链接检查发现README中2个旧失效路径，已更正到实际实现/平台边界文档；r1 failed及r2 passed均保留在开发证据。设备修复未通过、整体未完成；提交覆盖和远端源读回待实际执行。
+
+
+## 2026-10-15T14:14:51.573980+00:00 PAIR071新59附件完整远端复验
+
+app26/public5/private6三本地完整draft、系统34项正负例及两个源码附件passed；新59附件全部实际下载、验签/SHA/版本/源码关联passed，系统gzip/raw和下载SWU签名复验passed。source ccfe/e658/ccfe，SDK fa0d799，私有f80。原81附件/固定标签只读核对不变。前序wrong-checker/脚本变量/占位误报失败未删除；仅纠正发布主机脚本。一次受控GET接续后采用最多12并行范围，完整哈希及门禁不变。详见docs/delivery/PAIR071-SNAPSHOTS-20261015.md和docs/validation/pair071-delivery-snapshot.json。所有物理验收仍deferred/not_run；后台补丁由用户合并，未部署；不推广稳定，不将新文档提交认作二进制来源。

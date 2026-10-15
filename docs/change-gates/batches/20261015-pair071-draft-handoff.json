@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Document actual new59 controlled draft assets and next acceptance",
+  "context": "Frozen app26/public5/private6 binaries already built, signed and remotely verified; no code/build changes",
+  "next_steps": "New SDK Ubuntu/device matrix and external-resource acceptance remain deferred/not_run; no stable release",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-RELEASE-072",
+      "record": "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+      "scope": "Documentation/actual post-sync evidence only",
+      "invariants": "No rebuild/version/old asset/tag changes; no secret or per-unit identity publication; preserve failures; not physical qualification",
+      "paths": [
+        "docs/delivery/PAIR071-SNAPSHOTS-20261015.md",
+        "docs/validation/pair071-delivery-snapshot.json",
+        "docs/change-gates/batches/20261015-pair071-draft-handoff.json",
+        "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+        "docs/CHANGE-GATES.md",
+        "docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md",
+        "CURRENT_PROGRESS.md"
+      ],
+      "checks": [
+        {
+          "name": "Three controlled remote draft readbacks",
+          "status": "passed",
+          "scope": "59 real downloaded files, signatures/SHA/source and version relationships",
+          "evidence": "docs/validation/pair071-delivery-snapshot.json"
+        },
+        {
+          "name": "Physical acceptance",
+          "status": "not_run",
+          "scope": "A133 installation/upgrade/rollback/power/data and external resources",
+          "reason": "Deferred by user/new environment and resources",
+          "evidence": "docs/delivery/PAIR071-SNAPSHOTS-20261015.md"
+        }
+      ]
+    }
+  ]
+}
