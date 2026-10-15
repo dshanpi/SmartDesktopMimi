@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "100ask运行适配独立来源实施前记录",
+  "context": "SDK共有契约保留，两私有实现转产品私有源且无旧副本回退",
+  "next_steps": "先固定源/上传回读，再实现组合和实际双profile编译",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-065",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+      "scope": "私有配对源码与Provider组合",
+      "invariants": "原字节与依赖闭包、公共无私有输入、秘密不入Git、冻结候选不变",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/private065-prerecord-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "实现及验证",
+          "status": "not_run",
+          "scope": "实施前",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+          "reason": "尚未迁移源码或修改构建器"
+        }
+      ]
+    }
+  ]
+}

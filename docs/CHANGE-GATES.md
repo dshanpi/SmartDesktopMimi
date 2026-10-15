@@ -170,3 +170,5 @@ SPLIT061系统入口完成：原5上层源已退休，实际video目标/原ELF/A
 - [REQ-MIMI-IMAGE-063](change-gates/REQ-MIMI-IMAGE-063.md)：未来产品名镜像生成/版本锁/发布链，事前门禁，待实现。
 
 - REQ-MIMI-PRIVATE-064：私有生产工具独立来源，实际构建/回读与公共退休逐项核对。
+
+- REQ-MIMI-PRIVATE-065：100ask产品私有适配独立来源和显式组合，公共Provider保持禁用。
