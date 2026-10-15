@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "PRIVATE064生产源实际回读与CI结果",
+  "context": "68原源远端完整、65公共入口退休，CI通过但运行隔离未完",
+  "next_steps": "私有运行适配与双产品组合验证",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-064",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-064.md",
+      "scope": "本批结果与剩余工作",
+      "invariants": "保留失败/不改锁/秘密不入Git/主机不替代物理",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-064.md",
+        "docs/change-gates/batches/private064-results-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "来源与主机构建",
+          "status": "passed",
+          "scope": "68源独立回读、私有source/web/Rust CI全success、公共75架构/审计",
+          "evidence": "output/private-tooling-split-20261015/verified-result.json"
+        },
+        {
+          "name": "完整运行隔离/设备",
+          "status": "not_run",
+          "scope": "专有运行适配尚需拆分",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "本批只生产工具，A133物理由用户后置"
+        }
+      ]
+    }
+  ]
+}

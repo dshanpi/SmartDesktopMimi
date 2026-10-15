@@ -1,3 +1,11 @@
+# 当前进度（2026-10-15，PRIVATE064生产工具迁移完成）
+
+SmartDesktopMimi-Private已保存68份固定原SHA/模式的生产源、共享helper与原许可；65专有生产入口已从公共仓库退休并由公开审计反向拒绝。私有独立回读逐文件与公共d620原Git对象一致，5拒绝检查、3缺输入不调用ADB、脚本语法/私有前端构建passed；远端source/web/Rust工位core三个CI全部passed。本机旧cargo1.75阻塞历史保留，不改原锁，远端新工具链已实际补验。公共75架构检查0skip/源码审计passed，代码a87a706/私有286dcad，证据output/private-tooling-split-20261015/verified-result.json。
+
+IMAGE063新产品名镜像链184更新+74架构及3远端CI passed。共享采集061已迁SDK a49并完成180唯一主机检查。原rc2/rc23/25草稿附件仍冻结，不重新归属后续源、不更换签名或绑定，无硬件操作。A133物理按用户延期；Ubuntu登录/真实涂鸦/语音/账号验收未完成。
+
+下一步是Tuya/100ask运行适配的独立私有来源、公共禁用/私有启用及组合构建，不复制公共桌面；这些仍not_run。生产工具迁移不代表完整产品隔离或整套交付完成。原mimi循环已同步最新用户优先级和产品边界。
+
 # 当前进度（2026-10-15，IMAGE063命名链完成）
 
 新系统构建归档、系统构建记录、发布准备/门禁/远端复核已支持 SmartDesktopMimi-SystemImage-v<独立系统版本>.img.gz。内部硬件/签名/标签规则保留；旧锁只读兼容，旧25附件不改名覆盖。44针对性、184完整更新、74架构检查0skip，公开源审计0发现；真实未来归档段仅主机夹具验证，不是新SDK镜像。代码49b6f19，证据output/system-image-name-20261015/verified-result.json。

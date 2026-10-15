@@ -14,3 +14,5 @@
 私有远端已出现用户初始README提交fb44cec，空仓断言正确拒绝，未写入；改为克隆现有单README仓库并保留原文/历史继续。GitHub只读确认仍private且push权限。
 
 私有生产源68项已上传286dcad并独立clone/fetch，逐文件与公共d620原Git对象字节/模式一致。两次初检问题（umask模式语义、keys下README漏收）保留并追加回归，最终5拒绝检查通过。私有前端npm ci+tsc/vite正式构建passed；本机Rust锁版本blocked，远端CI待结果。此后才退休公共65专有生产源，保留共享lib与原许可，增加公开审计反向拒绝原目录/三个CLI，实际归属见private-source-ownership.json。两项运行适配仍未拆完，不宣称当前公共已隔离。一次迁移脚本Python字符串未闭合，在解析阶段拒绝、无文件改动，纠正后执行。
+
+本批最终：私有286dcad完整68项读回/5拒绝/3无ADB/前端passed，远端38675551082的source、web、factory-core三个job全success；本机旧Rust阻塞由远端实际工具链补验，原锁未改。公共a87a706退休65源，75架构0skip/公开审计passed。设备/授权下发/运行隔离not_run，冻结候选无变，不标整体完成。证据output/private-tooling-split-20261015/verified-result.json。
