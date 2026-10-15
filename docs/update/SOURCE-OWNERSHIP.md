@@ -83,3 +83,6 @@
 SDK a49d1d1标准overlay4276/95已独立回读。原apps/ipkvm/video的5源/补丁保存在SDK smartdesktopmimi-a133-capture并从上层退休；系统产品入口先校验固定源锁，再用SDK独立新目录编译，不保留隐式回退。Web/Go业务仍在公共源码，普通Web静态资源可应用更新，采集/Go服务程序只能走系统发布。原Linaro5.3、142编译输入/28链接输入含脚本/别名及补丁结果固定，实际新video目标81,304字节/74ceb07与原参考一致。34边界+native smoke、74架构、74平台检查全过0skip，native2重复计入后唯一180项；未重编无关桌面/网页/Tuya或旧镜像。芯片/ABI/加载器/原冻结产物与SDK配置SHA复核通过；物理后置、整体迁移false。
 
 产品开源/私有配对的新边界见EDITION-SOURCE-MAP.md，当前仅完成实际归属清单，尚未实现公共禁用/私有启用两产品隔离。
+
+## PRIVATE065：100ask运行适配的产品来源
+private Provider构建另外显式传入`--private-product-root /绝对路径/SmartDesktopMimi-Private`，或在build_apps前设置`MIMI_PRIVATE_PRODUCT_ROOT`；外置100ask依赖仍通过`--private-sdk`/`AITVBOX_100ASK_SDK_ROOT`提供。固定锁`adapters/100ask/source-lock.json`与原两C字节、原SDK配方关联；临时组合后调用原SDK编译器/审计工具。缺产品组件拒绝，不能从SDK历史副本回退。public Provider拒绝两种私有输入，30TU禁用实现不变。SDK旧副本仅历史留存，产品源码以私有组件为新来源；Tuya隔离及完整产品锁/实际设备验收不由本条宣称完成。

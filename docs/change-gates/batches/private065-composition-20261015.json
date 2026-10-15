@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "100ask私有运行源显式组合与拒绝边界",
+  "context": "用户重启后继续；产品私有两C替代SDK历史实现作为新编译来源",
+  "next_steps": "固定代码后实际公共30/私有32TU编译、受影响回归及真实证据",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-065",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+      "scope": "Provider构建器、应用入口、来源说明及拒绝验证",
+      "invariants": "公共拒绝私有输入、无SDK旧源回退、原工具/配方/ABI、秘密不入Git",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+        "docs/change-gates/batches/private065-composition-20261015.json",
+        "docs/update/SOURCE-OWNERSHIP.md",
+        "scripts/build_a133_provider.py",
+        "scripts/build_apps.sh",
+        "tests/update/test_product_provider.py"
+      ],
+      "checks": [
+        {
+          "name": "入口拒绝边界",
+          "status": "passed",
+          "scope": "10项含源/锁/模式/链接/错误组合/旧输出，实际双入口预检",
+          "evidence": "output/private-100ask-adapter-20261015/product-regression.log"
+        },
+        {
+          "name": "实际编译与物理",
+          "status": "not_run",
+          "scope": "30/32TU独立编译待固定源码后执行；设备延期",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+          "reason": "先固定实际代码再构建，不用预检替代实际编译"
+        }
+      ]
+    }
+  ]
+}

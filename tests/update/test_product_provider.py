@@ -40,6 +40,98 @@ class ProductProviderTests(unittest.TestCase):
         rf.write_text(json.dumps(recipe))
         return sdk, component, rf, {profile: p.sha(rf)}, p.sha(tool)
 
+    def private_fixture(self, root):
+        sdk, component, rf, pins, tool_hash = self.fixture(root, 'private')
+        external, product = root / 'external-private-sdk', root / 'private-product'
+        external.mkdir()
+        product.mkdir()
+        recipe = json.loads(rf.read_text())
+        files = {}
+        for name, relative in p.PRIVATE_SOURCES.items():
+            source = product / relative
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text('/* product pairing source */')
+            source.chmod(0o644)
+            recipe['sources'][name] = p.sha(source)
+            historical = component / 'private/code' / name
+            historical.parent.mkdir(parents=True, exist_ok=True)
+            historical.write_text('/* obsolete SDK copy, must never be read */')
+            files[relative] = dict(sha256=p.sha(source), bytes=source.stat().st_size, git_mode='100644')
+        rf.write_text(json.dumps(recipe))
+        pins['private'] = p.sha(rf)
+        lock = dict(schema=1, component='100ask-auto-pairing', composition=p.PRIVATE_SOURCES,
+                    files=files, provider_recipe_sha256=pins['private'], source_commit='a' * 40)
+        lock_file = product / p.PRIVATE_LOCK
+        lock_file.parent.mkdir(parents=True, exist_ok=True)
+        lock_file.write_text(json.dumps(lock))
+        return sdk, component, rf, pins, tool_hash, external, product, lock_file
+
+    def test_private_requires_product_without_historical_fallback(self):
+        with tempfile.TemporaryDirectory() as d:
+            sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
+            with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)):
+                with self.assertRaisesRegex(ValueError, 'explicit private product'):
+                    p.preflight(str(sdk), 'private', str(external))
+                result = p.preflight(str(sdk), 'private', str(external), str(product))
+                composed = p.compose(component, result[3], result[6], Path(d) / 'composition')
+                for name, relative in p.PRIVATE_SOURCES.items():
+                    self.assertEqual((composed / 'code' / name).read_bytes(), (product / relative).read_bytes())
+                    (component / 'private/code' / name).unlink()
+                # Even absent old SDK copies cannot trigger a fallback or failure.
+                p.preflight(str(sdk), 'private', str(external), str(product))
+
+    def test_private_product_changes_and_aliases_rejected(self):
+        for target in ('source', 'lock', 'mode', 'source-alias', 'lock-alias'):
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as d:
+                sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)):
+                    source = product / next(iter(p.PRIVATE_SOURCES.values()))
+                    p.preflight(str(sdk), 'private', str(external), str(product))
+                    if target in ('source', 'lock'):
+                        (source if target == 'source' else lock).write_text('changed')
+                    elif target == 'mode':
+                        source.chmod(0o755)
+                    else:
+                        selected = source if target == 'source-alias' else lock
+                        other = Path(d) / 'alias-target'
+                        selected.rename(other)
+                        selected.symlink_to(other)
+                    with self.assertRaises(ValueError):
+                        p.preflight(str(sdk), 'private', str(external), str(product))
+
+    def test_public_rejects_private_flags_before_reading_inputs(self):
+        for private, product in (('/missing-private', None), (None, '/missing-product')):
+            with self.assertRaisesRegex(ValueError, 'public profile forbids'):
+                p.preflight('/missing-sdk', 'public', private, product)
+
+    def test_private_wrong_composition_recipe_and_overlapping_root_rejected(self):
+        for change in ('recipe', 'composition', 'files'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as d:
+                sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
+                body = json.loads(lock.read_text())
+                body[{'recipe': 'provider_recipe_sha256', 'composition': 'composition', 'files': 'files'}[change]] = {} if change != 'recipe' else 'bad'
+                lock.write_text(json.dumps(body))
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)):
+                    with self.assertRaisesRegex(ValueError, 'composition or provider recipe'):
+                        p.preflight(str(sdk), 'private', str(external), str(product))
+                    with self.assertRaisesRegex(ValueError, 'separate from SDK'):
+                        p.preflight(str(sdk), 'private', str(external), str(external))
+
+    def test_existing_output_preserved_before_compiler_execution(self):
+        with tempfile.TemporaryDirectory() as d:
+            sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
+            output = Path(d) / 'old-build'
+            output.mkdir()
+            old = output / 'lv_backend'
+            old.write_bytes(b'preserve existing candidate')
+            args = argparse.Namespace(sdk=str(sdk), profile='private', private_sdk=str(external),
+                                      private_product_root=str(product), output=str(output), check=False)
+            with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p.subprocess, 'run') as execute:
+                with self.assertRaisesRegex(ValueError, 'new directory'):
+                    p.build(args)
+                execute.assert_not_called()
+            self.assertEqual(old.read_bytes(), b'preserve existing candidate')
+
     def test_changed_source_dependency_tool_recipe_and_compiler_rejected(self):
         for target in ['source', 'dependency', 'tool', 'recipe', 'compiler']:
             with self.subTest(target=target), tempfile.TemporaryDirectory() as d:

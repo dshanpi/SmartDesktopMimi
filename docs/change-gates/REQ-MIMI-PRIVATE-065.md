@@ -12,3 +12,6 @@ SDK已有镜像/历史overlay内原配对副本暂保留作原构建来源，本
 缺/错组件、公开携带私有输入、篡改/链接/旧输出保留回归；实际公共30TU和私有32TU独立编译/链接，私有后端与原8a8b3a45…同字节，公共无私有依赖；私有上传原源回读和公开源码审计。完整应用/镜像与两设备更新数据、真实100ask绑定仍not_run，A133物理按用户延期。证据output/private-100ask-adapter-20261015。
 
 用户于本轮要求重启电脑并暂停，已停止功能实施/长任务及原mimi循环；两适配私有497468c上传与独立回读/审计passed，公共组合构建器尚未改，实际双profile构建not_run。详见docs/delivery/RESUME-20261015-REBOOT.md，重启后从明确边界接续，不标完成。
+
+用户重启后已明确继续。已核对公共53559a5/私有fa0a24e、原SDK a49及无遗留构建，恢复原mimi循环。新Provider入口private显式--private-product-root，固定运行锁9bcd9a60及两C的配方SHA/文件/Git模式；public拒绝任一私有输入。临时闭包仅从SDK取共享源、从产品私有取明确两C，原SDK工具与配方哈希不变，原dependency/宏映射仍执行。build_apps通过MIMI_PRIVATE_PRODUCT_ROOT贯通两次调用，清理/SDK配置前预检；未改Tuya或共享桌面。
+10项Provider入口主机回归passed，包括SDK旧两副本不同/不存在仍从产品取源，缺/篡改/软链接/错误组合/公开输入/旧输出保留。实际30/32TU编译和新镜像/安装尚not_run，将在本代码固定后执行受影响实际构建。本批Provider回执可追溯组件锁，完整最终产品镜像来源锁的接续仍须核对，不把独立Provider构建称完整新镜像通过。

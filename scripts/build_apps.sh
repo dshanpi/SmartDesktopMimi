@@ -18,6 +18,7 @@ BUILD_OUT="${PRODUCT_ROOT}/build"
 PREPARE_TUYAOPEN="${SELF_DIR}/prepare_tuyaopen_build_root.sh"
 ENABLE_100ASK_CLOUD="${AITVBOX_ENABLE_100ASK_CLOUD:-OFF}"
 PRIVATE_100ASK_SDK_ROOT="${AITVBOX_100ASK_SDK_ROOT:-}"
+PRIVATE_PRODUCT_ROOT="${MIMI_PRIVATE_PRODUCT_ROOT:-}"
 # shellcheck source=scripts/lib.sh
 source "${SELF_DIR}/lib.sh"
 
@@ -131,7 +132,9 @@ if [[ "${ENABLE_100ASK_CLOUD}" == "ON" ]]; then
 fi
 PROVIDER_ARGS=(--sdk "${SDK}" --profile "${PROVIDER_PROFILE}")
 if [[ "${PROVIDER_PROFILE}" == "private" ]]; then
-    PROVIDER_ARGS+=(--private-sdk "${PRIVATE_100ASK_SDK_ROOT}")
+    PROVIDER_ARGS+=(--private-sdk "${PRIVATE_100ASK_SDK_ROOT}" --private-product-root "${PRIVATE_PRODUCT_ROOT}")
+elif [[ -n "${PRIVATE_100ASK_SDK_ROOT}" || -n "${PRIVATE_PRODUCT_ROOT}" ]]; then
+    die "Public provider forbids private SDK or product inputs"
 fi
 python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
 python3 "${SELF_DIR}/build_a133_services.py" --sdk "${SDK}" --check
