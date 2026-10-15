@@ -68,3 +68,6 @@
 23个已在SDK958保存并实际重编的platform C已从桌面源码删除；24个接口头和冻结共享/客户端保留。CMake默认上层且拒绝混合模式；旧后端target/库查找已移除。SDK组件继续独立构建系统后端，provider-recipe中保存旧闭包与原字节。
 所有退休路径及SHA登记source-ownership.json，重新出现即拒绝。原平台实现测试保留并从显式MIMI_A133_PROVIDER_ROOT指向固定配方与实际SDK源码；无配置对应检查明确skip/not_run，配置错误失败。实际SDK条件106架构/平台+28边界通过，A133前端672源重编且清理前后字节相同；证据output/backend-source-retirement-20261015。
 剩余：平台接口头/冻结硬件客户端边界、其他apps/platform_services/hdmi_preview/ipkvm及集成材料的最终归属仍须收尾；migration_complete=false。完整新产品/升级/物理验收不因本批通过而变为passed。
+
+
+054完整应用入口接续补充：实际全入口在npm未进入PATH时阶段4失败；19早拒绝/边界回归通过后，只加载已有Node工具链、逐字核对尾段并验证前序收据/SHA后接续阶段4/5及更新器，最终passed_recovered。前端/SDK后端归集及其他组件衔接已通过；原失败保留，未变模块增量构建，不称全SDK干净重建。原冻结镜像/包未变，无真机结论。证据output/product-pipeline-20261015/verified-result.json。

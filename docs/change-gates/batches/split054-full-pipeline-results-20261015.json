@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "summary": "完整应用构建分段恢复及当前源码来源说明",
+  "context": "首轮failed不改；实际固定源码/产物后只续后两阶段+更新器，配置与旧候选不变",
+  "next_steps": "其他来源边界与产品锁；资源到位后必需物理验收，仍禁应用/Release上传",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-054",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+      "scope": "完整入口恢复和接续状态",
+      "invariants": "原失败保留，分段输入实证绑定，不借主机冒充物理，无签名/镜像/上传",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+        "docs/CHANGE-GATES.md",
+        "docs/update/SOURCE-OWNERSHIP.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/split054-full-pipeline-results-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "完整应用入口接续",
+          "status": "passed",
+          "scope": "实际SDK，来源/前序SHA与tail固定，原失败保留",
+          "evidence": "output/product-pipeline-20261015/verified-result.json"
+        },
+        {
+          "name": "首轮完整入口",
+          "status": "failed",
+          "scope": "第四阶段npm未进入PATH",
+          "evidence": "output/product-pipeline-20261015/result.json",
+          "reason": "后续环境修复不覆盖旧失败"
+        },
+        {
+          "name": "镜像和物理交付",
+          "status": "not_run",
+          "scope": "新系统/升级回退/断电数据",
+          "evidence": "output/product-pipeline-20261015/verified-result.json",
+          "reason": "本批仅软件来源/集成构建，无设备安装"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-SPLIT-055",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-055.md",
+      "scope": "README当前源码归属同步",
+      "invariants": "接口/旧产物保持，整体迁移未完成",
+      "paths": [
+        "README.md",
+        "docs/change-gates/REQ-MIMI-SPLIT-055.md"
+      ],
+      "checks": [
+        {
+          "name": "来源说明核对",
+          "status": "passed",
+          "scope": "当前源码已删除23C，头和其他待办明确",
+          "evidence": "output/backend-source-retirement-20261015/verified-result.json"
+        }
+      ]
+    }
+  ]
+}

@@ -45,3 +45,8 @@ flowchart TD
 追加修复：build_apps在任何清理/编译前显式检查node/npm，缺失提前给出真实原因；增加缺网页工具链时旧输出不动的实际Shell分支回归。接续前核对前三阶段归集产物/Provider收据、全部相关C/构建输入和当前源与d5仅前置检查/测试/文档差异；只在新进程PATH载入已有固定Node工具链，执行与原脚本逐字相同的第四阶段及后续tail，不重复编译已通过阶段。原failed不改，续跑写result-r2.json；配置与冻结候选继续前后保护。既有未改模块复用不叫空缓存重建。镜像/签名/安装/上传仍not_run。
 
 网页工具链早拒绝已实现：node/npm缺失在源码审计/清理/编译前失败；真实隔离PATH的Shell回归确认旧产物原字节保留，既有缺SDK分支仍验证不被环境缺失遮蔽。19主机边界回归及Bash语法passed，证据output/product-pipeline-20261015/preflight-regression.log。环境恢复和分段整链仍not_run。
+
+## 分段恢复后的完整应用构建结果
+首轮source d5e54111e96c723fe40754f084203285f70fb602的result.json仍failed（阶段4未载入npm）；后续source72c85e4f1f23def336f28e64a6a22da84f79af33只增加前置node/npm检查、测试和文档，runner已逐字比较原脚本移除两条检查后完全相等、实际stage4至末尾tail完全相等，其余生产输入无diff。
+只在子进程PATH加载原Node v22.23.3/npm10.9.9，续跑第四阶段IPKVM网页/视频与第五阶段Tuya及更新器exit0。前1-3阶段九个归集文件/收据前后SHA完全一致，SDK三配置与原618镜像/cdf SWU/c22签名包前后不变，源码clean，未触发配置恢复写回。result-r2/verified-result.json记passed_recovered，原失败和两份日志保留；不能把本结论称为单次无失败运行、完整SDK空缓存构建或真机验收。
+后端实际归集SHA8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3、前端4891196a5e3134ddda967f2823ffe54111d8f97e3aa2588272d4e17c4e673045；其他组件实际hash见verified-result.json。构建结果均为开发输出，未替换签名冻结候选，未生成镜像、签名、安装或上传。19前置/来源边界回归passed；其余未变代码不重复整轮测试。后续为其余源码归属和新产品来源锁闭环，以及待输入后的可信设备OTA与全部必需实机验收。

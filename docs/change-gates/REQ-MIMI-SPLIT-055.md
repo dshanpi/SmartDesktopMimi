@@ -22,3 +22,5 @@ SDK958已保存并重编private32/public30，054实际系统入口和上层672�
 实际SDK958配置下33架构+73平台集成共106项全部passed、0skip；28边界/应用构建收据回归passed，总134项本批主机检查。平台实现检查读取固定SDK源，而不是恢复已删除副本；显式无SDK的单项另行记录skip/not_run，不计134通过。显式混合CMake构建返回非0且明确Backend moved to SDK，负向拒绝passed。
 移除23个C实现后实际上层重编exit0/源码clean/672源归属passed；ELF4878416B/hash4891196a5e3134ddda967f2823ffe54111d8f97e3aa2588272d4e17c4e673045，与054清理前字节相同。24个platform接口头对照aabc676全部原字节不变；SDK private/public预检仍passed。verified-result.json绑定实际代码SHA；不借用054或旧厂包的实机验收。
 完整build_apps正向归集/全系统重建、新设备升级/回退/断电/数据仍not_run。接口头/冻结共享客户端和apps/platform_services、hdmi_preview、ipkvm等其他系统源归属尚待最终收尾，migration_complete=false；不是全部拆仓完成。原rc2镜像/rc23签名包及物理rc17未改，无应用/Release上传。下一步优先恢复已登记设备ADB scope后可信OTA/失联对照，或继续其余源码归属；不把已授权但未执行项目标passed。
+
+054完整应用构建接续已通过（保留npm首轮失败），实际SDK后端归集与其他系统组件衔接通过；SOURCE-OWNERSHIP/README同步当前来源，旧接口和其余源码待办保持。详见output/product-pipeline-20261015/verified-result.json；未新增物理通过。
