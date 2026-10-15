@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "summary": "Bind exact dualprofile tool commit from actual SDK origin metadata",
+  "context": "Correct abbreviated source wording with realfullcommit and exact blob SHA",
+  "next_steps": "Productentry wiring and publicplatform source removal remain pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-053",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+      "scope": "Documentation correlation only, no candidate rebuild",
+      "invariants": "No invented commit or reuse of oldrecipe evidence",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+        "docs/change-gates/batches/20261015-split053-source-correlation.json"
+      ],
+      "checks": [
+        {
+          "name": "Exact sourceblob correlation",
+          "status": "passed",
+          "scope": "Real Gitblob vs SDKbuilder and two recipe toolhashes",
+          "evidence": "output/a133-provider-split-20261015/dual-source-correlation.json"
+        }
+      ]
+    }
+  ]
+}
