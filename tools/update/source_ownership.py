@@ -52,6 +52,10 @@ def verify(root):
         raise ValueError('unknown source ownership schema/platform')
     if not policy.get('files') or not policy.get('scopes'):
         raise ValueError('empty source ownership inventory')
+    for name in policy.get('retired_platform_sources', {}):
+        path = root / safe_name(name)
+        if path.exists() or path.is_symlink():
+            raise ValueError('retired platform implementation reintroduced: ' + name)
     actual = set()
     for name in policy['scopes']:
         path = root / safe_name(name)

@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from tests.sdk_source import provider_source
 import re
 
 
@@ -92,7 +93,7 @@ class PlatformManifestTests(unittest.TestCase):
                 self.assertIsInstance(manifest["hardware"], dict)
                 self.assertTrue(manifest["hardware"])
                 provider = (
-                    ROOT / "apps/lv_port_linux/src/platform/a133/platform_capabilities_a133.c"
+                    provider_source("apps/lv_port_linux/src/platform/a133/platform_capabilities_a133.c")
                     if platform_id == "a133"
                     else ROOT / "platforms" / platform_id / "platform_provider.c"
                 )
@@ -239,8 +240,8 @@ class PlatformManifestTests(unittest.TestCase):
             cmake,
             r'option\(AITVBOX_ENABLE_100ASK_CLOUD[\s\S]*?OFF\)',
         )
-        self.assertIn("src/system/service_cloud_stub.c", cmake)
-        self.assertIn("src/system/service_cloud_validation.c", cmake)
+        self.assertNotIn("add_executable(lv_backend", cmake)
+        self.assertIn("Backend moved to SDK", cmake)
         self.assertIn("AITVBOX_100ASK_SDK_ROOT", cmake)
         self.assertNotIn("../../third_party/100ask-iot-sdk", cmake)
 
@@ -259,7 +260,7 @@ class PlatformManifestTests(unittest.TestCase):
                     "cc", "-std=c11", "-Wall", "-Wextra", "-Werror", "-c",
                     "-I", ROOT / "apps/lv_port_linux/src/system",
                     "-I", ROOT / "apps/lv_port_linux/src",
-                    ROOT / "apps/lv_port_linux/src/system/service_cloud_stub.c",
+                    provider_source("apps/lv_port_linux/src/system/service_cloud_stub.c", "public"),
                     "-o", output,
                 ],
                 cwd=ROOT,
@@ -284,7 +285,7 @@ class PlatformManifestTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertIn("Private 100ask SDK is incomplete", result.stdout + result.stderr)
+            self.assertIn("Application builds cannot enable", result.stdout + result.stderr)
 
     def test_cloud_provider_rejects_private_sdk_inside_public_tree(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -302,7 +303,7 @@ class PlatformManifestTests(unittest.TestCase):
             )
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(
-                "must be outside the product source tree",
+                "Application builds cannot enable",
                 result.stdout + result.stderr,
             )
 

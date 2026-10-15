@@ -18,6 +18,7 @@ import tarfile
 import tempfile
 import threading
 import unittest
+from tests.sdk_source import provider_source
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -269,10 +270,10 @@ class PlatformHostTests(unittest.TestCase):
 
     def test_cloud_and_ota_require_strict_tls_verification(self):
         cloud = (
-            REPO / "apps/lv_port_linux/src/system/service_cloud.c"
+            provider_source("apps/lv_port_linux/src/system/service_cloud.c")
         ).read_text(encoding="utf-8")
         ota = (
-            REPO / "apps/lv_port_linux/src/system/service_ota.c"
+            provider_source("apps/lv_port_linux/src/system/service_ota.c")
         ).read_text(encoding="utf-8")
         package = (
             REPO / "packaging/aitvbox-suite/Makefile"
@@ -294,10 +295,10 @@ class PlatformHostTests(unittest.TestCase):
 
     def test_cloud_accepts_only_current_six_digit_pairing_codes(self):
         cloud = (
-            REPO / "apps/lv_port_linux/src/system/service_cloud.c"
+            provider_source("apps/lv_port_linux/src/system/service_cloud.c")
         ).read_text(encoding="utf-8")
         validation = (
-            REPO / "apps/lv_port_linux/src/system/service_cloud_validation.c"
+            provider_source("apps/lv_port_linux/src/system/service_cloud_validation.c")
         )
 
         with tempfile.TemporaryDirectory() as directory:
@@ -359,7 +360,7 @@ class PlatformHostTests(unittest.TestCase):
 
     def test_tuya_runtime_preflights_factory_license_before_spawn(self):
         source = (
-            REPO / "apps/lv_port_linux/src/system/service_ai_runtime.c"
+            provider_source("apps/lv_port_linux/src/system/service_ai_runtime.c")
         ).read_text(encoding="utf-8")
 
         self.assertIn('TUYA_LICENSE_FILE_DEFAULT "/factory/tuya/license.env"', source)
@@ -416,7 +417,7 @@ class PlatformHostTests(unittest.TestCase):
             REPO / "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c"
         ).read_text(encoding="utf-8")
         backend = (
-            REPO / "apps/lv_port_linux/src/system/service_ai_runtime.c"
+            provider_source("apps/lv_port_linux/src/system/service_ai_runtime.c")
         ).read_text(encoding="utf-8")
         settings = (
             REPO / "apps/lv_port_linux/src/system/settings.c"
@@ -735,7 +736,7 @@ int main(int argc, char **argv) {
             REPO / "apps/ipkvm/video/main.cpp"
         ).read_text(encoding="utf-8")
         preview_service = (
-            REPO / "apps/lv_port_linux/src/system/service_hdmi_preview.c"
+            provider_source("apps/lv_port_linux/src/system/service_hdmi_preview.c")
         ).read_text(encoding="utf-8")
         product_init = (
             REPO / "packaging/aitvbox-suite/files/aitvbox.init"
@@ -877,7 +878,7 @@ int main(int argc, char **argv) {
     def test_backend_reconciles_wifi_restored_after_deferred_probe(self):
         """A late system Wi-Fi connection must unblock AI/cloud services."""
         wifi_service = (
-            REPO / "apps/lv_port_linux/src/system/service_wifi.c"
+            provider_source("apps/lv_port_linux/src/system/service_wifi.c")
         ).read_text(encoding="utf-8")
 
         self.assertIn("reconcile_external_wifi_connection", wifi_service)
@@ -888,7 +889,7 @@ int main(int argc, char **argv) {
 
     def test_wifi_scan_reinitializes_hal_after_deferred_driver_probe(self):
         wifi_service = (
-            REPO / "apps/lv_port_linux/src/system/service_wifi.c"
+            provider_source("apps/lv_port_linux/src/system/service_wifi.c")
         ).read_text(encoding="utf-8")
 
         self.assertIn("bool hal_ready;", wifi_service)
@@ -948,7 +949,7 @@ int main(int argc, char **argv) {
     def test_a2dp_sink_uses_explicit_bounded_pcm_playback(self):
         """Decoded PCM must have one ready consumer before callbacks start."""
         source = (
-            REPO / "apps/lv_port_linux/src/system/service_bt.c"
+            provider_source("apps/lv_port_linux/src/system/service_bt.c")
         ).read_text(encoding="utf-8")
         player = (
             REPO / "apps/lv_port_linux/src/system/bt_pcm_player.c"
@@ -965,7 +966,7 @@ int main(int argc, char **argv) {
 
     def test_backend_publishes_ipc_before_best_effort_hardware_settings(self):
         source = (
-            REPO / "apps/lv_port_linux/src/backend_main.c"
+            provider_source("apps/lv_port_linux/src/backend_main.c")
         ).read_text(encoding="utf-8")
 
         self.assertLess(source.index("mw_init(true)"),
@@ -975,13 +976,13 @@ int main(int argc, char **argv) {
 
     def test_backend_entrypoint_delegates_routing_and_service_lifecycle(self):
         source = (
-            REPO / "apps/lv_port_linux/src/backend_main.c"
+            provider_source("apps/lv_port_linux/src/backend_main.c")
         ).read_text(encoding="utf-8")
         runtime = (
-            REPO / "apps/lv_port_linux/src/backend/backend_runtime.c"
+            provider_source("apps/lv_port_linux/src/backend/backend_runtime.c")
         ).read_text(encoding="utf-8")
         router = (
-            REPO / "apps/lv_port_linux/src/backend/backend_command_router.c"
+            provider_source("apps/lv_port_linux/src/backend/backend_command_router.c")
         ).read_text(encoding="utf-8")
         cmake = (
             REPO / "apps/lv_port_linux/CMakeLists.txt"
@@ -998,7 +999,7 @@ int main(int argc, char **argv) {
         self.assertIn("{TOPIC_WIFI_COMMAND, handle_wifi_command}", router)
         self.assertIn("{TOPIC_CLOUD_COMMAND, handle_cloud_command}", router)
         self.assertIn('set(AITVBOX_PLATFORM "a133"', cmake)
-        self.assertIn("AITVBOX_PLATFORM_SOURCES", cmake)
+        self.assertNotIn("add_executable(lv_backend", cmake)
 
         platform_contract = (
             REPO / "apps/lv_port_linux/src/platform/platform_capabilities.h"

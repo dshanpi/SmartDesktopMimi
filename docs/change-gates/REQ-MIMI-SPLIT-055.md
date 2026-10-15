@@ -13,3 +13,7 @@ SDK958已保存并重编private32/public30，054实际系统入口和上层672�
 ## 路径、验收和接续
 计划路径：apps/lv_port_linux/CMakeLists.txt及23已登记platform C、docs/update/source-ownership.json、tools/update/source_ownership.py、tests/sdk_source.py、tests/platform/test_host_integration.py、tests/architecture/test_architecture.py、tests/update/test_source_ownership.py，及本门禁/进度/索引/批次。
 基准aabc676（完整实际SHA由批次证据记录）。文件迁移核对、主机受影响回归、实际A133上层重编：not_run；新整镜像/物理接口/升级断电：not_run。证据output/backend-source-retirement-20261015。接口头文件及其他服务未拆部分继续明确待办。
+
+## 实现与初始检查
+23个已登记platform C已逐文件核对SDK配方与实际源码原字节后移除（retirement-before.json）；接口头文件未动。CMake默认且强制上层，旧backend-only块移除，拒绝混合构建/私有云；SDK后端仍走054入口。ownership保留退休清单和原SHA，重新引入即拒绝，即使未参与编译。
+平台实现测试通过tests/sdk_source.py读取显式MIMI_A133_PROVIDER_ROOT和固定配方/实际源SHA；未配置时只对应实现检查SkipTest/not_run，显式配置错误则失败；没有旧源码回退。28边界/应用构建收据回归passed；现有672编译源归属复核passed。架构+平台集成回归正在运行，实际新源码重编not_run；结果后续追加。

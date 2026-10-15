@@ -1,31 +1,16 @@
 {
   "application_repository": "dshanpi/SmartDesktopMimi",
   "files": {
-    "apps/lv_port_linux/src/apps/video/tplayer_wrapper.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/apps/video/tplayer_wrapper.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/backend/backend_command_router.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/backend/backend_command_router.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/backend/backend_runtime.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/backend/backend_runtime.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/backend/backend_v2_server.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/backend/backend_v2_server.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/backend_main.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/draw/sunxi_g2d/g2d_driver.h": {
@@ -148,21 +133,12 @@
       "owner": "shared-frozen",
       "sha256": "28901cd87e233af0882bae6df2c7fb411bebb0940794e297a8aa24a7b9bc21ee"
     },
-    "apps/lv_port_linux/src/platform/a133/platform_capabilities_a133.c": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/platform/platform_capabilities.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/platform/platform_capabilities.h": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/platform/ubuntu/desktop_controls.c": {
       "owner": "platform-client-frozen",
       "sha256": "c6ad7659e92562ee5323e17b096c4884726a8b1729127fd3bc8e47d60d49b204"
-    },
-    "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.c": {
-      "owner": "platform"
     },
     "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.h": {
       "owner": "platform"
@@ -194,9 +170,6 @@
       "owner": "platform-client-frozen",
       "sha256": "7614ce0677de9527442daca15196c34000aac65b3a9742c37d7be6d1e44c9203"
     },
-    "apps/lv_port_linux/src/system/bluez_player_monitor.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/bluez_player_monitor.h": {
       "owner": "platform"
     },
@@ -223,9 +196,6 @@
     "apps/lv_port_linux/src/system/device_identity.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/system/led_strip_hal.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/led_strip_hal.h": {
       "owner": "platform"
     },
@@ -241,67 +211,31 @@
     "apps/lv_port_linux/src/system/service_ai.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/system/service_ai_runtime.c": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_bt.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/service_bt.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_cloud.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/system/service_cloud.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/system/service_cloud_stub.c": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_cloud_validation.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/service_cloud_validation.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_hdmi_preview.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/system/service_hdmi_preview.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/system/service_led.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/service_led.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_ota.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/system/service_ota.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/system/service_sensor.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/service_sensor.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_time.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/system/service_time.h": {
       "owner": "platform"
     },
-    "apps/lv_port_linux/src/system/service_video.c": {
-      "owner": "platform"
-    },
     "apps/lv_port_linux/src/system/service_video.h": {
-      "owner": "platform"
-    },
-    "apps/lv_port_linux/src/system/service_wifi.c": {
       "owner": "platform"
     },
     "apps/lv_port_linux/src/system/service_wifi.h": {
@@ -322,9 +256,6 @@
     "apps/lv_port_linux/src/system/volume_control.h": {
       "owner": "platform-client-frozen",
       "sha256": "7a1337a7097677eb9e64e20663164232d03b568dbdb6737bf85a12e65fd920fa"
-    },
-    "apps/lv_port_linux/src/system/wifi_hal.c": {
-      "owner": "platform"
     },
     "apps/lv_port_linux/src/system/wifi_hal.h": {
       "owner": "platform"
@@ -347,6 +278,166 @@
   },
   "migration_complete": false,
   "platform_id": "a133",
+  "retired_platform_sources": {
+    "apps/lv_port_linux/src/apps/video/tplayer_wrapper.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "ec8c711412936e530b1f80ab4124658cf3c72eb97eca496ea5e9bf875ed4e9af"
+    },
+    "apps/lv_port_linux/src/backend/backend_command_router.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "a13837d6ed8a6c8c94ba6b99c3dd3d8542f36df2abfe08ad224dd8ed4adb7d6e"
+    },
+    "apps/lv_port_linux/src/backend/backend_runtime.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "a565cf9408cbf8c69db4fb18f7aec3adcf85a6d7a6abd48e6853d44eea57abce"
+    },
+    "apps/lv_port_linux/src/backend/backend_v2_server.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "19589f7eab2597838f87ab868ce1180c45a1c02eb619215869f27a4c9b133d43"
+    },
+    "apps/lv_port_linux/src/backend_main.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "f07868fcc0ce0d73d9a4a2b11fe89dbf8d1bceb4c6d2cbf0e5e30c8676523f08"
+    },
+    "apps/lv_port_linux/src/platform/a133/platform_capabilities_a133.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "b0870193423f26c75ed8f52f498f18043f4f43974f8cc01a90da9f5d1be2789f"
+    },
+    "apps/lv_port_linux/src/platform/platform_capabilities.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "bb38d4247cc8004735a7e2342cfabd2e9a5c502b99425bad6313c1d3b6c7a1b8"
+    },
+    "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "462339f2fd221eb091c447e09bc6ba47a2d39f61acfb6c3c8de880b66b9e8c0b"
+    },
+    "apps/lv_port_linux/src/system/bluez_player_monitor.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "a1e5923e18c47032113a6bfeff0e6900166ccd7a26c6aba7ddb98160656473cd"
+    },
+    "apps/lv_port_linux/src/system/led_strip_hal.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "840e0d648fa5c0ddb7e3dd816f179226ce8d24bbf794bd22751dd657557acb31"
+    },
+    "apps/lv_port_linux/src/system/service_ai_runtime.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "225a3825c0460851b7d943e83ad27e1f59bc9f8862a0043ad087d13633e2dc72"
+    },
+    "apps/lv_port_linux/src/system/service_bt.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "f5704a88928b21a27c26efac5e9ec4e8961921bda03cae89e50f30877c43cb28"
+    },
+    "apps/lv_port_linux/src/system/service_cloud.c": {
+      "sdk_profiles": [
+        "private"
+      ],
+      "sha256": "eec4529aef64b0dc57abd93748ed90d1ac510e0f74d58515a8343cc39be8fcde"
+    },
+    "apps/lv_port_linux/src/system/service_cloud_stub.c": {
+      "sdk_profiles": [
+        "public"
+      ],
+      "sha256": "ecc73488ed99dd42575a76d1ebf16a758b44e61798cd9a6268774536f67680e8"
+    },
+    "apps/lv_port_linux/src/system/service_cloud_validation.c": {
+      "sdk_profiles": [
+        "private"
+      ],
+      "sha256": "4c237b45d55328db1a93cffa969b35b3de1f6fcf4a6c1f33adcc06e86171b8af"
+    },
+    "apps/lv_port_linux/src/system/service_hdmi_preview.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "eda96c496ac612bf66b9c839b312ac9c69178eedcd42055e944923632e981c3f"
+    },
+    "apps/lv_port_linux/src/system/service_led.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "2756ab7fa1787e57292f8c25c73a6e0d99de28ed527190677447b940162f26ef"
+    },
+    "apps/lv_port_linux/src/system/service_ota.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "43f3cc9be60b5716821a6927a71caad8b408391f22f6046320eece18783d46ae"
+    },
+    "apps/lv_port_linux/src/system/service_sensor.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "cafcab4053e703e5f62def90021bbaf14e566b4c6a55067166174a87b9057a6e"
+    },
+    "apps/lv_port_linux/src/system/service_time.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "09fa5a11df094dd862cc178704c50bcd7f4ce5a88076307bf15562ebf01bdab5"
+    },
+    "apps/lv_port_linux/src/system/service_video.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "b32df0beb4295eaa0d212b1d761c0096e45190b4cacff419ab1798469772d1e4"
+    },
+    "apps/lv_port_linux/src/system/service_wifi.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "febc601078d908399b35bed45d8450c68c970b5be091a11d501c52dded312c0b"
+    },
+    "apps/lv_port_linux/src/system/wifi_hal.c": {
+      "sdk_profiles": [
+        "private",
+        "public"
+      ],
+      "sha256": "75e9d4f153e729499764ccab018707bca8832135c2531da2396b468af1d0b55c"
+    }
+  },
   "schema_version": 1,
   "scopes": [
     "apps/lv_port_linux/src/system",

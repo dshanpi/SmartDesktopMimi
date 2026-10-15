@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "summary": "退休23个上层后端C副本，保留SDK实现测试",
+  "context": "全部23原字节已在SDK958核验；28边界回归通过，完整受影响检查运行中",
+  "next_steps": "读取现有平台回归结果，修复失败，实际上层编译并记录",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-055",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-055.md",
+      "scope": "实现源退休与测试来源迁移",
+      "invariants": "接口/共享源不变，失败不删，缺SDK not_run，错误SDK failclosed",
+      "paths": [
+        "apps/lv_port_linux/CMakeLists.txt",
+        "apps/lv_port_linux/src/apps/video/tplayer_wrapper.c",
+        "apps/lv_port_linux/src/backend/backend_command_router.c",
+        "apps/lv_port_linux/src/backend/backend_runtime.c",
+        "apps/lv_port_linux/src/backend/backend_v2_server.c",
+        "apps/lv_port_linux/src/backend_main.c",
+        "apps/lv_port_linux/src/platform/a133/platform_capabilities_a133.c",
+        "apps/lv_port_linux/src/platform/platform_capabilities.c",
+        "apps/lv_port_linux/src/platform/wifi/aw_wifimg_driver.c",
+        "apps/lv_port_linux/src/system/bluez_player_monitor.c",
+        "apps/lv_port_linux/src/system/led_strip_hal.c",
+        "apps/lv_port_linux/src/system/service_ai_runtime.c",
+        "apps/lv_port_linux/src/system/service_bt.c",
+        "apps/lv_port_linux/src/system/service_cloud.c",
+        "apps/lv_port_linux/src/system/service_cloud_stub.c",
+        "apps/lv_port_linux/src/system/service_cloud_validation.c",
+        "apps/lv_port_linux/src/system/service_hdmi_preview.c",
+        "apps/lv_port_linux/src/system/service_led.c",
+        "apps/lv_port_linux/src/system/service_ota.c",
+        "apps/lv_port_linux/src/system/service_sensor.c",
+        "apps/lv_port_linux/src/system/service_time.c",
+        "apps/lv_port_linux/src/system/service_video.c",
+        "apps/lv_port_linux/src/system/service_wifi.c",
+        "apps/lv_port_linux/src/system/wifi_hal.c",
+        "docs/change-gates/REQ-MIMI-SPLIT-055.md",
+        "docs/update/source-ownership.json",
+        "tests/architecture/test_architecture.py",
+        "tests/platform/test_host_integration.py",
+        "tests/update/test_source_ownership.py",
+        "tools/update/source_ownership.py",
+        "tests/sdk_source.py",
+        "tests/update/test_sdk_source.py",
+        "docs/change-gates/batches/split055-implementation-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "迁移与边界",
+          "status": "passed",
+          "scope": "23实际SDK源原字节和28回归",
+          "evidence": "output/backend-source-retirement-20261015/retirement-before.json; boundary-r2.log"
+        },
+        {
+          "name": "平台与新编译",
+          "status": "not_run",
+          "scope": "正在执行/尚未执行",
+          "evidence": "output/backend-source-retirement-20261015",
+          "reason": "本批源提交后接续，不借用旧候选通过"
+        }
+      ]
+    }
+  ]
+}

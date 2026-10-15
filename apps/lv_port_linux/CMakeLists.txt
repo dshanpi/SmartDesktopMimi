@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.11)
 project(lvgl)
 
 option(MIMI_ENABLE_VOICE_CONTROL "Build the optional voice navigation app" OFF)
-option(MIMI_APPLICATION_ONLY "Configure only the independently released desktop" OFF)
+option(MIMI_APPLICATION_ONLY "Configure only the independently released desktop" ON)
+if(NOT MIMI_APPLICATION_ONLY)
+    message(FATAL_ERROR "Backend moved to SDK; use scripts/build_apps.sh for system builds")
+endif()
 
 option(LV_USE_SUNXI_G2D "Allwinner sunxi-g2d draw unit (FILL acceleration, RGB565)" OFF)
 option(AITVBOX_ENABLE_100ASK_CLOUD
@@ -26,47 +29,13 @@ if(AITVBOX_PLATFORM STREQUAL "ubuntu-host")
     endif()
     set(AITVBOX_PLATFORM_SOURCES "")
 elseif(AITVBOX_PLATFORM STREQUAL "a133")
-    set(AITVBOX_PLATFORM_SOURCES
-        src/platform/a133/platform_capabilities_a133.c)
+    set(AITVBOX_PLATFORM_SOURCES "")
 else()
     message(FATAL_ERROR
         "AITVBOX_PLATFORM=${AITVBOX_PLATFORM} has no adapter yet. "
         "Add src/platform/${AITVBOX_PLATFORM}/ and its toolchain profile.")
 endif()
 
-if(AITVBOX_ENABLE_100ASK_CLOUD)
-    if(NOT IS_ABSOLUTE "${AITVBOX_100ASK_SDK_ROOT}")
-        message(FATAL_ERROR
-            "AITVBOX_100ASK_SDK_ROOT must be an absolute path when "
-            "AITVBOX_ENABLE_100ASK_CLOUD=ON")
-    endif()
-    get_filename_component(AITVBOX_100ASK_SDK_REAL
-        "${AITVBOX_100ASK_SDK_ROOT}" REALPATH)
-    get_filename_component(AITVBOX_PRODUCT_ROOT
-        "${CMAKE_SOURCE_DIR}/../.." REALPATH)
-    string(FIND "${AITVBOX_100ASK_SDK_REAL}/"
-        "${AITVBOX_PRODUCT_ROOT}/" AITVBOX_100ASK_IN_PRODUCT_TREE)
-    if(AITVBOX_100ASK_IN_PRODUCT_TREE EQUAL 0)
-        message(FATAL_ERROR
-            "AITVBOX_100ASK_SDK_ROOT must be outside the product source tree; "
-            "private SDK files must never be consumed from a public checkout")
-    endif()
-    foreach(required_file IN ITEMS include/100ask_iot.h src/100ask_iot.c)
-        if(NOT EXISTS "${AITVBOX_100ASK_SDK_REAL}/${required_file}")
-            message(FATAL_ERROR
-                "Private 100ask SDK is incomplete: missing "
-                "${AITVBOX_100ASK_SDK_REAL}/${required_file}")
-        endif()
-    endforeach()
-    set(AITVBOX_CLOUD_SOURCES
-        src/system/service_cloud.c
-        src/system/service_cloud_validation.c
-        "${AITVBOX_100ASK_SDK_REAL}/src/100ask_iot.c")
-    message(STATUS "100ask cloud provider: enabled (private SDK outside public tree)")
-else()
-    set(AITVBOX_CLOUD_SOURCES src/system/service_cloud_stub.c)
-    message(STATUS "100ask cloud provider: disabled (public stub)")
-endif()
 
 add_definitions(-D_GNU_SOURCE)
 if(NOT AITVBOX_PLATFORM STREQUAL "ubuntu-host")
@@ -252,24 +221,6 @@ endif()
 
 # 假设 sysroot 环境变量已设置，CMake 会自动在 sysroot 中查找
 # wifimg 库名为 libwifimg-v2.0.so，需要明确指定
-if(NOT MIMI_APPLICATION_ONLY)
-find_library(WIFIMG_LIB NAMES wifimg-v2.0 wifimg)
-find_library(WIFIMG_LOG_LIB log) # 假设依赖 liblog (从 demo 来看可能需要)
-
-if (WIFIMG_LIB)
-    message(STATUS "Found wifimg: ${WIFIMG_LIB}")
-    list(APPEND BACKEND_LIBS ${WIFIMG_LIB})
-else()
-    message(WARNING "wifimg library not found. WiFi features will be disabled or linking may fail.")
-    # 尝试直接链接具体的库名
-    list(APPEND BACKEND_LIBS wifimg-v2.0)
-endif()
-
-# 如果有 liblog 也链接上
-if (WIFIMG_LOG_LIB)
-    list(APPEND BACKEND_LIBS ${WIFIMG_LOG_LIB})
-endif()
-endif() # platform-only Wi-Fi provider
 
 # -----------------------------------------------------------------------------
 # Wayland Support
@@ -580,162 +531,6 @@ list(FILTER APP_SOURCES EXCLUDE REGEX "src/apps/video/tplayer_wrapper\\.c$")
 # -----------------------------------------------------------------------------
 # TPlayer Support
 # -----------------------------------------------------------------------------
-if(NOT MIMI_APPLICATION_ONLY)
-# TPlayer dependencies: libtplayer, libcedarx (cdx_base), librt, libstdc++
-find_library(TPLAYER_LIB NAMES tplayer)
-find_library(CDX_BASE_LIB NAMES cdx_base)
-find_library(ASOUND_LIB NAMES asound)
-
-# Manually add TPlayer include path
-# Based on search: /home/ubuntu/A133-Tina5.0-v0.9/out/a133/b6/openwrt/staging_dir/target/usr/include/allwinner
-# And vdecoder.h in: /home/ubuntu/A133-Tina5.0-v0.9/out/a133/b6/openwrt/staging_dir/target/usr/include/allwinner/include
-set(TPLAYER_INCLUDE_DIR 
-    "${SYSROOT_PATH}/usr/include/allwinner"
-    "${SYSROOT_PATH}/usr/include/allwinner/include"
-)
-
-if (TPLAYER_LIB)
-    message(STATUS "Found TPlayer: ${TPLAYER_LIB}")
-    list(APPEND TPLAYER_LIBS ${TPLAYER_LIB})
-else()
-    message(WARNING "TPlayer lib not found, assuming tplayer")
-    list(APPEND TPLAYER_LIBS tplayer)
-endif()
-
-if (CDX_BASE_LIB)
-    message(STATUS "Found CedarX Base: ${CDX_BASE_LIB}")
-    list(APPEND TPLAYER_LIBS ${CDX_BASE_LIB})
-else()
-    message(WARNING "CedarX Base lib not found, assuming cdx_base")
-    list(APPEND TPLAYER_LIBS cdx_base)
-endif()
-
-# -----------------------------------------------------------------------------
-# Build Backend Process (lv_backend)
-# -----------------------------------------------------------------------------
-# Backend 独立进程，负责业务逻辑 (Wi-Fi, 音乐等)
-# 它不依赖 LVGL 图形库，只依赖 middleware 和系统库
-
-add_executable(lv_backend
-    src/backend_main.c
-    src/backend/backend_command_router.c
-    src/backend/backend_runtime.c
-    src/backend/backend_v2_server.c
-    src/platform/platform_capabilities.c
-    ${AITVBOX_PLATFORM_SOURCES}
-    src/middleware/middleware.c
-    src/ipc/ipc_socket.c
-    src/ipc/ipc_v2.c
-    src/system/backlight_control.c
-    src/system/volume_control.c
-    src/system/led_strip_hal.c
-    src/system/service_led.c
-    src/system/config/app_config.c
-    src/system/settings.c
-    src/system/log/app_log.c
-    src/system/wifi_hal.c
-    src/system/service_wifi.c
-    src/system/service_time.c
-    src/system/service_video.c
-    src/system/service_sensor.c
-    src/system/bluez_player_monitor.c
-    src/system/bt_pcm_player.c
-    src/system/service_bt.c
-    src/system/service_ai_runtime.c
-    src/system/service_hdmi_preview.c
-    src/system/service_ota.c
-    ${AITVBOX_CLOUD_SOURCES}
-    src/platform/wifi/aw_wifimg_driver.c
-    src/apps/video/tplayer_wrapper.c
-)
-
-# -----------------------------------------------------------------------------
-# btmanager Support (Bluetooth A2DP Sink)
-# -----------------------------------------------------------------------------
-find_library(BTMG_LIB NAMES btmg)
-find_library(BT_SHARED_MAINLOOP_LIB NAMES shared-mainloop)
-find_library(BLUETOOTH_INTERNAL_LIB NAMES bluetooth-internal)
-find_library(BLUETOOTH_LIB NAMES bluetooth)
-find_library(GIO_LIB NAMES gio-2.0)
-find_library(GOBJECT_LIB NAMES gobject-2.0)
-find_library(GLIBCORE_LIB NAMES glib-2.0)
-find_library(SBC_LIB NAMES sbc)
-find_library(JSONC_LIB NAMES json-c)
-find_library(CURL_LIB NAMES curl REQUIRED)
-find_library(DBUS_LIB NAMES dbus-1)
-find_path(DBUS_INCLUDE_DIR NAMES dbus/dbus.h
-    HINTS "${SYSROOT_PATH}/usr/include/dbus-1.0"
-    PATH_SUFFIXES dbus-1.0)
-find_path(DBUS_ARCH_INCLUDE_DIR NAMES dbus/dbus-arch-deps.h
-    HINTS "${SYSROOT_PATH}/usr/lib/dbus-1.0/include"
-    PATH_SUFFIXES dbus-1.0/include)
-find_library(READLINE_LIB NAMES readline)
-find_library(NCURSES_LIB NAMES ncurses)
-find_library(WIRELESSCOM_LIB NAMES wirelesscom)
-
-# OTA 与可选云 provider 的 HTTPS 请求使用 libcurl。
-find_library(CURL_LIB NAMES curl)
-
-if(AITVBOX_ENABLE_100ASK_CLOUD)
-    find_library(MOSQUITTO_LIB NAMES mosquitto)
-    if(NOT MOSQUITTO_LIB)
-        message(FATAL_ERROR
-            "AITVBOX_ENABLE_100ASK_CLOUD=ON requires libmosquitto in the target sysroot")
-    endif()
-endif()
-
-set(BT_LIBS
-    ${BTMG_LIB}
-    ${BT_SHARED_MAINLOOP_LIB}
-    ${BLUETOOTH_INTERNAL_LIB}
-    ${BLUETOOTH_LIB}
-    ${GIO_LIB}
-    ${GOBJECT_LIB}
-    ${GLIBCORE_LIB}
-    ${SBC_LIB}
-    ${JSONC_LIB}
-    ${DBUS_LIB}
-    ${READLINE_LIB}
-    ${NCURSES_LIB}
-    ${WIRELESSCOM_LIB}
-)
-
-target_link_libraries(lv_backend
-    PRIVATE
-    pthread
-    rt
-    m
-    ${ASOUND_LIB}
-    ${BACKEND_LIBS} # 包含 wifimg, log 等
-    ${TPLAYER_LIBS}
-    ${BT_LIBS}
-    ${CURL_LIB}
-)
-
-if(AITVBOX_ENABLE_100ASK_CLOUD)
-    target_link_libraries(lv_backend PRIVATE ${MOSQUITTO_LIB})
-endif()
-
-target_include_directories(lv_backend PRIVATE
-    ${DBUS_INCLUDE_DIR}
-    ${DBUS_ARCH_INCLUDE_DIR}
-)
-
-target_include_directories(lv_backend SYSTEM PRIVATE
-    ${TPLAYER_INCLUDE_DIR}
-    "${SYSROOT_PATH}/usr/include"
-)
-
-if(AITVBOX_ENABLE_100ASK_CLOUD)
-    target_include_directories(lv_backend PRIVATE
-        "${AITVBOX_100ASK_SDK_REAL}/include")
-endif()
-
-# -----------------------------------------------------------------------------
-# Build UI Process (lvglsim)
-# -----------------------------------------------------------------------------
-# UI 进程，负责界面显示和用户交互
-endif() # NOT MIMI_APPLICATION_ONLY
 find_library(ASOUND_LIB NAMES asound)
 find_library(JSONC_LIB NAMES json-c)
 find_library(CURL_LIB NAMES curl REQUIRED)
