@@ -1,0 +1,1713 @@
+{
+  "requirement": "REQ-MIMI-TRACE-059",
+  "recorded_after_implementation": true,
+  "base": "c851ad0f15641532ebe0c497f71b5cf9006969d0",
+  "reviewed_head": "c81e23b1f4176902dde13dab10de536865207331",
+  "paths": {
+    ".github/workflows/application-build.yml": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    ".github/workflows/application-publish.yml": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    ".github/workflows/application-update.yml": [
+      {
+        "commit": "a01bf7fe48935ff67d5fc1169d1ae2b255e5b91b",
+        "subject": "Check protected ownership in final system filesystem images"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    ".github/workflows/public-ci.yml": [
+      {
+        "commit": "a01bf7fe48935ff67d5fc1169d1ae2b255e5b91b",
+        "subject": "Check protected ownership in final system filesystem images"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    ".gitignore": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "README.en.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/platform_desktop_update.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/platform_desktop_update_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/version/DesktopUpdate.tsx": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/ui/src/layout/components_setting/version/VersionContent.tsx": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/ui/src/locales/en.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/ui/src/locales/zh.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/ui/tests/update-reliability.mjs": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/upstream/web.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/video/Makefile": [
+      {
+        "commit": "b8108fcb654a5faa719703b44ce5dca1de383266",
+        "subject": "Release HDMI capture when display stream and snapshot consumers are idle"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/video/capture_cache_sync.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/ipkvm/video/capture_supervisor.h": [
+      {
+        "commit": "b8108fcb654a5faa719703b44ce5dca1de383266",
+        "subject": "Release HDMI capture when display stream and snapshot consumers are idle"
+      }
+    ],
+    "apps/ipkvm/video/main.cpp": [
+      {
+        "commit": "b8108fcb654a5faa719703b44ce5dca1de383266",
+        "subject": "Release HDMI capture when display stream and snapshot consumers are idle"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/configs/ubuntu-host.defaults": [
+      {
+        "commit": "7985eb93eb3779988ad64cd34430c2bc5bdca0de",
+        "subject": "Record per-change gates and add isolated Ubuntu desktop build target"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/ai/ai_app.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/ai/ai_free_chat_view.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/app.h": [
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/bt/bt_app.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c": [
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/iot/iot_app.c": [
+      {
+        "commit": "a2533bc42ac1ac329a0bff5829e1440fc6ccc1bd",
+        "subject": "Keep voice input and IoT confirmation reachable on small screens"
+      },
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/iot/iot_app.h": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/iot/iot_client.c": [
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/iot/iot_client.h": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/iot/iot_json.h": [
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/ota/ota_app.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/pairing/pairing_app.h": [
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/setting/setting_app.c": [
+      {
+        "commit": "fe58653135118be74f3ea4da01a787f4ceccbea3",
+        "subject": "fix(pairing): route settings to explicit pairing flow"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/user/user_app.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/video/video_app.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/voice/README.md": [
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      },
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/voice/voice_app.c": [
+      {
+        "commit": "a2533bc42ac1ac329a0bff5829e1440fc6ccc1bd",
+        "subject": "Keep voice input and IoT confirmation reachable on small screens"
+      },
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      },
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/voice/voice_app.h": [
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/voice/voice_command.c": [
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/voice/voice_command.h": [
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      }
+    ],
+    "apps/lv_port_linux/src/apps/wifi/wifi_app.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/lib/indev_backends/evdev.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/main.c": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/platform/ubuntu/desktop_controls.c": [
+      {
+        "commit": "7985eb93eb3779988ad64cd34430c2bc5bdca0de",
+        "subject": "Record per-change gates and add isolated Ubuntu desktop build target"
+      }
+    ],
+    "apps/lv_port_linux/src/system/app_manager.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/app_manager.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/app_registry.c": [
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/app_registry.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/backend_types.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/ota_slot.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/service_bt.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/service_hdmi_preview.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/service_sensor.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/settings.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/system/settings.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/cloud_ota_modal.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_all_apps.c": [
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_all_apps.h": [
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_capabilities.h": [
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_clock.c": [
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      },
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "89ebaff9af61c67f4d8a59599c2bff24db156055",
+        "subject": "fix(ui): route home update tile to desktop application updater"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_dock.c": [
+      {
+        "commit": "8529f98a01a65831860a4bc60fe4eb1a83455450",
+        "subject": "Match approved home icons and show adaptive page lines"
+      },
+      {
+        "commit": "3fe8ceb8b772111ed418841a9faaca17d65032d8",
+        "subject": "fix(desktop): prevent pointer focus and momentum from skipping app pages"
+      },
+      {
+        "commit": "8c4f111a6a8dcfb09f4e5d016601799aac3e7e34",
+        "subject": "fix(desktop): keep swipeable application strip on home screen"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_dock.h": [
+      {
+        "commit": "8c4f111a6a8dcfb09f4e5d016601799aac3e7e34",
+        "subject": "fix(desktop): keep swipeable application strip on home screen"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_health.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_home_tokens.h": [
+      {
+        "commit": "8c4f111a6a8dcfb09f4e5d016601799aac3e7e34",
+        "subject": "fix(desktop): keep swipeable application strip on home screen"
+      },
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_status_bar.c": [
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      },
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_update.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/desktop_update.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/display_profile.c": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/display_profile.h": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/images/sleeping_cat.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/lockscreen.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/lockscreen.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/lockscreen_3d.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/lockscreen_3d.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/lockscreen_disabled.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/mimi_ui.c": [
+      {
+        "commit": "a2533bc42ac1ac329a0bff5829e1440fc6ccc1bd",
+        "subject": "Keep voice input and IoT confirmation reachable on small screens"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/mimi_ui.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/theme/theme.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/theme/theme.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/theme/theme_types.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/ui.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/ui.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/ui_components.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/ui_fonts.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/ui_i18n.c": [
+      {
+        "commit": "fe58653135118be74f3ea4da01a787f4ceccbea3",
+        "subject": "fix(pairing): route settings to explicit pairing flow"
+      },
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      },
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "16ce4d2d86fc0607624e9d216e3b1fd332d52b76",
+        "subject": "fix(ui): label desktop update contents explicitly"
+      },
+      {
+        "commit": "89ebaff9af61c67f4d8a59599c2bff24db156055",
+        "subject": "fix(ui): route home update tile to desktop application updater"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "apps/lv_port_linux/src/ui/ui_i18n.h": [
+      {
+        "commit": "fe58653135118be74f3ea4da01a787f4ceccbea3",
+        "subject": "fix(pairing): route settings to explicit pairing flow"
+      },
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      },
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/architecture.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/change-gates/REQ-MIMI-BUILD-017.md": [
+      {
+        "commit": "0535803ceeaabdce6929a86d2c5ff0d51d294b23",
+        "subject": "Bind Ubuntu build gate to verified results and remaining failures"
+      },
+      {
+        "commit": "7985eb93eb3779988ad64cd34430c2bc5bdca0de",
+        "subject": "Record per-change gates and add isolated Ubuntu desktop build target"
+      }
+    ],
+    "docs/change-gates/REQ-MIMI-UI-016.md": [
+      {
+        "commit": "7985eb93eb3779988ad64cd34430c2bc5bdca0de",
+        "subject": "Record per-change gates and add isolated Ubuntu desktop build target"
+      }
+    ],
+    "docs/change-gates/REQ-MIMI-UI-018.md": [
+      {
+        "commit": "2541ed95a05214bd914d391a0189cff45cb31454",
+        "subject": "docs(gates): bind HDMI capability checks to actual build evidence"
+      },
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      }
+    ],
+    "docs/change-gates/REQ-MIMI-UPDATE-019.md": [
+      {
+        "commit": "33d10786ba6c42f41a558cbb605adadfe0019312",
+        "subject": "docs(gates): record rc17 installation and incomplete pairing input acceptance"
+      },
+      {
+        "commit": "fe58653135118be74f3ea4da01a787f4ceccbea3",
+        "subject": "fix(pairing): route settings to explicit pairing flow"
+      }
+    ],
+    "docs/cloud.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/en/architecture.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/en/build-and-release.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/next-phase-ai-desktop-requirements.md": [
+      {
+        "commit": "8529f98a01a65831860a4bc60fe4eb1a83455450",
+        "subject": "Match approved home icons and show adaptive page lines"
+      },
+      {
+        "commit": "8c4f111a6a8dcfb09f4e5d016601799aac3e7e34",
+        "subject": "fix(desktop): keep swipeable application strip on home screen"
+      },
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "bb82184ee41027431dad6493d115c96df567a725",
+        "subject": "fix(packaging): declare signed factory desktop runtime dependencies"
+      }
+    ],
+    "docs/ota.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/release.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/tuya-iot-dp-schema.md": [
+      {
+        "commit": "0663b3615adf9a0d999a45e17a77a84f215f6c20",
+        "subject": "Restore existing Tuya DP contract inputs omitted during source migration"
+      }
+    ],
+    "docs/tuyaopen.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/update/IMPLEMENTATION.md": [
+      {
+        "commit": "ee9148f6d42f9932a8fe448c95439b591f10ad2e",
+        "subject": "docs: record complete product build and blocked hardware acceptance"
+      },
+      {
+        "commit": "a266f022385a60605210d042c8a0b9d655b09626",
+        "subject": "docs: record rc6 acceptance and unresolved product delivery gates"
+      },
+      {
+        "commit": "624bd3f7781b36efa294533b530c40a2d1e0087e",
+        "subject": "docs: record signed rc5 installation and real desktop update navigation"
+      },
+      {
+        "commit": "d3e5f351c56bd266ecf15fb187150310cc7f6e90",
+        "subject": "docs: record actual A133 upgrade rollback and conditional power loss evidence"
+      },
+      {
+        "commit": "d392224306ae2b021d240c86ca87ea69abe9454e",
+        "subject": "Record signed application candidate evidence and signing continuation policy"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/update/RELEASE-RUNBOOK.md": [
+      {
+        "commit": "17d50a960f6f49a846694b06ef9bdfe1fdab739f",
+        "subject": "build: reject missing OpenWrt product package metadata"
+      },
+      {
+        "commit": "4d1739d23ed0c92203824ab54ad373f65672a44d",
+        "subject": "fix(update): allow desktop startup before system health commit lock"
+      },
+      {
+        "commit": "b7a9dcfab9c5ecd8d79caf044a61127e10ecc9f2",
+        "subject": "docs: specify measured A133 system identity and OTA baseline"
+      },
+      {
+        "commit": "23ec61689c5852fafd42501fb1e7a32e59369590",
+        "subject": "build: verify restored SDK packing inputs before product compilation"
+      },
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      },
+      {
+        "commit": "b6dc1879fea4fbaf0328bb53d2968562d7ae74a2",
+        "subject": "Enforce application source ownership and freeze legacy platform clients"
+      },
+      {
+        "commit": "d1aa48b5ca89e1ff9dde4e658caf3b38ae7196f7",
+        "subject": "Require existing repo overlay format for private SDK deltas"
+      },
+      {
+        "commit": "39743cbda7a1251aff6569c7b5ffa7a88f20ac3b",
+        "subject": "Record priority private SDK source upload authorization"
+      },
+      {
+        "commit": "0a3c6a8681572bbda8dcbc48c9dd0466592cbbee",
+        "subject": "Block firmware packing on filesystem integrity errors"
+      },
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      },
+      {
+        "commit": "a01bf7fe48935ff67d5fc1169d1ae2b255e5b91b",
+        "subject": "Check protected ownership in final system filesystem images"
+      },
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/update/application-manifest.schema.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/update/device.schema.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/update/platform-contract-lock.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/update/updater.example.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/user-app-development-guide.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/zh-CN/architecture.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/zh-CN/build-and-release.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "docs/zh-CN/capture-daemon.md": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "integrations/tuyaopen/config/aitvbox-tuya-dp-schema.json": [
+      {
+        "commit": "0663b3615adf9a0d999a45e17a77a84f215f6c20",
+        "subject": "Restore existing Tuya DP contract inputs omitted during source migration"
+      }
+    ],
+    "packaging/aitvbox-mimi-update/Makefile": [
+      {
+        "commit": "640c026050e9b8184c512b9dfb3ccf8d2ce8e0c1",
+        "subject": "fix(system): declare factory curl dependency and preflight Tuya tools"
+      },
+      {
+        "commit": "bb82184ee41027431dad6493d115c96df567a725",
+        "subject": "fix(packaging): declare signed factory desktop runtime dependencies"
+      },
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "packaging/aitvbox-mimi-update/files/mimi-desktop.init": [
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "packaging/aitvbox-mimi-update/files/mimi-platform-provider": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "packaging/aitvbox-mimi-update/files/mimi-update.init": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "packaging/aitvbox-suite/Makefile": [
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "packaging/aitvbox-suite/files/aitvbox.init": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "packaging/aitvbox-suite/files/start-ui.sh": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "platform/app-sdk/manifest.schema.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "scripts/audit_english_ui.py": [
+      {
+        "commit": "5118b936f0977046ea9b6112b8a6510ddeecfa9c",
+        "subject": "fix(build): audit bilingual helpers and voice input vocabulary"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "scripts/audit_sdk.sh": [
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      }
+    ],
+    "scripts/auto_build_package.sh": [
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      }
+    ],
+    "scripts/build_mimi_updater.sh": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "scripts/clean_sdk_product_artifacts.sh": [
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      }
+    ],
+    "scripts/prepare_tuyaopen_build_root.sh": [
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      }
+    ],
+    "scripts/render_ui_review.py": [
+      {
+        "commit": "66cd09008a804946581370bbc5c76727202fab6b",
+        "subject": "fix(ui): reflect unsupported HDMI in native Ubuntu desktop"
+      },
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      }
+    ],
+    "scripts/toggle_product.sh": [
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      }
+    ],
+    "scripts/validate_tuya_dp_schema.py": [
+      {
+        "commit": "0663b3615adf9a0d999a45e17a77a84f215f6c20",
+        "subject": "Restore existing Tuya DP contract inputs omitted during source migration"
+      }
+    ],
+    "services/mimi-iot-bridge/README.md": [
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "services/mimi-iot-bridge/go.mod": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "services/mimi-iot-bridge/main.go": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "services/mimi-iot-bridge/tuya.go": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "services/mimi-iot-bridge/tuya_test.go": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "services/mimi-update/go.mod": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/engine.go": [
+      {
+        "commit": "4d1739d23ed0c92203824ab54ad373f65672a44d",
+        "subject": "fix(update): allow desktop startup before system health commit lock"
+      },
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/factory.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/github.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/manifest.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/pack.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/package.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/platform_health_test.go": [
+      {
+        "commit": "8b06a6b6de52b90638b99850229eb85415b765ee",
+        "subject": "Require complete activity status before accepting desktop health"
+      }
+    ],
+    "services/mimi-update/update/policy.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/release_identity.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/release_index.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/release_index_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/server.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/service_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/status_concurrency_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/storage.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/storage_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/system.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/system_geometry.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/system_github.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/system_install.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/system_ota_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/unified_release_test.go": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "services/mimi-update/update/update_test.go": [
+      {
+        "commit": "4d1739d23ed0c92203824ab54ad373f65672a44d",
+        "subject": "fix(update): allow desktop startup before system health commit lock"
+      },
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/architecture/fixtures/evdev_calibration.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/architecture/fixtures/native_lockscreen_checks.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/architecture/test_desktop_home.py": [
+      {
+        "commit": "fe58653135118be74f3ea4da01a787f4ceccbea3",
+        "subject": "fix(pairing): route settings to explicit pairing flow"
+      },
+      {
+        "commit": "8c4f111a6a8dcfb09f4e5d016601799aac3e7e34",
+        "subject": "fix(desktop): keep swipeable application strip on home screen"
+      },
+      {
+        "commit": "6587d57a3977b467ae8fd875e9ad314317d9c664",
+        "subject": "Adapt home and launcher geometry to narrow and short displays"
+      },
+      {
+        "commit": "eaa3d7751fabe8c08ddecbbbc82ecc6a63666587",
+        "subject": "Add approved app drawer and credential-free pairing desktop"
+      },
+      {
+        "commit": "2787e157120074fef578f167e8ba037809d9c5df",
+        "subject": "test(ui): retain desktop update routing regression after home correction"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/architecture/test_evdev_calibration.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/architecture/test_ui_localization.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/iot/test_client.py": [
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      },
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "tests/iot/test_response.py": [
+      {
+        "commit": "b2f3e9e2c8603ff57b4966f86ccb91d82547bea4",
+        "subject": "Validate IoT acknowledgements and reject stale voice proposals"
+      }
+    ],
+    "tests/platform/test_capture_cache_sync.cpp": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/platform/test_capture_supervisor.cpp": [
+      {
+        "commit": "b8108fcb654a5faa719703b44ce5dca1de383266",
+        "subject": "Release HDMI capture when display stream and snapshot consumers are idle"
+      }
+    ],
+    "tests/sdkbuild/test_configuration.py": [
+      {
+        "commit": "ebd8e2ae995ede2357034eb721a4ffe322c640cd",
+        "subject": "Add native Smart Home controls and developer SDK profile checks"
+      }
+    ],
+    "tests/sdkbuild/test_deb.py": [
+      {
+        "commit": "0697b63d6bdb1e6ee17a7ead040b3f096e2f8073",
+        "subject": "Isolate SDK compilation from host search overrides"
+      },
+      {
+        "commit": "b3a0f214a96b022c7f8ddf5381ad9a7048d4955d",
+        "subject": "Add explicit Debian SDK metadata and signed deb transport packaging"
+      }
+    ],
+    "tests/update/provenance_fixture.py": [
+      {
+        "commit": "b6dc1879fea4fbaf0328bb53d2968562d7ae74a2",
+        "subject": "Enforce application source ownership and freeze legacy platform clients"
+      },
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_application_build.py": [
+      {
+        "commit": "b6dc1879fea4fbaf0328bb53d2968562d7ae74a2",
+        "subject": "Enforce application source ownership and freeze legacy platform clients"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_baseline.py": [
+      {
+        "commit": "a01bf7fe48935ff67d5fc1169d1ae2b255e5b91b",
+        "subject": "Check protected ownership in final system filesystem images"
+      },
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_build_application.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_external_inputs.py": [
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      }
+    ],
+    "tests/update/test_filesystem_image.py": [
+      {
+        "commit": "0a3c6a8681572bbda8dcbc48c9dd0466592cbbee",
+        "subject": "Block firmware packing on filesystem integrity errors"
+      }
+    ],
+    "tests/update/test_openwrt_metadata.py": [
+      {
+        "commit": "17d50a960f6f49a846694b06ef9bdfe1fdab739f",
+        "subject": "build: reject missing OpenWrt product package metadata"
+      }
+    ],
+    "tests/update/test_ota_slot.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_pack_inputs.py": [
+      {
+        "commit": "23ec61689c5852fafd42501fb1e7a32e59369590",
+        "subject": "build: verify restored SDK packing inputs before product compilation"
+      }
+    ],
+    "tests/update/test_prepare_release.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_release_collection.py": [
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_release_gate.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_sdk_snapshot.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/test_system_record.py": [
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      }
+    ],
+    "tests/update/test_ui_audit.py": [
+      {
+        "commit": "5118b936f0977046ea9b6112b8a6510ddeecfa9c",
+        "subject": "fix(build): audit bilingual helpers and voice input vocabulary"
+      }
+    ],
+    "tests/update/test_unified_release.py": [
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/update/ui-catalog.json": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tests/voice/test_commands.py": [
+      {
+        "commit": "037c88f3823e9ce90303b649438063bd043488b9",
+        "subject": "Add optional voice navigation with expiring local confirmation"
+      }
+    ],
+    "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/include/app_chat_bot.h": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/aitapp/aitapp.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/board/touch_tap.c": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/public_release_audit.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/application_tree.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/baseline.py": [
+      {
+        "commit": "a01bf7fe48935ff67d5fc1169d1ae2b255e5b91b",
+        "subject": "Check protected ownership in final system filesystem images"
+      },
+      {
+        "commit": "02aa46bcb0a1aa58b6a709eed1ebb7d2c4fea6bb",
+        "subject": "Verify updater system integration and hold lock through desktop launch"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/build_application.py": [
+      {
+        "commit": "b6dc1879fea4fbaf0328bb53d2968562d7ae74a2",
+        "subject": "Enforce application source ownership and freeze legacy platform clients"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/build_provenance.py": [
+      {
+        "commit": "b6dc1879fea4fbaf0328bb53d2968562d7ae74a2",
+        "subject": "Enforce application source ownership and freeze legacy platform clients"
+      },
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/check_contracts.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/external_inputs.py": [
+      {
+        "commit": "25ab275a3c460da020653fad364a97d679946f16",
+        "subject": "build: consume external platform libraries and pin vendor input provenance"
+      }
+    ],
+    "tools/update/filesystem_image.py": [
+      {
+        "commit": "0a3c6a8681572bbda8dcbc48c9dd0466592cbbee",
+        "subject": "Block firmware packing on filesystem integrity errors"
+      }
+    ],
+    "tools/update/github_release.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/openwrt_metadata.py": [
+      {
+        "commit": "17d50a960f6f49a846694b06ef9bdfe1fdab739f",
+        "subject": "build: reject missing OpenWrt product package metadata"
+      }
+    ],
+    "tools/update/pack_inputs.py": [
+      {
+        "commit": "23ec61689c5852fafd42501fb1e7a32e59369590",
+        "subject": "build: verify restored SDK packing inputs before product compilation"
+      }
+    ],
+    "tools/update/prepare_release.py": [
+      {
+        "commit": "b6dc1879fea4fbaf0328bb53d2968562d7ae74a2",
+        "subject": "Enforce application source ownership and freeze legacy platform clients"
+      },
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/promote_release.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/publish_draft.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/release_collection.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/release_gate.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/release_identity.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/release_workflow.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/sdk_snapshot.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/swu_package.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/system_record.py": [
+      {
+        "commit": "43f9355d8a17c1fa8b22ad992c5cbfab6e9d89df",
+        "subject": "Generate verified system build records and bind release versions"
+      }
+    ],
+    "tools/update/ui_catalog.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ],
+    "tools/update/validation_report.py": [
+      {
+        "commit": "6f7bff8906f77098934ff10adb1cfc8edf71df69",
+        "subject": "Restore unified update candidate and audit pinned SDK input replay"
+      }
+    ]
+  },
+  "acceptance": "No additional acceptance inferred; see original requirement records and delivery snapshot"
+}

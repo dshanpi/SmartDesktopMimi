@@ -154,3 +154,5 @@ SPLIT056更新：五系统兼容服务8源/许可证迁SDKd9、4260/95标准重�
 - [REQ-MIMI-DELIVERY-058](change-gates/REQ-MIMI-DELIVERY-058.md)：用户授权先同步源码/产物，A133物理验收后置，草稿/远端复核not_run。
 
 SPLIT057完成受影响主机验证：171项0skip、实际stage2同字节、SDK7ed标准4267/95及独立读回passed；物理按058后置，整体未完成。
+
+- [REQ-MIMI-TRACE-059](change-gates/REQ-MIMI-TRACE-059.md)：首次远端全区间212路径历史覆盖补记，保留初次覆盖失败，不冒充历史事前记录或功能验收。
