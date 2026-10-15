@@ -135,6 +135,20 @@ def audit_dependencies(paths, source, sdk, private, origin=None):
     return files
 
 
+def profile_sources(rows, profile, source, private):
+    expected_count = {'private': 32, 'public': 30}[profile]
+    if len(rows) != expected_count:
+        raise ValueError('backend translation unit count does not match selected cloud profile')
+    names = {within(Path(row['file']), source) for row in rows}
+    external = [Path(row['file']) for row in rows if within(Path(row['file']), source) is None]
+    cloud = 'apps/lv_port_linux/src/system/service_cloud'
+    if profile == 'private':
+        if cloud + '.c' not in names or cloud + '_validation.c' not in names or cloud + '_stub.c' in names or external != [private / 'src/100ask_iot.c']:
+            raise ValueError('private cloud source composition mismatch')
+    elif cloud + '_stub.c' not in names or cloud + '.c' in names or cloud + '_validation.c' in names or external:
+        raise ValueError('public profile includes private cloud sources')
+
+
 def stage(args):
     source, sdk, private = [canonical(getattr(args, k)) for k in ('source', 'sdk', 'private_sdk')]
     compiler = sdk_compiler(args.compiler, sdk)
@@ -151,13 +165,16 @@ def stage(args):
     sys.path.insert(0, str(source / 'tools/update'))
     from source_ownership import verify, owner
     policy = verify(source)
-    build = source / 'apps/lv_port_linux/build'
+    build = canonical(args.build_dir) if args.build_dir else source / 'apps/lv_port_linux/build'
     commands_file = build / 'compile_commands.json'
     link_file = build / 'CMakeFiles/lv_backend.dir/link.txt'
     commands = json.loads(regular(commands_file).read_text())
     rows = [c for c in commands if 'CMakeFiles/lv_backend.dir/' in c.get('command', '')]
-    if len(rows) != 32:
-        raise ValueError('reviewed baseline requires exactly 32 backend translation units')
+    profile_sources(rows, args.profile, source, private)
+    cache = (build / 'CMakeCache.txt').read_text()
+    expected_flag = 'ON' if args.profile == 'private' else 'OFF'
+    if 'AITVBOX_ENABLE_100ASK_CLOUD:BOOL=' + expected_flag + '\n' not in cache:
+        raise ValueError('CMake cloud flag differs from explicit component profile')
     output.mkdir(mode=0o700, parents=True)
     (output / 'code').mkdir(mode=0o700)
     roots = dict(SOURCE_ROOT=source, SDK_ROOT=sdk, PRIVATE_SDK=private)
@@ -184,6 +201,8 @@ def stage(args):
         inputs.update(audit_dependencies(paths, source, sdk, private))
         objects[argv[argv.index('-o') + 1]] = '${BUILD_ROOT}/object-' + str(i) + '.o'
         entries.append(dict(source=normalize(str(cfile), roots), flags=[normalize(v, roots) for v in flags]))
+    if args.profile == 'public' and any(key.startswith('private/') for key in inputs):
+        raise ValueError('public component reads private dependency')
     for key, digest in inputs.items():
         if key.startswith('project/'):
             rel = key[len('project/'):]
@@ -211,7 +230,7 @@ def stage(args):
             value = objects[value]
         link_flags.append(normalize(value, roots))
         i += 1
-    recipe = dict(schema_version=1, requirement='REQ-MIMI-SPLIT-053', source_commit=commit, tool_sha256=sha(Path(__file__).resolve()),
+    recipe = dict(schema_version=1, cloud_profile=args.profile, requirement='REQ-MIMI-SPLIT-053', source_commit=commit, tool_sha256=sha(Path(__file__).resolve()),
                   source_ownership_sha256=sha(source / 'docs/update/source-ownership.json'),
                   origin_root=str(source), compiler_sha256=sha(compiler), compiler_target=within(compiler.resolve(), sdk),
                   compile_commands_sha256=sha(commands_file), link_recipe_sha256=sha(link_file),
@@ -257,15 +276,22 @@ def build_component(args):
         paths = dependencies(run([str(compiler), *flags, '-M', '-MT', 'mimi_deps'], output))
         observed.update(audit_dependencies(paths, component / 'code', sdk, private, origin))
         run([str(compiler), *flags, '-c', '-o', str(output / ('object-' + str(i) + '.o'))], output, output / ('compile-' + str(i) + '.log'))
+    if recipe['cloud_profile'] == 'public' and any(key.startswith('private/') for key in observed):
+        raise ValueError('public profile read private dependencies')
     if observed != recipe['inputs']:
         raise ValueError('standalone source/include closure differs from original')
     run([str(compiler), *[expand(v, roots) for v in recipe['link_flags']]], output, output / 'link.log')
     for name, digest in recipe['sources'].items():
         if sha(component / 'code' / name) != digest:
             raise ValueError('component changed during build')
+    for name, digest in expected_external.items():
+        bucket, rel = name.split('/', 1)
+        path = {'sdk': sdk, 'private': private}[bucket] / rel
+        if sha(regular(path)) != digest:
+            raise ValueError('SDK/private input changed during build')
     actual = sha(output / 'lv_backend')
     result = dict(requirement='REQ-MIMI-SPLIT-053', status='passed',
-                  scope='Actual independent 32TU A133 compile/link with audited deps; not device compatibility or completed repository split',
+                  scope='Actual independent A133 compile/link with audited deps; not device compatibility or completed repository split', cloud_profile=recipe['cloud_profile'],
                   source_commit=recipe['source_commit'], recipe_sha256=sha(component / 'provider-recipe.json'),
                   compiler_sha256=recipe['compiler_sha256'], backend_sha256=actual,
                   original_backend_sha256=recipe['original_backend_sha256'], byte_identical=actual == recipe['original_backend_sha256'],
@@ -282,6 +308,8 @@ def main():
     s = commands.add_parser('stage')
     s.add_argument('--source', required=True)
     s.add_argument('--source-commit', required=True)
+    s.add_argument('--profile', choices=['private', 'public'], default='private')
+    s.add_argument('--build-dir')
     b = commands.add_parser('build')
     b.add_argument('--component', required=True)
     for child in (s, b):

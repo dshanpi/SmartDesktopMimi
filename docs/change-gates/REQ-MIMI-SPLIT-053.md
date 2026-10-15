@@ -47,3 +47,8 @@ stage-r3实际passed，复制66个项目源码/头文件、32TU（31项目C+1外
 证据 output/a133-provider-split-20261015/{stage-r1,stage-r2,stage-r3,build-r3}.log、actual-build-readback.json、build-result.json、boundaries-r3.log。输出.delivery/a133-provider-split-r3-20261015与独立build-r3；旧空partial目录保留，不冒充组件。
 本次只完成独立组件和真实构建，不声明migration_complete：尚需支持现有私有cloud ON及公开stub OFF两种系统配方、接入标准私有SDK overlay并实际重放、系统入口改用该平台源码、移除公开应用旧平台实现和完成最终应用SDK交付。旧sysrc2/app23产物及源码工作树不改，正式SDKHEAD仍1fb03f3未加入本组件，私有repo本轮未push。不能将SDK已上传的面板修复与本组件混记。
 接续：在不重建整SDK的前提下完成公开stub profile独立构建、SDK源码/配方衔接及公共源移除；A133新的内核/失联/升级回退断电数据验收依赖保存ADBbinding，Ubuntu真实登录输入仍pending，整套发布未完成。冻结候选保持，源码/Release不上传。
+
+## 双配置接续（2026-10-15，实施前）
+现有系统可选100ask私有插件ON与公开stub OFF，拆分不得删除OFF能力。先在同一冻结来源的新外置CMake目录真实配置/编译OFF（不动现有build），再扩展材料生成器为显式private/public profile：分别严格32/30TU并检查cloud源码组合、公开profile不得引用私有源或头。两配置分别提取/独立编译，输入和字节对照各归各，不把私有构建结果给公开版。
+
+公开OFF原始参考构建已实际完成（外置CMake，仅lv_backend目标，未覆盖私有参考）；13边界回归passed。工具增加显式profile与外置build-dir、严格32/30TU及cloud源组合，公开profile不能读取外置private输入；编译器/SDK/私有输入编译后自动再核hash。下一步两profile各自新输出重取闭包/编译，原r3工具/配方保留，不移记结果。

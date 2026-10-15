@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Preserve publicstub and privatecloud standalone provider profiles",
+  "context": "Private32TU already proved byte-identical; public30TU originalreference now built independently",
+  "next_steps": "Stage/build both profiles and SDKoverlay integration without copying privatevendor",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-053",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+      "scope": "Explicit dualprofile source composition and referencecompile",
+      "invariants": "No private source/header in public profile; no original sourcefallback; old private candidate unchanged",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+        "docs/change-gates/batches/20261015-split053-dual-profile.json",
+        "tools/update/platform_provider.py",
+        "tests/update/test_platform_provider.py"
+      ],
+      "checks": [
+        {
+          "name": "13boundary regressions",
+          "status": "passed",
+          "scope": "Host selection/path regressions",
+          "evidence": "output/a133-provider-split-20261015/dual-boundaries.log"
+        },
+        {
+          "name": "Publicstub originalreference build",
+          "status": "passed",
+          "scope": "Actual samefrozen source andSDK, outside oldbuild, backendtarget only",
+          "evidence": "output/a133-provider-split-20261015/public-origin-config.log and public-origin-build.log"
+        },
+        {
+          "name": "Dual independentcomponents/SDKintegration",
+          "status": "not_run",
+          "scope": "New tool requires own real results",
+          "evidence": "output/a133-provider-split-20261015",
+          "reason": "next step"
+        }
+      ]
+    }
+  ]
+}

@@ -67,6 +67,22 @@ class ProviderSplitTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 p.sdk_compiler(str(target), sdk)
 
+    def test_public_private_cloud_compositions_do_not_mix(self):
+        source = Path('/source')
+        private = Path('/private')
+        cloud = 'apps/lv_port_linux/src/system/service_cloud'
+        public = [{'file': '/source/' + cloud + '_stub.c'}] + [{'file': '/source/common-' + str(i) + '.c'} for i in range(29)]
+        p.profile_sources(public, 'public', source, private)
+        wrong = public[:-1] + [{'file': '/private/src/100ask_iot.c'}]
+        with self.assertRaises(ValueError):
+            p.profile_sources(wrong, 'public', source, private)
+        with self.assertRaises(ValueError):
+            p.profile_sources(public, 'private', source, private)
+        rows = public[1:] + [{'file': '/source/' + cloud + '.c'}, {'file': '/source/' + cloud + '_validation.c'}, {'file': '/private/src/100ask_iot.c'}]
+        p.profile_sources(rows, 'private', source, private)
+        with self.assertRaises(ValueError):
+            p.profile_sources(rows, 'public', source, private)
+
     def test_relocation_and_missing_placeholder(self):
         roots = {'SDK_ROOT': Path('/sdk'), 'SOURCE_ROOT': Path('/old/project')}
         arg = p.normalize('--sysroot=/sdk/target', roots)
