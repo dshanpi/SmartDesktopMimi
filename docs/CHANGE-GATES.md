@@ -134,3 +134,5 @@ LOGIN052更新：独立root平台服务/保留签名deb已部署、真实无X11�
 SPLIT053更新：66文件/32TU独立真实编译及与旧后端字节相同passed；SDK配方接入与公共旧源移除not_run，迁移仍未完成。
 
 SPLIT053更新：private32/public30组件、4248/95标准overlay重放、私有SDK958上传独立远端读回及实际SDKprivate编译passed；系统入口/公共旧源移除仍not_run，整套迁移未完成。
+
+- [REQ-MIMI-SPLIT-054](change-gates/REQ-MIMI-SPLIT-054.md)：SDK独立Provider系统入口，实施前记录，实际检查not_run。

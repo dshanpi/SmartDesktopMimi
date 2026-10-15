@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "事前记录系统构建切换独立SDK Provider",
+  "context": "053源码已上传和重放，系统入口仍混合；本轮不触碰冻结产物和硬件",
+  "next_steps": "实现入口、受影响回归和真实编译，记录失败与未验项",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-054",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+      "scope": "系统构建来源边界",
+      "invariants": "硬件契约/原钥/冻结候选不变；缺组件提前拒绝且不回退",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-054.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/split054-plan-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "产品入口验证",
+          "status": "not_run",
+          "scope": "主机实际SDK",
+          "evidence": "output/product-provider-20261015",
+          "reason": "实施前记录"
+        }
+      ]
+    }
+  ]
+}
