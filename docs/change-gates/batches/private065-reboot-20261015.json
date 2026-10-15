@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "用户重启暂停与准确接续检查点",
+  "context": "两原适配已上传，公共组合实现未开始，停止自动循环",
+  "next_steps": "仅用户重启后说继续再恢复原循环，先读重启接续记录",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-065",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+      "scope": "暂停/真实状态与未完步骤",
+      "invariants": "不把原源复制称组合通过，不改冻结候选或设备，不自动恢复",
+      "paths": [
+        "docs/delivery/RESUME-20261015-REBOOT.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+        "docs/change-gates/batches/private065-reboot-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "当前源与任务核对",
+          "status": "passed",
+          "scope": "私有497468c回读审计，应用/私有源干净，无本批运行构建",
+          "evidence": "output/private-100ask-adapter-20261015/reboot-checkpoint.json"
+        },
+        {
+          "name": "组合与设备",
+          "status": "not_run",
+          "scope": "Provider尚未修改/双profile未编译，物理延期",
+          "evidence": "docs/delivery/RESUME-20261015-REBOOT.md",
+          "reason": "用户重启暂停"
+        }
+      ]
+    }
+  ]
+}
