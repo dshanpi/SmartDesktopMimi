@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "IMAGE063完整回归与接续状态",
+  "context": "184更新和74架构项通过，保留旧索引失败和冻结候选",
+  "next_steps": "私有生产工具来源迁移；新SDK环境后物理验收",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-IMAGE-063",
+      "record": "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+      "scope": "本批结果与产品边界接续",
+      "invariants": "不把主机检查称实机、不变更冻结产物",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-IMAGE-063.md",
+        "docs/update/EDITION-SOURCE-MAP.md",
+        "docs/change-gates/batches/image063-results-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "完整受影响主机检查",
+          "status": "passed",
+          "scope": "184更新+74架构0skip/源审计/冻结SHA",
+          "evidence": "output/system-image-name-20261015/verified-result.json"
+        },
+        {
+          "name": "新SDK镜像与设备",
+          "status": "not_run",
+          "scope": "用户延期物理",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "待新的SDK Ubuntu环境"
+        }
+      ]
+    }
+  ]
+}
