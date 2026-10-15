@@ -160,3 +160,5 @@ SPLIT057完成受影响主机验证：171项0skip、实际stage2同字节、SDK7
 - [REQ-MIMI-CI-060](change-gates/REQ-MIMI-CI-060.md)：远端失败后的发布YAML/现有UI清单修复，5 YAML/11应用58源和11回归本地passed，真实远端待验，未改产物。
 
 DELIVERY058本轮完成：两类型25附件完整远端下载/原签名/版本绑定passed；CI060代码2af远端三CI passed；TRACE059历史覆盖补记后通过，旧失败保留。物理后置/整个项目未完成，交付记录见docs/delivery/20261015-snapshot.md。
+
+- [REQ-MIMI-SPLIT-061](change-gates/REQ-MIMI-SPLIT-061.md)：共享采集/编码源归属，事前门禁，待源/编译对照。
