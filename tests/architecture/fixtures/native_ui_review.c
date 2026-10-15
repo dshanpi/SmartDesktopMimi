@@ -641,23 +641,39 @@ int main(int argc,char**argv) {
    else assert(find_label(lv_scr_act(),accepted));
    puts("PASS IoT host fixture: explicit confirmation, cancel sends nothing, one command, no false state confirmation");
   }
- }else if(!strcmp(argv[1],"pairing-bound") || !strcmp(argv[1],"pairing-unbound") || !strcmp(argv[1],"pairing-unknown")){
+ }else if(!strcmp(argv[1],"pairing-bound") || !strcmp(argv[1],"pairing-unbound") || !strcmp(argv[1],"pairing-unknown") || !strcmp(argv[1],"pairing-requery")){
   app_pairing.init();cloud_status_t status={.state=CLOUD_STATE_CONNECTED};
   emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));
   cloud_pairing_status_v1_t pair={.version=1,.bytes=sizeof(pair)};
-  if(!strcmp(argv[1],"pairing-bound"))pair.ownership=CLOUD_PAIRING_BOUND;
+  if(!strcmp(argv[1],"pairing-bound") || !strcmp(argv[1],"pairing-requery"))pair.ownership=CLOUD_PAIRING_BOUND;
   else if(!strcmp(argv[1],"pairing-unbound")){pair.ownership=CLOUD_PAIRING_UNBOUND;pair.expires_in=598;strcpy(pair.code,"123456");}
   emit(TOPIC_CLOUD_PAIRING_STATUS,&pair,sizeof(pair));pump();
-  lv_obj_t*refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code");assert(refresh);
+  lv_obj_t*refresh=find_label(lv_scr_act(),pair.ownership==CLOUD_PAIRING_BOUND ? (ui_i18n_is_zh()?"检查绑定状态":"Check binding status") : (ui_i18n_is_zh()?"刷新绑定码":"Refresh code"));assert(refresh);
   if(pair.ownership==CLOUD_PAIRING_BOUND){
    assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"设备已绑定账号，无需绑定码。账号归属和解绑请在 100ask.net 查看。":"Device already linked. Check ownership or unlink at 100ask.net."));
-   assert(lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
+   assert(!lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
+   assert(!lv_obj_has_flag(lv_obj_get_parent(refresh),LV_OBJ_FLAG_HIDDEN));
    assert(!find_label(lv_scr_act(),"123456"));
   }else if(pair.ownership==CLOUD_PAIRING_UNBOUND)assert(find_label(lv_scr_act(),"123456"));
   else assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"账号归属尚未确认。可刷新查询，或在 100ask.net 查看设备绑定。":"Account ownership is unconfirmed. Refresh to check, or review device binding at 100ask.net."));
+  unsigned expected_refreshes=0;
+  if(!strcmp(argv[1],"pairing-requery")){
+   assert(pairing_refreshes==0);
+   tap_widget(lv_obj_get_parent(refresh));assert(pairing_refreshes==1);
+   assert(!find_label(lv_scr_act(),"123456"));
+   status.bind_token_refreshing=false;status.bind_token_error=0;
+   emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));
+   pair.ownership=CLOUD_PAIRING_UNBOUND;pair.expires_in=598;strcpy(pair.code,"123456");
+   emit(TOPIC_CLOUD_PAIRING_STATUS,&pair,sizeof(pair));pump();
+   assert(find_label(lv_scr_act(),"123456"));
+   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code"));
+   assert(!lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
+   for(unsigned settle=0;settle<6;settle++)pump();
+   expected_refreshes=1;
+  }
   pair.version=99;pair.ownership=CLOUD_PAIRING_UNBOUND;pair.expires_in=599;strcpy(pair.code,"654321");
   emit(TOPIC_CLOUD_PAIRING_STATUS,&pair,sizeof(pair));assert(!find_label(lv_scr_act(),"654321"));
-  assert(pairing_refreshes==0);
+  assert(pairing_refreshes==expected_refreshes);
   puts("PASS PAIR071 real UI: authoritative ownership, strict optional version, no automatic refresh");
  }else if(strcmp(argv[1],"pairing")==0){
   app_pairing.init();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"— — — — — —":"- - - - - -"));cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};

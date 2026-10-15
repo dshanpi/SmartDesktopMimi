@@ -10,7 +10,7 @@
 
 /* The desktop only handles the existing public status contract. Device
  * signatures, provisioning and long-lived secrets remain in the Provider. */
-static lv_obj_t *code_label, *state_label, *expiry_label, *refresh_button, *steps_label;
+static lv_obj_t *code_label, *state_label, *expiry_label, *refresh_button, *steps_label, *refresh_label;
 static lv_timer_t *pair_timer;
 static cloud_status_t snapshot;
 static cloud_pairing_countdown_t countdown;
@@ -35,7 +35,7 @@ static void render_status(void)
     uint32_t remaining = cloud_pairing_remaining(&countdown,lv_tick_get());
     bool unavailable = snapshot.state == CLOUD_STATE_UNAVAILABLE;
     bool bound = ownership_received && ownership.ownership==CLOUD_PAIRING_BOUND;
-    lv_obj_t *binding_controls[]={code_label,expiry_label,refresh_button,steps_label};
+    lv_obj_t *binding_controls[]={code_label,expiry_label,steps_label};
     for (unsigned i=0;i<sizeof(binding_controls)/sizeof(binding_controls[0]);i++) {
         if (!binding_controls[i]) continue;
         if (bound && !unavailable) lv_obj_add_flag(binding_controls[i],LV_OBJ_FLAG_HIDDEN);
@@ -48,8 +48,8 @@ static void render_status(void)
     const char *state;
     if (!received) state=tr("正在读取设备状态…", "Reading device status…");
     else if (unavailable) state=tr("当前系统未提供配对服务", "Pairing service is unavailable on this system.");
+    else if (snapshot.bind_token_refreshing) state=tr("正在读取配对信息…", "Reading pairing information…");
     else if (bound) state=tr("设备已绑定账号，无需绑定码。账号归属和解绑请在 100ask.net 查看。", "Device already linked. Check ownership or unlink at 100ask.net.");
-    else if (snapshot.bind_token_refreshing) state=tr("正在申请绑定码…", "Requesting a pairing code…");
     else if (snapshot.bind_token_error == 401 || snapshot.bind_token_error == 403)
         state=tr("设备身份认证失败，请检查出厂登记", "Device authentication failed. Check factory enrollment.");
     else if (snapshot.bind_token_error == -ENOKEY)
@@ -63,7 +63,8 @@ static void render_status(void)
     else if (usable) state=tr("在 100ask.net 输入下方绑定码", "Enter this code at 100ask.net.");
     else state=tr("点击刷新绑定码开始配对", "Select Refresh code to pair.");
     lv_label_set_text(state_label,state);
-    if (!received || unavailable || bound || snapshot.bind_token_refreshing) lv_obj_add_state(refresh_button,LV_STATE_DISABLED);
+    lv_label_set_text(refresh_label,bound ? tr("检查绑定状态","Check binding status") : tr("刷新绑定码","Refresh code"));
+    if (!received || unavailable || snapshot.bind_token_refreshing) lv_obj_add_state(refresh_button,LV_STATE_DISABLED);
     else lv_obj_remove_state(refresh_button,LV_STATE_DISABLED);
 }
 static void status_cb(const mw_msg_t *msg)
@@ -95,8 +96,7 @@ static void timer_cb(lv_timer_t *timer)
 static void refresh_cb(lv_event_t *e)
 {
     (void)e;
-    if (!received || snapshot.bind_token_refreshing || snapshot.state==CLOUD_STATE_UNAVAILABLE ||
-        (ownership_received && ownership.ownership==CLOUD_PAIRING_BOUND)) return;
+    if (!received || snapshot.bind_token_refreshing || snapshot.state==CLOUD_STATE_UNAVAILABLE) return;
     memset(&countdown,0,sizeof(countdown));
     memset(snapshot.bind_token,0,sizeof(snapshot.bind_token));snapshot.bind_token_expires_in=0;
     snapshot.bind_token_refreshing=true;render_status();
@@ -111,7 +111,7 @@ static void close_pairing(void)
     if(pair_timer){lv_timer_delete(pair_timer);pair_timer=NULL;}
     memset(&snapshot,0,sizeof(snapshot));
     memset(&countdown,0,sizeof(countdown));memset(&ownership,0,sizeof(ownership));ownership_received=false;
-    code_label=state_label=expiry_label=refresh_button=steps_label=NULL;
+    code_label=state_label=expiry_label=refresh_button=steps_label=refresh_label=NULL;
 }
 static void init_pairing(void)
 {
@@ -132,7 +132,7 @@ static void init_pairing(void)
     expiry_label=mimi_ui_text(card,"",ui_font_body_md(),MIMI_MUTED);
     refresh_button=lv_button_create(card);mimi_ui_button_style(refresh_button,true);
     lv_obj_set_size(refresh_button,240,56);
-    lv_obj_t *label=mimi_ui_text(refresh_button,tr("刷新绑定码","Refresh code"),ui_font_body_lg(),MIMI_TEXT);lv_obj_center(label);
+    lv_obj_t *label=refresh_label=mimi_ui_text(refresh_button,tr("刷新绑定码","Refresh code"),ui_font_body_lg(),MIMI_TEXT);lv_obj_center(label);
     lv_obj_add_event_cb(refresh_button,refresh_cb,LV_EVENT_CLICKED,NULL);
     lv_obj_t *steps=steps_label=mimi_ui_text(body,tr("1. 在手机或电脑登录 100ask.net\n2. 在设备管理中输入六位绑定码\n3. 在网站确认设备归属\n\n账号绑定结果与解绑请在网站查看。云连接正常不代表已绑定账号。", "1. Sign in to 100ask.net on your phone or computer.\n2. Enter the six-digit code in device management.\n3. Confirm device ownership on the website.\n\nCheck account binding or unlink on the website. A cloud connection does not establish account ownership."),ui_font_body_lg(),MIMI_MUTED);
     lv_obj_set_width(steps,lv_pct(100));lv_label_set_long_mode(steps,LV_LABEL_LONG_WRAP);

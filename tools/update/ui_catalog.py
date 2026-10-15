@@ -18,7 +18,7 @@ SCENARIOS={
  'ota':['check','download','cancel-download','apply','error','back-to-settings'],
  'user':['empty-list','install','invalid-signature','permissions','launch-exit','upgrade-data','uninstall'],
  'hdmi_mcp':['source-preview','hotplug','task-state','cancel','keyboard-mouse','release-on-disconnect'],
- 'pairing':['existing-bound-no-token','refresh','new-code','expiry','offline','no-credential-display','authoritative-bound','unknown-ownership','reject-optional-schema','same-code-poll-no-renewal'],
+ 'pairing':['existing-bound-no-token','refresh','new-code','expiry','offline','no-credential-display','authoritative-bound','unknown-ownership','reject-optional-schema','same-code-poll-no-renewal','bound-requery-after-website-unlink'],
  'iot':['unconfigured','device-list','device-status','confirm-control','provider-error','control-readback'],
  'voice':['optional-disabled','text-edit','transcript-preview','confirm-command','cancel','unsafe-command-rejection','real-speech'],
  'web':['login','same-origin','settings','video','keyboard-mouse','blur-release','mobile-layout','apps','update'],

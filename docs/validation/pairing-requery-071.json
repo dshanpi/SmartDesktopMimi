@@ -1,0 +1,11 @@
+{
+  "requirement": "REQ-MIMI-PAIR-071",
+  "status": "passed_staged_host_only",
+  "old_UI_expected_failure_returncode": -6,
+  "new_UI_variants_passed": 20,
+  "canonical_source_unchanged": true,
+  "original_source_sha256": "5dec4447451766494d723bf60ce7ecc2d59efcdf699b305061321bff3c39fb31",
+  "fixed_source_sha256": "fd4a82b6b851c3f7aaad5448a9b32a13e77247ee7bb42c2f5310579d7b6952ec",
+  "hardware_or_backend_calls": false,
+  "next": "Apply staged2files only after active full SDK worker completes, update inventory/gate, build affected application and factory baselines; no provider/kernel rebuild needed"
+}

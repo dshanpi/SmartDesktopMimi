@@ -518,7 +518,7 @@
       ]
     },
     "apps/lv_port_linux/src/apps/pairing/pairing_app.c": {
-      "sha256": "5dec4447451766494d723bf60ce7ecc2d59efcdf699b305061321bff3c39fb31",
+      "sha256": "fd4a82b6b851c3f7aaad5448a9b32a13e77247ee7bb42c2f5310579d7b6952ec",
       "bindings": [
         "refresh_button,refresh_cb,LV_EVENT_CLICKED,NULL"
       ]
@@ -737,7 +737,8 @@
       "authoritative-bound",
       "unknown-ownership",
       "reject-optional-schema",
-      "same-code-poll-no-renewal"
+      "same-code-poll-no-renewal",
+      "bound-requery-after-website-unlink"
     ],
     "iot": [
       "unconfigured",

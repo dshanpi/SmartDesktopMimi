@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Allow explicit ownership recheck after website unlink",
+  "context": "New BOUND UI had no manual recheck path while provider GET_STATUS is cached; old source reproduced assertion failure",
+  "next_steps": "Build/sign shared rc26; preserve publicrc5/factoryrc25; private rc6 factoryrc26; actual device/site acceptance remains not_run",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PAIR-071",
+      "record": "docs/change-gates/REQ-MIMI-PAIR-071.md",
+      "scope": "Existing pairing button state and host LVGL regression/inventory",
+      "invariants": "No automatic code request, no V1/header/provider/keys change, no double version with different SHA, no actual device/site calls",
+      "paths": [
+        "apps/lv_port_linux/src/apps/pairing/pairing_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tools/update/ui_catalog.py",
+        "tests/update/ui-catalog.json",
+        "docs/change-gates/REQ-MIMI-PAIR-071.md",
+        "docs/validation/pairing-requery-071.json",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261015-pair071-bound-requery.json"
+      ],
+      "checks": [
+        {
+          "name": "Before/after real LVGL staged regression",
+          "status": "passed",
+          "scope": "Old assertion fails-6;20fixedhostvariants including BOUND manual query to UNBOUND and restored enabled refresh",
+          "evidence": "docs/validation/pairing-requery-071.json"
+        },
+        {
+          "name": "Real account unlink/new bind",
+          "status": "not_run",
+          "scope": "100ask.net and A133",
+          "reason": "No production backend deployment/device installation in scope",
+          "evidence": "docs/change-gates/REQ-MIMI-PAIR-071.md"
+        }
+      ]
+    }
+  ]
+}
