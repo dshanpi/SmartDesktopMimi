@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "旧后端C实现退休事前记录",
+  "context": "054编译/字节对照已通过，保留接口和原冻结产物",
+  "next_steps": "固定SDK原字节核对、迁移实现测试输入、上层重编和逐项证据",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-055",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-055.md",
+      "scope": "只移除23个旧platform C实现",
+      "invariants": "原接口/钥/产物/测试断言保留；缺SDK不记passed",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-055.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/split055-plan-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "迁移检查与编译",
+          "status": "not_run",
+          "scope": "主机与A133交叉编译",
+          "evidence": "output/backend-source-retirement-20261015",
+          "reason": "实施前记录"
+        }
+      ]
+    }
+  ]
+}

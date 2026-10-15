@@ -138,3 +138,5 @@ SPLIT053更新：private32/public30组件、4248/95标准overlay重放、私有S
 - [REQ-MIMI-SPLIT-054](change-gates/REQ-MIMI-SPLIT-054.md)：SDK独立Provider系统入口，实施前记录，实际检查not_run。
 
 SPLIT054更新：系统SDK后端入口已实现，private32/public30实际编译字节对照和A133桌面672源归属passed；完整归集整链/系统重建/真机not_run，公共旧源未移除。
+
+- [REQ-MIMI-SPLIT-055](change-gates/REQ-MIMI-SPLIT-055.md)：移除23个SDK已保存的上层旧后端C副本，事前门禁，实际not_run。
