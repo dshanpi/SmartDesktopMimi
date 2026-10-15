@@ -20,3 +20,7 @@ PRIVATE066已实际编译并接通公共/私有Provider、Tuya和打包，但来
 实际278ddd4首次来源收集passed：public核对公共10/SDK68个blob，private核对公共9/SDK67/私有6个blob；所有选择源与固定Git内容/模式匹配。原始程序未重编或修改，固定strip工具派生rootfs哈希：public后端6f30483c，private后端5e3f2286、Tuyaee949bf6。两版各做ext4/SquashFS最小主机文件系统的实际构造、提取、程序/标记/无逐台凭据复核及旧程序拒绝，4组通过；不含完整系统依赖，不是产品镜像。
 211完整更新、75架构0skip、Go vet/完整race回归通过；随后新增3项发布来源检查和1项CLI写前保护检查，按受影响范围补验，总计215唯一更新项。固件新增旧锁/当前程序回执不同在SDK变更前拒绝，使用实际两版程序验证。rootfs记录不能覆盖输入锁/镜像/解出目录，哈希流式读取；拒绝SUID模式、布尔schema和伪造实机合格标记。新的最终Git源快照仍需本次代码提交后重收集，旧初始锁/失败不覆盖。
 失败历史：新来源发布测试夹具首次漏version字段，9个子场景报错；修正夹具后3项全部通过，原日志product-release-provenance-initial-fixture-failure.log保留，不改产品门禁。最终完整SDK库存/镜像/系统OTA产品版本匹配/设备升级保留仍未完成。
+
+收尾复查发现：系统来源验证器已支持两份新产品记录，但prepare_release的固定附件白名单尚未接通，完整prepare路径可能拒绝新产品候选。继续同一067修复：新产品system-build显式声明时必须同时提供platform-product-lock.json和product-rootfs-check.json并经原签名/来源门禁复核；应用和旧系统不能借此导入额外附件。先增加完整prepare主机夹具复现，保留失败，再补白名单并验证公开/私有正例及缺件/错类型拒绝。此项仍不涉及真实镜像/安装或系统OTA版本匹配。
+
+prepare完整路径修复通过：初始两版正例均明确失败于undeclared附件，日志prepare-integration-initial-failure.log保留。声明新产品的系统候选现在必须带齐两固定元数据后才进入原check；应用候选仍拒绝。11项完整prepare夹具及3项来源复核通过；签名checker在prepare夹具中模拟，不将其称实际签名产品验收。来源锁初始bcabd29/19文件已上传回读，追加修复将独立提交，旧证据不覆盖；总计218唯一更新检查（原215加3）。

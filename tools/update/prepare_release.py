@@ -121,6 +121,16 @@ def prepare(plan_path, output, checker, trust):
             raise ValueError('validation target inventory differs from preparation plan')
         allowed |= {e['evidence'] for t in report['targets'] for e in t['checks'].values() if 'evidence' in e}
     if kind == 'system':
+        record = load(sources['system-build.json'])
+        product_fields = {'product_edition', 'platform_product_lock_sha256'}
+        if product_fields & record.keys():
+            product_assets = {'platform-product-lock.json', 'product-rootfs-check.json'}
+            if (not product_fields <= record.keys() or record['product_edition'] not in {'public', 'private'} or
+                    not product_assets <= sources.keys()):
+                raise ValueError('missing product source lock provenance')
+            # Only declared system products may transport these fixed records;
+            # check() still verifies their signed build/source/hash linkage.
+            allowed |= product_assets
         manifest = load(sources['system-manifest.json'])
         if manifest.get('ota'):
             allowed.add('system.swu')

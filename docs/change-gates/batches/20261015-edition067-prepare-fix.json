@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Connect declared product source/rootfs metadata to full system preparation whitelist; retain prior reproducible failure",
+  "context": "Final prepare integration audit reproduced missing whitelist for both editions; failure log retained. Same REQ067, no binary/runtime change.",
+  "next_steps": "Commit/source readback/CI and rebind final component locks; full product image and system OTA edition check remain pending.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-EDITION-067",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-067.md",
+      "scope": "Connect declared product source/rootfs metadata to full system preparation whitelist; retain prior reproducible failure",
+      "invariants": "Only explicitly declared system products admit both fixed metadata files; common app and legacy extra attachment rejection, all existing signed provenance and physical release gates retained.",
+      "paths": [
+        "tools/update/prepare_release.py",
+        "tests/update/test_prepare_release.py",
+        "docs/change-gates/REQ-MIMI-EDITION-067.md",
+        "docs/change-gates/batches/20261015-edition067-prepare-fix.json"
+      ],
+      "checks": [
+        {
+          "name": "Complete preparation and provenance host regression",
+          "status": "passed",
+          "scope": "Host synthetic metadata preparation: 11 checks and 3 provenance checks, signature checker mocked; not deployable image acceptance",
+          "evidence": "output/product-edition-20261015/prepare-integration-initial-failure.log;output/product-edition-20261015/prepare-integration-fixed.log;output/product-edition-20261015/prepare-provenance-recheck.log"
+        },
+        {
+          "name": "Product and physical acceptance",
+          "status": "not_run",
+          "scope": "No new full image or actual installation; checker mocked in preparation fixture",
+          "reason": "Independent product/physical acceptance remains pending",
+          "evidence": "docs/change-gates/REQ-MIMI-EDITION-067.md"
+        }
+      ]
+    }
+  ]
+}

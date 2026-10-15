@@ -38,6 +38,63 @@ class PreparationTests(unittest.TestCase):
         path=root/'plan.json';prepare.write(path,plan)
         return path,plan
 
+    def product_plan(self, root, edition):
+        from test_product_lock import lock_fixture
+        path, plan = self.plan(root, 'system', False)
+        source = root/'inputs'
+        record = gate.load(source/'system-build.json')
+        components = gate.load(source/'sdk-components.json')
+        product = lock_fixture(edition)
+        product['repositories']['application']['commit'] = record['source_commit']
+        product['repositories']['hardware']['commit'] = record['hardware_commit']
+        product['sdk_manifest_sha256'] = components['manifest_sha256']
+        prepare.write(source/'platform-product-lock.json', product)
+        digest = gate.sha(source/'platform-product-lock.json')
+        prepare.write(source/'product-rootfs-check.json', dict(schema_version=1, status='passed',
+            edition=edition, product_lock_sha256=digest, rootfs_image_sha256='8'*64,
+            physical='not_run', release_qualified=False))
+        record.update(product_edition=edition, platform_product_lock_sha256=digest,
+            product_rootfs_check_sha256=gate.sha(source/'product-rootfs-check.json'), rootfs_image_sha256='8'*64)
+        prepare.write(source/'system-build.json', record)
+        manifest = gate.load(source/'system-manifest.json')
+        manifest['build_provenance_sha256'] = gate.sha(source/'system-build.json')
+        prepare.write(source/'system-manifest.json', manifest)
+        for name in ['platform-product-lock.json', 'product-rootfs-check.json', 'system-build.json', 'system-manifest.json']:
+            plan['assets'][name] = dict(path='inputs/'+name, sha256=gate.sha(source/name))
+        prepare.write(path, plan)
+        return path, plan
+
+    def test_full_product_preparation_keeps_both_metadata_assets(self):
+        # Checker is mocked: metadata transport only, not signature or image acceptance.
+        for edition in ('public', 'private'):
+            with self.subTest(edition=edition), tempfile.TemporaryDirectory() as temp, patch.object(gate.subprocess,'run'):
+                root=Path(temp); path, _ = self.product_plan(root, edition)
+                lock=prepare.prepare(path, root/'candidate', Path('/checker'), Path('/trust'))
+                self.assertEqual(lock['product_edition'], edition)
+                self.assertTrue({'platform-product-lock.json', 'product-rootfs-check.json'} <= lock['assets'].keys())
+                self.assertTrue(all(e['result']=='not_run' for e in gate.load(root/'candidate/validation.json')['targets'][0]['checks'].values()))
+
+    def test_product_prepare_missing_metadata_rejected_before_checker(self):
+        for missing in ('platform-product-lock.json', 'product-rootfs-check.json'):
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as temp:
+                root=Path(temp); path, plan=self.product_plan(root, 'private')
+                plan['assets'].pop(missing); prepare.write(path, plan)
+                with patch.object(gate.subprocess,'run') as checker, self.assertRaises(ValueError):
+                    prepare.prepare(path, root/'candidate', Path('/checker'), Path('/trust'))
+                checker.assert_not_called()
+                self.assertFalse((root/'candidate').exists())
+
+    def test_application_cannot_import_product_system_metadata(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp); path, plan=self.plan(root, 'application')
+            for name in ('platform-product-lock.json', 'product-rootfs-check.json'):
+                prepare.write(root/'inputs'/name, {'fixture':'system metadata'})
+                plan['assets'][name]=dict(path='inputs/'+name, sha256=gate.sha(root/'inputs'/name))
+            prepare.write(path, plan)
+            with patch.object(gate.subprocess,'run') as checker, self.assertRaisesRegex(ValueError,'undeclared'):
+                prepare.prepare(path, root/'candidate', Path('/checker'), Path('/trust'))
+            checker.assert_not_called()
+
     def test_both_kinds_same_version_separate_tags_no_fake_acceptance(self):
         with tempfile.TemporaryDirectory() as temp, patch.object(gate.subprocess,'run'):
             parent=Path(temp);tags=[]
