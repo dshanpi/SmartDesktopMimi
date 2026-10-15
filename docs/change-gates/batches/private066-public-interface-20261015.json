@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Tuya授权接口与公共固定禁用组件",
+  "context": "公共native探针不含授权/网络API且不能调用open，尚未全链替换",
+  "next_steps": "私有组件实际重试/读取与A133对象编译，然后SDK/主入口/打包接线",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "公共ABI和禁止授权读/初始化stub",
+      "invariants": "无授权或网络调用、公共stub不因已有凭据启用、未接线不宣称产品隔离",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/private066-prerecord-20261015.json",
+        "docs/change-gates/batches/private066-public-interface-20261015.json",
+        "integrations/tuyaopen/pairing/mimi_device_pairing.h",
+        "integrations/tuyaopen/pairing/mimi_device_pairing_stub.c",
+        "integrations/tuyaopen/pairing/mimi_tuya_license_provider_stub.h",
+        "tests/update/test_tuya_pairing_public.py"
+      ],
+      "checks": [
+        {
+          "name": "公共组件native",
+          "status": "passed",
+          "scope": "2项实际编译运行；不链接授权API，open若被调用即abort",
+          "evidence": "output/private-tuya-adapter-20261015/public-stub-regression.log"
+        },
+        {
+          "name": "完整运行链",
+          "status": "not_run",
+          "scope": "SDK/主入口/启动尚待接线",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+          "reason": "本批组件阶段"
+        }
+      ]
+    }
+  ]
+}
