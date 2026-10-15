@@ -32,3 +32,9 @@ flowchart TD
 自写首次读回脚本误将Git工作树POSIX组权限等同SDK目标mode，在boost归档处failed；后续诊断又假设每项都必须有size而KeyError，误疑LFS未物化的解释保留并纠正。实际首失败在mode，bodySHA匹配（Git checkout0664/目标0644）；官方验证按Git可表示位与SDK目标精确mode处理。未证明LFS丢失或源码损坏，未放松字节门禁。见remote-readback-failed/diagnosis/remote-verify和remote-readback.json。
 在SDK保存/读回/重编通过后，上层旧8文件移除，系统入口预检固定source-lock再用SDK helper新目录编译归集；不再引用/clean旧源目录。退休路径及作用域防止旧/改名实现重新混入。测试保留，五服务fixture从显式MIMI_A133_SERVICES_ROOT解析固定SDK源，未提供时明确not_run；配置坏失败。
 30项边界/应用收据回归passed（含固定源/工具篡改无执行且旧输出不变、同字节错误链接目标拒绝、SDK头篡改拒绝、退休目录新源拒绝），Bash语法和实际SDK wrapper preflight passed。实际新上层第三阶段归集及平台106回归尚not_run；物理未操作。全部源迁移仍false，hdmi/ipkvm/Tuya/接口头和冻结客户端待收尾。
+
+## 最终受影响验证（代码6b3c078640b34175001ff504061edca6719c5762）
+当前build_apps第3阶段字面代码已实际执行，SDK组件独立新目录编译并归集五服务exit0，全部与原fresh reference同字节，源clean；source-lock03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58、无原上层源依赖、203 SDK头闭包/库和别名匹配。五目标ELF64little/AArch64/解释器/lib/ld-linux-aarch64.so.1及NEEDED实际读回passed。源Makefile不匹配实际Tina scan.mk的BuildPackage/KernelPackage选择规则，不会作为自动OpenWrt包执行；这是扫描选择核对，不伪称完整metadata/镜像重建。
+30边界+106架构/平台集成共136项passed，显式提供实际两个SDK组件、0skip；未配置服务SDK的单独检查明确Ran0/skipped1/not_run，不计136通过。现有桌面672源清单按新退休策略复核passed；桌面C/编译选项未变，未重编无关上层/网页/Tuya。SDK三配置与原618/cdf/c22冻结候选SHA均保持。
+证据verified-result.json、actual-stage3-result.json、platform-regression.log、boundary-regression.log、abi-and-protected-checks.json及no-sdk-platform-not-run.log；私有SDKd9已回读4260/95。原自写读回诊断失败和纠正均保留。无镜像重建/签名/设备安装或应用/Release上传，物理仍not_run。
+归属说明：本轮迁移现有系统生命周期兼容服务，尤其agentd仍混有业务编排；不能据进程名断言全部函数天然属于硬件层。受信权限/执行边与上层编排的最终拆分，以及hdmi_preview/ipkvm/Tuya、24接口头/冻结客户端继续待办；migration_complete=false。当前只冻结实现与接口，未作跨平台支持声明。

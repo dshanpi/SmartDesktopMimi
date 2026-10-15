@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "summary": "五兼容平台服务SDK来源与新stage3/136主机回归实际结果",
+  "context": "代码6b3c078、SDKd9、五ELF字节不变；首读回诊断错误保留纠正，原候选未变",
+  "next_steps": "其余混合业务/源边界/产品锁；已请求的ADB/Xorg到位优先真机",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-056",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-056.md",
+      "scope": "实际源归档/入口和回归结果及可接续状态",
+      "invariants": "行为/原钥/绑定和旧产物不变，混合业务未完成不遮盖；无应用/Release上传",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-056.md",
+        "docs/CHANGE-GATES.md",
+        "README.md",
+        "docs/update/SOURCE-OWNERSHIP.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/split056-results-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "SDK源保存/读回与新入口",
+          "status": "passed",
+          "scope": "4260/95，stage3五目标独立同字节与AArch64 ABI",
+          "evidence": "output/platform-services-split-20261015/verified-result.json"
+        },
+        {
+          "name": "主机回归",
+          "status": "passed",
+          "scope": "30边界+106架构/平台，真实SDK配置0skip",
+          "evidence": "output/platform-services-split-20261015/boundary-regression.log; platform-regression.log"
+        },
+        {
+          "name": "首自写读回诊断",
+          "status": "failed",
+          "scope": "Git组权限/可选size假设不当，后续官方校验通过",
+          "evidence": "output/platform-services-split-20261015/remote-readback-diagnosis.json",
+          "reason": "原失败保留，非源码损坏"
+        },
+        {
+          "name": "新镜像及物理交付",
+          "status": "not_run",
+          "scope": "全部物理和新完整镜像；混合业务/其他源尚未拆完",
+          "evidence": "output/platform-services-split-20261015/verified-result.json",
+          "reason": "仅变更软件来源；外部控制/登录输入尚未到位"
+        }
+      ]
+    }
+  ]
+}

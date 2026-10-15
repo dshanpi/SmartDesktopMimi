@@ -67,6 +67,7 @@ Mermaid 源码、SVG 和高清 PNG。
 ## 目录结构
 
 - `apps/lv_port_linux/`: 独立 LVGL 桌面（`lvglsim`）；旧 A133 后端实现已迁入私有 SDK，保留接口头及冻结客户端。系统构建由 SDK 组件产生 `lv_backend`，详见 [源码归属](docs/update/SOURCE-OWNERSHIP.md)。
+- 五个平台系统兼容服务的源码现位于私有 SDK 的 `smartdesktopmimi-a133-services` 组件；`scripts/build_apps.sh` 预检固定来源后独立编译归集。应用包不替换这些服务，混合业务的最终拆分仍见源码归属记录。
 - `apps/hdmi_preview/`: HDMI 输入采集/直显助手。
 - `apps/ipkvm/`: A133 H.264 发送器、鉴权 Web 页面和 WebRTC/HID 服务。
 - `integrations/tuyaopen/`: TuyaOpen 的 A133 交叉构建集成层（构建脚本、配置、补丁）。

@@ -71,3 +71,10 @@
 
 
 054完整应用入口接续补充：实际全入口在npm未进入PATH时阶段4失败；19早拒绝/边界回归通过后，只加载已有Node工具链、逐字核对尾段并验证前序收据/SHA后接续阶段4/5及更新器，最终passed_recovered。前端/SDK后端归集及其他组件衔接已通过；原失败保留，未变模块增量构建，不称全SDK干净重建。原冻结镜像/包未变，无真机结论。证据output/product-pipeline-20261015/verified-result.json。
+
+
+### 2026-10-15 五系统兼容服务迁SDK（REQ-MIMI-SPLIT-056，更新此前platform_services待办）
+原apps/platform_services的8个已追踪文件已移出上层，C/H原字节与GPL许可证保存于私有SDKd9的smartdesktopmimi-a133-services组件。Makefile固定原实际GCC11，不再导入SDK.config执行配置选择，原编译链接参数保留。source-lock固定源/自含helper/203 SDK头依赖/链接库与别名/编译器/五目标参考字节；系统入口缺/变来源在清理前拒绝，不回退旧源。
+实际新stage3独立编译归集的五个ELF均与原目标同字节；136主机回归（实际SDK，0skip）、AArch64 ABI和冻结候选/SDK配置保护检查passed，旧桌面672源清单复核通过。其他未变阶段沿用054实际结果，不重跑无关编译；不是全SDK干净重建或真机验收。
+平台集成测试现需同时设置MIMI_A133_PROVIDER_ROOT和MIMI_A133_SERVICES_ROOT，指向对应标准SDK组件；无SDK明确not_run/skip，配置坏failclosed，不恢复旧副本。源码退休清单和retired_scopes阻止改名实现回到旧目录。
+迁移系统生命周期兼容实现并不代表agentd的混合业务全部天然属于底层；受信执行/权限边与上层编排还需最终收尾，其他hdmi/ipkvm/Tuya与旧接口/冻结客户端亦未完成，migration_complete=false。当前物理与完整新镜像未验收，应用/Release未上传。证据output/platform-services-split-20261015/verified-result.json。

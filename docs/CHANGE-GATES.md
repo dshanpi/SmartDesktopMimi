@@ -146,3 +146,5 @@ SPLIT055更新：23个旧后端C已从上层移除、SDK原字节核对/24接口
 SPLIT054整链接续更新：首轮npm PATH失败保留；新增node/npm早拒绝，19主机回归passed；固定前三段收据/源码与相同tail后只续跑后两段/更新器，passed_recovered。SDK配置和旧冻结产物SHA均不变；全镜像/真机仍not_run。
 
 - [REQ-MIMI-SPLIT-056](change-gates/REQ-MIMI-SPLIT-056.md)：五平台服务来源迁入SDK，实施前记录，实际not_run。
+
+SPLIT056更新：五系统兼容服务8源/许可证迁SDKd9、4260/95标准重放和独立回读passed；上层旧源移除/新stage3同字节与ABI/136主机回归0skip passed。混合业务和其他源边界仍待收尾，未新建镜像或操作设备，真机not_run。

@@ -1,3 +1,18 @@
+# 当前接续状态（2026-10-15，SPLIT056）
+
+整套交付未完成。本批构建/回归已结束，无仍在运行的本批作业；应用源码和Release未上传。
+
+- 新完成：五系统兼容服务的8个旧源/Makefile已从上层移除，原C/H和许可证保存在SDK独立组件；只固定原实际编译器、不改服务逻辑。实际新系统构建stage3独立编译归集五目标均与原fresh reference同字节，AArch64/加载器/依赖核对passed；30边界+106架构/平台共136主机项passed、配置真实SDK且0skip。旧桌面672源清单按新策略复核passed，未重编无关UI/网页/Tuya。
+- SDK私有源：d9eca3dcebd3f4e869161699661f3db980d644da已上传100askTeam/A133-AIDesktop-Tina5；标准overlay4260文件/95基线与独立远端读回passed，旧4248payload不变。只新增新组件12文件到真实SDK，不全量覆盖已审核输入。新source-lock03cd9b…3f58固定203头/2库及别名/编译器/源/五目标。自写首次读回mode/可选size假设失败已保留并纠正，不是SDK字节损坏。
+- 冻结候选和三SDK配置SHA不变：system rc2镜像618a5c…139a/SWUcdf623…2a1d，factory app rc23包c22c01…f78。未重建/重签/安装。本批代码6b3c078640b34175001ff504061edca6719c5762、SDK源origin ce93e18；证据output/platform-services-split-20261015/verified-result.json，门禁REQ-MIMI-SPLIT-056。
+- 当前真实外部等待：LYNX固定project4/device4/COM17/USB scope、无活动任务，adbSerial仍空且当前MCP无绑定写入工具，已向用户提供串号并等待保存；不绕过scope。Ubuntu独立login服务active，仍仅GDM seat0 greeter、无ubuntu本地X11会话，等待已请求的Xorg登录。不重复要求电源/拔HDMI或重置账号绑定。
+- A133首要未完：上次实际为旧kernel/rc17；新kernel/可信系统升级回退、真实事务阶段断电、数据/原功能和失联根因对照尚未完成。HDMI默认关闭，MCP恢复授权保留但无故不重启。
+- 其余未完：agentd混合业务最终拆分、hdmi_preview/ipkvm/Tuya等系统来源、24旧接口头/冻结客户端边界与最终产品来源锁；Ubuntu真实登录/数据、100ask归属新绑定、真实语音；Tuya资源到位后实控；全部必需验收后才应用推送/统一Releases/远端附件复验。迁移和整体交付均未完成。
+
+下一步：ADB/Xorg到位即优先真实验收；否则继续其余来源边界和产品锁。只重跑受影响项，文档不换版本/重建；下方旧时间点/失败历史保留。
+
+---
+
 # 当前接续状态（2026-10-15，SPLIT054/055 完整应用入口接续完成）
 
 整套交付未完成；本批构建和主机回归已结束，没有仍在运行的本批作业。应用源码和Release未上传。
