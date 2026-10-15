@@ -24,7 +24,7 @@ class ProductEditionTests(unittest.TestCase):
         backend = build / 'lv_port_linux/lv_backend'
         backend.write_bytes(header + b'fixture backend ' + edition.encode())
         provider = dict(requirement='REQ-MIMI-PRIVATE-066', status='passed', phase='compiled',
-                        profile=edition, recipe_sha256=c.RECIPES[edition], provider_edition_source_version=2,
+                        profile=edition, recipe_sha256=c.RECIPES[edition], provider_edition_source_version=3,
                         original_source_dependency=False, reference_backend_sha256=c.sha(backend), backend_sha256=c.sha(backend))
         if edition == 'private':
             provider.update(private_product_source_lock_sha256=c.PRIVATE_LOCK_HASH,

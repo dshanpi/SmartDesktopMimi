@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Authoritative pairing ownership and conservative nonrenewing expiry",
+  "context": "Empty code previously conflated with failure; old backend TTL fixed to3600; preserve public/private source and frozen V1",
+  "next_steps": "User merges/deploys backend patch; new package and real device/ownership acceptance remain not_run",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PAIR-071",
+      "record": "docs/change-gates/REQ-MIMI-PAIR-071.md",
+      "scope": "Optional shared status/UI, private parser, versioned SDK provider source closure and scoped regression",
+      "invariants": "No V1 renumber/layout change, no credentials or private HTTP source in public tree, no device/key/binding or frozen artifact writes",
+      "paths": [
+        ".github/workflows/public-ci.yml",
+        "CURRENT_PROGRESS.md",
+        "apps/lv_port_linux/src/apps/pairing/pairing_app.c",
+        "apps/lv_port_linux/src/middleware/middleware.h",
+        "apps/lv_port_linux/src/system/cloud_pairing_status.h",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-PAIR-071.md",
+        "docs/change-gates/batches/20261015-pair071-client.json",
+        "docs/update/platform-contract-lock.json",
+        "docs/validation/pairing-client-071.json",
+        "scripts/build_a133_provider.py",
+        "scripts/check_product_edition.py",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/test_cloud_pairing_contract.py",
+        "tests/update/test_product_edition.py",
+        "tests/update/test_product_provider.py"
+      ],
+      "checks": [
+        {
+          "name": "Host and real A133 backend builds",
+          "status": "passed",
+          "scope": "60of63 host;6private;15overlay;16hostUI;actual30/32A133backend units",
+          "evidence": "docs/validation/pairing-client-071.json"
+        },
+        {
+          "name": "Live backend deployment and physical binding",
+          "status": "not_run",
+          "scope": "User merges later; A133 blackscreen remains",
+          "reason": "No production deployment or device install in this scope",
+          "evidence": "docs/change-gates/REQ-MIMI-PAIR-071.md"
+        }
+      ]
+    }
+  ]
+}

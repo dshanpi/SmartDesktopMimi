@@ -1,12 +1,24 @@
 {
   "schema_version": 1,
-  "contract": "legacy-v1-with-read-only-video-status",
-  "notes": "Append-only VIDEO_CMD_GET_STATUS = 9. Existing command IDs/layouts retain their semantics. Changes require explicit contract review.",
+  "contract": "legacy-v1-with-optional-pairing-status",
+  "notes": "PAIR071 reviewed append-only topic22,32byte schema1. Existing native V1 layouts/IDs unchanged. Old UI dispatcher drops unknown topic; new UI retains V1-only status fallback. Host ABI/static and actual legacy/extended LVGL fixtures passed; physical mixed-version device matrix not_run. This optional extension does not change base Ports/device ABI or authorize a platform mismatch.",
   "headers": {
     "apps/lv_port_linux/src/system/backend_types.h": "1deb1d5c4c0d0b9d4dd1795d80cf2d487ccfe8b669afbb250d222674cb22a085",
-    "apps/lv_port_linux/src/middleware/middleware.h": "28901cd87e233af0882bae6df2c7fb411bebb0940794e297a8aa24a7b9bc21ee",
+    "apps/lv_port_linux/src/middleware/middleware.h": "8c9795f8e7d78ae9ea442398ab93c16ab901d5e8d68b4d2b72a4e3248a6845d0",
     "apps/lv_port_linux/src/ipc/ipc_socket.h": "43bf645d440b2688f72c99c0efbc30caf49484c819f1ac9f4b16608f58b86f3f",
-    "core/ports/aitvbox_ports.h": "dfaaf4b964b63809065af14c5df960b8a1f7f9b22517a4514e19c5117ea25f55"
+    "core/ports/aitvbox_ports.h": "dfaaf4b964b63809065af14c5df960b8a1f7f9b22517a4514e19c5117ea25f55",
+    "apps/lv_port_linux/src/system/cloud_pairing_status.h": "aafe1aafac977f2995dffeb8df45a4c5b104e5d9242d2289d65f34778b66bf98"
   },
-  "contract_id": "mimi-ipc-v1.1"
+  "contract_id": "mimi-ipc-v1.2",
+  "minimum_compatible_contract_id": "mimi-ipc-v1.1",
+  "compatibility_evidence": "docs/validation/pairing-client-071.json",
+  "optional_extensions": [
+    {
+      "topic": 22,
+      "name": "cloud_pairing_status",
+      "version": 1,
+      "bytes": 32,
+      "required_for_legacy_UI": false
+    }
+  ]
 }

@@ -69,6 +69,9 @@ typedef enum {
     /* LED strip (UI interaction feedback → Backend service_led) */
     TOPIC_LED_COMMAND,         /* UI -> Backend (swipe / preview cues) */
 
+    /* Optional PAIR071 extension; all preceding V1 topic numbers stay fixed. */
+    TOPIC_CLOUD_PAIRING_STATUS,
+
     TOPIC_MAX
 } mw_topic_t;
 

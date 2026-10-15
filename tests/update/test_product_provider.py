@@ -42,7 +42,7 @@ class ProductProviderTests(unittest.TestCase):
                       inputs={'sdk/include.h': p.sha(dependency)},
                       compiler_target=p.COMPILER, compiler_sha256=p.sha(compiler),
                       source_commit='fixture', translation_units=[], link_flags=[],
-                      edition_source_version=2, edition_source_requirement='REQ-MIMI-PRIVATE-066',
+                      edition_source_version=3, edition_source_requirement='REQ-MIMI-PAIR-071',
                       reference_state='audited_new_source_reference', reference_backend_sha256='a' * 64,
                       prior_backend_sha256='b' * 64, original_backend_sha256='b' * 64)
         recipe['source_graph_sha256'] = p.source_graph(recipe)

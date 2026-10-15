@@ -52,6 +52,7 @@ flowchart TD
 
 | 需求 | 记录 | 当前状态 |
 | --- | --- | --- |
+| REQ-MIMI-PAIR-071 权威配对状态与真实有效期 | [记录](change-gates/REQ-MIMI-PAIR-071.md) | 客户端与实际双profile后端主机通过；真实绑定/部署未执行 |
 | REQ-MIMI-TRACE-001 全变更可追溯规则 | 本文件 | 已记录，人工语义复核 + 本地自动覆盖检查；远端CI执行 not_run |
 | REQ-MIMI-UI-016 首页图标与内嵌分页 | [首页门禁](change-gates/REQ-MIMI-UI-016.md) | 已实现；整机稳定性 failed |
 | REQ-MIMI-BUILD-017 Ubuntu 原生编译基础 | [Ubuntu 门禁](change-gates/REQ-MIMI-BUILD-017.md) | 原生编译/窗口通过；服务状态投影 failed，deb 未验收 |

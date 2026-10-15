@@ -1,0 +1,109 @@
+{
+  "A133_ABI_static_assertions": "passed:legacy276byte/status4bytecommand, originaltopics/offsets and32byteextension",
+  "A133_UI_translation_unit": "passed:actual final source with restored SDK sysroot; not full link",
+  "UI": {
+    "count": 16,
+    "images": {
+      "pairing-bound-en-dark.png": "1abe6d4a7711dd2422a8742a4cb71a9bd0571a756dbf19eb0ebd7f20bfe227e4",
+      "pairing-bound-en-light.png": "a308a0652a240d345139d7df3f2233e6062741a1f1de245f28a1c20187541f41",
+      "pairing-bound-zh-dark.png": "ca79944d6aaa027e1176a5a64871de0d35207ac4203089939cdc0dcd868827ab",
+      "pairing-bound-zh-light.png": "773ca5fe0d516843032b6d767abc30390f16988131704748b41e4c2214381306",
+      "pairing-en-dark.png": "efcf0c4ace402c4e3c8d5c991557e04583e8dd43eb4a5b263ea1d588b4597813",
+      "pairing-en-light.png": "2fd4707efe70232ce213fb5dbcfb12e9cd51fea025d305b818d9f7dca2669344",
+      "pairing-unbound-en-dark.png": "48a4e8078f4d86ea5162466e5a98e881346580fa915f38294cc1af9da7a74ffb",
+      "pairing-unbound-en-light.png": "f8a0b665f815b97ffe514ed55ce01fbacf7ffdf1ae9195d05f3b69ef05912d92",
+      "pairing-unbound-zh-dark.png": "f182f6e094bd761bfae3f0b82d7152dfd180a11fd87bef054338d0bec101c38c",
+      "pairing-unbound-zh-light.png": "34bad09ecc46437be1e3fb993e90f36e299fc82b5a3dbea907ad45645f4a163d",
+      "pairing-unknown-en-dark.png": "0df91c7101567011eaeab1fe44c0d90310553d6bea0516b8f2d0172f17c3bc65",
+      "pairing-unknown-en-light.png": "24067fd92f2205b3c787620e7e69f65ccb45c49b9869c1073d7d8e95b94c7508",
+      "pairing-unknown-zh-dark.png": "8805cc42b30dd3f4068d9e88395dfba29654fb533f9af16bfd907adc91121162",
+      "pairing-unknown-zh-light.png": "5a4f59c67c339839763e7f634c717f9774656353bbe78577a942a3ff5264d797",
+      "pairing-zh-dark.png": "83c5fb72bf229a38d75e1bfe94207d2f18956ae6d36dd0f3b38cf6646a1f93a1",
+      "pairing-zh-light.png": "0146d4d9909a154ec63e0adc744a2914c8b0a3fca58246c75f041efd6698cae4"
+    },
+    "locales": [
+      "zh",
+      "en"
+    ],
+    "resolution": "1024x768",
+    "states": [
+      "legacy",
+      "bound",
+      "unbound",
+      "unknown"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "visual_review": "passed3ChineseLightStates; hosted fixtures only"
+  },
+  "affected_tests": {
+    "log_sha256": "d7bc6655d170aa8172e681bd562d76e9b06ad78d123f617b43afa529d4b7e13b",
+    "passed": 60,
+    "skipped": 3,
+    "skips_do_not_replace_actual_A133_builds": true,
+    "total": 63
+  },
+  "at": "2026-10-15T11:47:42.131045+00:00",
+  "backend_deployment": "not_run:user merges and deploys later",
+  "backend_patch": "83e7de7cb31bb914dc17a0e997f4f67a7b3f5133",
+  "contract_review": {
+    "first_block": "middleware hash changed; contracts-r1.log retained",
+    "id": "mimi-ipc-v1.2",
+    "minimum_compatible": "mimi-ipc-v1.1",
+    "old_unknown_topic_dispatch": "reviewed source drops topic without disconnect; not physical mixed-version test"
+  },
+  "device": "A133 MainBoard V1.2/project4/device4; no new candidate installed",
+  "device_pairing": "not_run:old board black screen unresolved",
+  "factory_identity_keys_bindings_changed": false,
+  "first_failure": {
+    "kind": "staging public directory already exists",
+    "preserved": "output/pairing-client-20261015/staging-r1-failure.json",
+    "recovery": "reused already completed public reference after exact recipe/executableSHA check; no duplicate build"
+  },
+  "frozen_draft_assets_changed": false,
+  "overlay_tests": {
+    "log_sha256": "f76d6dfb7bbf53a81cf86d2fceedd819a8da89e841a0a8e7dd42efc57d21cff0",
+    "passed": 15,
+    "total": 15
+  },
+  "private_tests": {
+    "log_sha256": "8cd4695748f26a40b7b4c2cdf864cd6e2624a3845ac02e315682c58d567ab582",
+    "passed": 6,
+    "total": 6
+  },
+  "profiles": {
+    "private": {
+      "backend_sha256": "85ba68fc875f0c97f1b0c86cdcc34de5b1a2866eac38763358b3f067d258d632",
+      "original_source_dependency": false,
+      "receipt_sha256": "a13ae802ba4d2533c51b10b61171988a6e0674f05c25eddcb0d508e0e4bcf939",
+      "recipe_sha256": "fded4477968ca3070806597f8deb868741fac83ee68b5895f4eed79ccf35364c",
+      "source_graph_sha256": "8da7b01c692a4a1e0e52287280a3d4585efa82ec03ebe1c4a97feff6d04fc345",
+      "translation_units": 32
+    },
+    "public": {
+      "backend_sha256": "f023f6193c941f4320536315e0c4e861573e439c163a29a1a08e8c065aafec6d",
+      "original_source_dependency": false,
+      "receipt_sha256": "33171c8e36b36089b3cb4aaf49fd2006577cf53b253ffa6dac377a014e011173",
+      "recipe_sha256": "e40509021c45d869d6ed735e8e5fe93df0a061eb4e9ab836c9010cf76780f654",
+      "source_graph_sha256": "d38711ec8a5aa761444071baf2af716835821fe7539efc45598e67c07f319dc9",
+      "translation_units": 30
+    }
+  },
+  "remaining": [
+    "real account ownership/new binding",
+    "new application packaging and full application link",
+    "backend merge/deployment by user",
+    "physical hardware acceptance deferred"
+  ],
+  "requirement": "REQ-MIMI-PAIR-071",
+  "schema": 1,
+  "source_hashes": {
+    "apps/lv_port_linux/src/apps/pairing/pairing_app.c": "5dec4447451766494d723bf60ce7ecc2d59efcdf699b305061321bff3c39fb31",
+    "apps/lv_port_linux/src/middleware/middleware.h": "8c9795f8e7d78ae9ea442398ab93c16ab901d5e8d68b4d2b72a4e3248a6845d0",
+    "apps/lv_port_linux/src/system/cloud_pairing_status.h": "aafe1aafac977f2995dffeb8df45a4c5b104e5d9242d2289d65f34778b66bf98",
+    "docs/update/platform-contract-lock.json": "3b3768efa8cecd37f4d4ef789c86257e7f0c4bfe9357cb1c271034fc6f80fdfb"
+  },
+  "status": "passed_host_and_backend_compile_only"
+}
