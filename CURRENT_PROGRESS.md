@@ -1,3 +1,9 @@
+# 当前执行进度（2026-10-15，SPLIT061入口完成 / EDITION062梳理）
+
+共享采集程序已从上层退休，系统构建改用固定SDK组件；实际video入口、原程序74ceb07同字节/ABI、SDK4276/95回读、提前拒绝及180唯一主机检查0skip全部passed，代码45ba139。已有rc2/rc23及SDK配置SHA未变，无设备/HDMI操作，真机继续后置。
+公共/私有新边界的实际源码清单见docs/update/EDITION-SOURCE-MAP.md；49共享候选与66专有/混合候选、2份SDK私有适配的哈希已保存，按行为拆分而非复制桌面。当前私有仓库仍未初始化/迁移，公共禁用/私有启用尚not_run；新镜像名生成/打包链待落实，不能把梳理当完成。整体源迁移false。
+本轮源码通过后同步main，已上传25附件不修改/覆盖。下一步独立落实产品名镜像输出，再接续专有接入的独立来源/构建组合。
+
 # 最新要求接续（2026-10-15，EDITION062）
 
 用户指定公共SmartDesktopMimi与私有SmartDesktopMimi-Private：桌面/普通软件和更新共享公开，私有扩展才支持Tuya/100ask.net一机一码自动配对，公共版本不支持。新镜像外部文件名SmartDesktopMimi-SystemImage-v<版本>.img.gz，不显示A133，内部硬件匹配不变。门禁REQ-MIMI-EDITION-062已记录，先梳理实际归属，未标迁移/双版本验收通过；旧rc2/rc23快照不重写。

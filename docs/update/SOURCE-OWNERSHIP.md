@@ -78,3 +78,8 @@
 实际新stage3独立编译归集的五个ELF均与原目标同字节；136主机回归（实际SDK，0skip）、AArch64 ABI和冻结候选/SDK配置保护检查passed，旧桌面672源清单复核通过。其他未变阶段沿用054实际结果，不重跑无关编译；不是全SDK干净重建或真机验收。
 平台集成测试现需同时设置MIMI_A133_PROVIDER_ROOT和MIMI_A133_SERVICES_ROOT，指向对应标准SDK组件；无SDK明确not_run/skip，配置坏failclosed，不恢复旧副本。源码退休清单和retired_scopes阻止改名实现回到旧目录。
 迁移系统生命周期兼容实现并不代表agentd的混合业务全部天然属于底层；受信执行/权限边与上层编排还需最终收尾，其他hdmi/ipkvm/Tuya与旧接口/冻结客户端亦未完成，migration_complete=false。当前物理与完整新镜像未验收，应用/Release未上传。证据output/platform-services-split-20261015/verified-result.json。
+
+## SPLIT061 共享采集系统入口（2026-10-15）
+SDK a49d1d1标准overlay4276/95已独立回读。原apps/ipkvm/video的5源/补丁保存在SDK smartdesktopmimi-a133-capture并从上层退休；系统产品入口先校验固定源锁，再用SDK独立新目录编译，不保留隐式回退。Web/Go业务仍在公共源码，普通Web静态资源可应用更新，采集/Go服务程序只能走系统发布。原Linaro5.3、142编译输入/28链接输入含脚本/别名及补丁结果固定，实际新video目标81,304字节/74ceb07与原参考一致。34边界+native smoke、74架构、74平台检查全过0skip，native2重复计入后唯一180项；未重编无关桌面/网页/Tuya或旧镜像。芯片/ABI/加载器/原冻结产物与SDK配置SHA复核通过；物理后置、整体迁移false。
+
+产品开源/私有配对的新边界见EDITION-SOURCE-MAP.md，当前仅完成实际归属清单，尚未实现公共禁用/私有启用两产品隔离。

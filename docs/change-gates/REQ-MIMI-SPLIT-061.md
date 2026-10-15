@@ -18,3 +18,7 @@
 ## 上层入口与源退休实施
 本批接续SDK归档：只9新组件文件安装实际SDK，scripts/build_a133_capture.py固定原锁，产品build_apps在清理/依赖前预检；IPKVM all先检查固定组件，video新目录独立编译/归集收据，web目标仍独立。原5追踪实现/Makefile/补丁在SDK重编/远端回读后删除，退休路径/作用域守卫保留。实际make video入口passed，程序74ceb07同字节，不重编无关网页/桌面/Tuya或整镜像。
 测试显式MIMI_A133_CAPTURE_ROOT；缺SDK保持not_run。旧fixture读SDK头，保留监督测试并新增既有缓存syscall seam的自动执行，open/ioctl/close包装不接触设备。入口篡改/旧输出保留、GNU旧/新ld路径和脚本解析、make元字符、外来依赖逃逸等检查待运行；真机后置。一次接续文档脚本误以为apps/ipkvm/README.md已存在而中止，未影响构建/设备，后续新建该归属说明；已写入的测试不重复追加。
+
+## 上层入口与受影响验证完成（代码45ba139）
+实际SDK9新组件独立编译、make video新入口/归集、原74ceb07字节/ELF64little/AArch64和解释器/NEEDED、缺固定组件的make all提前拒绝且旧输出保持、桌面672源按新增退休策略复核、公有源码审计均passed。34边界含2 native smoke、74架构、74平台全部0skip；native2重叠后唯一180项，不重复报182。缓存/监督测试仅syscall seam/线程状态，不打开摄像头/ION。源/包装器/库路径篡改和不支持根字符均拒绝。SDK原配置、618镜像/cdf SWU/c22应用包SHA全部保持。verified-result.json绑定实际代码/原源/SDK/锁/ABI/测试与保护哈希。
+原5上层源已退休，新构建入口完成；公开/私有专有配对仍062未实现，完整源迁移false，真机和完整新镜像未执行。修正当前编译文档的已退休路径，不更改历史快照/标签/产物或归属旧通过证据。

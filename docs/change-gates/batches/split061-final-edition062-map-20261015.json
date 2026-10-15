@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "summary": "共享采集源码系统入口收尾与产品边界清单",
+  "context": "保留旧ld诊断和路径脚本失败历史，实际代码45ba通过",
+  "next_steps": "新镜像名生成/发布链，再独立实现专有接入组合",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-061",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+      "scope": "真实源迁移验证/实际产品源码归属清单与接续",
+      "invariants": "不改旧候选或秘密，物理不冒充passed，清单不冒充产品隔离",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/update/SOURCE-OWNERSHIP.md",
+        "docs/zh-CN/capture-daemon.md",
+        "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+        "docs/change-gates/REQ-MIMI-EDITION-062.md",
+        "docs/update/EDITION-SOURCE-MAP.md",
+        "docs/change-gates/batches/split061-final-edition062-map-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "采集入口和受影响回归",
+          "status": "passed",
+          "scope": "180唯一项/0skip、原ELF/ABI/冻结SHA、4276/95回读",
+          "evidence": "output/capture-source-split-20261015/verified-result.json"
+        },
+        {
+          "name": "产品实际源归属",
+          "status": "passed",
+          "scope": "49共享66专有或混合候选及2SDK适配，仅记录哈希",
+          "evidence": "output/edition-split-20261015/source-boundary-inventory.json"
+        },
+        {
+          "name": "双产品运行隔离与真机",
+          "status": "not_run",
+          "scope": "062实际迁移和A133物理",
+          "evidence": "docs/update/EDITION-SOURCE-MAP.md",
+          "reason": "私有仓库尚未迁移，真实板卡等新SDK环境"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-EDITION-062",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-062.md",
+      "scope": "真实源迁移验证/实际产品源码归属清单与接续",
+      "invariants": "不改旧候选或秘密，物理不冒充passed，清单不冒充产品隔离",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/update/SOURCE-OWNERSHIP.md",
+        "docs/zh-CN/capture-daemon.md",
+        "docs/change-gates/REQ-MIMI-SPLIT-061.md",
+        "docs/change-gates/REQ-MIMI-EDITION-062.md",
+        "docs/update/EDITION-SOURCE-MAP.md",
+        "docs/change-gates/batches/split061-final-edition062-map-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "采集入口和受影响回归",
+          "status": "passed",
+          "scope": "180唯一项/0skip、原ELF/ABI/冻结SHA、4276/95回读",
+          "evidence": "output/capture-source-split-20261015/verified-result.json"
+        },
+        {
+          "name": "产品实际源归属",
+          "status": "passed",
+          "scope": "49共享66专有或混合候选及2SDK适配，仅记录哈希",
+          "evidence": "output/edition-split-20261015/source-boundary-inventory.json"
+        },
+        {
+          "name": "双产品运行隔离与真机",
+          "status": "not_run",
+          "scope": "062实际迁移和A133物理",
+          "evidence": "docs/update/EDITION-SOURCE-MAP.md",
+          "reason": "私有仓库尚未迁移，真实板卡等新SDK环境"
+        }
+      ]
+    }
+  ]
+}

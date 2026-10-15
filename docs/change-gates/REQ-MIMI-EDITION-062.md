@@ -34,3 +34,5 @@ A133安装/失联/升级/断电验收继续按用户要求后置到新SDK Ubuntu
 只读实际核对：用户指定dshanpi/SmartDesktopMimi-Private存在、private=true、当前size_kb=0、main默认分支且当前登录具有push/admin权限。只读取仓库metadata，未初始化/推送内容或复制凭据。证据output/edition-split-20261015/repository-access.json。
 
 接续进度已按实际SDK归档完成而系统入口未切换纠正；本轮只记录产品拆分设计与仓库访问，未对公开/私有配对功能作运行改动。
+
+实际归属清单已建立docs/update/EDITION-SOURCE-MAP.md，逐文件SHA与45ba代码起点见source-boundary-inventory.json，明确公开通用IoT/语音与私有设备授权、100ask SDK private适配/外置输入、Tuya混合源及生产工具后续动作。初次git ls-files普通行输出使中文路径被quote后读取失败，未写清单/复制源；改为NUL边界UTF8解码后完整展开并固定实际字节。私有仓库迁移/公共禁用/私有启用均not_run，新镜像名工具/链路待落实。

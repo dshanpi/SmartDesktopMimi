@@ -15,14 +15,13 @@
 
 ## A133 编译
 
-先按平台 manifest 设置 SDK 路径，再分别构建采集进程、音频辅助进程、后端和 Go 服务：
+先按平台 manifest 设置 SDK 路径并应用固定SDK overlay，再独立构建；各--output必须是尚不存在的新目录：
 
 ```sh
-make -C apps/ipkvm/video SDK_ROOT="$A133_SDK_ROOT" BUILD_DIR=build
-make -C apps/hdmi_preview SDK_ROOT="$A133_SDK_ROOT" BUILD_DIR=build
-cmake -S apps/lv_port_linux -B apps/lv_port_linux/build \
-  -DCMAKE_TOOLCHAIN_FILE="$A133_TOOLCHAIN_FILE"
-cmake --build apps/lv_port_linux/build --target lv_backend
+# First apply the reviewed private SDK overlay with scripts/apply_overlay.sh.
+make -C apps/ipkvm SDK_ROOT="$A133_SDK_ROOT" BUILD_DIR="$PWD/build/ipkvm" video
+python3 scripts/build_a133_hdmi.py --sdk "$A133_SDK_ROOT" --output "$PWD/build/hdmi-fresh"
+python3 scripts/build_a133_provider.py --sdk "$A133_SDK_ROOT" --profile public --output "$PWD/build/provider-fresh"
 (cd apps/ipkvm/upstream && go test ./... && go build ./cmd/...)
 ```
 
@@ -100,3 +99,6 @@ session cookie 的生命周期终止客户端会话。
 
 `/usr/bin/aitvbox-ipkvmctl status` 会同时检查进程、控制/媒体 socket 和 Capture 状态；
 无信号可以是可诊断状态，但 socket 不可访问或采集状态不可读取应判为失败。
+
+## 2026-10-15 源归属状态
+SPLIT061的采集实现及补丁已移入SDK smartdesktopmimi-a133-capture，原5个上层源退休。当前固定SDK独立构建与原程序74ceb07同字节，缓存/监督native seam不接触硬件；这不代表A133失联已解决。实际新系统安装/升级/断电/数据矩阵按用户要求后置至新SDK环境。
