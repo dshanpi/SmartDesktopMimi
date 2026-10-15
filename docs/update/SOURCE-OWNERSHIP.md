@@ -62,3 +62,9 @@
 
 ### 2026-10-15 产品入口切换（REQ-MIMI-SPLIT-054）
 `scripts/build_apps.sh`预检固定SDK组件后，使用SDK内独立helper构建`lv_backend`，桌面`build_openwrt.sh`只构建`lvglsim`并强制归属检查。双profile实际重编与原后端字节一致，A133上层672编译源审计passed。实际源码60b0b13，详见054及output/product-provider-20261015。旧混合CMake分支和平台源码仍保留作对照，未完成公共旧源移除；完整产品整链/新镜像及真机未执行，不把该入口检查当作迁移完成。
+
+
+### 2026-10-15 旧后端C退休（REQ-MIMI-SPLIT-055，替代054“旧C仍保留”当前状态）
+23个已在SDK958保存并实际重编的platform C已从桌面源码删除；24个接口头和冻结共享/客户端保留。CMake默认上层且拒绝混合模式；旧后端target/库查找已移除。SDK组件继续独立构建系统后端，provider-recipe中保存旧闭包与原字节。
+所有退休路径及SHA登记source-ownership.json，重新出现即拒绝。原平台实现测试保留并从显式MIMI_A133_PROVIDER_ROOT指向固定配方与实际SDK源码；无配置对应检查明确skip/not_run，配置错误失败。实际SDK条件106架构/平台+28边界通过，A133前端672源重编且清理前后字节相同；证据output/backend-source-retirement-20261015。
+剩余：平台接口头/冻结硬件客户端边界、其他apps/platform_services/hdmi_preview/ipkvm及集成材料的最终归属仍须收尾；migration_complete=false。完整新产品/升级/物理验收不因本批通过而变为passed。
