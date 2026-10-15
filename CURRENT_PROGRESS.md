@@ -1,6 +1,6 @@
 # SYSTEM070包装冲突主机修复通过（2026-10-15）
 
-suite release14在有baseline时只验证而不再声明product-edition，updater唯一安装封存文件；无baseline仍保留suite原标记。真实公共/私有A133程序夹具+两生产recipe原故障复现、修复后文件交集为空/444/拒绝损坏seal及受影响23项0skip passed。旧rc24签名包c3339a52与构建源bedf1a8不变，无需重编/重签应用。真实SDK rootfs/opkg/pack和完整公开镜像仍待重试，旧失败不覆盖；服务器17严格只读、设备验收后置。
+suite release14在有baseline时只验证而不再声明product-edition，updater唯一安装封存文件；无baseline仍保留suite原标记。真实公共/私有A133程序夹具+两生产recipe原故障复现、修复后文件交集为空/444/拒绝损坏seal及受影响24项0skip passed。旧rc24签名包c3339a52与构建源bedf1a8不变，无需重编/重签应用。真实SDK rootfs/opkg/pack和完整公开镜像仍待重试，旧失败不覆盖；服务器17严格只读、设备验收后置。
 
 # SYSTEM070实际opkg冲突修复（2026-10-15，实施前）
 
