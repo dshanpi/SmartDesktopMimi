@@ -168,12 +168,31 @@ class ProductEditionTests(unittest.TestCase):
                 # A mixed build must fail on the first install recipe line, before mkdir/copy.
                 shutil.rmtree(stage)
                 record = product / 'build/lv_port_linux/provider-build-result.json'
+                original_record = record.read_bytes()
                 body = json.loads(record.read_text());body['profile'] = 'private' if edition == 'public' else 'public'
                 record.write_text(json.dumps(body))
                 result = subprocess.run(command, cwd=ROOT / 'packaging/aitvbox-suite', capture_output=True, text=True)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn('PRODUCT EDITION BLOCKED', result.stderr)
                 self.assertFalse(stage.exists())
+                record.write_bytes(original_record)
+                # A structurally valid old lock cannot authorize different build receipts.
+                component = fixtures/('edition067-'+edition)/'platform-product-lock.json'
+                if not component.is_file():
+                    self.fail('configured program fixtures also require the actual edition067 source lock')
+                stale = json.loads(component.read_text())
+                stale['programs']['provider_sha256'] = 'e'*64
+                stale_lock = root/'stale-source-lock.json';stale_lock.write_text(json.dumps(stale))
+                sdk = root/'sdk';(sdk/'.repo').mkdir(parents=True)
+                sentinel = sdk/'.config';sentinel.write_bytes(b'unchanged SDK config')
+                env = dict(os.environ, AITVBOX_PRODUCT_BUILD=str(product), MIMI_PRODUCT_EDITION=edition,
+                           AITVBOX_ENABLE_100ASK_CLOUD='ON' if edition=='private' else 'OFF',
+                           MIMI_PLATFORM_PRODUCT_LOCK=str(stale_lock))
+                refused = subprocess.run(['bash',str(ROOT/'scripts/build_firmware.sh'),str(sdk)],capture_output=True,text=True,env=env)
+                self.assertNotEqual(refused.returncode,0)
+                self.assertIn('product lock program receipt differs',refused.stderr)
+                self.assertEqual(sentinel.read_bytes(),b'unchanged SDK config')
+
 
 
 if __name__ == '__main__':

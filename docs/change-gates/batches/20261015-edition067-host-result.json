@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "summary": "Complete component lock/rootfs/release provenance host checks and record common application preservation.",
+  "context": "Initial source lock278ddd4 measured; added input-output protection, strict modes/schema and old-lock refusal. Programs and original snapshots not rebuilt.",
+  "next_steps": "Collect final committed source locks and revalidate existing filesystem fixtures, then source upload/readback/CI. Full SDK/image and system OTA edition matching remain unqualified.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-EDITION-067",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-067.md",
+      "scope": "Source/stripped program/rootfs and release record correlation plus host shared application transactions.",
+      "invariants": "No real credentials, trusted key replacement, device operations or snapshot overwrite. Host minimal filesystems and simulated process hooks never count as product/physical acceptance.",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-EDITION-067.md",
+        "docs/change-gates/batches/20261015-edition067-host-result.json",
+        "docs/update/PRODUCT-EDITIONS.md",
+        "docs/update/PRODUCT-SOURCE-LOCK.md",
+        "scripts/build_firmware.sh",
+        "scripts/build_release.sh",
+        "scripts/lock_product_sources.py",
+        "tests/update/test_product_edition.py",
+        "tests/update/test_product_lock.py",
+        "tests/update/test_product_provenance.py",
+        "tools/update/build_provenance.py",
+        "tools/update/product_lock.py",
+        "tools/update/system_record.py"
+      ],
+      "checks": [
+        {
+          "name": "Actual source and filesystem component proof",
+          "status": "passed",
+          "scope": "Two actual source locks and four minimal host filesystems with actual A133 program bytes/strip and stale rejection",
+          "evidence": "output/product-edition-20261015/actual-component-filesystem-readback.json"
+        },
+        {
+          "name": "Affected host regressions and shared data preservation",
+          "status": "passed",
+          "scope": "215 unique update checks combined,75 architecture,Go vet/race;16+6 application transaction subcases with simulated hooks",
+          "evidence": "output/product-edition-20261015/final-product-record-regression.log;shared-application-preservation.log"
+        },
+        {
+          "name": "Final committed locks and full product acceptance",
+          "status": "not_run",
+          "scope": "Final current-source collection, new full image and actual devices",
+          "reason": "Fix commit first; whole SDK/image and physical phases remain separate.",
+          "evidence": "docs/update/PRODUCT-SOURCE-LOCK.md"
+        }
+      ]
+    }
+  ]
+}

@@ -99,7 +99,7 @@ def system(directory, lock, manifest, factory, load):
                 record['platform_product_lock_sha256'] != assets['platform-product-lock.json'] or
                 lock['platform_product_lock_sha256'] != assets['platform-product-lock.json'] or
                 record.get('product_rootfs_check_sha256') != assets['product-rootfs-check.json'] or
-                rootfs.get('schema_version') != 1 or rootfs.get('status') != 'passed' or rootfs.get('edition') != product['edition'] or
+                type(rootfs.get('schema_version')) is not int or rootfs.get('schema_version') != 1 or rootfs.get('status') != 'passed' or rootfs.get('edition') != product['edition'] or
                 rootfs.get('physical') != 'not_run' or rootfs.get('release_qualified') is not False or
                 rootfs.get('product_lock_sha256') != assets['platform-product-lock.json'] or
                 rootfs.get('rootfs_image_sha256') != record.get('rootfs_image_sha256') or

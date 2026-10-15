@@ -31,6 +31,8 @@ Options:
   --allow-dirty         允许已跟踪源码有未提交修改（会记录在构建清单；不推荐）
   -h, --help
 
+MIMI_HARDWARE_SOURCE_ROOT must point to the fixed SDK overlay Git repository.
+Product source locks require committed inputs; --allow-dirty cannot qualify them.
 默认执行正式完整流程。开发期只重编某一层时，请直接使用 build_apps.sh 或
 build_firmware.sh；不要用旧 build/ 产物手工调用 SDK pack。
 USAGE

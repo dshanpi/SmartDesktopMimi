@@ -2,6 +2,7 @@
 """Validate product lock metadata or an extracted rootfs; no source/SDK access."""
 import argparse
 import json
+import hashlib
 import os
 from pathlib import Path
 import sys
@@ -11,7 +12,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from lock_product_sources import validate, check_rootfs
 from check_product_edition import load
-from build_a133_provider import sha
+def sha(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for chunk in iter(lambda:stream.read(1 << 20), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
 
 
 def main():
@@ -34,7 +41,8 @@ def main():
             if not a.image:
                 raise ValueError('--image is required for an image readback record')
             output = a.output.absolute()
-            if output.resolve() != output or output.is_symlink():
+            if (output.resolve() != output or output.is_symlink() or
+                    output in {lock_path.resolve(), a.image.resolve()} or a.rootfs.resolve() in output.parents):
                 raise ValueError('aliased rootfs record output')
             output.parent.mkdir(parents=True, exist_ok=True)
             with tempfile.NamedTemporaryFile(mode='w', prefix='.rootfs-record-', dir=output.parent, delete=False) as stream:

@@ -160,7 +160,7 @@ def validate(lock):
                 'sdk_manifest_sha256', 'recipe_sha256', 'source_graph_sha256', 'provider_tool_sha256',
                 'compiler_sha256', 'strip_tool_sha256', 'programs', 'rootfs_programs', 'evidence_scope',
                 'full_sdk_inventory', 'full_image', 'physical', 'release_qualified'}
-    if (set(lock) != required or lock['schema_version'] != 1 or lock['kind'] != 'platform-product-lock'
+    if (set(lock) != required or type(lock['schema_version']) is not int or lock['schema_version'] != 1 or lock['kind'] != 'platform-product-lock'
             or lock['requirement'] != 'REQ-MIMI-EDITION-067' or lock['platform_id'] != 'a133'
             or lock['edition'] not in ('public', 'private') or lock['release_qualified'] is not False
             or lock['full_image'] != 'not_run' or lock['physical'] != 'not_run'
@@ -195,7 +195,7 @@ def validate(lock):
         raise ValueError('product installed program composition mismatch')
     for value in lock['rootfs_programs'].values():
         if (set(value) != {'sha256', 'bytes', 'mode'} or not HASH.fullmatch(value['sha256'])
-                or type(value['bytes']) is not int or value['bytes'] <= 0 or value['mode'] != 0o755):
+                or type(value['bytes']) is not int or value['bytes'] <= 0 or type(value['mode']) is not int or value['mode'] != 0o755):
             raise ValueError('invalid stripped rootfs program')
     return lock
 
@@ -208,7 +208,7 @@ def check_rootfs(lock, root):
     for name, entry in lock['rootfs_programs'].items():
         path = root / name
         if (path.resolve() != path or not path.is_file() or provider.sha(path) != entry['sha256']
-                or path.stat().st_size != entry['bytes'] or path.stat().st_mode & 0o777 != entry['mode']):
+                or path.stat().st_size != entry['bytes'] or path.stat().st_mode & 0o7777 != entry['mode']):
             raise ValueError('rootfs program differs from selected/stripped product: ' + name)
     if lock['edition'] == 'public':
         for name in ('usr/bin/your_chat_bot_QIO_1.0.1.bin', 'etc/aitvbox-tuya-pid', 'usr/share/tuyaopen_models'):

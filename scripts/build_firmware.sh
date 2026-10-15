@@ -63,14 +63,17 @@ python3 "${PRODUCT_ROOT}/scripts/check_product_edition.py" \
     --build "${AITVBOX_PRODUCT_BUILD}/build" --edition "${MIMI_PRODUCT_EDITION}"
 
 if [[ -n "${MIMI_PLATFORM_PRODUCT_LOCK:-}" ]]; then
-    python3 - "${PRODUCT_ROOT}" "${MIMI_PLATFORM_PRODUCT_LOCK}" "${MIMI_PRODUCT_EDITION}" <<'LOCK_PREFLIGHT'
+    python3 - "${PRODUCT_ROOT}" "${MIMI_PLATFORM_PRODUCT_LOCK}" "${MIMI_PRODUCT_EDITION}" "${AITVBOX_PRODUCT_BUILD}/build" <<'LOCK_PREFLIGHT'
 import sys
 from pathlib import Path
 sys.path.insert(0,sys.argv[1]+'/scripts')
 from lock_product_sources import validate
-from check_product_edition import load
+from check_product_edition import load, check
 lock=validate(load(Path(sys.argv[2]).absolute()))
 if lock['edition'] != sys.argv[3]:raise SystemExit('product source lock edition mismatch')
+programs=check(sys.argv[4],sys.argv[3])
+for field,value in lock['programs'].items():
+    if programs.get(field) != value:raise SystemExit('product lock program receipt differs from current build: '+field)
 LOCK_PREFLIGHT
 fi
 

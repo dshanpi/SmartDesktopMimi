@@ -137,7 +137,7 @@ def prepare(build, plan_path, output, checker, trust):
                 product['repositories']['application']['commit'] != manifest['PRODUCT_COMMIT'] or
                 product['repositories']['hardware']['commit'] != plan['hardware_commit'] or
                 product['sdk_manifest_sha256'] != manifest.get('SDK_MANIFEST_SHA256') or
-                check.get('schema_version') != 1 or check.get('status') != 'passed' or
+                type(check.get('schema_version')) is not int or check.get('schema_version') != 1 or check.get('status') != 'passed' or
                 check.get('edition') != product['edition'] or check.get('physical') != 'not_run' or
                 check.get('release_qualified') is not False or
                 check.get('product_lock_sha256') != sums['metadata/platform-product-lock.json'] or

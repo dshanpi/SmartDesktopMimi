@@ -1,5 +1,6 @@
 """Host fixtures for source locking and stale/mixed rootfs rejection."""
 import copy
+import json
 import hashlib
 import importlib.util
 from pathlib import Path
@@ -35,7 +36,7 @@ def lock_fixture(edition='public'):
 
 class ProductSourceLockTests(unittest.TestCase):
     def test_model_rejects_private_public_mix_unknown_fields_and_false_acceptance(self):
-        for change in ('private', 'field', 'accepted', 'image', 'path', 'program', 'hash'):
+        for change in ('private', 'field', 'accepted', 'image', 'path', 'program', 'hash', 'schema-type'):
             with self.subTest(change=change):
                 record = lock_fixture()
                 p.validate(record)
@@ -44,6 +45,7 @@ class ProductSourceLockTests(unittest.TestCase):
                 elif change == 'field': record['secret'] = 'not a real credential'
                 elif change == 'accepted': record['release_qualified'] = True
                 elif change == 'image': record['full_image'] = 'passed'
+                elif change == 'schema-type': record['schema_version'] = True
                 elif change == 'path': record['repositories']['hardware']['files']['../escape'] = record['repositories']['hardware']['files'].pop('fixture.c')
                 elif change == 'program': record['rootfs_programs']['usr/bin/your_chat_bot_QIO_1.0.1.bin'] = dict(sha256='6'*64, bytes=1, mode=0o755)
                 else: record['compiler_sha256'] = 'missing'
@@ -80,13 +82,14 @@ class ProductSourceLockTests(unittest.TestCase):
 
     def test_rootfs_rejects_stale_program_mode_edition_alias_and_credentials(self):
         for edition in ('public', 'private'):
-            for change in ('program', 'mode', 'edition', 'alias', 'credential'):
+            for change in ('program', 'mode', 'suid', 'edition', 'alias', 'credential'):
                 with self.subTest(edition=edition, change=change), tempfile.TemporaryDirectory() as directory:
                     root = Path(directory).resolve();record = self.rootfs(root, edition)
                     p.check_rootfs(record, root)
                     binary = root / 'usr/bin/lv_backend'
                     if change == 'program':binary.write_bytes(b'old SDK cache program')
                     elif change == 'mode':binary.chmod(0o777)
+                    elif change == 'suid':binary.chmod(0o4755)
                     elif change == 'edition':(root / 'etc/smartdesktopmimi/product-edition').write_text('wrong')
                     elif change == 'alias':
                         other = root / 'other';binary.rename(other);binary.symlink_to(other)
@@ -99,6 +102,27 @@ class ProductSourceLockTests(unittest.TestCase):
             root = Path(directory).resolve();record = self.rootfs(root, 'public')
             path = root / 'usr/bin/your_chat_bot_QIO_1.0.1.bin';path.write_bytes(b'stale runtime')
             with self.assertRaisesRegex(ValueError, 'private device runtime'):p.check_rootfs(record, root)
+
+    def test_rootfs_record_output_cannot_overwrite_lock_image_or_rootfs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            fs = root/'rootfs';fs.mkdir()
+            record = self.rootfs(fs, 'private')
+            lock = root/'lock.json';lock.write_text(json.dumps(record))
+            image = root/'host-only.img';image.write_bytes(b'host input fixture, not a system image')
+            command = [sys.executable, str(ROOT/'tools/update/product_lock.py'), '--lock', str(lock),
+                       '--rootfs', str(fs), '--image', str(image)]
+            protected = [lock, image, fs/'usr/bin/lv_backend']
+            before = [path.read_bytes() for path in protected]
+            for output in protected:
+                result = subprocess.run(command+['--output',str(output)],capture_output=True,text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('PRODUCT ROOTFS BLOCKED', result.stderr)
+                self.assertEqual([path.read_bytes() for path in protected], before)
+            output = root/'readback.json'
+            result = subprocess.run(command+['--output',str(output)],capture_output=True,text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIs(json.loads(output.read_text())['release_qualified'],False)
 
 
 if __name__ == '__main__':unittest.main()
