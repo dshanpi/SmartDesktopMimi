@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Derive rootfs hashes with the pinned actual SDK package pipeline",
+  "context": "Actual r2 package modifies RPATH before strip; plain-strip source derivation omitted this transformation. Exact copied-program replay matches real rootfs; old failure retained.",
+  "next_steps": "Implement schema2 pipeline provenance with legacy schema1 read support, verify real programs and affected tests, then formal r3 build.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-070",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-070.md",
+      "scope": "Fixed SDK rstrip/patchelf/strip transformation and strict independent result verification",
+      "invariants": "No observed hash whitelist, weakened guards, original program mutation, new keys, device or server writes; preserve legacy evidence.",
+      "paths": [
+        "scripts/lock_product_sources.py",
+        "tests/update/test_package_transform.py",
+        "docs/change-gates/REQ-MIMI-SYSTEM-070.md",
+        "docs/change-gates/batches/20261015-system070-transform.json",
+        "CURRENT_PROGRESS.md"
+      ],
+      "checks": [
+        {
+          "name": "Schema compatibility and real package transformation",
+          "status": "passed",
+          "scope": "63 affected tests0skip: real public/private A133 binaries, actual r2 rootfs, legacy locks, v2 provenance and strict tool/failure rejection",
+          "evidence": "output/system-product-20261015/package-transform-tests-r2.log;package-transform-public-audit.json"
+        },
+        {
+          "name": "Complete new product qualification",
+          "status": "not_run",
+          "scope": "Formal SDK rootfs/pack/SWU/runtime and download checks",
+          "reason": "r2 remains failed; no qualified new complete image",
+          "evidence": "output/system-product-20261015/public-product-build-r2-result.json"
+        }
+      ]
+    }
+  ]
+}

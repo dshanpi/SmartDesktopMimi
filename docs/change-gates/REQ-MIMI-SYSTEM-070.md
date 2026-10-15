@@ -34,3 +34,15 @@
 不变量：不能使用opkg强制覆盖、取消产品标记/验证、篡改baseline seal或任意换钥；不写服务器17、不动设备/HDMI；应用rc24来自实际bedf1a8，后续系统包装提交可独立变化且准确记录。新运行库/rootfs和完整来源、远端附件仍按原门禁。
 
 修复主机结果：原recipe公共/私有两个真实程序夹具均复现product-edition交集失败；修复后组合payload交集为空、updater唯一标记444且seal不变、无baseline原路径和损坏seal/混版拒绝通过。受影响product_edition/baseline/system_edition共24项0skip通过；完整SDK真实opkg/镜像仍待重跑。首次夹具umask产生可组写文件及首次测试模块搜索路径不完整的调用失败保留，分别修正夹具权限和测试PYTHONPATH后才得最终结果，不以这些工具调用失败解释产品根因。
+
+### SDK 包装变换来源锁修正（2026-10-15，实施前）
+
+r2已经通过真实opkg文件归属和封存基线检查，但最终rootfs后端与来源锁普通strip派生值相差14字节。真实SDK的固定rstrip.sh先用patchelf移除不允许的RPATH再strip --strip-all；副本精确重放与实际rootfs完整相等。旧失败和BUILD-INCOMPLETE保留，不能白名单实测SHA或取消检查。
+
+本批仅修scripts/lock_product_sources.py及受影响测试：新生成schema2来源锁固定SDK rstrip脚本、patchelf和strip的路径/解析路径/SHA及顺序；旧schema1只按原格式兼容读取，不升级历史证据。输入验证→原始ELF副本→固定真实SDK脚本→独立严格退出码重放→全字节比较→前后输入重验→锁记录；任一缺失、变更、执行失败或结果不一致都拒绝。不能因为SDK脚本末尾true掩盖内部错误就接受。
+
+不变量：不修改原程序/SDK脚本/rootfs，不更改现有可信钥、签名rc24或两基线，不重签/改应用版本；公共/私有组成、文件模式、秘密排除和来源校验继续强制。只对必要产品组合重跑正式构建，不挪用失败r2为完成。没有服务器17写入授权，不触碰服务器/设备。
+
+验收：not_run，schema2缺项/篡改/未知顺序拒绝与旧schema1保持可读；真实A133公共/私有程序包装、r2实物完整字节比较和非法输入拒绝；受影响产品锁/来源/系统测试及公开审计；最后正式新镜像/SWU/运行库回读仍not_run。证据统一output/system-product-20261015，下一步先实现并通过受影响主机检查，再建立独立r3构建目录。
+
+本批主机结果：63项受影响测试0skip通过，含真实A133公共/私有后端及私有Tuya三个程序包装、public与r2 rootfs哈希/长度一致、原程序未变；历史两版schema1实锁仍可读。schema2工具/顺序/解析路径/缺项/布尔伪schema拒绝，两版系统构建元数据重哈希仍不能绕过工具篡改；损坏或另指向工具拒绝；SDK脚本伪成功空操作及strip失败故障注入被拒绝。公开源码审计0发现。实际证据package-transform-tests-r2.log和package-transform-public-audit.json。尚未生成新提交实锁或新完整镜像，这些保持not_run，不能把r2改标通过。

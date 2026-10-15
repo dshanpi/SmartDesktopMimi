@@ -5,7 +5,6 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -21,6 +20,75 @@ HARDWARE = '100askTeam/A133-AIDesktop-Tina5'
 HASH = re.compile(r'[a-f0-9]{64}\Z')
 COMMIT = re.compile(r'[a-f0-9]{40}\Z')
 STRIP_SHA256 = '42cba88845773ca75e8d0a4693285845841267bca1ff708f77fdba3c62b6772b'
+PACKAGE_TRANSFORM = dict(
+    schema=1, algorithm='a133-sdk-rstrip-rpath-then-strip-v1', strip_arguments=['--strip-all'],
+    inputs={
+        'strip': dict(path='prebuilt/rootfsbuilt/aarch64/toolchain-sunxi-glibc-gcc-1130/toolchain/bin/aarch64-openwrt-linux-strip',
+                      resolved='prebuilt/rootfsbuilt/aarch64/toolchain-sunxi-glibc-gcc-1130/toolchain/bin/aarch64-openwrt-linux-gnu-strip',
+                      sha256=STRIP_SHA256),
+        'patchelf': dict(path='openwrt/openwrt/staging_dir/host/bin/patchelf',
+                         resolved='out/a133/b6/openwrt/staging_dir/host/bin/patchelf',
+                         sha256='53d03dde55a97e139e22e3fa04739f4ed695d113f99061ea52ea7c141e610687'),
+        'rstrip': dict(path='openwrt/openwrt/scripts/rstrip.sh',
+                       resolved='openwrt/openwrt/scripts/rstrip.sh',
+                       sha256='6a43c5e8643c72a1bac5c87cf99195bf3574ec6aadf61d26818181aed6791943')})
+
+
+def package_tools(sdk):
+    # The SDK script contains eval/unquoted paths. Only this fixed SDK-local
+    # pipeline is supported; do not turn it into a caller-selected shell command.
+    sdk = provider.canonical(str(sdk))
+    if not re.fullmatch(r'/[A-Za-z0-9_./-]+', str(sdk)):
+        raise ValueError('SDK package pipeline requires a shell-safe fixed root')
+    result = {}
+    for name, record in PACKAGE_TRANSFORM['inputs'].items():
+        actual = (sdk / record['path']).resolve(strict=True)
+        if (actual != sdk / record['resolved'] or not provider.inside(actual, sdk)
+                or not actual.is_file() or provider.sha(actual) != record['sha256']):
+            raise ValueError('SDK package transformation input differs: ' + name)
+        result[name] = actual
+    return result
+
+
+def package_program(sdk, source):
+    """Run the pinned real SDK pipeline on copies, checking its masked failures.
+
+    rstrip.sh ends with true. Independently execute its exact ELF transformation
+    with checked subprocess exits and require byte equality; script exit 0 alone
+    is deliberately insufficient. Neither the source nor SDK files are written.
+    """
+    sdk = provider.canonical(str(sdk))
+    tools = package_tools(sdk)
+    before = source.read_bytes()
+    if (len(before) < 64 or before[:6] != b'\x7fELF\x02\x01'
+            or int.from_bytes(before[16:18], 'little') not in (2, 3)
+            or int.from_bytes(before[18:20], 'little') != 183):
+        raise ValueError('package input must be an AArch64 ELF executable/shared object')
+    env = {'PATH': '/usr/bin:/bin', 'LC_ALL': 'C', 'TOPDIR': str(sdk / 'openwrt/openwrt'),
+           'STRIP': str(tools['strip']) + ' --strip-all', 'PATCHELF': str(tools['patchelf'])}
+    with tempfile.TemporaryDirectory(prefix='mimi-package-', dir='/tmp') as directory:
+        actual, strict = Path(directory) / 'actual', Path(directory) / 'strict'
+        for path in (actual, strict):
+            path.write_bytes(before)
+            path.chmod(0o755)
+        def run(command):
+            return subprocess.run([str(x) for x in command], env=env, check=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=60)
+        old = run([tools['patchelf'], '--print-rpath', strict]).stdout.decode().rstrip('\n')
+        # Mirrors the pinned shell case patterns with IFS=':'. Base /lib and
+        # /usr/lib are intentionally removed by that SDK; their children remain.
+        new = ':'.join(path for path in old.split(':')
+                       if re.fullmatch(r'(?:/lib/[^/].*|/usr/lib/[^/].*|\$ORIGIN/.*|\$ORIGIN)', path))
+        if new != old:
+            run([tools['patchelf'], '--set-rpath', new, strict])
+        run([tools['strip'], '--strip-all', strict])
+        run(['/bin/bash', tools['rstrip'], actual])
+        if actual.read_bytes() != strict.read_bytes() or actual.stat().st_mode & 0o7777 != 0o755:
+            raise ValueError('SDK package pipeline differs from strict transformation replay')
+        output = actual.read_bytes()
+    if package_tools(sdk) != tools or source.read_bytes() != before:
+        raise ValueError('package transformation inputs changed during derivation')
+    return dict(sha256=hashlib.sha256(output).hexdigest(), bytes=len(output), mode=0o755)
 
 
 def git(root, *args):
@@ -108,10 +176,11 @@ def source_context(args):
                    recipe_sha256=provider.RECIPES[args.edition],
                    source_graph_sha256=recipe['source_graph_sha256'],
                    provider_tool_sha256=provider.TOOL_HASH, compiler_sha256=recipe['compiler_sha256'],
-                   strip_tool_sha256=STRIP_SHA256)
+                   strip_tool_sha256=STRIP_SHA256, package_transform=PACKAGE_TRANSFORM)
     strip = compiler.with_name('aarch64-openwrt-linux-strip').resolve(strict=True)
     if not provider.inside(strip, sdk) or provider.sha(strip) != STRIP_SHA256:
         raise ValueError('SDK package strip tool differs from the qualified input')
+    package_tools(sdk)
     return context
 
 
@@ -124,7 +193,7 @@ def collect(args):
     # Recheck after reading programs, rather than attaching a stale source snapshot.
     if source_context(args) != context:
         raise ValueError('source changed during product locking')
-    lock = dict(schema_version=1, kind='platform-product-lock', requirement='REQ-MIMI-EDITION-067',
+    lock = dict(schema_version=2, kind='platform-product-lock', requirement='REQ-MIMI-EDITION-067',
                 edition=args.edition, platform_id='a133', **context,
                 programs={key: programs[key] for key in ('provider_sha256', 'tuya_sha256',
                           'provider_record_sha256', 'tuya_record_sha256')},
@@ -135,13 +204,9 @@ def collect(args):
     selected = {'usr/bin/lv_backend': build / 'lv_port_linux/lv_backend'}
     if args.edition == 'private':
         selected['usr/bin/your_chat_bot_QIO_1.0.1.bin'] = build / 'tuyaopen/your_chat_bot_QIO_1.0.1.bin'
-    strip = (provider.canonical(args.sdk) / provider.COMPILER).with_name('aarch64-openwrt-linux-strip').resolve(strict=True)
-    with tempfile.TemporaryDirectory(prefix='mimi-product-strip-') as temp:
-        for name, actual in selected.items():
-            copied = Path(temp) / actual.name
-            shutil.copyfile(actual, copied)
-            subprocess.run([str(strip), str(copied)], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            lock['rootfs_programs'][name] = dict(sha256=provider.sha(copied), bytes=copied.stat().st_size, mode=0o755)
+    sdk = provider.canonical(args.sdk)
+    for name, actual in selected.items():
+        lock['rootfs_programs'][name] = package_program(sdk, actual)
     if source_context(args) != context or edition_gate.check(str(build), args.edition) != programs:
         raise ValueError('source or program changed while deriving rootfs hashes')
     validate(lock)
@@ -160,7 +225,15 @@ def validate(lock):
                 'sdk_manifest_sha256', 'recipe_sha256', 'source_graph_sha256', 'provider_tool_sha256',
                 'compiler_sha256', 'strip_tool_sha256', 'programs', 'rootfs_programs', 'evidence_scope',
                 'full_sdk_inventory', 'full_image', 'physical', 'release_qualified'}
-    if (set(lock) != required or type(lock['schema_version']) is not int or lock['schema_version'] != 1 or lock['kind'] != 'platform-product-lock'
+    version = lock.get('schema_version')
+    if type(version) is int and version == 2:
+        required.add('package_transform')
+        # JSON canonical bytes distinguish bool from int, unlike Python ==.
+        if json.dumps(lock.get('package_transform'), sort_keys=True) != json.dumps(PACKAGE_TRANSFORM, sort_keys=True):
+            raise ValueError('unknown SDK package transformation provenance')
+        if lock.get('strip_tool_sha256') != STRIP_SHA256:
+            raise ValueError('package transformation strip digest mismatch')
+    if (set(lock) != required or type(version) is not int or version not in (1, 2) or lock['kind'] != 'platform-product-lock'
             or lock['requirement'] != 'REQ-MIMI-EDITION-067' or lock['platform_id'] != 'a133'
             or lock['edition'] not in ('public', 'private') or lock['release_qualified'] is not False
             or lock['full_image'] != 'not_run' or lock['physical'] != 'not_run'
