@@ -7,7 +7,7 @@ REQ-MIMI-EDITION-062；这是当前源码梳理，**两产品构建隔离尚未�
 | services/mimi-update、tools/update、构建/deb工具 | 公共共享 | 应用更新不得覆盖平台/私有接入/身份/凭据；硬件匹配不变 |
 | apps/lv_port_linux/src/apps/iot、services/mimi-iot-bridge | 公共共享 | 通用云项目的列表/控制与设备自身一机一码授权分层，真实云资源仍未提供 |
 | apps/lv_port_linux/src/apps/voice和通用对话界面 | 公共共享 | 可选语音文字控制继续公开，不把普通AI交互判为私有 |
-| SDK private/code/.../service_cloud.c、service_cloud_validation.c及外置100ask输入 | 专有适配转SmartDesktopMimi-Private | 当前仍是冻结SDK private配方，下一步抽取注册/刷新/自动绑定产品接入；SDK保留契约/硬件实现，不能只删密钥就算公共隔离 |
+| SDK private/code/.../service_cloud.c、service_cloud_validation.c及外置100ask输入 | 专有适配转SmartDesktopMimi-Private | PRIVATE065已将两原C归私有adapters/100ask，以固定锁显式组合原SDK共享源；实际private32/public30TU均原字节、公共禁用实现和无旧副本回退passed。SDK旧源暂留历史，最终SDK退休/产品锁另记；Tuya隔离未完 |
 | scripts/factory_provision_device.sh、scripts/provision_tuya_license.sh、tools/factory-assistant | 产品私有生产工具候选 | PRIVATE064已迁62跟踪源+3授权CLI，固定原SHA/模式，私有上传独立回读68项含helper/许可passed，公共入口退休并反向审计拒绝；真实xlsx/凭据库/授权输入不进任何Git。运行适配另行拆分 |
 | third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c和app_chat_bot.c | 混合源按行为拆分 | 通用对话/上游许可保留；授权读取、一机一码初始化和生产接入归私有。不能把整个上游TuyaOpen或普通AI界面复制成私有版。尚未抽取 |
 | A133采集/显示、后端、五平台兼容服务和板级适配 | 既有私有SDK标准overlay | 两产品通过接口消费；板级SDK与产品专有配对归属分别登记 |

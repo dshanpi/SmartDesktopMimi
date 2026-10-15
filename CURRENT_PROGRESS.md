@@ -1,3 +1,9 @@
+# 当前进度（2026-10-15，PRIVATE065 Provider组合通过）
+
+用户重启后已明确继续，原mimi循环ACTIVE，无重复构建。100ask两原C私有497468c与锁9bcd9a60已成为新私有编译的显式来源；公共入口拒绝私有输入，SDK旧副本不作回退。代码25112c7实际公共30TU/private32TU独立编译/链接/依赖闭包通过，分别84af5217/8a8b3a45与原程序同字节、ELF64 AArch64。189更新+75架构0skip/10拒绝边界、源码审计及实际build_apps --clean缺组件清理前拒绝passed，旧输出/SDK配置/原rc2/rc23 SHA不变。证据output/private-100ask-adapter-20261015/verified-result.json。
+
+两项产品能力尚非全部完成：Tuya一机一码运行适配、双产品完整组合/最终产品来源锁、公共更新保留私有组件仍需接续；本批不构建/安装新完整镜像。A133物理继续deferred/not_run，Ubuntu登录/真实语音/账号归属/Tuya设备待验收。历史暂停记录保留，本头部为用户继续后的新状态；整体未完成。
+
 # 用户重启暂停（2026-10-15 / PRIVATE065）
 
 长任务paused、原mimi循环PAUSED，等待用户重启后明确继续。先读docs/delivery/RESUME-20261015-REBOOT.md，不重复构建或上传。100ask两原适配已私有497468c上传并独立回读；公共仅实施前记录，Provider组合代码尚未改、实际30/32TU构建not_run。本批无正在运行的构建，无硬件操作；冻结候选不变，整体未完成。

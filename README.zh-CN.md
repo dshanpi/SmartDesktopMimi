@@ -248,10 +248,11 @@ SWUpdate A/B 双槽 OTA，LVGL UI 菜单触发，升级 kernel + rootfs（含 LV
 签名 + provision 注册获取 secret）。固件只编一次，每台差异只有
 `/etc/100ask/device_sig`（出厂数据）。
 
-- 后端服务 `apps/lv_port_linux/src/system/service_cloud.c`：MQTT 连云、收 OTA 推送、
+- 产品私有适配 `SmartDesktopMimi-Private/adapters/100ask/system/service_cloud.c`：MQTT 连云、收 OTA 推送、
   静默下载（复用 `service_ota`）。
 - 100ask SDK 是仓库外可选私有 provider；公开版默认使用无网络 stub。内部构建需显式设置
-  `AITVBOX_ENABLE_100ASK_CLOUD=ON` 与 `AITVBOX_100ASK_SDK_ROOT=/绝对路径`。
+  `AITVBOX_ENABLE_100ASK_CLOUD=ON`、`AITVBOX_100ASK_SDK_ROOT=/绝对路径` 和
+  `MIMI_PRIVATE_PRODUCT_ROOT=/绝对路径/SmartDesktopMimi-Private`。
 - UI：顶栏云徽章（连接色 + OTA 下载/待装反馈，`desktop_status_bar` / `ui_helpers`）+
   安装模态框（`src/ui/cloud_ota_modal.c`）。
 

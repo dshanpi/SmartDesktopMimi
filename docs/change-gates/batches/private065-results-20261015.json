@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "100ask显式组合的实际双profile构建及回归结果",
+  "context": "重启后继续、实际32/30TU与原同字节，不把独立Provider称新完整镜像",
+  "next_steps": "真实源码上传回读后Tuya运行隔离/完整产品来源锁与双产品组合",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-065",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+      "scope": "实际构建证据、当前入口文档及接续",
+      "invariants": "不改冻候选、公共无私有来源、秘密不入Git、物理延期如实记录",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-065.md",
+        "docs/change-gates/batches/private065-results-20261015.json",
+        "README.md",
+        "README.zh-CN.md",
+        "docs/build.md",
+        "docs/update/EDITION-SOURCE-MAP.md"
+      ],
+      "checks": [
+        {
+          "name": "实际Provider及受影响主机",
+          "status": "passed",
+          "scope": "32/30TU字节/依赖/ABI，189更新/75架构0skip，10边界及实际清理前拒绝",
+          "evidence": "output/private-100ask-adapter-20261015/verified-result.json"
+        },
+        {
+          "name": "完整产品/Tuya/设备",
+          "status": "not_run",
+          "scope": "仍须最终来源/组合和物理验收",
+          "evidence": "CURRENT_PROGRESS.md",
+          "reason": "本批仅100ask源及Provider组合，A133用户延期"
+        }
+      ]
+    }
+  ]
+}

@@ -138,10 +138,12 @@ TuyaOpen 聊天机器人，产物归集到 `build/`。IPKVM 操作见
 ```sh
 AITVBOX_ENABLE_100ASK_CLOUD=ON \
 AITVBOX_100ASK_SDK_ROOT=/absolute/private/100ask-iot-sdk \
+MIMI_PRIVATE_PRODUCT_ROOT=/absolute/private/SmartDesktopMimi-Private \
 ./scripts/build_apps.sh /home/ubuntu/A133-Tina5.0-v0.9
 ```
 
-SDK 目录必须包含 `include/100ask_iot.h` 和 `src/100ask_iot.c`。启用但路径或 Mosquitto
+SDK 目录必须包含 `include/100ask_iot.h` 和 `src/100ask_iot.c`。产品私有目录还必须提供固定的`adapters/100ask/source-lock.json`与两份实现；
+不接受SDK历史副本回退，公开profile拒绝任一私有输入。启用但路径或 Mosquitto
 依赖缺失时构建会立即失败；默认公开构建不会准备或链接 Mosquitto。
 
 ## 打产品固件

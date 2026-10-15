@@ -15,3 +15,5 @@ SDK已有镜像/历史overlay内原配对副本暂保留作原构建来源，本
 
 用户重启后已明确继续。已核对公共53559a5/私有fa0a24e、原SDK a49及无遗留构建，恢复原mimi循环。新Provider入口private显式--private-product-root，固定运行锁9bcd9a60及两C的配方SHA/文件/Git模式；public拒绝任一私有输入。临时闭包仅从SDK取共享源、从产品私有取明确两C，原SDK工具与配方哈希不变，原dependency/宏映射仍执行。build_apps通过MIMI_PRIVATE_PRODUCT_ROOT贯通两次调用，清理/SDK配置前预检；未改Tuya或共享桌面。
 10项Provider入口主机回归passed，包括SDK旧两副本不同/不存在仍从产品取源，缺/篡改/软链接/错误组合/公开输入/旧输出保留。实际30/32TU编译和新镜像/安装尚not_run，将在本代码固定后执行受影响实际构建。本批Provider回执可追溯组件锁，完整最终产品镜像来源锁的接续仍须核对，不把独立Provider构建称完整新镜像通过。
+
+实际结果：公共30TU SHA84af521753b943908838a03db64ed53c1c755bc5f292144df621d50094119701，私有32TU SHA8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3，全部与原二进制相等；源/include闭包、原工具/配方及ELF64 AArch64检查passed。10入口边界、189更新、75架构0skip、源码审计及真实build_apps --clean缺产品组件前置拒绝passed，旧后端/六项冻结输入SHA不变。证据verified-result.json；完整最终系统来源锁、Tuya隔离和完整新镜像/设备仍not_run。
