@@ -37,5 +37,6 @@ jobs:
         run: |
           python3 tools/update/ui_catalog.py
           python3 tools/update/check_contracts.py
+          python3 tools/update/source_ownership.py
       - name: Release gate regression tests
         run: python3 -m unittest discover -s tests/update -p 'test_*.py'

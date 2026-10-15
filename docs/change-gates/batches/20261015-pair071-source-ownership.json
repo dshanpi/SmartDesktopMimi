@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "Classify reviewed optional pairing contract and check actual source ownership in CI",
+  "context": "Full application r1 correctly stopped before compilation on missing shared header ownership; old middleware freeze also required explicit reviewed digest update",
+  "next_steps": "Read and build actual full application r2; preserve failed r1 and old products",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PAIR-071",
+      "record": "docs/change-gates/REQ-MIMI-PAIR-071.md",
+      "scope": "Reviewed shared headers ownership metadata plus CI actual-tree gates; no runtime change",
+      "invariants": "Only approved new shared contract and append-only topic header SHA; other frozen/platform source stays intact; no private implementation in application",
+      "paths": [
+        "docs/update/source-ownership.json",
+        ".github/workflows/public-ci.yml",
+        ".github/workflows/application-update.yml",
+        "docs/change-gates/REQ-MIMI-PAIR-071.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261015-pair071-source-ownership.json"
+      ],
+      "checks": [
+        {
+          "name": "Shared contract/ABI/source review",
+          "status": "passed",
+          "scope": "Prior exact header SHA with32byte extension, V1 ABI, actual A133 and16UI fixtures; no code bytes changed",
+          "evidence": "docs/validation/pairing-client-071.json"
+        },
+        {
+          "name": "First full application r1",
+          "status": "failed",
+          "scope": "Source ownership preflight before compilation",
+          "reason": "Missing cloud_pairing_status.h classification; retained BUILD-INCOMPLETE",
+          "evidence": "docs/change-gates/REQ-MIMI-PAIR-071.md"
+        }
+      ]
+    }
+  ]
+}

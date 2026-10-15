@@ -51,6 +51,7 @@ jobs:
           python3 -u -m unittest -v tests.architecture.test_architecture
           python3 -u -m unittest -v tests.architecture.test_cloud_pairing_contract
           python3 -u scripts/check_architecture.py
+          python3 -u tools/update/source_ownership.py
 
       - name: Validate host integration
         run: |

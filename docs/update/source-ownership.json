@@ -131,7 +131,7 @@
     },
     "apps/lv_port_linux/src/middleware/middleware.h": {
       "owner": "shared-frozen",
-      "sha256": "28901cd87e233af0882bae6df2c7fb411bebb0940794e297a8aa24a7b9bc21ee"
+      "sha256": "8c9795f8e7d78ae9ea442398ab93c16ab901d5e8d68b4d2b72a4e3248a6845d0"
     },
     "apps/lv_port_linux/src/platform/platform_capabilities.h": {
       "owner": "platform"
@@ -180,6 +180,10 @@
     "apps/lv_port_linux/src/system/bt_pcm_player.h": {
       "owner": "platform-client-frozen",
       "sha256": "9aace3fa603a839adcb23203554978229be8f2f902c9cc914db829fbfc5d2571"
+    },
+    "apps/lv_port_linux/src/system/cloud_pairing_status.h": {
+      "owner": "shared-frozen",
+      "sha256": "aafe1aafac977f2995dffeb8df45a4c5b104e5d9242d2289d65f34778b66bf98"
     },
     "apps/lv_port_linux/src/system/config/app_config.c": {
       "owner": "shared-frozen",

@@ -29,3 +29,7 @@ not_run：后台线上部署（补丁83e7de7由用户后续合并）、真实账
 
 ### 远端UI清单门禁失败与修复
 原627e1ef的Application update gates（38730596624）在UI coverage inventory失败，原因新配对页源SHA未同步ui-catalog，非已通过主机项或设备状态改变。先比较原/现清单，变化仅pairing_app.c，真实16变体与页面断言已经覆盖；现补authoritative-bound、unknown-ownership、reject-optional-schema、same-code-poll-no-renewal四场景，再显式record清单。清单只绑定源码/场景，实体四项保持not_run；保留远端失败，不改旧包、不重编无关代码。私有f80bbfb的CI已success，SDK实际默认master已快进fa0d799，初次同步额外main同值引用保留未删。
+
+
+### 完整应用构建r1失败：共享头归属登记缺项（实施前审查与修复）
+固定df4dcd8的完整构建在来源门禁拒绝新增cloud_pairing_status.h，尚未进入编译；BUILD-INCOMPLETE/日志保留。此前63主机与A133后端通过不能替代完整应用链。现复核新头仅32字节共享契约/通用倒计时，无厂商HTTP/凭据/硬件实现；归shared-frozen并固定SHA。middleware.h的原冻结SHA也仅按此前topic22兼容审查更新；backend_types.h/其余平台共享SHA保持不动。补公开两个CI入口对实际源码树运行source_ownership.py，提前发现同类缺项。只改归属清单/CI/记录，无运行时代码变化，不重复后端/单元编译；完整应用新r2重做此前尚未进入的链路。
