@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "平台服务源迁入SDK事前门禁",
+  "context": "后端已迁移，五个系统服务仍在上层；固定621fd和SDK958父",
+  "next_steps": "先原/SDK独立编译五服务和overlay重放，再SDK源上传读回，最后上层切换及回归",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-056",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-056.md",
+      "scope": "平台服务源码和系统构建来源",
+      "invariants": "行为与五目标字节不变，许可证/原失败/原钥和冻结候选保留；无公开发布",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-056.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/split056-plan-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "迁移验证",
+          "status": "not_run",
+          "scope": "真实SDK和主机；物理不动",
+          "evidence": "output/platform-services-split-20261015",
+          "reason": "实施前记录"
+        }
+      ]
+    }
+  ]
+}
