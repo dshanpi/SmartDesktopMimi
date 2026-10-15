@@ -62,3 +62,6 @@
 
 ## 2026-10-15 用户最新优先级（覆盖旧上传前置）
 用户明确A133失联、真实系统安装、升级/回退/断电验收暂缓，待提供新的SDK Ubuntu环境后集中重做。先收尾当前源码、同步上传代码/私有SDK overlay/现有镜像/应用升级包。按REQ-MIMI-DELIVERY-058保存受控草稿快照及远端下载复核；未执行保持deferred/not_run，不再阻挡本次同步。未经后续真机验收不公开稳定Release，不改变设备验签或硬件匹配规则。
+
+## 2026-10-15 产品开源/私有边界与镜像文件名
+遵循REQ-MIMI-EDITION-062：对外新镜像SmartDesktopMimi-SystemImage-v<版本>.img.gz，不含A133；内部硬件匹配必须保留。SmartDesktopMimi公共桌面/普通应用/通用更新；SmartDesktopMimi-Private只接入涂鸦和100ask.net的一机一码/自动配对等专有能力。公共版本不提供两项专有配对；普通软件升级共用公共发布，不复制双份桌面。凭据不进任何Git仓库或通用镜像，原SDK overlay另保留。旧快照/标签不覆盖，先梳理实际边界再迁移。

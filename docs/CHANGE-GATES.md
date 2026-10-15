@@ -162,3 +162,5 @@ SPLIT057完成受影响主机验证：171项0skip、实际stage2同字节、SDK7
 DELIVERY058本轮完成：两类型25附件完整远端下载/原签名/版本绑定passed；CI060代码2af远端三CI passed；TRACE059历史覆盖补记后通过，旧失败保留。物理后置/整个项目未完成，交付记录见docs/delivery/20261015-snapshot.md。
 
 - [REQ-MIMI-SPLIT-061](change-gates/REQ-MIMI-SPLIT-061.md)：共享采集/编码源归属，事前门禁，待源/编译对照。
+
+- [REQ-MIMI-EDITION-062](change-gates/REQ-MIMI-EDITION-062.md)：公共桌面/私有一机一码边界及产品镜像命名，用户要求已记录，实际拆分/新镜像未执行。

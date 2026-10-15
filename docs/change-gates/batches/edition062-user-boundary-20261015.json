@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "用户指定产品开源/私有边界和外部镜像名",
+  "context": "普通桌面升级均可公开，只有两项一机一码接入私有，不复制双份桌面",
+  "next_steps": "只读核对私有仓库与实际源码依赖，后续实施迁移，保留旧快照",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-EDITION-062",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-062.md",
+      "scope": "设计/门禁和接续要求记录",
+      "invariants": "秘密不进任何Git、内部硬件匹配不变、旧产物/绑定/钥不改",
+      "paths": [
+        "AGENTS.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-EDITION-062.md",
+        "docs/change-gates/batches/edition062-user-boundary-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "用户边界记录",
+          "status": "passed",
+          "scope": "真实用户2026-10-15消息的两个仓库/专有配对/镜像名",
+          "evidence": "docs/change-gates/REQ-MIMI-EDITION-062.md"
+        },
+        {
+          "name": "实际迁移与新镜像",
+          "status": "not_run",
+          "scope": "公共/私有profile和新产物",
+          "evidence": "output/edition-split-20261015",
+          "reason": "本批只理解记录，先核对已有仓库和代码归属"
+        }
+      ]
+    }
+  ]
+}
