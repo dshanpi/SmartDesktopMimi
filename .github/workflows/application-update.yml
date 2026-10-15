@@ -12,7 +12,14 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+      - name: Fetch the pinned Go action through Git
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: actions/setup-go
+          ref: b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+          path: .mimi-ci/setup-go
+          persist-credentials: false
+      - uses: ./.mimi-ci/setup-go
         with:
           go-version-file: services/mimi-update/go.mod
           cache: false

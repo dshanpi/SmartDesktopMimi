@@ -21,8 +21,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Fetch the pinned Go action through Git
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: actions/setup-go
+          ref: b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+          path: .mimi-ci/setup-go
+          persist-credentials: false
       - name: Install Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
+        uses: ./.mimi-ci/setup-go
         with:
           go-version-file: apps/ipkvm/upstream/go.mod
           cache-dependency-path: apps/ipkvm/upstream/go.sum

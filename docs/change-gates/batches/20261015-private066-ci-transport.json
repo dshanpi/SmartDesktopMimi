@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "Recover fixed setup-go input through Git checkout when codeload archive returns404.",
+  "context": "Remote source byte readback already passed; original public setup failures and a single failed-job retry retained. Official Git SHA unchanged and actual fetch verified.",
+  "next_steps": "Run updated public workflows, retain real CI status and source readback; no product rebuild for CI-only change.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "Three Go workflow transport steps and ignored temporary action checkout only.",
+      "invariants": "Exact official setup-go b7ad commit, original Go inputs/permissions/checks retained; no floating tag, secret or product/device change.",
+      "paths": [
+        ".gitignore",
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/20261015-private066-ci-transport.json",
+        ".github/workflows/application-update.yml",
+        ".github/workflows/application-publish.yml",
+        ".github/workflows/public-ci.yml"
+      ],
+      "checks": [
+        {
+          "name": "Pinned action Git fetch and YAML validation",
+          "status": "passed",
+          "scope": "Exact original Git commit fetched/checked out and three workflow structures validated",
+          "evidence": "output/private-tuya-adapter-20261015/remote-ci-setup-failure.json; .delivery/ci-setup-go-readback-066"
+        },
+        {
+          "name": "Updated remote CI execution",
+          "status": "not_run",
+          "scope": "Actual changed workflow run",
+          "reason": "Commit/push precede real GitHub job.",
+          "evidence": "output/private-tuya-adapter-20261015/remote-source-integration.json"
+        }
+      ]
+    }
+  ]
+}

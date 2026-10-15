@@ -76,3 +76,6 @@ id_ed25519*
 
 # Local delivery candidates and private SDK inputs (never public source).
 /.delivery/
+
+# Temporary pinned CI action checkout, never part of source exports.
+/.mimi-ci/
