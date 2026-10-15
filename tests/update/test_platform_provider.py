@@ -50,6 +50,21 @@ class ProviderSplitTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'unclassified'):
                 p.audit_dependencies([sdk / 'escape.h'], source, sdk, private)
 
+    def test_sdk_compiler_keeps_argv0_and_pins_alias_within_sdk(self):
+        with tempfile.TemporaryDirectory() as d:
+            sdk = Path(d).resolve()
+            target = sdk / 'wrapper.sh'
+            target.write_text('fixture')
+            gcc = sdk / 'aarch64-openwrt-linux-gcc'
+            gcc.symlink_to(target)
+            self.assertEqual(p.sdk_compiler(str(gcc), sdk), gcc)
+            gcc.unlink()
+            gcc.symlink_to('/bin/sh')
+            with self.assertRaisesRegex(ValueError, 'escapes SDK'):
+                p.sdk_compiler(str(gcc), sdk)
+            with self.assertRaises(ValueError):
+                p.sdk_compiler(str(target), sdk)
+
     def test_relocation_and_missing_placeholder(self):
         roots = {'SDK_ROOT': Path('/sdk'), 'SOURCE_ROOT': Path('/old/project')}
         arg = p.normalize('--sysroot=/sdk/target', roots)

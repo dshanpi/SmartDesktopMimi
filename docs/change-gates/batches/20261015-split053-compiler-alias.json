@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Keep reviewed OpenWrt compiler argv0 while pinning SDK alias target",
+  "context": "First actualstage rejected real inSDK compiler alias; no component created; failure kept",
+  "next_steps": "Restage with fixed compiler identity and actual32TU closure/build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-053",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+      "scope": "SDK wrapper compatibility and explicit tool/target hash binding",
+      "invariants": "Only fixed gcc logical name; resolved target must stay within SDK; project source aliases still refused",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SPLIT-053.md",
+        "docs/change-gates/batches/20261015-split053-compiler-alias.json",
+        "tools/update/platform_provider.py",
+        "tests/update/test_platform_provider.py"
+      ],
+      "checks": [
+        {
+          "name": "Actualstage firstattempt",
+          "status": "failed",
+          "scope": "Input admission only, no output",
+          "evidence": "output/a133-provider-split-20261015/stage-r1.log",
+          "reason": "compiler is legitimate SDK-internal dispatch wrapper symlink"
+        },
+        {
+          "name": "12boundary tests",
+          "status": "passed",
+          "scope": "Compiler target/argv0 and prior sourceownership tests",
+          "evidence": "output/a133-provider-split-20261015/boundaries-r2.log"
+        }
+      ]
+    }
+  ]
+}

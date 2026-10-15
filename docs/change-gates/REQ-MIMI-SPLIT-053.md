@@ -35,3 +35,5 @@ flowchart TD
 原后端来自sysrc2/source d7c8572、SDK97基线/overlay1fb03f3；私有100ask SDK仍在开发主机既有外置目录，运行数据/凭据不接触。当前应用rc23/sysrc2候选hash保持冻结。MCP ADB保存binding空、Ubuntu普通Xorg登录未到位，已请求不重复提问；此任务可独立推进。
 
 工具已实现（尚未运行实际SDK构建）：仅执行CLI指定且位于SDK的compiler，原generated wrapper不执行；从32TU真实预处理结果复制项目文件，私有SDK/系统头只hash外置；独立配方重写新源码与新对象路径，编译前后实际-M审计拒绝旧应用目录回读。使用显式SDK sysroot/staging，不接受host include覆盖或shell/response/plugin参数。保留__FILE__旧诊断字符串仅用macro-prefix-map，不读取旧源。11项边界与原归属回归passed，actualstage/build仍not_run。
+
+实际stage首轮failed于编译器canonical检查，未创建输出：固定OpenWrt gcc是SDK内wrapper符号链接，wrapper按argv0分派；不能简单使用resolved文件名执行。修复为只允许SDK内固定aarch64-openwrt-linux-gcc logical入口，同时绑定SDK内resolved目标路径及SHA，SDK外别名拒绝；不放宽项目/私有源别名。不改变既有SDK文件。

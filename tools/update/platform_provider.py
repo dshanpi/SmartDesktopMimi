@@ -22,6 +22,19 @@ def canonical(value):
     return p
 
 
+def sdk_compiler(value, sdk):
+    path = Path(value)
+    if not path.is_absolute() or str(path) != str(Path(os.path.normpath(path))) or path.name != 'aarch64-openwrt-linux-gcc' or within(path, sdk) is None:
+        raise ValueError('invalid fixed A133 compiler path')
+    target = path.resolve(strict=True)
+    if within(target, sdk) is None:
+        raise ValueError('compiler alias escapes SDK')
+    regular(target)
+    # OpenWrt wrappers dispatch using argv0. Keep the reviewed logical name,
+    # while pinning both its resolved path and bytes instead of changing argv0.
+    return path
+
+
 def regular(path):
     if not path.is_file() or path.is_symlink():
         raise ValueError('source/input must be a regular non-symlink file: ' + str(path))
@@ -122,13 +135,13 @@ def audit_dependencies(paths, source, sdk, private, origin=None):
 
 
 def stage(args):
-    source, sdk, private, compiler = [canonical(getattr(args, k)) for k in ('source', 'sdk', 'private_sdk', 'compiler')]
+    source, sdk, private = [canonical(getattr(args, k)) for k in ('source', 'sdk', 'private_sdk')]
+    compiler = sdk_compiler(args.compiler, sdk)
     output = Path(args.output).absolute()
     if output.exists() or output.is_symlink():
         raise ValueError('output already exists')
     if within(output, source) is not None:
         raise ValueError('component output must be outside source checkout')
-    regular(compiler)
     commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
     if commit != args.source_commit or subprocess.check_output(['git', 'status', '--porcelain'], cwd=source, text=True).strip():
         raise ValueError('source commit/clean state mismatch')
@@ -197,9 +210,9 @@ def stage(args):
             value = objects[value]
         link_flags.append(normalize(value, roots))
         i += 1
-    recipe = dict(schema_version=1, requirement='REQ-MIMI-SPLIT-053', source_commit=commit,
+    recipe = dict(schema_version=1, requirement='REQ-MIMI-SPLIT-053', source_commit=commit, tool_sha256=sha(Path(__file__).resolve()),
                   source_ownership_sha256=sha(source / 'docs/update/source-ownership.json'),
-                  origin_root=str(source), compiler_sha256=sha(compiler),
+                  origin_root=str(source), compiler_sha256=sha(compiler), compiler_target=within(compiler.resolve(), sdk),
                   compile_commands_sha256=sha(commands_file), link_recipe_sha256=sha(link_file),
                   original_backend_sha256=sha(build / 'bin/lv_backend'), sources=source_files,
                   inputs=inputs, translation_units=entries, link_flags=link_flags,
@@ -211,9 +224,10 @@ def stage(args):
 
 
 def build_component(args):
-    component, sdk, private, compiler = [canonical(getattr(args, k)) for k in ('component', 'sdk', 'private_sdk', 'compiler')]
+    component, sdk, private = [canonical(getattr(args, k)) for k in ('component', 'sdk', 'private_sdk')]
+    compiler = sdk_compiler(args.compiler, sdk)
     recipe = json.loads(regular(component / 'provider-recipe.json').read_text())
-    if recipe['schema_version'] != 1 or sha(regular(compiler)) != recipe['compiler_sha256']:
+    if recipe['schema_version'] != 1 or recipe['tool_sha256'] != sha(Path(__file__).resolve()) or sha(compiler) != recipe['compiler_sha256'] or within(compiler.resolve(), sdk) != recipe['compiler_target']:
         raise ValueError('compiler or schema mismatch')
     if within(compiler, sdk) is None or within(private, component) is not None:
         raise ValueError('wrong SDK compiler/private boundary')
