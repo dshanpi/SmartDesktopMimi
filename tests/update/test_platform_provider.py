@@ -34,6 +34,8 @@ class ProviderSplitTests(unittest.TestCase):
             for x in [source, sdk, private, origin]:
                 x.mkdir()
                 (x / 'file.h').write_text(x.name)
+            (source / 'sub').mkdir()
+            self.assertEqual(p.audit_dependencies([source / 'sub/../file.h'], source, sdk, private), {'project/file.h': p.sha(source / 'file.h')})
             expected = {'project/file.h': p.sha(source / 'file.h'), 'sdk/file.h': p.sha(sdk / 'file.h'), 'private/file.h': p.sha(private / 'file.h')}
             self.assertEqual(p.audit_dependencies([source / 'file.h', sdk / 'file.h', private / 'file.h'], source, sdk, private, origin), expected)
             with self.assertRaisesRegex(ValueError, 'original application'):

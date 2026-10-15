@@ -112,13 +112,14 @@ def expand(arg, roots):
 def audit_dependencies(paths, source, sdk, private, origin=None):
     files = {}
     for path in paths:
-        if not path.is_absolute() or path.resolve() != path:
+        if not path.is_absolute() or path.resolve() != Path(os.path.normpath(path)):
             # SDK header symlinks are real selected SDK inputs; resolve them,
             # while project/private source aliases never become accepted.
             if path.is_absolute() and within(path, sdk) is not None:
                 path = path.resolve()
             else:
                 raise ValueError('noncanonical dependency: ' + str(path))
+        path = Path(os.path.normpath(path))
         if origin is not None and within(path, origin) is not None:
             raise ValueError('standalone component read original application source')
         bucket = None

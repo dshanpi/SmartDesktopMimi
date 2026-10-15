@@ -51,3 +51,8 @@ A133系统候选sysrc2/应用rc23保持原hash；新kernel尚未装板、FES重�
 LOGIN052补充：桥接8258178已收紧只读固定UID/seat0详情（SSH不查询），15Python及5次/10秒实际等待passed；暂态日志failed保留，未声称长稳/真实登录。更新器642/d53不变、rc22 deb保留，真实用户登录和A133 ADB输入pending，全部发布门禁未完成。
 
 SPLIT053事前：从真实sysrc2后端32TU构建记录提取源/头闭包，独立编译验证后接入私有SDK并去除公开平台源；原候选冻结，迁移未完成。ADB和Ubuntu登录输入仍pending。
+
+## 2026-10-15 SPLIT053 独立后端实际进展
+从冻结sysrc2 source d7c8572提取66个源码/头闭包，独立32TU编译/链接passed；不读旧应用源、不借用旧对象、不复制私有SDK。新lv_backend407240B/hash8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3与原后端逐字节相同；299个SDK与2个外置私有依赖后置hash全一致，真实ELF/loader/20依赖读回passed。12边界回归passed，两次实际guard失败保留。
+仍未完成物理迁移：独立组件待SDK-overlay接入/重放，cloud OFF公开stub配方、系统构建入口切换、公共旧平台源移除及最终应用SDK仍需做；migration_complete=false。没有改动冻结app23/sysrc2、SDK1fb底层提交或设备。证据 output/a133-provider-split-20261015；门禁SPLIT053，关键source/evidence小型增量备份。
+ADB保存binding仍空，Ubuntu服务实际active等待普通Xorg登录；相关输入已询问，不重复。全部必需真机和最终发布仍未完成，未上传应用/Release。
