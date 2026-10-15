@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Record actual97 SDK input source checkpoint and bounded restoration before final product build",
+  "context": "EDITION068 code and binaries remain unchanged. Real overlay readback exposed60 modes/one expanded configuration; original values retained and exact locked state restored. Composite delta audit reconciles133 relocations and4 generated caches.",
+  "next_steps": "Finish source evidence sync then prepare final compatible factory application/baseline and full product preflight/build; actual physical phases remain deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-069",
+      "record": "docs/change-gates/REQ-MIMI-SDK-069.md",
+      "scope": "SDK input checkpoint and narrow host source/config restoration, no full product build",
+      "invariants": "No whole SDK/cache backup, no binary rebuild for documentation, no device/key/binding changes, unchanged frozen assets. Full image and physical acceptance not inferred.",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-SDK-069.md",
+        "docs/change-gates/batches/20261015-sdk069-input-checkpoint.json",
+        "docs/update/SDK-INPUT-CHECKPOINT.md"
+      ],
+      "checks": [
+        {
+          "name": "SDK component/overlay/source checkpoint",
+          "status": "passed",
+          "scope": "97 actual roots/heads,4283 overlay entries/95 baselines,4694 source objects,57 known root/ignored inputs and97 saved source archives",
+          "evidence": "output/final-sdk-inputs-20261015/composite-source-reconciled-private.json;overlay-readback-fixed.log;archive-readback-private.json"
+        },
+        {
+          "name": "Configuration and packing input gates",
+          "status": "passed",
+          "scope": "Exact panel config transformation, equivalent Kconfig normalization using existing metadata,display input and golden packing-input checks",
+          "evidence": "output/final-sdk-inputs-20261015/effective-config-equivalence-private.json;kernel-config-correction-readback.json;pack-inputs-passed.json"
+        },
+        {
+          "name": "New complete image and physical qualification",
+          "status": "not_run",
+          "scope": "No product binary built or installed this batch",
+          "reason": "Input checkpoint precedes actual new factory application/product build; device testing deferred by user",
+          "evidence": "docs/update/SDK-INPUT-CHECKPOINT.md"
+        }
+      ]
+    }
+  ]
+}
