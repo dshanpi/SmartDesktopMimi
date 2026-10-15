@@ -39,12 +39,13 @@ func ABDirection(cmdline, environment string) (string, error) {
 }
 
 type SystemJournal struct {
-	Schema        int    `json:"schema_version"`
-	HighWater     uint64 `json:"high_water"`
-	Phase         string `json:"phase"`
-	Version       string `json:"version"`
-	PackageSHA256 string `json:"package_sha256"`
-	BootID        string `json:"boot_id,omitempty"`
+	ProductEdition string `json:"product_edition,omitempty"`
+	Schema         int    `json:"schema_version"`
+	HighWater      uint64 `json:"high_water"`
+	Phase          string `json:"phase"`
+	Version        string `json:"version"`
+	PackageSHA256  string `json:"package_sha256"`
+	BootID         string `json:"boot_id,omitempty"`
 }
 
 func (e *Engine) reconcileSystem(d Device) (SystemJournal, error) {
@@ -88,6 +89,9 @@ func CommitSystemJournal(c Config) error {
 	if s.Phase == "idle" || s.Phase == "committed" {
 		return nil
 	}
+	if err = checkSystemProductCommit(c, s); err != nil {
+		return err
+	}
 	s.Phase = "committed"
 	return atomicJSON(dir, "state.json", s)
 }
@@ -112,7 +116,10 @@ func CheckSystemCommit(c Config) error {
 	if err != nil {
 		return err
 	}
-	return validateSystemCommit(s, d)
+	if err = validateSystemCommit(s, d); err != nil {
+		return err
+	}
+	return checkSystemProductCommit(c, s)
 }
 
 func atomicJSON(dir, name string, v any) error {
@@ -173,6 +180,9 @@ func (c Config) systemDevice() (SystemDevice, error) {
 		return d, err
 	}
 	if err := ReadJSON(c.SystemDeviceFile, &d); err != nil {
+		return d, err
+	}
+	if err := systemEditionMarker("/etc/smartdesktopmimi/product-edition", d.ProductEdition); err != nil {
 		return d, err
 	}
 	live, err := (Provider{c}).Device()
@@ -380,7 +390,7 @@ func SystemOperation(ctx context.Context, c Config, operation string, report fun
 	if err = engine.Hooks.Preflight(); err != nil {
 		return err
 	}
-	state = SystemJournal{Schema: 1, HighWater: m.Sequence, Phase: "applying", Version: m.Version, PackageSHA256: m.OTA.PackageSHA256, BootID: strings.TrimSpace(string(boot))}
+	state = SystemJournal{ProductEdition: m.ProductEdition, Schema: 1, HighWater: m.Sequence, Phase: "applying", Version: m.Version, PackageSHA256: m.OTA.PackageSHA256, BootID: strings.TrimSpace(string(boot))}
 	if err = atomicJSON(dir, "state.json", state); err != nil {
 		return err
 	}
@@ -397,4 +407,50 @@ func SystemOperation(ctx context.Context, c Config, operation string, report fun
 	}
 	emit("pending-reboot", m.Version, 100)
 	return nil
+}
+
+// The caller always supplies the fixed platform path, never request input.
+func systemEditionMarker(path, declared string) error {
+	info, err := os.Lstat(path)
+	if os.IsNotExist(err) && declared == "" {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("system product edition marker unavailable: %w", err)
+	}
+	if !info.Mode().IsRegular() || info.Size() > 16 {
+		return fmt.Errorf("invalid system product edition marker")
+	}
+	if err := trustedFile(path); err != nil {
+		return err
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return validateSystemEditionMarker(raw, declared)
+}
+func validateSystemEditionMarker(raw []byte, declared string) error {
+	if declared != "public" && declared != "private" {
+		return fmt.Errorf("system product edition descriptor missing or unknown")
+	}
+	if string(raw) != declared && string(raw) != declared+"\n" {
+		return fmt.Errorf("system product edition marker disagrees with descriptor")
+	}
+	return nil
+}
+
+func checkSystemProductCommit(c Config, s SystemJournal) error {
+	if s.Phase == "idle" || s.Phase == "committed" {
+		return nil
+	}
+	if s.ProductEdition == "" {
+		// A new product rootfs cannot confirm a legacy unpaired transaction.
+		return systemEditionMarker("/etc/smartdesktopmimi/product-edition", "")
+	}
+	d, err := c.systemDevice()
+	if err != nil {
+		return err
+	}
+	return matchSystemEditions(s.ProductEdition, d.ProductEdition)
 }

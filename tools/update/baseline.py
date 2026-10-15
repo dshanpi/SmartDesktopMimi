@@ -33,7 +33,24 @@ def inventory(root):
 def write(path,value):
     path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n');path.chmod(0o644)
 
-def verify(directory):
+def verify_product_edition(root, expected=None):
+    marker = root/'etc/smartdesktopmimi/product-edition'
+    system = root/'etc/smartdesktopmimi/system-device.json'
+    declared = json.loads(system.read_text()).get('product_edition', '') if system.exists() else ''
+    if not marker.exists() and not marker.is_symlink():
+        if declared or expected is not None:raise ValueError('missing baseline product edition marker')
+        return ''
+    if marker.is_symlink() or not marker.is_file() or marker.stat().st_size > 16:
+        raise ValueError('invalid baseline product edition marker')
+    raw=marker.read_text()
+    edition=raw[:-1] if raw.endswith('\n') else raw
+    if (edition not in {'public','private'} or raw not in (edition,edition+'\n') or
+            (system.exists() and declared != edition) or (expected is not None and expected != edition)):
+        raise ValueError('baseline product edition descriptor/marker/selection mismatch')
+    return edition
+
+
+def verify(directory, edition=None):
     seal=json.loads((directory/'baseline-lock.json').read_text())
     if seal.get('schema_version')!=1 or seal.get('policy')!='MIMI-UPDATE-001/1.0.0':raise ValueError('unknown baseline seal')
     root=directory/'rootfs'
@@ -43,6 +60,7 @@ def verify(directory):
     if factory['commit']!=seal['factory_commit'] or factory['package_sha256']!=seal['factory_package_sha256']:raise ValueError('factory provenance mismatch')
     if device.get('enrollment_id'):raise ValueError('unit-specific enrollment must not be baked into an image')
     if (root/'overlay').exists():raise ValueError('factory data does not belong in a generic image')
+    verify_product_edition(root, edition)
     return seal
 
 
@@ -76,13 +94,13 @@ def verify_image_owners(image, paths):
         if owners.get(name)!=(0,0):raise ValueError('final image protected path is not root-owned: '+name)
 
 
-def verify_rootfs(directory, rootfs, image=None):
+def verify_rootfs(directory, rootfs, image=None, edition=None):
     """Compare the final filesystem with the prepared, verified factory input.
 
     This is a packaging readback, not a replacement for signature verification
     during prepare or for physical enrollment and upgrade acceptance.
     """
-    seal=verify(directory)
+    seal=verify(directory, edition)
     rootfs=rootfs.resolve(strict=True)
 
     def regular(relative):
@@ -132,6 +150,8 @@ def verify_rootfs(directory, rootfs, image=None):
 
 def prepare(args):
     if args.output.exists():raise ValueError('output already exists')
+    edition=getattr(args,'product_edition',None)
+    if edition is not None and edition not in {'public','private'}:raise ValueError('unknown product edition')
     device=json.loads(args.device.read_text())
     # This reference provider implements only A133; other providers must be qualified separately.
     if device['identity']['platform_id']!='a133' or device['identity']['architecture']!='aarch64':raise ValueError('A133 provider cannot be used for another platform')
@@ -156,9 +176,15 @@ def prepare(args):
                 raise ValueError('system and application device baselines differ')
             if system.get('storage')!='emmc' or system.get('boot_mode')!='ab':
                 raise ValueError('system OTA provider requires A133 eMMC A/B')
+            declared=system.get('product_edition','')
+            if declared and declared != edition:
+                raise ValueError('system descriptor requires matching explicit --product-edition')
+            if edition is not None:system['product_edition']=edition
             write(config/'system-device.json',system)
             updater['system_repository']=updater['repository']
             updater['system_device_file']='/etc/smartdesktopmimi/system-device.json'
+        if edition is not None:
+            marker=config/'product-edition';marker.write_text(edition+'\n');marker.chmod(0o444)
         write(config/'updater.json',updater)
         binary=root/'usr/bin/mimi-update';binary.parent.mkdir(parents=True);shutil.copyfile(args.updater,binary);binary.chmod(0o755)
         for source,target in [('mimi-update.init','etc/init.d/mimi-update'),('mimi-desktop.init','etc/init.d/mimi-desktop'),('mimi-platform-provider','usr/libexec/mimi-platform-provider')]:
@@ -180,6 +206,7 @@ def main():
     parser.add_argument('--rootfs',type=Path,help='extracted final filesystem, read-only verification')
     parser.add_argument('--image',type=Path,help='original ext4/SquashFS image for owner verification')
     for name in ['device','trust','application','updater','checker']:parser.add_argument('--'+name,type=Path)
+    parser.add_argument('--product-edition',choices=['public','private'],help='explicit product selection on build host only')
     parser.add_argument('--system-device',type=Path,help='controlled A133 system descriptor with measured partition geometry')
     args=parser.parse_args();args.output=args.output.resolve()
     if args.operation=='prepare':
@@ -189,7 +216,7 @@ def main():
             setattr(args,name,value.resolve())
     if args.operation=='verify-rootfs' and (args.rootfs is None or args.image is None):parser.error('verify-rootfs requires --rootfs and --image')
     try:
-        result=prepare(args) if args.operation=='prepare' else verify_rootfs(args.output,args.rootfs,args.image) if args.operation=='verify-rootfs' else verify(args.output)
+        result=prepare(args) if args.operation=='prepare' else verify_rootfs(args.output,args.rootfs,args.image,args.product_edition) if args.operation=='verify-rootfs' else verify(args.output,args.product_edition)
     except (ValueError,KeyError,OSError,subprocess.CalledProcessError) as error:parser.exit(1,'BASELINE BLOCKED: '+str(error)+'\n')
     print('PASS signed factory baseline '+result['factory_version']+'; physical enrollment and acceptance still required')
 if __name__=='__main__':main()

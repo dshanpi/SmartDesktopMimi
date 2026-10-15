@@ -18,7 +18,7 @@ class ProductProvenanceTests(unittest.TestCase):
         self.lock = dict(version='2.0.0', source_commit='a'*40, hardware_commit='b'*40, platform_id='a133',
                          partition_sha256='1'*64, toolchain_sha256='2'*64, sysroot_sha256='3'*64,
                          dependency_lock_sha256='4'*64, image_asset='SmartDesktopMimi-SystemImage-v2.0.0.img.gz')
-        self.manifest = dict(version='2.0.0')
+        self.manifest = dict(version='2.0.0', product_edition=edition)
         self.factory = dict(commit='c'*40, version='1.0.0', package_sha256='d'*64)
         (directory / self.lock['image_asset']).write_bytes(b'HOST FIXTURE NOT AN IMAGE')
         fixture.system(directory, self.manifest, self.lock, self.factory)

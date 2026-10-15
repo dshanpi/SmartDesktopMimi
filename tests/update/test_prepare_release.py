@@ -58,6 +58,7 @@ class PreparationTests(unittest.TestCase):
         prepare.write(source/'system-build.json', record)
         manifest = gate.load(source/'system-manifest.json')
         manifest['build_provenance_sha256'] = gate.sha(source/'system-build.json')
+        manifest['product_edition'] = edition
         prepare.write(source/'system-manifest.json', manifest)
         for name in ['platform-product-lock.json', 'product-rootfs-check.json', 'system-build.json', 'system-manifest.json']:
             plan['assets'][name] = dict(path='inputs/'+name, sha256=gate.sha(source/name))

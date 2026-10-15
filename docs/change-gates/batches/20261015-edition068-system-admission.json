@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "summary": "Bind system OTA edition to signed manifest, controlled descriptor, sealed marker and pending journal; keep shared app compatibility",
+  "context": "EDITION067 component locks/data preservation passed; system platform overwrite requires explicit product pairing and baseline packaging seal. Implementation prerecord retained.",
+  "next_steps": "Fix source commit/readback/CI and critical delta backup. Fresh SDK complete product image and actual physical/cloud/session acceptance remain separate.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-EDITION-068",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-068.md",
+      "scope": "System manifest admission, candidate selection/download fence, boot commit fence and prepared baseline/product provenance only",
+      "invariants": "No implicit conversion; legacy only both absent; common application Device/Targets unchanged. No actual device or trusted key/binding operations; frozen assets unchanged.",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-EDITION-068.md",
+        "docs/change-gates/batches/20261015-edition068-system-admission.json",
+        "docs/update/PRODUCT-SOURCE-LOCK.md",
+        "scripts/build_firmware.sh",
+        "scripts/build_release.sh",
+        "services/mimi-update/update/system.go",
+        "services/mimi-update/update/system_edition_test.go",
+        "services/mimi-update/update/system_install.go",
+        "tests/update/test_prepare_release.py",
+        "tests/update/test_product_provenance.py",
+        "tests/update/test_system_edition.py",
+        "tools/update/baseline.py",
+        "tools/update/build_provenance.py"
+      ],
+      "checks": [
+        {
+          "name": "Complete local update/architecture/Go regression",
+          "status": "passed",
+          "scope": "223 update checks,75 architecture0skip,Go vet/race,3 new signed fixture tests with16 edition combinations",
+          "evidence": "output/system-edition-20261015/all-update.log;architecture.log;go-race.log;system-edition-race.log"
+        },
+        {
+          "name": "Actual signed baseline and filesystem readback",
+          "status": "passed",
+          "scope": "Frozen actual signed factory app admitted by native checker with actual A133 updater; public/private baseline-only host ext4/SquashFS readback4; not complete SDK or physical image",
+          "evidence": "output/system-edition-20261015/actual-signed-baseline-readback.json"
+        },
+        {
+          "name": "Full product/physical acceptance",
+          "status": "not_run",
+          "scope": "Complete new SDK image, actual install/rollback/power and private runtime",
+          "reason": "Fresh environment and user-deferred physical phases remain pending",
+          "evidence": "docs/change-gates/REQ-MIMI-EDITION-068.md"
+        }
+      ]
+    }
+  ]
+}

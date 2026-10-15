@@ -10,6 +10,7 @@ import (
 )
 
 type SystemManifest struct {
+	ProductEdition           string     `json:"product_edition,omitempty"`
 	BuildProvenanceSHA256    string     `json:"build_provenance_sha256,omitempty"`
 	Schema                   int        `json:"schema_version"`
 	Policy                   string     `json:"policy"`
@@ -41,6 +42,7 @@ type SystemOTA struct {
 	Device        Device `json:"destination_device"`
 }
 type SystemDevice struct {
+	ProductEdition  string `json:"product_edition,omitempty"`
 	Device          Device `json:"device"`
 	Bootloader      string `json:"bootloader"`
 	PartitionSHA256 string `json:"partition_sha256"`
@@ -92,6 +94,9 @@ func VerifySystemManifest(raw, sig []byte, t Trust, d SystemDevice) (SystemManif
 		}
 	}
 	if e := verifyDetached(raw, sig, m.KeyID, m.Sequence, t); e != nil {
+		return m, e
+	}
+	if e := matchSystemEditions(m.ProductEdition, d.ProductEdition); e != nil {
 		return m, e
 	}
 	if e := validateTargets(m.Targets); e != nil {
@@ -154,4 +159,16 @@ func VerifySystem(raw, sig []byte, t Trust, d SystemDevice, image string) (Syste
 		return m, fmt.Errorf("system image hash/size mismatch")
 	}
 	return m, nil
+}
+
+// Legacy system records are compatible only when both omit the edition.
+// Shared application manifests deliberately have no edition restriction.
+func matchSystemEditions(candidate, installed string) error {
+	if candidate == "" && installed == "" {
+		return nil
+	}
+	if (candidate != "public" && candidate != "private") || candidate != installed {
+		return fmt.Errorf("system product edition missing, unknown or mismatched")
+	}
+	return nil
 }

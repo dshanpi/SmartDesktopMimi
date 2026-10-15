@@ -83,7 +83,7 @@ python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage inp
 # Fail before SDK mutation if an updater-enabled release lacks its signed input.
 if [[ "${MIMI_APPLICATION_UPDATES:-0}" == 1 || -d "${PRODUCT_ROOT}/build/mimi-baseline" ]]; then
     python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify \
-        --output "${PRODUCT_ROOT}/build/mimi-baseline"
+        --output "${PRODUCT_ROOT}/build/mimi-baseline" --product-edition "${MIMI_PRODUCT_EDITION}"
 fi
 
 # Tina's kernel build launches tools/build/buildserver in the background with

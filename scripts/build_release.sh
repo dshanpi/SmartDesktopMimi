@@ -77,6 +77,7 @@ print('System release tag:',tag_for('system',sys.argv[2],'a133'))
 VERSION_CHECK
 export MIMI_SYSTEM_VERSION
 export MIMI_APPLICATION_UPDATES="${APPLICATION_UPDATES}"
+export MIMI_PRODUCT_EDITION="${MIMI_PRODUCT_EDITION:-public}"
 
 
 for command in git make cmake rsync unsquashfs debugfs blkid sha256sum file; do
@@ -97,7 +98,7 @@ done
 if [[ "${APPLICATION_UPDATES}" -eq 1 ]]; then
     require_file "${PRODUCT_ROOT}/build/mimi-baseline/baseline-lock.json" \
         "Prepare a verified signed factory baseline with tools/update/baseline.py first"
-    python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify --output "${PRODUCT_ROOT}/build/mimi-baseline"
+    python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify --output "${PRODUCT_ROOT}/build/mimi-baseline" --product-edition "${MIMI_PRODUCT_EDITION}"
     BASELINE_LOCK_SHA="$(sha256sum "${PRODUCT_ROOT}/build/mimi-baseline/baseline-lock.json" | awk '{print $1}')"
     python3 - "$PRODUCT_ROOT/build/mimi-baseline/rootfs/etc/smartdesktopmimi/device.json" "$MIMI_SYSTEM_VERSION" <<'BASELINE_VERSION_CHECK'
 import json,sys
@@ -155,7 +156,6 @@ done < <(git -C "${PRODUCT_ROOT}" config --file .gitmodules --get-regexp path 2>
 
 # Source lock preflight precedes output creation, cleaning and SDK changes.
 : "${MIMI_HARDWARE_SOURCE_ROOT:?Set the fixed SDK overlay Git repository root}"
-export MIMI_PRODUCT_EDITION="${MIMI_PRODUCT_EDITION:-public}"
 PRODUCT_LOCK_ARGS=(--edition "${MIMI_PRODUCT_EDITION}" --sdk "${SDK}"
                    --hardware-source "${MIMI_HARDWARE_SOURCE_ROOT}")
 if [[ "${MIMI_PRODUCT_EDITION}" == private ]]; then

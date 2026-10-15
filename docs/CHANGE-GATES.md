@@ -176,3 +176,5 @@ SPLIT061系统入口完成：原5上层源已退休，实际video目标/原ELF/A
 - REQ-MIMI-PRIVATE-066：Tuya产品授权适配、公共提前禁用及暂存源/构建核对。
 
 REQ-MIMI-EDITION-067：[产品来源锁与共享更新保留边界](change-gates/REQ-MIMI-EDITION-067.md)，实施前记录；组件来源和主机数据保留待验证，最终镜像/实机未完成。
+
+REQ-MIMI-EDITION-068：[系统产品版本准入](change-gates/REQ-MIMI-EDITION-068.md)，实施前已记录；系统清单/受控基线/固定标记配对，当前not_run。

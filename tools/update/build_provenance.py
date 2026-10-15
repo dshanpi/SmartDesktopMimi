@@ -95,7 +95,8 @@ def system(directory, lock, manifest, factory, load):
             raise ValueError('missing product source lock provenance')
         product = validate_product_lock(load(directory/'platform-product-lock.json'))
         rootfs = load(directory/'product-rootfs-check.json')
-        if (record['product_edition'] != lock['product_edition'] or lock['product_edition'] != product['edition'] or
+        if (manifest.get('product_edition') != product['edition'] or
+                record['product_edition'] != lock['product_edition'] or lock['product_edition'] != product['edition'] or
                 record['platform_product_lock_sha256'] != assets['platform-product-lock.json'] or
                 lock['platform_product_lock_sha256'] != assets['platform-product-lock.json'] or
                 record.get('product_rootfs_check_sha256') != assets['product-rootfs-check.json'] or
