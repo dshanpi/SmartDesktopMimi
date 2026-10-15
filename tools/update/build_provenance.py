@@ -87,5 +87,25 @@ def system(directory, lock, manifest, factory, load):
         raise ValueError('system build image asset differs from release lock')
     if record.get('image_sha256')!=assets[release_image(lock)] or record.get('partition_sha256')!=lock['partition_sha256']:
         raise ValueError('system build image/partition mismatch')
+    product_fields = {'product_edition', 'platform_product_lock_sha256'}
+    if product_fields & (record.keys() | lock.keys()) or 'platform-product-lock.json' in assets:
+        from product_lock import validate as validate_product_lock
+        if (not product_fields <= record.keys() or not product_fields <= lock.keys() or
+                'platform-product-lock.json' not in assets or 'product-rootfs-check.json' not in assets):
+            raise ValueError('missing product source lock provenance')
+        product = validate_product_lock(load(directory/'platform-product-lock.json'))
+        rootfs = load(directory/'product-rootfs-check.json')
+        if (record['product_edition'] != lock['product_edition'] or lock['product_edition'] != product['edition'] or
+                record['platform_product_lock_sha256'] != assets['platform-product-lock.json'] or
+                lock['platform_product_lock_sha256'] != assets['platform-product-lock.json'] or
+                record.get('product_rootfs_check_sha256') != assets['product-rootfs-check.json'] or
+                rootfs.get('schema_version') != 1 or rootfs.get('status') != 'passed' or rootfs.get('edition') != product['edition'] or
+                rootfs.get('physical') != 'not_run' or rootfs.get('release_qualified') is not False or
+                rootfs.get('product_lock_sha256') != assets['platform-product-lock.json'] or
+                rootfs.get('rootfs_image_sha256') != record.get('rootfs_image_sha256') or
+                product['sdk_manifest_sha256'] != components['manifest_sha256'] or
+                product['repositories']['application']['commit'] != record['source_commit'] or
+                product['repositories']['hardware']['commit'] != record['hardware_commit']):
+            raise ValueError('product source/rootfs/release lock mismatch')
     if record.get('factory_application')!={'commit':factory['commit'],'version':factory['version'],'sha256':factory['package_sha256']}:
         raise ValueError('system build factory application mismatch')

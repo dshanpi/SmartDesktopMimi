@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "summary": "Lock selected product sources, stripped rootfs programs and common signed update preservation.",
+  "context": "PRIVATE066 programs and source already verified; add source pairing and host preservation without rebuilding unchanged programs or touching hardware.",
+  "next_steps": "Collect actual public/private Git/blob source locks; exercise rootfs image readback and full affected regressions; full image/physical still deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-EDITION-067",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-067.md",
+      "scope": "Component lock collection, rootfs readback and system/release record binding; host signed application data-preservation scenarios.",
+      "invariants": "No duplicate desktop or credentials, no source/key/binding replacement, no changing old snapshots; original and stripped ELF hashes separate; host hooks never count as physical tests.",
+      "paths": [
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-EDITION-067.md",
+        "docs/change-gates/batches/20261015-edition067-source-lock.json",
+        "scripts/build_firmware.sh",
+        "scripts/build_release.sh",
+        "scripts/lock_product_sources.py",
+        "services/mimi-update/update/edition_preservation_test.go",
+        "tests/update/test_product_lock.py",
+        "tests/update/test_system_record.py",
+        "tools/update/build_provenance.py",
+        "tools/update/prepare_release.py",
+        "tools/update/product_lock.py",
+        "tools/update/system_record.py"
+      ],
+      "checks": [
+        {
+          "name": "Shared signed application preservation",
+          "status": "passed",
+          "scope": "2 Go race tests,16 positive/recovery and6 forbidden-path subcases; compiled private program files protected on host",
+          "evidence": "output/product-edition-20261015/shared-application-preservation.log"
+        },
+        {
+          "name": "Source/rootfs and system record units",
+          "status": "passed",
+          "scope": "16 host checks; synthetic rootfs/system records not flashable",
+          "evidence": "output/product-edition-20261015/product-lock-record-tests.log"
+        },
+        {
+          "name": "Actual source composition and complete new system",
+          "status": "not_run",
+          "scope": "Actual three repositories/SDK source locks and whole new image",
+          "reason": "Fixed code is needed before Git source collection; image/device postponed.",
+          "evidence": "docs/change-gates/REQ-MIMI-EDITION-067.md"
+        }
+      ]
+    }
+  ]
+}

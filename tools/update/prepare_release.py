@@ -67,6 +67,10 @@ def make_lock(directory, kind):
         if record['hardware_repository'] != HARDWARE_REPOSITORY:
             raise ValueError('unexpected private hardware repository')
         lock['hardware_repository'] = HARDWARE_REPOSITORY
+        if 'product_edition' in record or 'platform_product_lock_sha256' in record:
+            lock['product_edition'] = record['product_edition']
+            lock['platform_product_lock_sha256'] = record['platform_product_lock_sha256']
+
         lock['dependency_lock_sha256'] = sha(directory/'dependency-lock.json')
         factory = load(directory/'factory-manifest.json')
         lock.update(factory_application_commit=factory['commit'],

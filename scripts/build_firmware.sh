@@ -62,6 +62,18 @@ esac
 python3 "${PRODUCT_ROOT}/scripts/check_product_edition.py" \
     --build "${AITVBOX_PRODUCT_BUILD}/build" --edition "${MIMI_PRODUCT_EDITION}"
 
+if [[ -n "${MIMI_PLATFORM_PRODUCT_LOCK:-}" ]]; then
+    python3 - "${PRODUCT_ROOT}" "${MIMI_PLATFORM_PRODUCT_LOCK}" "${MIMI_PRODUCT_EDITION}" <<'LOCK_PREFLIGHT'
+import sys
+from pathlib import Path
+sys.path.insert(0,sys.argv[1]+'/scripts')
+from lock_product_sources import validate
+from check_product_edition import load
+lock=validate(load(Path(sys.argv[2]).absolute()))
+if lock['edition'] != sys.argv[3]:raise SystemExit('product source lock edition mismatch')
+LOCK_PREFLIGHT
+fi
+
 # Reject an SDK whose selected LCD driver will not be compiled, before mutation.
 python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage inputs
 
@@ -353,6 +365,10 @@ case "${ROOTFS_TYPE}" in
         ;;
 esac
 
+PRIVATE_TUYA_PATHS=()
+if [[ "${MIMI_PRODUCT_EDITION}" == private ]]; then
+    PRIVATE_TUYA_PATHS=(/usr/bin/your_chat_bot_QIO_1.0.1.bin)
+fi
 for path in \
     /usr/bin/lvglsim \
     /usr/bin/lv_backend \
@@ -371,7 +387,7 @@ for path in \
     /etc/init.d/aitvbox-apps \
     /etc/init.d/aitvbox-usb-hid \
     /etc/init.d/aitvbox-ipkvm \
-    /etc/init.d/bluetooth_init; do
+    /etc/init.d/bluetooth_init "${PRIVATE_TUYA_PATHS[@]}"; do
     if [[ "${ROOTFS_TYPE}" == squashfs ]]; then
         if ! awk -v expected="squashfs-root${path}" \
             '$1 == "-rwxr-xr-x" && $2 == "0/0" && $NF == expected { found = 1 }
@@ -474,6 +490,16 @@ fi
 
 [[ -z "${ROOTFS_LIST}" ]] || rm -f "${ROOTFS_LIST}"
 ROOTFS_LIST=""
+if [[ -n "${MIMI_PLATFORM_PRODUCT_LOCK:-}" ]]; then
+    if [[ -z "${ROOTFS_EXTRACT}" ]]; then
+        ROOTFS_EXTRACT="$(mktemp -d /tmp/aitvbox-rootfs-extract.XXXXXX)"
+        unsquashfs -no-progress -d "${ROOTFS_EXTRACT}" "${ROOTFS_IMAGE}" >/dev/null
+    fi
+    python3 "${PRODUCT_ROOT}/tools/update/product_lock.py" \
+        --lock "${MIMI_PLATFORM_PRODUCT_LOCK}" --rootfs "${ROOTFS_EXTRACT}" \
+        --image "${ROOTFS_IMAGE}" --output "${PRODUCT_ROOT}/build/product-rootfs-check.json"
+fi
+
 if [[ -n "${ROOTFS_EXTRACT}" ]]; then
     rm -rf -- "${ROOTFS_EXTRACT}"
     ROOTFS_EXTRACT=""

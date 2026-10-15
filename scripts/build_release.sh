@@ -151,6 +151,19 @@ while IFS= read -r submodule_path; do
     fi
 done < <(git -C "${PRODUCT_ROOT}" config --file .gitmodules --get-regexp path 2>/dev/null | awk '{print $2}')
 
+# Source lock preflight precedes output creation, cleaning and SDK changes.
+: "${MIMI_HARDWARE_SOURCE_ROOT:?Set the fixed SDK overlay Git repository root}"
+export MIMI_PRODUCT_EDITION="${MIMI_PRODUCT_EDITION:-public}"
+PRODUCT_LOCK_ARGS=(--edition "${MIMI_PRODUCT_EDITION}" --sdk "${SDK}"
+                   --hardware-source "${MIMI_HARDWARE_SOURCE_ROOT}")
+if [[ "${MIMI_PRODUCT_EDITION}" == private ]]; then
+    PRODUCT_LOCK_ARGS+=(--private-sdk "${AITVBOX_100ASK_SDK_ROOT:-}"
+                        --private-product-root "${MIMI_PRIVATE_PRODUCT_ROOT:-}")
+elif [[ -n "${AITVBOX_100ASK_SDK_ROOT:-}" || -n "${MIMI_PRIVATE_PRODUCT_ROOT:-}" ]]; then
+    die "Public product source lock forbids private inputs"
+fi
+python3 "${SELF_DIR}/lock_product_sources.py" "${PRODUCT_LOCK_ARGS[@]}" --check-sources
+
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     : "${MIMI_SWU_SIGNING_KEY:?Set external SWUpdate signing key}"
     : "${MIMI_SWU_PUBLIC_KEY:?Set matching platform public key}"
@@ -249,6 +262,14 @@ run_logged 05-display-input-gate python3 "$PRODUCT_ROOT/tools/update/a133_displa
     "$SDK" --stage inputs --output "$OUTPUT_DIR/metadata/display-inputs.json"
 
 run_logged 10-build-apps "${SELF_DIR}/build_apps.sh" --clean "${SDK}"
+export MIMI_PLATFORM_PRODUCT_LOCK="${OUTPUT_DIR}/metadata/platform-product-lock.json"
+run_logged 12-lock-product-sources python3 "${SELF_DIR}/lock_product_sources.py" \
+    "${PRODUCT_LOCK_ARGS[@]}" --build "${PRODUCT_ROOT}/build" --output "${MIMI_PLATFORM_PRODUCT_LOCK}"
+python3 - "${MIMI_PLATFORM_PRODUCT_LOCK}" "${COMMIT}" <<'PRODUCT_COMMIT_CHECK'
+import json,sys
+if json.load(open(sys.argv[1]))['repositories']['application']['commit'] != sys.argv[2]:
+    raise SystemExit('source changed since release preflight')
+PRODUCT_COMMIT_CHECK
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     run_logged 20-build-firmware env AITVBOX_OTA=1 \
         "${SELF_DIR}/build_firmware.sh" "${SDK}"
@@ -310,6 +331,9 @@ if [[ "${WITH_OTA}" -eq 1 ]]; then
     mv "${OUTPUT_DIR}/ota/swu-build.json" "${OUTPUT_DIR}/metadata/"
 fi
 
+require_file "${PRODUCT_ROOT}/build/product-rootfs-check.json" "missing final product rootfs readback"
+cp "${PRODUCT_ROOT}/build/product-rootfs-check.json" "${OUTPUT_DIR}/metadata/product-rootfs-check.json"
+
 APP_SUMS="${OUTPUT_DIR}/metadata/APPLICATION-SHA256SUMS"
 (
     cd "${PRODUCT_ROOT}"
@@ -345,6 +369,9 @@ SDK_BUILDCONFIG_SHA="$(sha256sum "${SDK}/.buildconfig" | awk '{print $1}')"
     echo "APPLICATION_VERSION=${VERSION}"
     echo "SYSTEM_VERSION=${MIMI_SYSTEM_VERSION}"
     echo "SYSTEM_TAG=system-a133-v${MIMI_SYSTEM_VERSION}"
+    echo "PRODUCT_EDITION=${MIMI_PRODUCT_EDITION}"
+    echo "PRODUCT_ROOTFS_IMAGE_SHA256=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["rootfs_image_sha256"])' "${OUTPUT_DIR}/metadata/product-rootfs-check.json")"
+    echo "PLATFORM_PRODUCT_LOCK_SHA256=$(sha256sum "${MIMI_PLATFORM_PRODUCT_LOCK}" | awk '{print $1}')"
     echo "SYSTEM_IMAGE_FILE=${SYSTEM_IMAGE_FILE}"
     echo "SYSTEM_IMAGE_RAW_SHA256=${SYSTEM_IMAGE_RAW_SHA256}"
     echo "SYSTEM_IMAGE_RAW_BYTES=${SYSTEM_IMAGE_RAW_BYTES}"

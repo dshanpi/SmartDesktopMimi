@@ -61,6 +61,52 @@ class SystemRecordTests(unittest.TestCase):
     def prepare(self):
         return record.prepare(self.build, self.plan_path, self.output, Path('/checker'), Path('/external-trust'))
 
+    def product(self):
+        from test_product_lock import lock_fixture
+        product = lock_fixture()
+        product['repositories']['application']['commit'] = self.manifest['PRODUCT_COMMIT']
+        product['repositories']['hardware']['commit'] = self.plan['hardware_commit']
+        product['sdk_manifest_sha256'] = self.manifest['SDK_MANIFEST_SHA256']
+        record.write(self.build/'metadata/platform-product-lock.json', product)
+        check = dict(schema_version=1, status='passed', edition='public', physical='not_run', release_qualified=False,
+                     product_lock_sha256=record.digest(self.build/'metadata/platform-product-lock.json'),
+                     rootfs_image_sha256='8'*64)
+        record.write(self.build/'metadata/product-rootfs-check.json', check)
+        self.manifest.update(PRODUCT_EDITION='public', PLATFORM_PRODUCT_LOCK_SHA256=check['product_lock_sha256'],
+                             PRODUCT_ROOTFS_IMAGE_SHA256=check['rootfs_image_sha256'])
+        self.refresh()
+        return product, check
+
+    def test_product_lock_and_rootfs_readback_are_bound_to_system_record(self):
+        product, check = self.product()
+        with patch.object(record.subprocess, 'run'):
+            result = self.prepare()
+        self.assertEqual(result['product_edition'], 'public')
+        self.assertEqual(result['platform_product_lock_sha256'], self.manifest['PLATFORM_PRODUCT_LOCK_SHA256'])
+        self.assertEqual(result['rootfs_image_sha256'], check['rootfs_image_sha256'])
+        self.assertEqual(record.load(self.output/'platform-product-lock.json'), product)
+        self.assertEqual(record.load(self.output/'product-rootfs-check.json'), check)
+
+    def test_mismatched_product_sources_or_rootfs_cannot_create_system_record(self):
+        import shutil
+        for change in ('application', 'hardware', 'sdk', 'edition', 'rootfs', 'qualified', 'missing'):
+            with self.subTest(change=change):
+                product, check = self.product()
+                if change in ('application', 'hardware'):
+                    product['repositories'][change]['commit'] = 'f'*40
+                elif change == 'sdk':product['sdk_manifest_sha256'] = '7'*64
+                elif change == 'edition':self.manifest['PRODUCT_EDITION'] = 'private'
+                elif change == 'rootfs':check['rootfs_image_sha256'] = 'wrong'
+                elif change == 'qualified':check['release_qualified'] = True
+                record.write(self.build/'metadata/platform-product-lock.json', product)
+                check['product_lock_sha256'] = record.digest(self.build/'metadata/platform-product-lock.json')
+                self.manifest['PLATFORM_PRODUCT_LOCK_SHA256'] = check['product_lock_sha256']
+                record.write(self.build/'metadata/product-rootfs-check.json', check)
+                if change == 'missing':(self.build/'metadata/product-rootfs-check.json').unlink()
+                self.refresh()
+                with patch.object(record.subprocess, 'run'), self.assertRaises(ValueError):self.prepare()
+                self.assertFalse(self.output.exists())
+
     def test_record_binds_actual_image_and_factory_and_is_deterministic(self):
         with patch.object(record.subprocess, 'run') as checker:
             result = self.prepare()

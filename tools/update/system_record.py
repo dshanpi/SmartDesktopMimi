@@ -17,6 +17,7 @@ from application_build import load, digest
 from release_identity import HARDWARE_REPOSITORY, tag_for
 from prepare_release import write
 from system_image import image_name, archive as archive_image, raw_digest
+from product_lock import validate as validate_product_lock
 
 HASH = re.compile(r'[a-f0-9]{64}')
 COMMIT = re.compile(r'[a-f0-9]{40}')
@@ -117,10 +118,32 @@ def prepare(build, plan_path, output, checker, trust):
              'logs/50-bootchain-gate.log']
     if named:
         names.append('metadata/image-archive.json')
+    product_fields = {'PRODUCT_EDITION', 'PLATFORM_PRODUCT_LOCK_SHA256', 'PRODUCT_ROOTFS_IMAGE_SHA256'}
+    product_declared = bool(product_fields & manifest.keys())
+    if product_declared:
+        if not product_fields <= manifest.keys():
+            raise ValueError('incomplete product source lock build fields')
+        names += ['metadata/platform-product-lock.json', 'metadata/product-rootfs-check.json']
     selected = {name: regular(build, name) for name in names}
     for name, path in selected.items():
         if sums.get(name) != digest(path):
             raise ValueError('build readback mismatch: '+name)
+    product = None
+    if product_declared:
+        product = validate_product_lock(load(selected['metadata/platform-product-lock.json']))
+        check = load(selected['metadata/product-rootfs-check.json'])
+        if (manifest['PRODUCT_EDITION'] != product['edition'] or
+                manifest['PLATFORM_PRODUCT_LOCK_SHA256'] != sums['metadata/platform-product-lock.json'] or
+                product['repositories']['application']['commit'] != manifest['PRODUCT_COMMIT'] or
+                product['repositories']['hardware']['commit'] != plan['hardware_commit'] or
+                product['sdk_manifest_sha256'] != manifest.get('SDK_MANIFEST_SHA256') or
+                check.get('schema_version') != 1 or check.get('status') != 'passed' or
+                check.get('edition') != product['edition'] or check.get('physical') != 'not_run' or
+                check.get('release_qualified') is not False or
+                check.get('product_lock_sha256') != sums['metadata/platform-product-lock.json'] or
+                not HASH.fullmatch(check.get('rootfs_image_sha256', '')) or
+                check['rootfs_image_sha256'] != manifest['PRODUCT_ROOTFS_IMAGE_SHA256']):
+            raise ValueError('product source/rootfs/build identity mismatch')
     seal = load(selected['metadata/baseline-lock.json'])
     factory = load(selected['metadata/factory-manifest.json'])
     device = load(selected['metadata/factory-device.json'])
@@ -197,6 +220,13 @@ def prepare(build, plan_path, output, checker, trust):
                       dependency_lock_sha256=digest(directory/'dependency-lock.json'),
                       factory_application={key: factory[value] for key,value in
                           [('commit','commit'),('version','version'),('sha256','package_sha256')]})
+        if product:
+            shutil.copyfile(selected['metadata/platform-product-lock.json'], directory/'platform-product-lock.json')
+            shutil.copyfile(selected['metadata/product-rootfs-check.json'], directory/'product-rootfs-check.json')
+            record.update(product_edition=product['edition'],
+                          platform_product_lock_sha256=sums['metadata/platform-product-lock.json'],
+                          product_rootfs_check_sha256=sums['metadata/product-rootfs-check.json'],
+                          rootfs_image_sha256=manifest['PRODUCT_ROOTFS_IMAGE_SHA256'])
         write(directory/'system-build.json', record)
         for name, path in selected.items():
             if digest(path) != sums[name]:raise ValueError('build changed during record preparation')
