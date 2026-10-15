@@ -182,3 +182,5 @@ REQ-MIMI-EDITION-068：[系统产品版本准入](change-gates/REQ-MIMI-EDITION-
 REQ-MIMI-SDK-069：[最终产品SDK输入核对](change-gates/REQ-MIMI-SDK-069.md)，实施前已记录，只读闭包核对不等于完整镜像构建或实机验收。
 
 REQ-MIMI-SYSTEM-070：[共用工厂应用和产品基线](change-gates/REQ-MIMI-SYSTEM-070.md)，实施前记录，新包/完整镜像尚未构建，物理验收后置。
+
+REQ-MIMI-RELEASE-072：[相同硬件不同runtime发布证据](change-gates/REQ-MIMI-RELEASE-072.md)，实施前记录，实际候选草稿拒绝已保留，作用域修正及验证not_run。

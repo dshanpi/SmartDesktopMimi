@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "Scope release evidence by complete signed target rather than hardware identity alone",
+  "context": "Actual common rc24 signed package supports same hardware on two distinct system runtimes; formal preparation incorrectly rejects legitimate two-target evidence.",
+  "next_steps": "Use existing trusted checker for unique per-target classification, reject duplicates/ambiguity/missing coverage, exercise actual candidate and prior gates without changing binaries.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-RELEASE-072",
+      "record": "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+      "scope": "Release-host target evidence coverage only",
+      "invariants": "Full signature/archive/product/data checks and real hardware acceptance remain mandatory; no artifact/key/device/source baseline changes.",
+      "paths": [
+        "tools/update/release_gate.py",
+        "tests/update/test_release_target_scope.py",
+        "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+        "docs/change-gates/batches/20261015-release072-scope.json",
+        "docs/CHANGE-GATES.md",
+        "CURRENT_PROGRESS.md"
+      ],
+      "checks": [
+        {
+          "name": "Actual candidate and scope regression",
+          "status": "passed",
+          "scope": "55 affected tests0skip with actual signed rc24 archive, exact two runtimes, duplicate-alias/missing/ambiguous/wrong-SoC refusal, prior collection/provenance/system gates",
+          "evidence": "output/release-scope-20261015/scope-tests-r2.log;public-audit.json"
+        },
+        {
+          "name": "Physical acceptance and publication",
+          "status": "not_run",
+          "scope": "Deferred user hardware tests and strict stable/upload gates",
+          "reason": "No device installation or new public release in this implementation batch",
+          "evidence": "docs/change-gates/REQ-MIMI-RELEASE-072.md"
+        }
+      ]
+    }
+  ]
+}

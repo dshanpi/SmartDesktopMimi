@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fail-closed release admission. This tool never promotes a failed/not-run target."""
 import argparse
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -36,6 +37,48 @@ def sha(path):
         for chunk in iter(lambda: stream.read(1024*1024), b''):
             digest.update(chunk)
         return digest.hexdigest()
+
+
+def target_key(target):
+    return json.dumps(target, sort_keys=True, separators=(',', ':'))
+
+
+def evidence_scope(manifest, device, checker, carrier=None):
+    """Classify only after the original signed artifact has passed admission.
+
+    The temporary unsigned projection is a compatibility predicate, never an
+    installation/signature authorization. Reuse the actual Go matcher so host
+    SemVer, capability and ABI interpretations cannot drift from the updater.
+    """
+    candidates = [target for target in manifest['targets'] if target['identity'] == device['identity']]
+    if not candidates:
+        raise ValueError('undeclared target evidence')
+    if len(candidates) == 1:
+        return target_key(candidates[0])
+    matched = []
+    with tempfile.TemporaryDirectory(prefix='mimi-target-scope-') as temporary:
+        root = Path(temporary)
+        device_path = root/'device.json'
+        device_path.write_text(json.dumps(device))
+        for target in candidates:
+            probe = copy.deepcopy(manifest if carrier is None else carrier)
+            probe['targets'] = [target]
+            if carrier is not None:
+                # System targets classify the SOURCE runtime. Its separately
+                # verified factory manifest describes the DESTINATION; do not
+                # impose the destination app's data range on this predicate.
+                schema = device['data_schema']
+                probe['data'] = dict(min=schema, max=schema, write=schema)
+            path = root/'predicate.json'
+            path.write_text(json.dumps(probe))
+            result = subprocess.run([str(checker), 'match', '--manifest', str(path),
+                                     '--device', str(device_path)], stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE, timeout=30)
+            if result.returncode == 0:
+                matched.append(target_key(target))
+    if len(matched) != 1:
+        raise ValueError('target evidence has ambiguous or missing runtime/capability scope')
+    return matched[0]
 
 
 def check(directory, stage, checker, trust):
@@ -90,14 +133,13 @@ def check(directory, stage, checker, trust):
     if not report['targets']:
         raise ValueError('missing target evidence')
     identities = []
+    scopes = set()
     for target in report['targets']:
         device = target['device_file']
         if Path(device).name != device or device not in assets:
             raise ValueError('device evidence must be a hashed release asset')
         device_record = load(directory / device)
         identity = device_record['identity'] if kind == 'application' else device_record['device']['identity']
-        if identity in identities:
-            raise ValueError('duplicate target evidence')
         if identity['ipc_contract'] != lock['ipc_contract']:
             raise ValueError('target/interface contract mismatch')
         identities.append(identity)
@@ -146,6 +188,16 @@ def check(directory, stage, checker, trust):
             subprocess.run([str(checker), 'verify', '--manifest', str(directory/'manifest.json'),
                             '--signature', str(directory/'manifest.sig'), '--archive', str(directory/'application.tar.gz'),
                             '--device', str(directory/device), '--trust', str(trust)], check=True)
+        # Full signature/archive/product checks above remain authoritative.
+        # Only their signed target declarations may classify this evidence.
+        manifest = load(directory/('manifest.json' if kind == 'application' else 'system-manifest.json'))
+        scope = evidence_scope(manifest, device_record if kind == 'application' else device_record['device'],
+                               checker, None if kind == 'application' else load(directory/'factory-manifest.json'))
+        if scope in scopes:
+            raise ValueError('duplicate target evidence scope')
+        scopes.add(scope)
+    if scopes != {target_key(target) for target in manifest['targets']}:
+        raise ValueError('missing declared target evidence scope')
     if kind == 'application':
         manifest = load(directory/'manifest.json')
         build_provenance.application(directory,lock,manifest,stage,load)
