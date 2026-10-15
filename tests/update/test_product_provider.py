@@ -31,12 +31,23 @@ class ProductProviderTests(unittest.TestCase):
         compiler.write_text('compiler')
         dependency = sdk / 'include.h'
         dependency.write_text('fixed input')
+        ai = component / p.EDITION / 'code' / p.AI_SOURCE
+        ai.parent.mkdir(parents=True)
+        ai.write_text('/* shared runtime includes selected reader */')
+        reader = component / p.EDITION / 'public/mimi_tuya_license_provider.h'
+        reader.parent.mkdir(parents=True)
+        reader.write_text('/* public always disabled */')
         recipe = dict(cloud_profile=profile, tool_sha256=p.sha(tool),
-                      sources={'provider.c': p.sha(code / 'provider.c')},
+                      sources={'provider.c': p.sha(code / 'provider.c'), p.AI_SOURCE: p.sha(ai), p.READER_SOURCE: p.sha(reader)},
                       inputs={'sdk/include.h': p.sha(dependency)},
                       compiler_target=p.COMPILER, compiler_sha256=p.sha(compiler),
-                      source_commit='fixture')
-        rf = component / profile / 'provider-recipe.json'
+                      source_commit='fixture', translation_units=[], link_flags=[],
+                      edition_source_version=2, edition_source_requirement='REQ-MIMI-PRIVATE-066',
+                      reference_state='audited_new_source_reference', reference_backend_sha256='a' * 64,
+                      prior_backend_sha256='b' * 64, original_backend_sha256='b' * 64)
+        recipe['source_graph_sha256'] = p.source_graph(recipe)
+        rf = component / p.EDITION / profile / 'provider-recipe.json'
+        rf.parent.mkdir(parents=True, exist_ok=True)
         rf.write_text(json.dumps(recipe))
         return sdk, component, rf, {profile: p.sha(rf)}, p.sha(tool)
 
@@ -57,6 +68,17 @@ class ProductProviderTests(unittest.TestCase):
             historical.parent.mkdir(parents=True, exist_ok=True)
             historical.write_text('/* obsolete SDK copy, must never be read */')
             files[relative] = dict(sha256=p.sha(source), bytes=source.stat().st_size, git_mode='100644')
+        tuya_files = {}
+        for relative in (p.TUYA_READER, 'adapters/tuya/mimi_device_pairing.c'):
+            source = product / relative
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text('/* private Tuya source */')
+            source.chmod(0o644)
+            tuya_files[relative] = dict(sha256=p.sha(source), bytes=source.stat().st_size, git_mode='100644')
+        tuya_lock = product / p.TUYA_LOCK
+        tuya_lock.write_text(json.dumps(dict(schema=1, component='tuya-device-pairing', api_version=1, files=tuya_files)))
+        recipe['sources'][p.READER_SOURCE] = p.sha(product / p.TUYA_READER)
+        recipe['source_graph_sha256'] = p.source_graph(recipe)
         rf.write_text(json.dumps(recipe))
         pins['private'] = p.sha(rf)
         lock = dict(schema=1, component='100ask-auto-pairing', composition=p.PRIVATE_SOURCES,
@@ -69,7 +91,7 @@ class ProductProviderTests(unittest.TestCase):
     def test_private_requires_product_without_historical_fallback(self):
         with tempfile.TemporaryDirectory() as d:
             sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
-            with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)):
+            with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p, 'TUYA_LOCK_HASH', p.sha(product / p.TUYA_LOCK)):
                 with self.assertRaisesRegex(ValueError, 'explicit private product'):
                     p.preflight(str(sdk), 'private', str(external))
                 result = p.preflight(str(sdk), 'private', str(external), str(product))
@@ -84,7 +106,7 @@ class ProductProviderTests(unittest.TestCase):
         for target in ('source', 'lock', 'mode', 'source-alias', 'lock-alias'):
             with self.subTest(target=target), tempfile.TemporaryDirectory() as d:
                 sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
-                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)):
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p, 'TUYA_LOCK_HASH', p.sha(product / p.TUYA_LOCK)):
                     source = product / next(iter(p.PRIVATE_SOURCES.values()))
                     p.preflight(str(sdk), 'private', str(external), str(product))
                     if target in ('source', 'lock'):
@@ -111,7 +133,7 @@ class ProductProviderTests(unittest.TestCase):
                 body = json.loads(lock.read_text())
                 body[{'recipe': 'provider_recipe_sha256', 'composition': 'composition', 'files': 'files'}[change]] = {} if change != 'recipe' else 'bad'
                 lock.write_text(json.dumps(body))
-                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)):
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p, 'TUYA_LOCK_HASH', p.sha(product / p.TUYA_LOCK)):
                     with self.assertRaisesRegex(ValueError, 'composition or provider recipe'):
                         p.preflight(str(sdk), 'private', str(external), str(product))
                     with self.assertRaisesRegex(ValueError, 'separate from SDK'):
@@ -126,18 +148,20 @@ class ProductProviderTests(unittest.TestCase):
             old.write_bytes(b'preserve existing candidate')
             args = argparse.Namespace(sdk=str(sdk), profile='private', private_sdk=str(external),
                                       private_product_root=str(product), output=str(output), check=False)
-            with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p.subprocess, 'run') as execute:
+            with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p, 'TUYA_LOCK_HASH', p.sha(product / p.TUYA_LOCK)), patch.object(p.subprocess, 'run') as execute:
                 with self.assertRaisesRegex(ValueError, 'new directory'):
                     p.build(args)
                 execute.assert_not_called()
             self.assertEqual(old.read_bytes(), b'preserve existing candidate')
 
     def test_changed_source_dependency_tool_recipe_and_compiler_rejected(self):
-        for target in ['source', 'dependency', 'tool', 'recipe', 'compiler']:
+        for target in ['source', 'dependency', 'tool', 'recipe', 'compiler', 'ai', 'reader']:
             with self.subTest(target=target), tempfile.TemporaryDirectory() as d:
                 sdk, component, rf, pins, tool_hash = self.fixture(Path(d).resolve())
                 files = dict(source=component / 'public/code/provider.c', dependency=sdk / 'include.h',
-                             tool=component / 'build_provider.py', recipe=rf, compiler=sdk / p.COMPILER)
+                             tool=component / 'build_provider.py', recipe=rf, compiler=sdk / p.COMPILER,
+                             ai=component / p.EDITION / 'code' / p.AI_SOURCE,
+                             reader=component / p.EDITION / 'public/mimi_tuya_license_provider.h')
                 with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins):
                     p.preflight(str(sdk), 'public')
                     files[target].write_text('changed')
@@ -154,6 +178,65 @@ class ProductProviderTests(unittest.TestCase):
                     p.preflight(str(sdk), 'private', str(sdk))
                 with self.assertRaises(ValueError):
                     p.preflight(str(sdk), 'public')
+
+    def test_unapproved_reference_and_source_graph_rejected(self):
+        for change in ('reference_state', 'source_graph_sha256', 'edition_source_version', 'reference_backend_sha256'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as d:
+                sdk, component, rf, pins, tool_hash = self.fixture(Path(d).resolve())
+                recipe = json.loads(rf.read_text())
+                recipe[change] = 'unapproved'
+                rf.write_text(json.dumps(recipe))
+                pins['public'] = p.sha(rf)
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins):
+                    with self.assertRaisesRegex(ValueError, 'edition/source graph/reference'):
+                        p.preflight(str(sdk), 'public')
+
+    def test_only_exact_new_reference_is_accepted_with_prior_kept(self):
+        for altered in (False, True):
+            with self.subTest(altered=altered), tempfile.TemporaryDirectory() as d:
+                root = Path(d).resolve()
+                sdk, component, rf, pins, tool_hash = self.fixture(root)
+                payload = b'new public program without private reader'
+                import hashlib
+                expected = hashlib.sha256(payload).hexdigest()
+                recipe = json.loads(rf.read_text())
+                recipe['reference_backend_sha256'] = expected
+                rf.write_text(json.dumps(recipe))
+                pins['public'] = p.sha(rf)
+                output = root / 'new-build'
+                args = argparse.Namespace(sdk=str(sdk), profile='public', private_sdk=None,
+                                          private_product_root=None, output=str(output), check=False)
+
+                def compile_probe(*_args, **_kwargs):
+                    output.mkdir()
+                    (output / 'lv_backend').write_bytes(payload + (b'changed' if altered else b''))
+                    result = dict(status='passed', cloud_profile='public', recipe_sha256=pins['public'],
+                                  no_original_source_dependency=True, backend_sha256=p.sha(output / 'lv_backend'),
+                                  original_backend_sha256=recipe['prior_backend_sha256'], byte_identical=False,
+                                  translation_units=30)
+                    (output / 'build-result.json').write_text(json.dumps(result))
+
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p.subprocess, 'run', compile_probe):
+                    if altered:
+                        with self.assertRaisesRegex(ValueError, 'build result mismatch'):
+                            p.build(args)
+                        self.assertFalse((output / 'product-provider-result.json').exists())
+                    else:
+                        receipt = p.build(args)
+                        self.assertEqual(receipt['backend_sha256'], expected)
+                        self.assertEqual(receipt['prior_backend_sha256'], 'b' * 64)
+                        self.assertFalse(receipt['byte_identical_to_prior'])
+
+    def test_private_tuya_reader_tamper_cannot_fall_back_to_sdk(self):
+        for target in ('reader', 'runtime', 'lock'):
+            with self.subTest(target=target), tempfile.TemporaryDirectory() as d:
+                sdk, component, rf, pins, tool_hash, external, product, lock = self.private_fixture(Path(d).resolve())
+                with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins), patch.object(p, 'PRIVATE_LOCK_HASH', p.sha(lock)), patch.object(p, 'TUYA_LOCK_HASH', p.sha(product / p.TUYA_LOCK)):
+                    p.preflight(str(sdk), 'private', str(external), str(product))
+                    path = {'reader': p.TUYA_READER, 'runtime': 'adapters/tuya/mimi_device_pairing.c', 'lock': p.TUYA_LOCK}[target]
+                    (product / path).write_text('tampered')
+                    with self.assertRaises(ValueError):
+                        p.preflight(str(sdk), 'private', str(external), str(product))
 
     def test_source_alias_rejected_even_with_identical_body(self):
         with tempfile.TemporaryDirectory() as d:

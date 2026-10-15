@@ -16,3 +16,7 @@
 组件阶段真实结果：4个对象使用原A133 GCC和真实Tuya SDK头编译，public/private runtime分别149输入、private/public reader分别71/4输入，公开组件无私有依赖，全部ELF64 AArch64且前后输入SHA稳定。公共2/私有2 native探针passed（reader14场景），详见a133-objects.json/verified-result.json。这里只编译适配对象，主程序/当前SDK/打包尚未接入，完整程序/镜像与物理not_run；不能把这个阶段改写为产品隔离通过。
 
 清单接续校正：此前EDITION-SOURCE-MAP文案替换未命中旧整句，现按实际组件阶段同步，明确主链未切换，不改变代码或重跑已通过构建。私有753bc51远端CI已经success；公共c793fbe相关CI以remote-source.json实际状态为准，不提前记通过。
+
+本轮接线先建立Provider edition-v2：原SDK工具d2/旧两profile/其他服务保持原字节，新增SDK recipe/共享AI源覆盖和公共reader stub，不复制整份后端或桌面。AI源只将已固定的reader函数片段替换为同目录头并填空行保留后续行号，私有头来自产品私有组件。先以原工具真实编译新源、native读取探针及公共二进制无授权路径检查建立新参考，再固定reference_backend_sha256/源图摘要；原original_backend_sha256保留为旧基线，不为消除差异而假称旧字节通过。新入口比较新源参考，记录与旧基线是否不同，拒绝错误版本/来源。通过标准SDK overlay归档/重放/回读后才新增到实际SDK。100ask锁按新recipe版本更新metadata而不改两C；Tuya锁单独固定，避免来源循环。
+
+Provider edition-v2 actual SDK source replay passed: cd92e9bb, 4283 overlay files/95 baselines, 7 additive files, zero prior actual SDK files changed. Original d2 builder and historical profiles remain byte-identical. New source reference public0075ec88 differs from old84af as intended (no credential fields/path); private8a8b3a45 remains byte-identical. Explicit entry preflight public/private and 13 boundary tests passed; final product-entry full builds not_run until this code commit. Tuya main/prepare/build/install remain unconnected and not qualified. Existing mimi prompt encoding repaired without changing scheduler/rate or delivery priority.

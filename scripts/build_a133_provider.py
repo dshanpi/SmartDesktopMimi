@@ -12,12 +12,18 @@ import tempfile
 PREFIX = 'openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider'
 TOOL_HASH = 'd2fc9477c990642fa27b56f65512ee751e5b3a1a478e5011b0f4878c0b56b4e0'
 RECIPES = {
-    'private': 'ab6e835a6062be717aa19c0b3634a48249a2ec77f3b4f0405b363776f65e883b',
-    'public': 'f005cb9f5ddb614a0fa27e040e787e8838743a123792d6764b449a27eb6089e3',
+    'private': '0b59970bbfe575d2ccd00949d14337d6ed14844711664bbabdd4920311b957fc',
+    'public': '8f0e4b562b30a33f75182c99fffda2a54470a72d03b32979f970148ad6991ba7',
 }
+EDITION = 'edition-v2'
+AI_SOURCE = 'apps/lv_port_linux/src/system/service_ai_runtime.c'
+READER_SOURCE = 'apps/lv_port_linux/src/system/mimi_tuya_license_provider.h'
+TUYA_LOCK = 'adapters/tuya/source-lock.json'
+TUYA_LOCK_HASH = '7392aac54a9f2c70d6404aa8ae3690b03784fb3d882bab0e85a574ff42e15b6c'
+TUYA_READER = 'adapters/tuya/mimi_tuya_license_provider.h'
 COMPILER = 'prebuilt/rootfsbuilt/aarch64/toolchain-sunxi-glibc-gcc-1130/toolchain/bin/aarch64-openwrt-linux-gcc'
 PRIVATE_LOCK = 'adapters/100ask/source-lock.json'
-PRIVATE_LOCK_HASH = '9bcd9a60ba97ecd5e020e035284f33d178ea64a35031a771839c0e731525e993'
+PRIVATE_LOCK_HASH = '80af8fca7a47db299d6f4b80177ce0ecb99925875f3ac5b6ce15f552b4442c81'
 PRIVATE_SOURCES = {
     'apps/lv_port_linux/src/system/service_cloud.c': 'adapters/100ask/system/service_cloud.c',
     'apps/lv_port_linux/src/system/service_cloud_validation.c': 'adapters/100ask/system/service_cloud_validation.c',
@@ -68,14 +74,40 @@ def private_component(value, sdk, private, recipe):
         mode = '100755' if source.stat().st_mode & 0o111 else '100644'
         if source.stat().st_size != item['bytes'] or mode != item['git_mode']:
             raise ValueError('private component source size or Git mode mismatch')
-    return root, lock
+    pinned_file(root / TUYA_LOCK, root, TUYA_LOCK_HASH)
+    tuya = json.loads((root / TUYA_LOCK).read_text())
+    if (tuya.get('schema') != 1 or tuya.get('component') != 'tuya-device-pairing' or
+            tuya.get('api_version') != 1 or
+            set(tuya.get('files', {})) != {TUYA_READER, 'adapters/tuya/mimi_device_pairing.c'}):
+        raise ValueError('private Tuya reader component mismatch')
+    for name, item in tuya['files'].items():
+        pinned_file(root / name, root, item['sha256'])
+        mode = '100755' if (root / name).stat().st_mode & 0o111 else '100644'
+        if mode != item['git_mode'] or (root / name).stat().st_size != item['bytes']:
+            raise ValueError('private Tuya component source size or Git mode mismatch')
+    if tuya['files'][TUYA_READER]['sha256'] != recipe['sources'].get(READER_SOURCE):
+        raise ValueError('private Tuya reader differs from fixed provider source')
+    return root, lock, tuya
 
 
-def selected_source(code, name, product):
+def selected_source(component, profile, name, product):
     # SDK's historical private copies are never selected for these two files.
     if product and name in PRIVATE_SOURCES:
         return product[0] / PRIVATE_SOURCES[name], product[0]
+    if name == AI_SOURCE:
+        return component / EDITION / 'code' / name, component / EDITION / 'code'
+    if name == READER_SOURCE:
+        if product:
+            return product[0] / TUYA_READER, product[0]
+        return component / EDITION / 'public/mimi_tuya_license_provider.h', component / EDITION / 'public'
+    code = component / profile / 'code'
     return code / name, code
+
+
+def source_graph(recipe):
+    graph = {key: recipe[key] for key in ('sources', 'inputs', 'translation_units',
+                                        'link_flags', 'compiler_target', 'compiler_sha256')}
+    return hashlib.sha256(json.dumps(graph, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
 def preflight(sdk_value, profile, private_value=None, product_value=None):
@@ -87,20 +119,26 @@ def preflight(sdk_value, profile, private_value=None, product_value=None):
     component = sdk / PREFIX
     tool = component / 'build_provider.py'
     pinned_file(tool, sdk, TOOL_HASH)
-    recipe_file = component / profile / 'provider-recipe.json'
+    recipe_file = component / EDITION / profile / 'provider-recipe.json'
     pinned_file(recipe_file, component, RECIPES[profile])
     recipe = json.loads(recipe_file.read_text())
     if recipe['cloud_profile'] != profile or recipe['tool_sha256'] != TOOL_HASH:
         raise ValueError('provider profile/tool mismatch')
+    if (recipe.get('edition_source_version') != 2 or
+            recipe.get('edition_source_requirement') != 'REQ-MIMI-PRIVATE-066' or
+            recipe.get('reference_state') != 'audited_new_source_reference' or
+            recipe.get('source_graph_sha256') != source_graph(recipe) or
+            len(recipe.get('reference_backend_sha256', '')) != 64 or
+            READER_SOURCE not in recipe['sources'] or AI_SOURCE not in recipe['sources']):
+        raise ValueError('provider edition/source graph/reference mismatch')
     private = canonical(private_value) if profile == 'private' and private_value else sdk.parent / '.mimi-private-disabled'
     if profile == 'private':
         product = Path(__file__).resolve().parents[1]
         if not private.is_dir() or inside(private, sdk) or inside(private, product):
             raise ValueError('private profile requires an external private SDK')
     product_component = private_component(product_value, sdk, private, recipe) if profile == 'private' else None
-    code = component / profile / 'code'
     for name, digest in recipe['sources'].items():
-        source, source_root = selected_source(code, name, product_component)
+        source, source_root = selected_source(component, profile, name, product_component)
         pinned_file(source, source_root, digest)
     for name, digest in recipe['inputs'].items():
         bucket, rel = name.split('/', 1)
@@ -119,12 +157,12 @@ def preflight(sdk_value, profile, private_value=None, product_value=None):
 
 def compose(component, recipe, product, directory):
     """Copy only fixed source blobs; execute the original, pinned SDK builder."""
-    code = component / 'private' / 'code'
-    composed = directory / 'private'
+    profile = recipe['cloud_profile']
+    composed = directory / profile
     (composed / 'code').mkdir(parents=True)
-    shutil.copyfile(component / 'private/provider-recipe.json', composed / 'provider-recipe.json')
+    shutil.copyfile(component / EDITION / profile / 'provider-recipe.json', composed / 'provider-recipe.json')
     for name, digest in recipe['sources'].items():
-        source, source_root = selected_source(code, name, product)
+        source, source_root = selected_source(component, profile, name, product)
         pinned_file(source, source_root, digest)
         target = composed / 'code' / name
         if not inside(target, composed / 'code') or target.resolve() != target:
@@ -138,11 +176,15 @@ def compose(component, recipe, product, directory):
 def build(args):
     sdk, component, tool, recipe, private, compiler, product = preflight(
         args.sdk, args.profile, args.private_sdk, args.private_product_root)
-    receipt = dict(requirement='REQ-MIMI-PRIVATE-065', status='passed', phase='preflight',
+    receipt = dict(requirement='REQ-MIMI-PRIVATE-066', status='passed', phase='preflight',
                    profile=args.profile, recipe_sha256=RECIPES[args.profile], tool_sha256=TOOL_HASH,
-                   provider_source_commit=recipe['source_commit'], release_qualified=False)
+                   provider_source_commit=recipe['source_commit'], release_qualified=False,
+                   provider_edition_source_version=2, source_graph_sha256=recipe['source_graph_sha256'],
+                   reference_backend_sha256=recipe['reference_backend_sha256'],
+                   prior_backend_sha256=recipe['prior_backend_sha256'])
     if product:
         receipt.update(private_product_source_lock_sha256=PRIVATE_LOCK_HASH,
+                       private_tuya_source_lock_sha256=TUYA_LOCK_HASH,
                        private_adapter_origin_sdk_commit=product[1]['source_commit'],
                        private_adapter_sources={name: recipe['sources'][name] for name in PRIVATE_SOURCES},
                        historical_sdk_pairing_sources_used=False)
@@ -156,17 +198,23 @@ def build(args):
         raise ValueError('build output must be a new directory outside SDK inputs')
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='.provider-source-', dir=output.parent) as temp:
-        selected = compose(component, recipe, product, Path(temp)) if product else component / args.profile
+        selected = compose(component, recipe, product, Path(temp))
         subprocess.run([sys.executable, str(tool), 'build', '--component', str(selected),
                         '--sdk', str(sdk), '--private-sdk', str(private), '--compiler', str(compiler),
                         '--output', str(output)], check=True)
     result = json.loads((output / 'build-result.json').read_text())
-    if result['status'] != 'passed' or result['cloud_profile'] != args.profile or result['recipe_sha256'] != RECIPES[args.profile] or not result['no_original_source_dependency'] or result['backend_sha256'] != sha(output / 'lv_backend') or not result['byte_identical']:
+    if (result['status'] != 'passed' or result['cloud_profile'] != args.profile or
+            result['recipe_sha256'] != RECIPES[args.profile] or not result['no_original_source_dependency'] or
+            result['backend_sha256'] != sha(output / 'lv_backend') or
+            result['backend_sha256'] != recipe['reference_backend_sha256'] or
+            result['original_backend_sha256'] != recipe['prior_backend_sha256'] or
+            result['byte_identical'] != (result['backend_sha256'] == recipe['prior_backend_sha256'])):
         raise ValueError('independent provider build result mismatch')
     # Recheck all pinned inputs before allowing the caller to collect this binary.
     preflight(args.sdk, args.profile, args.private_sdk, args.private_product_root)
     receipt.update(phase='compiled', backend_sha256=result['backend_sha256'],
-                   translation_units=result['translation_units'], original_source_dependency=False)
+                   translation_units=result['translation_units'], original_source_dependency=False,
+                   byte_identical_to_prior=result['byte_identical'])
     (output / 'product-provider-result.json').write_text(json.dumps(receipt, indent=2) + '\n')
     return receipt
 

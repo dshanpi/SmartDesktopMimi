@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Product entry selects additive SDK edition-v2 and fixed Tuya/100ask component sources.",
+  "context": "Continuation of PRIVATE066 component phase; original snapshots frozen; physical acceptance deferred by user.",
+  "next_steps": "Compile both entries against new audited source references, then wire Tuya main/prepare/package.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "Product entry selects additive SDK edition-v2 and fixed Tuya/100ask component sources.",
+      "invariants": "No credentials, key or binding changes. Public rejects private sources. Original d2 SDK inputs and old release artifacts preserved. New reference does not relabel old acceptance.",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/20261015-private066-provider-entry.json",
+        "scripts/build_a133_provider.py",
+        "tests/update/test_product_provider.py"
+      ],
+      "checks": [
+        {
+          "name": "SDK standard overlay and actual additive install",
+          "status": "passed",
+          "scope": "4283 overlay payload files / 95 component baselines; 7 new SDK files",
+          "evidence": "output/private-tuya-adapter-20261015/sdk-v2-actual-install.json"
+        },
+        {
+          "name": "Boundary checks and actual SDK preflight",
+          "status": "passed",
+          "scope": "13 native host boundary checks; public/private check-only entry",
+          "evidence": "output/private-tuya-adapter-20261015/provider-entry-tests.log"
+        },
+        {
+          "name": "Full product entry and runtime/package",
+          "status": "not_run",
+          "scope": "Actual program builds and complete Tuya/package chain",
+          "reason": "Code source fixed first; component references do not qualify whole product.",
+          "evidence": "docs/change-gates/REQ-MIMI-PRIVATE-066.md"
+        }
+      ]
+    }
+  ]
+}
