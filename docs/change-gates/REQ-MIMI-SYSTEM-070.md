@@ -23,3 +23,14 @@
 - not_run/deferred：A133安装、失联、升级回退断电/数据，按用户等新SDK环境；Ubuntu登录、真实Tuya/语音/账号归属未验收。
 
 后续只记录实际阶段与SHA；编译/主机验签不替代真实设备。旧rc2/rc23和25附件冻结，整套目标未完成。
+
+### 真实package/install文件冲突修复（2026-10-15，实施前）
+首轮正式构建在package/install失败，随后一次OPENWRT_VERBOSE=s限定复验220.3秒得到确切错误：aitvbox-suite与aitvbox-mimi-update均声明/etc/smartdesktopmimi/product-edition，opkg check_data_file_clashes拒绝。不是内核/网络/凭据错误，尚未到pack。前序主机包夹具只分别安装两包，没有检查两包文件归属交集，故遗漏了真实安装冲突。原日志和失败结果不覆盖。
+
+修复范围仅公共packaging/aitvbox-suite/Makefile：存在工厂baseline时，由更新器包携带已封存标记，suite先验证baseline及明确public/private选择，不再产生第二份；无baseline时仍由suite生成原标记。suite包release从13增到14避免旧IPK缓存。更新器/IPC/身份/签名格式和已签共用rc24不变，不重编/重签应用。
+
+验收先在原Makefile上用真实A133公共/私有程序夹具执行两个生产安装recipe，比较全部非目录文件交集，应能复现重复标记；修复后两版交集为空，标记唯一归属updater且444、其字节等于封存baseline；无baseline旧模式标记仍有；已有混版提前拒绝不退化。再执行受影响包/基线测试和源码审计。正式rootfs/pack须重新通过，不把独立recipe通过称真实opkg完成。现有失败目录保留，新重试输出另建r2。
+
+不变量：不能使用opkg强制覆盖、取消产品标记/验证、篡改baseline seal或任意换钥；不写服务器17、不动设备/HDMI；应用rc24来自实际bedf1a8，后续系统包装提交可独立变化且准确记录。新运行库/rootfs和完整来源、远端附件仍按原门禁。
+
+修复主机结果：原recipe公共/私有两个真实程序夹具均复现product-edition交集失败；修复后组合payload交集为空、updater唯一标记444且seal不变、无baseline原路径和损坏seal/混版拒绝通过。受影响product_edition/baseline/system_edition共23项0skip通过；完整SDK真实opkg/镜像仍待重跑。首次夹具umask产生可组写文件及首次测试模块搜索路径不完整的调用失败保留，分别修正夹具权限和测试PYTHONPATH后才得最终结果，不以这些工具调用失败解释产品根因。

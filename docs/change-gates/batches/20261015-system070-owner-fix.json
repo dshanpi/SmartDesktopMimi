@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Fix actual opkg duplicate ownership of product-edition marker",
+  "context": "Formal SYSTEM070 and verbose firmware replay failed before pack; separately passing package fixtures did not compare cross-package file ownership.",
+  "next_steps": "Reproduce with both production recipes, fix suite marker ownership, rerun affected tests and real rootfs/pack; retain frozen signed common app.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-070",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-070.md",
+      "scope": "Single-owner product marker in sealed-baseline systems, preserve legacy no-baseline behavior",
+      "invariants": "No force-overwrite or disabled edition/seal checks; no signing/key/device/server changes; old app and failed evidence immutable.",
+      "paths": [
+        "packaging/aitvbox-suite/Makefile",
+        "tests/update/test_product_edition.py",
+        "docs/change-gates/REQ-MIMI-SYSTEM-070.md",
+        "docs/change-gates/batches/20261015-system070-owner-fix.json",
+        "CURRENT_PROGRESS.md"
+      ],
+      "checks": [
+        {
+          "name": "Production package ownership regression",
+          "status": "passed",
+          "scope": "Both real A133 product program fixtures and two production make install recipes: no-baseline markers preserved, sealed payload intersection empty, marker444 unique to updater, corrupt seal/mixed source refused",
+          "evidence": "output/system-product-20261015/marker-ownership-before-fix-r2.log;marker-ownership-after-fix-r2.log"
+        },
+        {
+          "name": "New complete product image",
+          "status": "not_run",
+          "scope": "SDK package/install/rootfs/pack",
+          "reason": "Previous build failed; retry must pass real pipeline",
+          "evidence": "output/system-product-20261015/public-firmware-diagnostic.log"
+        }
+      ]
+    }
+  ]
+}

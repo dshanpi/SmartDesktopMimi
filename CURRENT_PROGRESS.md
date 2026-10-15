@@ -1,3 +1,11 @@
+# SYSTEM070包装冲突主机修复通过（2026-10-15）
+
+suite release14在有baseline时只验证而不再声明product-edition，updater唯一安装封存文件；无baseline仍保留suite原标记。真实公共/私有A133程序夹具+两生产recipe原故障复现、修复后文件交集为空/444/拒绝损坏seal及受影响23项0skip passed。旧rc24签名包c3339a52与构建源bedf1a8不变，无需重编/重签应用。真实SDK rootfs/opkg/pack和完整公开镜像仍待重试，旧失败不覆盖；服务器17严格只读、设备验收后置。
+
+# SYSTEM070实际opkg冲突修复（2026-10-15，实施前）
+
+原正式521.7秒/限定诊断220.3秒均在rootfs安装失败；确切为suite与updater重复安装product-edition。按SYSTEM070追加记录先补两生产recipe文件交集回归，修复为有baseline由updater唯一拥有、无baseline保留suite路径，验证seal/版型不放松。不动已签rc24应用bedf1a8或服务器17/设备，后续系统包装提交独立记录；原失败目录不覆盖。
+
 # SYSTEM070 接续（2026-10-15，实施前）
 
 开始新共用应用rc24及公开systemrc3/私有systemrc4主机构建候选，三个远端tag均只读确认不存在；不创建/覆盖旧tag。SDK069全部三CI已成功，旧rc2/rc23冻结。按docs/change-gates/REQ-MIMI-SYSTEM-070.md逐步编译/签名/基线及实际rootfs核对。尚无新包/完整镜像，不称配对已修；192.168.1.17仍严格只读。设备安装/断电等按用户后置。

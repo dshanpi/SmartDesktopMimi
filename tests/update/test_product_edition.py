@@ -165,6 +165,58 @@ class ProductEditionTests(unittest.TestCase):
                 self.assertFalse((stage / 'etc/100ask/cloud.conf').exists())
                 self.assertFalse((stage / 'etc/100ask/ca.crt').exists())
                 self.assertFalse((stage / 'factory/tuya/license.env').exists())
+                # Installing both production packages must not claim the same file.
+                # The factory tree here is a synthetic seal, not device/signature acceptance;
+                # provider/runtime programs above are actual separately built A133 inputs.
+                sys.path.insert(0, str(ROOT / 'tools/update'))
+                import baseline
+                (product / 'tools').symlink_to(ROOT / 'tools', target_is_directory=True)
+                prepared = product / 'build/mimi-baseline'
+                factory_root = prepared / 'rootfs'
+                config = factory_root / 'etc/smartdesktopmimi';config.mkdir(parents=True)
+                (config / 'device.json').write_text(json.dumps({'enrollment_id': ''}))
+                (config / 'system-device.json').write_text(json.dumps({'product_edition': edition}))
+                marker = config / 'product-edition';marker.write_text(edition + '\n');marker.chmod(0o444)
+                factory = factory_root / 'usr/lib/smartdesktopmimi/factory';factory.mkdir(parents=True)
+                (factory / 'manifest.json').write_text(json.dumps({'commit': 'a'*40, 'package_sha256': 'b'*64}))
+                for entry in factory_root.rglob('*'):
+                    entry.chmod(0o755 if entry.is_dir() else (0o444 if entry == marker else 0o644))
+                baseline.write(prepared / 'baseline-lock.json', dict(schema_version=1, policy='MIMI-UPDATE-001/1.0.0',
+                               factory_commit='a'*40, factory_version='1.0.0-test', factory_package_sha256='b'*64,
+                               files=baseline.inventory(factory_root)))
+                updater = product / 'build/mimi-update/mimi-update';updater.parent.mkdir()
+                shutil.copy2('/bin/true', updater)
+                with (top / 'rules.mk').open('a') as macros:macros.write('CP:=cp -fpR\n')
+                sealed_suite = root / 'sealed-suite'
+                suite_recipe = root / 'sealed-suite.mk'
+                suite_recipe.write_text(makefile.read_text().replace(str(stage), str(sealed_suite)))
+                result = subprocess.run(['make', '--no-print-directory', '-f', str(suite_recipe), 'all'],
+                                        cwd=ROOT / 'packaging/aitvbox-suite', capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                updater_stage = root / 'updater-package';updater_recipe = root / 'updater.mk'
+                updater_recipe.write_text('TOPDIR:=' + str(top) + '\nAITVBOX_PRODUCT_BUILD:=' + str(product) +
+                                          '\ninclude ' + str(ROOT / 'packaging/aitvbox-mimi-update/Makefile') +
+                                          '\nall:\n\t$(call Package/aitvbox-mimi-update/install,' + str(updater_stage) + ')\n')
+                result = subprocess.run(['make', '--no-print-directory', '-f', str(updater_recipe), 'all'],
+                                        cwd=ROOT / 'packaging/aitvbox-mimi-update', capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                payload = lambda tree: {p.relative_to(tree).as_posix() for p in tree.rglob('*') if p.is_file() or p.is_symlink()}
+                self.assertEqual(payload(sealed_suite) & payload(updater_stage), set(), 'opkg package file ownership collision')
+                self.assertFalse((sealed_suite / 'etc/smartdesktopmimi/product-edition').exists())
+                final_marker = updater_stage / 'etc/smartdesktopmimi/product-edition'
+                self.assertEqual(final_marker.read_bytes(), marker.read_bytes())
+                self.assertEqual(final_marker.stat().st_mode & 0o777, 0o444)
+                self.assertEqual(baseline.inventory(factory_root), json.loads((prepared / 'baseline-lock.json').read_text())['files'])
+                # A corrupt/mismatched seal must fail, never recreate a second marker.
+                marker.chmod(0o644);marker.write_text(('private' if edition == 'public' else 'public') + '\n');marker.chmod(0o444)
+                invalid_stage = root / 'invalid-baseline-suite'
+                invalid_recipe = root / 'invalid-baseline-suite.mk'
+                invalid_recipe.write_text(makefile.read_text().replace(str(stage), str(invalid_stage)))
+                result = subprocess.run(['make', '--no-print-directory', '-f', str(invalid_recipe), 'all'],
+                                        cwd=ROOT / 'packaging/aitvbox-suite', capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('baseline has changed since preparation', result.stdout + result.stderr)
+                self.assertFalse((invalid_stage / 'etc/smartdesktopmimi/product-edition').exists())
                 # A mixed build must fail on the first install recipe line, before mkdir/copy.
                 shutil.rmtree(stage)
                 record = product / 'build/lv_port_linux/provider-build-result.json'

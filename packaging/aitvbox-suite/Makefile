@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=aitvbox-suite
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=13
+PKG_RELEASE:=14
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -163,9 +163,15 @@ define Package/aitvbox-suite/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(SWUPDATE_PUBLIC_KEY) $(1)/etc/swupdate_public.pem
 	$(INSTALL_DATA) $(BUILD_OUT)/aitvbox-version $(1)/etc/aitvbox-version
-	$(INSTALL_DIR) $(1)/etc/smartdesktopmimi
-	printf '%s\n' '$(PRODUCT_EDITION)' > $(1)/etc/smartdesktopmimi/product-edition
-	chmod 444 $(1)/etc/smartdesktopmimi/product-edition
+	# A sealed baseline's marker belongs only to aitvbox-mimi-update. Do not
+	# duplicate its file in this package or bypass its selected edition/seal.
+	if [ -d "$(BUILD_OUT)/mimi-baseline" ]; then \
+		python3 "$(PRODUCT_ROOT)/tools/update/baseline.py" verify --output "$(BUILD_OUT)/mimi-baseline" --product-edition "$(PRODUCT_EDITION)"; \
+	else \
+		$(INSTALL_DIR) $(1)/etc/smartdesktopmimi; \
+		printf '%s\n' '$(PRODUCT_EDITION)' > $(1)/etc/smartdesktopmimi/product-edition; \
+		chmod 444 $(1)/etc/smartdesktopmimi/product-edition; \
+	fi
 	$(if $(PRIVATE_PAIRING_ENABLED),$(call Install/private-pairing,$(1)))
 
 	# Private cloud configuration is installed only for an explicitly enabled
