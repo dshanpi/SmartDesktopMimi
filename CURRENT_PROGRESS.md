@@ -1,3 +1,7 @@
+# SYSTEM070 接续（2026-10-15，实施前）
+
+开始新共用应用rc24及公开systemrc3/私有systemrc4主机构建候选，三个远端tag均只读确认不存在；不创建/覆盖旧tag。SDK069全部三CI已成功，旧rc2/rc23冻结。按docs/change-gates/REQ-MIMI-SYSTEM-070.md逐步编译/签名/基线及实际rootfs核对。尚无新包/完整镜像，不称配对已修；192.168.1.17仍严格只读。设备安装/断电等按用户后置。
+
 # SDK输入检查点（2026-10-15 / SDK069，源码同步待收尾）
 
 97组件根/HEAD、4694源对象、4283 overlay文件95基线和原318.1MiB源码包SHA复核passed；57根/忽略输入含两个明确配置派生已核对。恢复1份展开defconfig及60模式，清理4个固定pyc；原配置/权限和初始failed/review报告保留。不apply全树、不编译、不操作板子。检查点和来源SHA见docs/update/SDK-INPUT-CHECKPOINT.md，原始私有证据output/final-sdk-inputs-20261015。
