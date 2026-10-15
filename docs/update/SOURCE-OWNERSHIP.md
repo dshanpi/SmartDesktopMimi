@@ -58,3 +58,7 @@
 `migration_complete=false` 继续保留。详细证据与失败历史见SPLIT053门禁。
 冻结sysrc2来源锁继续指向构建当时实际1fb输入；958为新的sourcecheckpoint，
 不得倒填旧镜像、复制其真机结论或提前上传应用/Release。
+
+
+### 2026-10-15 产品入口切换（REQ-MIMI-SPLIT-054）
+`scripts/build_apps.sh`预检固定SDK组件后，使用SDK内独立helper构建`lv_backend`，桌面`build_openwrt.sh`只构建`lvglsim`并强制归属检查。双profile实际重编与原后端字节一致，A133上层672编译源审计passed。实际源码60b0b13，详见054及output/product-provider-20261015。旧混合CMake分支和平台源码仍保留作对照，未完成公共旧源移除；完整产品整链/新镜像及真机未执行，不把该入口检查当作迁移完成。

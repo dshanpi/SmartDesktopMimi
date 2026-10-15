@@ -136,3 +136,5 @@ SPLIT053更新：66文件/32TU独立真实编译及与旧后端字节相同passe
 SPLIT053更新：private32/public30组件、4248/95标准overlay重放、私有SDK958上传独立远端读回及实际SDKprivate编译passed；系统入口/公共旧源移除仍not_run，整套迁移未完成。
 
 - [REQ-MIMI-SPLIT-054](change-gates/REQ-MIMI-SPLIT-054.md)：SDK独立Provider系统入口，实施前记录，实际检查not_run。
+
+SPLIT054更新：系统SDK后端入口已实现，private32/public30实际编译字节对照和A133桌面672源归属passed；完整归集整链/系统重建/真机not_run，公共旧源未移除。

@@ -61,3 +61,9 @@ ADB保存binding仍空，Ubuntu服务实际active等待普通Xorg登录；相关
 private32/public30独立组件各与参考后端逐字节一致；public不需要privateSDK。新增134文件到标准SDK overlay后，总4248源文件/95实际基准的原apply_overlay入口重放passed；两个重放后的组件再次真实编译一致。私有SDK958c62f739c86fcc1128fb2d838faa25c550aaa9已push并独立fetch/完整4248文件及两组件源码复核passed，原driver1fb历史不改。
 实际恢复SDK只新增该134文件，不覆盖旧source/kernel/boot/补充输入；第一次Gitmode继承失配failed保留并修复新增文件exact644/755。SDK真实位置private32编译passed/仍8a8后端。13边界回归passed，秘密screen无发现、未复制私有厂商实现。应用/镜像/升级包/Release未上传。
 仍未完成系统构建入口切换、公共旧平台源移除/最终应用SDK与业务归属；迁移false。旧app23/sysrc2保持原hash和其实际private1fb输入锁。A133安装/失联根因与必需矩阵、Ubuntu普通登录/全数据等继续未验收；ADB/登录资源pending。证据 output/a133-provider-split-20261015。
+
+
+## 2026-10-15 SPLIT054 系统SDK后端入口真实编译
+source60b0b132efa3687722694f0581e30a8b50d5bf7e：系统build_apps已改为预检SDK固定组件后独立构建后端，桌面入口仅lvglsim。实际private32/public30均重编且与原后端逐字节一致（8a8b…c3f3/84af…9701）；A133上层4878416B/hash4891196a5e3134ddda967f2823ffe54111d8f97e3aa2588272d4e17c4e673045、672源归属审计passed、源clean；17边界与33架构回归passed。缺SDK组件时真实build_apps --clean提前拒绝并保留旧输出。
+证据output/product-provider-20261015/verified-result.json及原日志；门禁REQ-MIMI-SPLIT-054。完整build_apps正向归集与其余阶段、全系统重建、真机not_run，旧平台源未移除，源码迁移未完成。原system rc2/app rc23及可信钥/设备绑定无改动；没有应用/Release上传。
+当前实际外部等待：LYNX4已保存adbSerial仍空，未绕过scope；Ubuntu仅GDM seat0 greeter、无ubuntu本地X11会话，独立login服务active等待。两项问题已问用户，不重复要求重启或绑定重置。下一步接续公共旧源归属与移除/完整产品来源闭环；输入到位后优先A133可信OTA及失联修复对照、必需升级回退断电/数据/功能矩阵；Ubuntu真实登录数据、配对归属/新绑定、真实语音/Tuya资源和统一发布远端复验仍未完成。

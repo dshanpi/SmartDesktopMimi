@@ -31,3 +31,8 @@ flowchart TD
 ## 入口实现与主机拒绝回归
 已实现固定SDK工具/双配方哈希预检、源码/外部依赖/编译器关联核查；系统入口先check再清理和补依赖，后端使用SDK helper新输出；桌面仅lvglsim并检查compile_commands归属。后端成功且字节/收据一致才归集。SDK配方当前固定d7，不接受任意调用方覆盖来源。未修改VERSION、旧rc2/rc23和私有SDK源。
 17项主机回归passed（4新产品边界+13既有独立闭包/归属）：实际运行build_apps --clean缺组件分支且旧输出原字节保留；源码/SDK输入/工具/配方/编译器修改与外部同内容符号链接被拒绝；缺私有SDK/错误profile被拒绝。Bash语法passed。证据output/product-provider-20261015/regression.log。实际A133编译与真机仍not_run。
+
+## 实际编译结果（source 60b0b132efa3687722694f0581e30a8b50d5bf7e）
+产品入口wrapper在实际SDK重编private32/public30均passed，private后端8a8b3a45cc8eb17f212288b149157e529891e7fd045dfe2a7c7979191514c3f3/public后端84af521753b943908838a03db64ed53c1c755bc5f292144df621d50094119701，分别与053及原后端逐字节一致；输入闭包审计无旧应用源码依赖，公有profile无privateSDK读取。
+实际build_openwrt.sh --target lvglsim AArch64编译passed，672编译源归属检查passed，无platform service TU；ELF4878416B/hash4891196a5e3134ddda967f2823ffe54111d8f97e3aa2588272d4e17c4e673045；临时LVGL patch已复原，源clean。17边界回归及33架构回归passed。
+证据output/product-provider-20261015/verified-result.json、build-result.json、public-build.log、private-build.log、frontend-build.log、architecture.log。新开发输出不覆盖原rc2/rc23；未重新签名或安装。完整build_apps其余阶段/归集正向整链、全系统重建、真机接口与升级验收均not_run，未以组件检查冒充整链通过。旧平台源码尚保留，完整拆分未完成。
