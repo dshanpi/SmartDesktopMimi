@@ -1,3 +1,11 @@
+# 当前进度（2026-10-15，PRIVATE066主机接线通过，远端同步待核对）
+
+公共/私有版已接通SDK edition-v2、Tuya提前禁用/私有组件、prepare和直接构建回执、固件/薄包安装版本检查。实际公共30/private32TU后端和两种完整Tuya程序交叉编译passed；公共后端0075ec88已无授权字段/路径，私有8a8b3a45与原程序字节一致。新Tuya分别597e0e8a/fd96df76。204完整更新+1新增固件提前拒绝（205唯一项）、75架构0skip、私有2native及两仓源码审计passed，安装夹具使用实际新程序核对公共排除/私有保留和混合产物复制前拒绝。
+
+SDK cd92e9bb按标准overlay上传/独立回读4283文件95基线passed；只新增7个实际SDK文件，原SDK/d2/其他服务不变。原rc2/rc23/25草稿不变，未安装设备、未操作HDMI/密钥/绑定。失败历史（CRLF提交检查、调用方SDK目录写错）及修复结果保留。证据output/private-tuya-adapter-20261015/integration-result.json；使用说明docs/update/PRODUCT-EDITIONS.md。
+
+下一步：完成本批源码提交/两仓上传回读与CI；再补最终系统产品锁/完整镜像来源及共享更新保留私有组件验证。完整新镜像和设备运行未验收，不能称整套隔离或交付完成。A133真实安装/升级/回退/断电按用户后置，Ubuntu真实登录/云资源/语音/账号归属仍未验收。原mimi循环继续。
+
 # 当前进度（2026-10-15，PRIVATE066组件已编译，主链未切换）
 
 100ask PRIVATE065已完成实际公共30/private32TU构建、189更新+75架构0skip及两仓CI和源码回读，旧产物不变。Tuya PRIVATE066已抽出私有授权初始化C与原后端reader头，公共ABI和两固定禁用stub已建立；公共2/私有2 native探针（含14reader场景）通过，4个组件均用真实A133工具链/真实Tuya SDK头编译为ELF64 AArch64，依赖闭包及源前后SHA核对passed。源45324b4/私有f3b2809，证据output/private-tuya-adapter-20261015/verified-result.json。

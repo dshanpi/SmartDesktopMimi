@@ -51,6 +51,17 @@ if [[ ! -d "${SDK}/.repo" ]]; then
 fi
 SDK="$(cd "${SDK}" && pwd)"
 
+# Edition and actual program hashes must be checked before any SDK/rootfs mutation.
+export AITVBOX_PRODUCT_BUILD="${AITVBOX_PRODUCT_BUILD:-${PRODUCT_ROOT}}"
+export MIMI_PRODUCT_EDITION="${MIMI_PRODUCT_EDITION:-public}"
+case "${MIMI_PRODUCT_EDITION}:${AITVBOX_ENABLE_100ASK_CLOUD:-OFF}" in
+    private:1|private:ON|private:TRUE|private:YES|private:on|private:true|private:yes) ;;
+    public:0|public:OFF|public:FALSE|public:NO|public:off|public:false|public:no) ;;
+    *) die "Product edition must match explicit public/private 100ask build selection" ;;
+esac
+python3 "${PRODUCT_ROOT}/scripts/check_product_edition.py" \
+    --build "${AITVBOX_PRODUCT_BUILD}/build" --edition "${MIMI_PRODUCT_EDITION}"
+
 # Reject an SDK whose selected LCD driver will not be compiled, before mutation.
 python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage inputs
 

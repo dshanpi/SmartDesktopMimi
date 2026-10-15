@@ -137,6 +137,9 @@ elif [[ -n "${PRIVATE_100ASK_SDK_ROOT}" || -n "${PRIVATE_PRODUCT_ROOT}" ]]; then
     die "Public provider forbids private SDK or product inputs"
 fi
 python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
+if [[ -n "${MIMI_PRODUCT_EDITION:-}" && "${MIMI_PRODUCT_EDITION}" != "${PROVIDER_PROFILE}" ]]; then
+    die "Product edition differs from selected 100ask provider profile"
+fi
 export MIMI_PRODUCT_EDITION="${PROVIDER_PROFILE}"
 export MIMI_PRODUCT_SOURCE_ROOT="${PRODUCT_ROOT}"
 PAIRING_ARGS=(--profile "${PROVIDER_PROFILE}")
@@ -436,6 +439,8 @@ echo "==> version: ${BUILD_OUT}/aitvbox-version (AITVBOX_VERSION=${AITVBOX_VERSI
 
 echo
 "${SELF_DIR}/build_mimi_updater.sh"
+
+python3 "${SELF_DIR}/check_product_edition.py" --build "${BUILD_OUT}" --edition "${PROVIDER_PROFILE}" > "${BUILD_OUT}/product-edition.json"
 
 echo "Product app build complete. Artifacts under: ${BUILD_OUT}"
 ls -l "${BUILD_OUT}/lv_port_linux/" "${BUILD_OUT}/hdmi_preview/" \

@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=aitvbox-suite
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=12
+PKG_RELEASE:=13
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -22,6 +22,24 @@ SWUPDATE_PUBLIC_KEY := $(if $(strip $(MIMI_SWU_PUBLIC_KEY)),$(abspath $(MIMI_SWU
 EMOTION_LOTTIE_PACK := $(PRODUCT_ROOT)/third_party/aitvbox_emotion_lottie_pack
 AUDIO_DIAGNOSTIC_ENABLED := $(filter 1 y yes true,$(AITVBOX_AUDIO_DIAGNOSTIC))
 CLOUD_100ASK_ENABLED := $(filter 1 y yes true on ON TRUE YES,$(AITVBOX_ENABLE_100ASK_CLOUD))
+PRODUCT_EDITION := $(if $(strip $(MIMI_PRODUCT_EDITION)),$(strip $(MIMI_PRODUCT_EDITION)),public)
+ifneq ($(PRODUCT_EDITION),$(filter public private,$(PRODUCT_EDITION)))
+$(error MIMI_PRODUCT_EDITION must be public or private)
+endif
+ifneq ($(words $(PRODUCT_EDITION)),1)
+$(error MIMI_PRODUCT_EDITION must be public or private)
+endif
+ifeq ($(PRODUCT_EDITION),private)
+ifeq ($(CLOUD_100ASK_ENABLED),)
+$(error Private product requires explicit AITVBOX_ENABLE_100ASK_CLOUD=ON)
+endif
+else
+ifneq ($(CLOUD_100ASK_ENABLED),)
+$(error Public product forbids the private 100ask provider)
+endif
+endif
+PRIVATE_PAIRING_ENABLED := $(filter private,$(PRODUCT_EDITION))
+EDITION_CHECKER := $(PRODUCT_ROOT)/scripts/check_product_edition.py
 CLOUD_100ASK_DEPENDS :=
 ifneq ($(CLOUD_100ASK_ENABLED),)
 CLOUD_100ASK_DEPENDS += +libmosquitto-ssl
@@ -37,13 +55,18 @@ PKG_FILE_DEPENDS += ./files/bluetooth.json
 PKG_FILE_DEPENDS += $(BUILD_OUT)/lv_port_linux/lv_backend
 PKG_FILE_DEPENDS += $(BUILD_OUT)/lv_port_linux/lvglsim
 PKG_FILE_DEPENDS += $(BUILD_OUT)/hdmi_preview/hdmi_preview
+PKG_FILE_DEPENDS += $(EDITION_CHECKER)
+PKG_FILE_DEPENDS += $(BUILD_OUT)/lv_port_linux/provider-build-result.json
+PKG_FILE_DEPENDS += $(BUILD_OUT)/tuyaopen/pairing-build-result.json
 PKG_FILE_DEPENDS += $(BUILD_OUT)/tuyaopen/your_chat_bot_QIO_1.0.1.bin
+PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-version
+ifneq ($(PRIVATE_PAIRING_ENABLED),)
 PKG_FILE_DEPENDS += $(VENDOR_LIBS)/MNN/libMNN.so
 PKG_FILE_DEPENDS += $(VENDOR_LIBS)/MNN/libMNN_Express.so
 PKG_FILE_DEPENDS += $(VENDOR_LIBS)/models/mdtc_chunk_300ms.mnn
 PKG_FILE_DEPENDS += $(VENDOR_LIBS)/models/tokens.txt
-PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-version
 PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-tuya-pid
+endif
 PKG_FILE_DEPENDS += $(SWUPDATE_PUBLIC_KEY)
 ifneq ($(AUDIO_DIAGNOSTIC_ENABLED),)
 PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/tools/board/audio_chain_boot_test.init
@@ -73,6 +96,7 @@ define Build/Configure
 endef
 
 define Build/Compile
+	python3 "$(EDITION_CHECKER)" --build "$(BUILD_OUT)" --edition "$(PRODUCT_EDITION)"
 endef
 
 define Install/audio-diagnostic
@@ -82,25 +106,28 @@ define Install/audio-diagnostic
 endef
 
 define Install/100ask-cloud-config
+	# Credentials and per-device server overrides are runtime provisioned only.
 	$(INSTALL_DIR) $(1)/etc/100ask
-	@if [ -f "$(PRODUCT_ROOT)/secrets/100ask_cloud.env" ]; then \
-		cp -f "$(PRODUCT_ROOT)/secrets/100ask_cloud.env" $(1)/etc/100ask/cloud.conf; \
-		echo "  install: /etc/100ask/cloud.conf (server config)"; \
-	else \
-		echo "  skip: secrets/100ask_cloud.env not found, using built-in defaults"; \
-	fi
-	@if [ -f "$(PRODUCT_ROOT)/secrets/100ask_ca.crt" ]; then \
-		cp -f "$(PRODUCT_ROOT)/secrets/100ask_ca.crt" $(1)/etc/100ask/ca.crt; \
-		echo "  install: /etc/100ask/ca.crt"; \
-	fi
+endef
+
+define Install/private-pairing
+	$(INSTALL_BIN) $(BUILD_OUT)/tuyaopen/your_chat_bot_QIO_1.0.1.bin $(1)/usr/bin/your_chat_bot_QIO_1.0.1.bin
+	$(INSTALL_DIR) $(1)/usr/lib $(1)/usr/share/tuyaopen_models
+	$(INSTALL_DATA) $(VENDOR_LIBS)/MNN/libMNN.so $(1)/usr/lib/libMNN.so
+	$(INSTALL_DATA) $(VENDOR_LIBS)/MNN/libMNN_Express.so $(1)/usr/lib/libMNN_Express.so
+	$(INSTALL_DATA) $(VENDOR_LIBS)/models/mdtc_chunk_300ms.mnn $(1)/usr/share/tuyaopen_models/mdtc_chunk_300ms.mnn
+	$(INSTALL_DATA) $(VENDOR_LIBS)/models/tokens.txt $(1)/usr/share/tuyaopen_models/tokens.txt
+	$(INSTALL_DATA) $(BUILD_OUT)/aitvbox-tuya-pid $(1)/etc/aitvbox-tuya-pid
+	$(INSTALL_DIR) $(1)/factory/tuya
+	chmod 700 $(1)/factory/tuya
 endef
 
 define Package/aitvbox-suite/install
+	python3 "$(EDITION_CHECKER)" --build "$(BUILD_OUT)" --edition "$(PRODUCT_EDITION)"
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(BUILD_OUT)/lv_port_linux/lv_backend $(1)/usr/bin/lv_backend
 	$(INSTALL_BIN) $(BUILD_OUT)/lv_port_linux/lvglsim $(1)/usr/bin/lvglsim
 	$(INSTALL_BIN) $(BUILD_OUT)/hdmi_preview/hdmi_preview $(1)/usr/bin/hdmi_preview
-	$(INSTALL_BIN) $(BUILD_OUT)/tuyaopen/your_chat_bot_QIO_1.0.1.bin $(1)/usr/bin/your_chat_bot_QIO_1.0.1.bin
 	$(INSTALL_BIN) ./files/start-ui.sh $(1)/usr/bin/aitvbox-start-ui
 	$(INSTALL_BIN) ./files/mount-sdcard.sh $(1)/usr/bin/aitvbox-mount-sdcard
 
@@ -115,19 +142,6 @@ define Package/aitvbox-suite/install
 	$(INSTALL_DIR) $(1)/usr/share/aitvbox/bluetooth
 	$(INSTALL_DATA) ./files/bluetooth.json $(1)/usr/share/aitvbox/bluetooth/bluetooth.json
 	$(INSTALL_BIN) ./files/bt_init.sh $(1)/usr/share/aitvbox/bluetooth/bt_init.sh
-
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_DATA) $(VENDOR_LIBS)/MNN/libMNN.so $(1)/usr/lib/libMNN.so
-	$(INSTALL_DATA) $(VENDOR_LIBS)/MNN/libMNN_Express.so $(1)/usr/lib/libMNN_Express.so
-
-	$(INSTALL_DIR) $(1)/usr/share/tuyaopen_models
-	$(INSTALL_DATA) $(VENDOR_LIBS)/models/mdtc_chunk_300ms.mnn $(1)/usr/share/tuyaopen_models/mdtc_chunk_300ms.mnn
-	$(INSTALL_DATA) $(VENDOR_LIBS)/models/tokens.txt $(1)/usr/share/tuyaopen_models/tokens.txt
-
-	# 涂鸦量产授权目录；S95 启动脚本将其 bind 到 /overlay/factory/tuya。
-	# 通用固件仅创建目录，不包含任何设备 UUID/AuthKey。
-	$(INSTALL_DIR) $(1)/factory/tuya
-	chmod 700 $(1)/factory/tuya
 
 	$(INSTALL_DIR) $(1)/usr/share/fonts
 	$(INSTALL_DATA) $(LV_PORT_DIR)/src/ui/font/SarasaUiSC-Regular.ttf $(1)/usr/share/fonts/SarasaUiSC-Regular.ttf
@@ -149,7 +163,10 @@ define Package/aitvbox-suite/install
 	$(INSTALL_DIR) $(1)/etc
 	$(INSTALL_DATA) $(SWUPDATE_PUBLIC_KEY) $(1)/etc/swupdate_public.pem
 	$(INSTALL_DATA) $(BUILD_OUT)/aitvbox-version $(1)/etc/aitvbox-version
-	$(INSTALL_DATA) $(BUILD_OUT)/aitvbox-tuya-pid $(1)/etc/aitvbox-tuya-pid
+	$(INSTALL_DIR) $(1)/etc/smartdesktopmimi
+	printf '%s\n' '$(PRODUCT_EDITION)' > $(1)/etc/smartdesktopmimi/product-edition
+	chmod 444 $(1)/etc/smartdesktopmimi/product-edition
+	$(if $(PRIVATE_PAIRING_ENABLED),$(call Install/private-pairing,$(1)))
 
 	# Private cloud configuration is installed only for an explicitly enabled
 	# internal provider build. Public builds never consume local cloud secrets.

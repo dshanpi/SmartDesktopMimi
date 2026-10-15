@@ -1,5 +1,5 @@
 # 公共桌面与私有配对：实际源码归属清单
-REQ-MIMI-EDITION-062；这是当前源码梳理，**两产品构建隔离尚未完成**，不将当前历史快照称为已去掉专有接入的开源版。
+REQ-MIMI-EDITION-062；这是当前源码梳理，**Provider/Tuya来源选择与主机安装边界已接入，完整镜像和设备验收未完成**，不将当前历史快照称为已去掉专有接入的开源版。
 
 | 实际源码/输入 | 目标归属 | 动作与当前状态 |
 | --- | --- | --- |
@@ -7,9 +7,9 @@ REQ-MIMI-EDITION-062；这是当前源码梳理，**两产品构建隔离尚未�
 | services/mimi-update、tools/update、构建/deb工具 | 公共共享 | 应用更新不得覆盖平台/私有接入/身份/凭据；硬件匹配不变 |
 | apps/lv_port_linux/src/apps/iot、services/mimi-iot-bridge | 公共共享 | 通用云项目的列表/控制与设备自身一机一码授权分层，真实云资源仍未提供 |
 | apps/lv_port_linux/src/apps/voice和通用对话界面 | 公共共享 | 可选语音文字控制继续公开，不把普通AI交互判为私有 |
-| SDK private/code/.../service_cloud.c、service_cloud_validation.c及外置100ask输入 | 专有适配转SmartDesktopMimi-Private | PRIVATE065已将两原C归私有adapters/100ask，以固定锁显式组合原SDK共享源；实际private32/public30TU均原字节、公共禁用实现和无旧副本回退passed。SDK旧源暂留历史，最终SDK退休/产品锁另记；Tuya隔离未完 |
+| SDK private/code/.../service_cloud.c、service_cloud_validation.c及外置100ask输入 | 专有适配转SmartDesktopMimi-Private | PRIVATE065已将两原C归私有adapters/100ask，以固定锁显式组合原SDK共享源；实际private32/public30TU均原字节、公共禁用实现和无旧副本回退passed。SDK旧源暂留历史不再作产品配对回退，最终SDK退休/产品锁另记；Tuya主机接线见PRIVATE066 |
 | scripts/factory_provision_device.sh、scripts/provision_tuya_license.sh、tools/factory-assistant | 产品私有生产工具候选 | PRIVATE064已迁62跟踪源+3授权CLI，固定原SHA/模式，私有上传独立回读68项含helper/许可passed，公共入口退休并反向审计拒绝；真实xlsx/凭据库/授权输入不进任何Git。运行适配另行拆分 |
-| third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c和app_chat_bot.c | 混合源按行为拆分 | PRIVATE066已形成私有初始化C/后端reader头和公共固定禁用组件，4 native探针与4真实A133对象编译passed；当前SDK、主入口、prepare及打包尚未切换，完整隔离not_run。通用对话/上游许可保留，不复制上游库或桌面 |
+| third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/tuya_main.c和app_chat_bot.c | 混合源按行为拆分 | PRIVATE066已完成SDK edition-v2、公共提前禁用/私有组件来源、prepare/直接构建回执及薄包版本核对；实际两种Provider/Tuya完整程序、204完整更新+1新增检查、75架构0skip、真实程序安装夹具passed。完整镜像/设备/公共更新保留私有数据仍not_run。通用对话/上游许可保留，不复制上游库或桌面 |
 | A133采集/显示、后端、五平台兼容服务和板级适配 | 既有私有SDK标准overlay | 两产品通过接口消费；板级SDK与产品专有配对归属分别登记 |
 
 ## 必需验证与接续
@@ -17,4 +17,4 @@ REQ-MIMI-EDITION-062；这是当前源码梳理，**两产品构建隔离尚未�
 
 新镜像对外名SmartDesktopMimi-SystemImage-v<版本>.img.gz；内部硬件身份/系统锁保留。已上传rc2/rc23不覆盖改名或回填新来源，新名称生成/发布链已由IMAGE063实现并通过主机检查；真实新SDK镜像未构建。
 
-逐文件SHA/起点见开发主机output/edition-split-20261015/source-boundary-inventory.json，不含源正文或秘密。目标私有仓库已只读确认private/空仓库/有push权限，尚未初始化或复制内容。先固定专有入口与构建依赖，再分批迁移和测试。
+逐文件SHA/起点见开发主机output/edition-split-20261015/source-boundary-inventory.json，不含源正文或秘密。私有仓库已保存生产工具与固定100ask/Tuya适配；实际来源与构建选择见[PRODUCT-EDITIONS](PRODUCT-EDITIONS.md)，旧梳理不代表旧快照已完成隔离。

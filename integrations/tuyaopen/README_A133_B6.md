@@ -407,3 +407,6 @@ source build/envsetup.sh
 ```
 
 烧录 `out/a133/b6/openwrt/a133_linux_b6_uart0.img` 后，`your_chat_bot` 会随固件自动启动。
+
+## Product edition sources (PRIVATE066)
+Public/private selection and build commands: [PRODUCT-EDITIONS](../../docs/update/PRODUCT-EDITIONS.md). Direct staged build requires MIMI_PRODUCT_SOURCE_ROOT pointing to the current public source; explicit profile/private root must match the staged receipt. No implicit private enablement or old SDK pairing fallback.

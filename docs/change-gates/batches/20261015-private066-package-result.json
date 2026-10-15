@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "summary": "Integrate product edition package/install gates and record actual dual program builds.",
+  "context": "PRIVATE066 explicit source integration; no frozen artifact or device mutation. Original references and failed invocations retained.",
+  "next_steps": "Remote source readback and CI; final system product lock/full image and shared-update private data acceptance remain untested.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-PRIVATE-066",
+      "record": "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+      "scope": "Actual A133 program compilation plus host package boundary; not complete image or device acceptance.",
+      "invariants": "Single shared desktop, public pairing disabled, private explicit fixed adapters, no credentials in generic images, no trusted key/binding replacement, original snapshots immutable.",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-PRIVATE-066.md",
+        "docs/change-gates/batches/20261015-private066-package-result.json",
+        "docs/update/EDITION-SOURCE-MAP.md",
+        "docs/update/PRODUCT-EDITIONS.md",
+        "integrations/tuyaopen/README_A133_B6.md",
+        "packaging/aitvbox-suite/Makefile",
+        "packaging/aitvbox-suite/files/aitvbox.init",
+        "scripts/build_a133_provider.py",
+        "scripts/build_apps.sh",
+        "scripts/build_firmware.sh",
+        "scripts/check_product_edition.py",
+        "tests/update/test_product_edition.py"
+      ],
+      "checks": [
+        {
+          "name": "Actual dual A133 programs and host checks",
+          "status": "passed",
+          "scope": "public30/private32TU Providers and full Tuya binaries;205 unique update checks,75 architecture,2 private native; no skipped checks in configured host run",
+          "evidence": "output/private-tuya-adapter-20261015/integration-result.json"
+        },
+        {
+          "name": "Real-program package fixture and SDK mutation guard",
+          "status": "passed",
+          "scope": "public/private content, mixed program refusal before copy, startup path choice; actual programs with dummy fonts/models",
+          "evidence": "output/private-tuya-adapter-20261015/edition-package-final-tests.log"
+        },
+        {
+          "name": "Full image, final product locks and runtime data acceptance",
+          "status": "not_run",
+          "scope": "Complete new system and common update on private system",
+          "reason": "Source/package integration does not replace whole image or runtime acceptance; physical postponed by user.",
+          "evidence": "docs/update/PRODUCT-EDITIONS.md"
+        }
+      ]
+    }
+  ]
+}

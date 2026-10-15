@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the frozen A133 system provider from the SDK, never desktop sources."""
+"""Build the pinned A133 SDK provider with explicit product pairing components."""
 import argparse
 import hashlib
 import json
