@@ -87,7 +87,6 @@ python3 "${SELF_DIR}/audit_english_ui.py"
 require_file "${SDK}/build/envsetup.sh" "SDK 未初始化或路径错误：${SDK}"
 require_file "${PRODUCT_ROOT}/apps/lv_port_linux/build_openwrt.sh"
 require_file "${PRODUCT_ROOT}/apps/hdmi_preview/Makefile"
-require_file "${PRODUCT_ROOT}/apps/platform_services/Makefile"
 require_file "${PRODUCT_ROOT}/apps/ipkvm/Makefile"
 
 # The IPKVM video sender uses Tina's aarch64 toolchain, while OpenWrt can
@@ -136,6 +135,7 @@ if [[ "${PROVIDER_PROFILE}" == "private" ]]; then
     PROVIDER_ARGS+=(--private-sdk "${PRIVATE_100ASK_SDK_ROOT}")
 fi
 python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
+python3 "${SELF_DIR}/build_a133_services.py" --sdk "${SDK}" --check
 
 # Dependency staging may temporarily enable package symbols. Preserve the
 # caller's SDK configuration exactly so an application-only build does not
@@ -166,7 +166,6 @@ trap restore_sdk_configs EXIT
 if [[ "${CLEAN_BUILD}" -eq 1 ]]; then
     echo "==> 清理应用构建输出（保留源码、vendor、TuyaOpen venv 与下载缓存）"
     make -C "${PRODUCT_ROOT}/apps/hdmi_preview" SDK_ROOT="${SDK}" clean
-    make -C "${PRODUCT_ROOT}/apps/platform_services" SDK_ROOT="${SDK}" clean
     make -C "${PRODUCT_ROOT}/apps/ipkvm" SDK_ROOT="${SDK}" \
         BUILD_DIR="${BUILD_OUT}/ipkvm" clean
     rm -rf -- \
@@ -348,14 +347,13 @@ make -C "${PRODUCT_ROOT}/apps/hdmi_preview" SDK_ROOT="${SDK}" -j"$(nproc)" \
 cp -f "${PRODUCT_ROOT}/apps/hdmi_preview/build/hdmi_preview" "${BUILD_OUT}/hdmi_preview/"
 
 echo "==> [3/5] platform services (out-of-tree)"
-make -C "${PRODUCT_ROOT}/apps/platform_services" SDK_ROOT="${SDK}" -j"$(nproc)" \
-    || die "platform services 构建失败"
-cp -f "${PRODUCT_ROOT}/apps/platform_services/build/aitvbox-mcpd" \
-    "${PRODUCT_ROOT}/apps/platform_services/build/aitvbox-agentd" \
-    "${PRODUCT_ROOT}/apps/platform_services/build/aitvbox-controld" \
-    "${PRODUCT_ROOT}/apps/platform_services/build/aitvbox-appd" \
-    "${PRODUCT_ROOT}/apps/platform_services/build/aitvbox-app-policy" \
-    "${BUILD_OUT}/platform/"
+SERVICES_RUN="$(mktemp -d "${BUILD_OUT}/services.XXXXXX")"
+python3 "${SELF_DIR}/build_a133_services.py" --sdk "${SDK}" \
+    --output "${SERVICES_RUN}/compiled"
+for service in aitvbox-mcpd aitvbox-agentd aitvbox-controld aitvbox-appd aitvbox-app-policy; do
+    cp -f "${SERVICES_RUN}/compiled/${service}" "${BUILD_OUT}/platform/"
+done
+cp -f "${SERVICES_RUN}/compiled/build-result.json" "${BUILD_OUT}/platform/services-build-result.json"
 
 echo "==> [4/5] IPKVM WebRTC + A133 H.264 sender (out-of-tree)"
 make -C "${PRODUCT_ROOT}/apps/ipkvm" SDK_ROOT="${SDK}" \

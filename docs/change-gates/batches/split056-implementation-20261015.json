@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "summary": "五平台服务源码保存SDK并切换上层入口",
+  "context": "SDKd9标准overlay4260/95、独立读回和五目标字节对照passed；原读回诊断失败保留纠正",
+  "next_steps": "执行真实新stage3/测试，核对归集字节并记录；不重跑无关UI/网页/Tuya",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-056",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-056.md",
+      "scope": "SDK源/构建与上层退休及测试来源",
+      "invariants": "服务行为/ABI与旧产物不变，原失败保留；无上层旧源回退，原钥/设备不动",
+      "paths": [
+        "apps/platform_services/Makefile",
+        "apps/platform_services/src/agentd.c",
+        "apps/platform_services/src/app_policy.c",
+        "apps/platform_services/src/appd.c",
+        "apps/platform_services/src/controld.c",
+        "apps/platform_services/src/mcpd.c",
+        "apps/platform_services/src/safe_io.c",
+        "apps/platform_services/src/safe_io.h",
+        "docs/change-gates/REQ-MIMI-SPLIT-056.md",
+        "docs/update/source-ownership.json",
+        "scripts/build_apps.sh",
+        "tests/platform/test_host_integration.py",
+        "tests/sdk_source.py",
+        "tests/update/test_sdk_source.py",
+        "tests/update/test_source_ownership.py",
+        "tools/update/source_ownership.py",
+        "scripts/build_a133_services.py",
+        "tests/update/test_build_a133_services.py",
+        "docs/change-gates/batches/split056-implementation-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "SDK源归档和重放",
+          "status": "passed",
+          "scope": "4260文件/95基线，五目标同字节，私有源上传独立回读",
+          "evidence": "output/platform-services-split-20261015/remote-readback.json; replay-result.json"
+        },
+        {
+          "name": "边界回归",
+          "status": "passed",
+          "scope": "30主机检查及Bash语法",
+          "evidence": "output/platform-services-split-20261015/boundary-regression.log"
+        },
+        {
+          "name": "新入口及平台/物理",
+          "status": "not_run",
+          "scope": "实际新stage3和平台回归待执行；物理未操作",
+          "evidence": "output/platform-services-split-20261015",
+          "reason": "本批提交后执行受影响验证"
+        }
+      ]
+    }
+  ]
+}

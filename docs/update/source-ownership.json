@@ -436,8 +436,51 @@
         "public"
       ],
       "sha256": "75e9d4f153e729499764ccab018707bca8832135c2531da2396b468af1d0b55c"
+    },
+    "apps/platform_services/Makefile": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "f2cd051a3807711bf3eea1260c59bdad3f122849476cd2bb3620b42cd02b8e34",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/agentd.c": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "12104db13bf77792ddb9e648d5a79d665ee1cbde92d0dd94c7b0664af0dd31f3",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/app_policy.c": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "4cacd03a979a8f160864cf86a2475d6725f407eaccbc7cdce5a6515b2423c92b",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/appd.c": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "3fef1a26c4f7b87d9e7ca692b129a5f70359c2d2f143d7b297f9e1238bfd8155",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/controld.c": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "2ff26fcb3b4504c3aa8e2305b95fad19108a51ce600821fc9fab75c5ae79d270",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/mcpd.c": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "498a382e28a4ec4b6939ed4cb9eafcbe456ba60acea7a6d5642cf53483b63c56",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/safe_io.c": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "cb5c721c17b67819ef78788ea268366587f67f9b49c84d53d48732b133f0886e",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
+    },
+    "apps/platform_services/src/safe_io.h": {
+      "sdk_component": "smartdesktopmimi-a133-services",
+      "sha256": "059621f642847c1296f617b35dbec7ddd6055a7ab2bb849b3b31f685929bfc51",
+      "source_lock_sha256": "03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58"
     }
   },
+  "retired_scopes": [
+    "apps/platform_services"
+  ],
   "schema_version": 1,
   "scopes": [
     "apps/lv_port_linux/src/system",

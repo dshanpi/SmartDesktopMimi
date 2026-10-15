@@ -34,3 +34,23 @@ def provider_source(name, profile='private'):
     if name not in recipe['sources'] or path.resolve() != path or not path.is_file() or digest(path) != recipe['sources'][name]:
         raise ValueError('configured A133 provider implementation differs: ' + name)
     return path
+
+
+SERVICES_LOCK_SHA256 = '03cd9bd5e9b1661be82dc78f39606b6a65189b59f107ece6722b5d94982d3f58'
+
+
+def services_source(name):
+    value = os.environ.get('MIMI_A133_SERVICES_ROOT')
+    if not value:
+        raise unittest.SkipTest('A133 platform-services implementation not_run: set MIMI_A133_SERVICES_ROOT')
+    root = Path(value)
+    if not root.is_absolute() or root != root.resolve():
+        raise ValueError('configured platform-services root must be absolute and canonical')
+    lock_path = root / 'source-lock.json'
+    if lock_path.resolve() != lock_path or digest(lock_path) != SERVICES_LOCK_SHA256:
+        raise ValueError('configured platform-services lock changed')
+    lock = json.loads(lock_path.read_text())
+    path = root / 'code' / name
+    if path.resolve() != path or lock['files'].get('code/' + name) != digest(path):
+        raise ValueError('configured platform service source changed')
+    return path

@@ -80,6 +80,19 @@ class SourceOwnershipTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'retired platform implementation'):
             ownership.audit_commands(self.root, self.commands('system/app_manager.c'))
 
+    def test_new_source_under_retired_scope_rejected_without_compilation(self):
+        lock = self.root / ownership.LOCK
+        policy = json.loads(lock.read_text())
+        name = 'apps/retired_services'
+        policy['retired_scopes'] = [name]
+        lock.write_text(json.dumps(policy))
+        ownership.verify(self.root)
+        directory = self.root / name
+        directory.mkdir()
+        (directory / 'new_service.c').write_text('int service;')
+        with self.assertRaisesRegex(ValueError, 'retired platform scope'):
+            ownership.verify(self.root)
+
     def test_empty_inventory_and_unknown_subtree_rejected(self):
         with self.assertRaisesRegex(ValueError, 'empty compilation'):
             ownership.audit_commands(self.root, [])

@@ -56,6 +56,13 @@ def verify(root):
         path = root / safe_name(name)
         if path.exists() or path.is_symlink():
             raise ValueError('retired platform implementation reintroduced: ' + name)
+    for scope in policy.get('retired_scopes', []):
+        directory = root / safe_name(scope)
+        if directory.is_symlink():
+            raise ValueError('retired platform scope is a symlink: ' + scope)
+        for file in directory.rglob('*'):
+            if file.suffix in EXTENSIONS or file.name == 'Makefile':
+                raise ValueError('source reintroduced under retired platform scope: ' + scope)
     actual = set()
     for name in policy['scopes']:
         path = root / safe_name(name)

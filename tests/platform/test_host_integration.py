@@ -18,7 +18,7 @@ import tarfile
 import tempfile
 import threading
 import unittest
-from tests.sdk_source import provider_source
+from tests.sdk_source import provider_source, services_source
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -30,12 +30,12 @@ TOGGLE_PRODUCT = REPO / "scripts/toggle_product.sh"
 SYNC_TO_SDK = REPO / "scripts/sync_to_sdk.sh"
 INJECT_KERNEL_CONFIG = REPO / "scripts/inject_platform_kernel_config.sh"
 HIDCTL = REPO / "packaging/aitvbox-usb-hid/files/aitvbox-hidctl"
-MCP_SOURCE = REPO / "apps/platform_services/src/mcpd.c"
-AGENT_SOURCE = REPO / "apps/platform_services/src/agentd.c"
-CONTROL_SOURCE = REPO / "apps/platform_services/src/controld.c"
-APPD_SOURCE = REPO / "apps/platform_services/src/appd.c"
-SAFE_IO_SOURCE = REPO / "apps/platform_services/src/safe_io.c"
-APP_POLICY_SOURCE = REPO / "apps/platform_services/src/app_policy.c"
+MCP_SOURCE = None  # Resolved from the explicit SDK in setUpClass.
+AGENT_SOURCE = None  # Resolved from the explicit SDK in setUpClass.
+CONTROL_SOURCE = None  # Resolved from the explicit SDK in setUpClass.
+APPD_SOURCE = None  # Resolved from the explicit SDK in setUpClass.
+SAFE_IO_SOURCE = None  # Resolved from the explicit SDK in setUpClass.
+APP_POLICY_SOURCE = None  # Resolved from the explicit SDK in setUpClass.
 MCP_CLIENT = REPO / "tools/mcp/aitvbox_mcp_client.py"
 EXAMPLE = REPO / "platform/app-sdk/examples/hello"
 NATIVE_EXAMPLE = REPO / "platform/app-sdk/examples/native-status"
@@ -181,7 +181,7 @@ class PlatformHostTests(unittest.TestCase):
     def test_public_safe_io_is_durable_and_clears_sensitive_memory(self):
         source = SAFE_IO_SOURCE.read_text(encoding="utf-8")
         makefile = (
-            REPO / "apps/platform_services/Makefile"
+            services_source("Makefile")
         ).read_text(encoding="utf-8")
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1028,6 +1028,13 @@ int main(int argc, char **argv) {
 
     @classmethod
     def setUpClass(cls):
+        global MCP_SOURCE, AGENT_SOURCE, CONTROL_SOURCE, APPD_SOURCE, SAFE_IO_SOURCE, APP_POLICY_SOURCE
+        MCP_SOURCE = services_source("src/mcpd.c")
+        AGENT_SOURCE = services_source("src/agentd.c")
+        CONTROL_SOURCE = services_source("src/controld.c")
+        APPD_SOURCE = services_source("src/appd.c")
+        SAFE_IO_SOURCE = services_source("src/safe_io.c")
+        APP_POLICY_SOURCE = services_source("src/app_policy.c")
         cls.workspace = Path(tempfile.mkdtemp(prefix="aitvbox-host-tests-"))
         cls.bin_dir = cls.workspace / "bin"
         cls.bin_dir.mkdir()

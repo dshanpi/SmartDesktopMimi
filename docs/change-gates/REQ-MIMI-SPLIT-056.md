@@ -25,3 +25,10 @@ flowchart TD
 计划：scripts/build_a133_services.py、scripts/build_apps.sh；apps/platform_services/*；tests/sdk_source.py和tests/platform/test_host_integration.py及专用边界回归；docs/update/source-ownership.json/tools/update/source_ownership.py防止退休路径回归；私有SDKoverlay/meta/scripts.apply_overlay既有入口。
 应用起点621fd46（实际SHA见证据），私有SDK父958c62f739c86fcc1128fb2d838faa25c550aaa9。证据output/platform-services-split-20261015；目标开发主机Ubuntu/实际SDK，物理A133不动。
 原/迁移五服务新目录编译对照、标准overlay重放、敏感筛查、SDK上传读回、上层新入口/边界回归：not_run。完整新镜像/真机：not_run。旧源删除前必须先完成SDK保存和重编；文档/流程调整不重建已冻结候选，失败逐条保留。下一步按本流程核对，ADB/Xorg输入到位即优先接续物理验收。
+
+## SDK保存、独立编译及上层切换实际进度
+原8文件/许可证已保存到SDK自含组件；Makefile唯一改动为去掉.config导入式工具链选择、固定原实际GCC11编译器，C/H原字节不变。固定203真实SDK头依赖、编译器、2链接库及别名目标，6TU产生5服务与原fresh reference逐字节一致。原staged/replayed通过后补强链接别名守卫，r2重新标准overlay重放4260文件/95真实HEAD和五目标构建全部passed，先前检查记录保留。
+私有SDK已正常推送d9eca3dcebd3f4e869161699661f3db980d644da，独立fetch/ff与官方verify_overlay全4260字节、目标精确mode/95基线passed，旧4248payload不变。只新增组件12文件到真实SDK，不全量覆写已有内核/配置补充输入。新12文件类型/既有凭据签名筛查0finding；不是完整历史安全审计。
+自写首次读回脚本误将Git工作树POSIX组权限等同SDK目标mode，在boost归档处failed；后续诊断又假设每项都必须有size而KeyError，误疑LFS未物化的解释保留并纠正。实际首失败在mode，bodySHA匹配（Git checkout0664/目标0644）；官方验证按Git可表示位与SDK目标精确mode处理。未证明LFS丢失或源码损坏，未放松字节门禁。见remote-readback-failed/diagnosis/remote-verify和remote-readback.json。
+在SDK保存/读回/重编通过后，上层旧8文件移除，系统入口预检固定source-lock再用SDK helper新目录编译归集；不再引用/clean旧源目录。退休路径及作用域防止旧/改名实现重新混入。测试保留，五服务fixture从显式MIMI_A133_SERVICES_ROOT解析固定SDK源，未提供时明确not_run；配置坏失败。
+30项边界/应用收据回归passed（含固定源/工具篡改无执行且旧输出不变、同字节错误链接目标拒绝、SDK头篡改拒绝、退休目录新源拒绝），Bash语法和实际SDK wrapper preflight passed。实际新上层第三阶段归集及平台106回归尚not_run；物理未操作。全部源迁移仍false，hdmi/ipkvm/Tuya/接口头和冻结客户端待收尾。
