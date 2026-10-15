@@ -17,3 +17,6 @@ dshanpi/SmartDesktopMimi唯一应用/系统入口；100askTeam/A133-AIDesktop-Ti
 ## 实际同步进度
 应用main已fast-forward推送c81e23b及后续5ad62aa历史覆盖补记；应用v1.0.8-rc.23与系统system-a133-v1.0.0-rc.2轻量标签分别指向实际a37/d7，不移动历史标签。公开候选审计0finding及新增历史909blob已知秘密签名0finding passed。两个GitHub draft/prerelease已创建：应用ID413348355，系统实际ID见output/delivery-sync-20261015/system-remote-draft.json。应用12附件上传完成、下载进行中；系统13附件上传进行中。真实上传完成前不标远端复核passed。
 初次同步脚本在旧cryptography backend参数、RSA签名API及OTA字段路径核对三处失败，保留prepare/r2/r3日志，修正后r4固定原RSA PKCS1v15 SHA256验签和raw/ota各自原哈希通过；未换钥/重签或改候选。为降低传输等待，严格核对自己传输PID后结束串行下载，保留不合格partial，改两类型/独立附件并行；不触及设备或其他任务。目录/目标/原SHA不变，全部远端文件仍需完整下载复核。
+
+## 同步最终结果
+应用12/系统13附件已全部上传并逐个完整下载；远端asset ID/size/SHA、四原RSA签名及gzip解压raw618/应用c22/SWUcdf和a37/d7版本配对全部passed。系统SWU慢流采用固定asset ID的HTTP206范围读回及慢段再拆分，严格Content-Range/字节上限/允许CDN、最终全包原SHA后接续总复核；两次仅结束自己传输PID并保留partial，不把partial记通过，不触及设备。详见verified-result.json、system-swu-range-verified.json、upload-final.log及handoff记录。当前上传同步这一项passed，真机仍deferred/not_run，整体项目未完成。草稿入口及附件说明已保存docs/delivery/20261015-snapshot.md，未公开稳定版/未替换标签或签名钥。

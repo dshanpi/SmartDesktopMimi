@@ -1,3 +1,13 @@
+# 最新进度（2026-10-15，本轮上传同步已完成）
+
+按用户最新要求，A133失联、安装、升级/回退/断电/数据真机验收暂缓，等待新的SDK Ubuntu环境集中重做，不再阻挡本轮上传。
+
+- 已完成：SmartDesktopMimi源码main和两个原始来源标签已推送；应用v1.0.8-rc.23的12附件、系统system-a133-v1.0.0-rc.2的13附件已上传统一Releases草稿并全部完整下载，SHA/四原签名/gzip解压raw/版本配对复核passed。两个链接与来源详见docs/delivery/20261015-snapshot.md；草稿需维护账号登录。
+- 代码2afdf6f的远端公开源码、应用更新、变更追溯三个CI全部passed。原YAML/旧清单/首次历史覆盖失败保留并已修复。冻结镜像和应用仍原618/cdf/c22，对应源d7/a37，不冒充后续源码构建。
+- SDK当前私有7ed3fdd，HDMI来源拆分/4267文件95基线标准overlay回读/独立同字节编译及171主机项0skip passed。后续混合业务/IPKVM/Tuya/冻结接口与完整产品锁仍待收尾，migration_complete=false。
+- 真机相关deferred/not_run，未解决失联、未安装新kernel；不操作设备或打开HDMI。Ubuntu真实Xorg登录blocked（用户暂不能进入控制台）；涂鸦资源/真实语音/账号归属等仍未验收。
+- 仅本轮受控上传同步完成，整套交付未完成、非稳定发布，不停止原mimi循环。新SDK环境到位后先核对输入与候选，重新执行真实安装和必需矩阵。证据output/delivery-sync-20261015/verified-result.json。
+
 # 当前接续状态（2026-10-15，SPLIT057 / DELIVERY058）
 
 用户最新要求：A133失联、安装、升级/回退及断电验收暂缓，提供新SDK Ubuntu环境后集中重做；先上传源码、SDK overlay、现有镜像和应用升级包。此指示覆盖旧“真机未过禁止上传”当前阶段前置。只同步受控草稿快照，正式稳定发布与设备安装门禁不放宽。

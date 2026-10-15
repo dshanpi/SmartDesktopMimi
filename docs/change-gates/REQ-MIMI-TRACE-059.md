@@ -10,3 +10,5 @@
 
 ## 验收与接续
 实现位置：docs/change-gates/historical-sync-inventory-20261015.json、本文件、新批次和CHANGE-GATES索引。完整区间覆盖检查补记后待运行；产品源码/二进制/设备行为不变，因此不重复构建。真机按DELIVERY058后置；本轮上传和远端复验继续。
+
+历史补记后c851至5ad全区间和c81至5ad追加区间覆盖均passed；后续远端实际追溯CI也passed。原首次缺失212路径失败保留在full-range-traceability-failure.json，未伪装历史事前记录。

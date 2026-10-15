@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "summary": "受控草稿同步与完整远端复核结束",
+  "context": "用户授权先上传/真机后置；来源/原签名保持，全部25附件复验",
+  "next_steps": "等待新SDK环境接续实际安装和必需验收，其他外部依赖如实记录",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "本轮真实结果和可接续交付说明",
+      "invariants": "不回填物理通过，不改候选/标签/原钥，历史失败保留",
+      "paths": [
+        "README.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/delivery/20261015-snapshot.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/REQ-MIMI-CI-060.md",
+        "docs/change-gates/REQ-MIMI-TRACE-059.md",
+        "docs/change-gates/batches/delivery058-final-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "受控同步与远端检查",
+          "status": "passed",
+          "scope": "25附件全下载验签/哈希关联、代码2af远端3CI与历史覆盖",
+          "evidence": "output/delivery-sync-20261015/verified-result.json; ci060-remote-verified.json"
+        },
+        {
+          "name": "真实板卡/完整交付",
+          "status": "not_run",
+          "scope": "A133新安装/升级/断电/数据等",
+          "evidence": "docs/delivery/20261015-snapshot.md",
+          "reason": "用户明确后置至新SDK Ubuntu环境，不标整套完成"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-CI-060",
+      "record": "docs/change-gates/REQ-MIMI-CI-060.md",
+      "scope": "本轮真实结果和可接续交付说明",
+      "invariants": "不回填物理通过，不改候选/标签/原钥，历史失败保留",
+      "paths": [
+        "README.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/delivery/20261015-snapshot.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/REQ-MIMI-CI-060.md",
+        "docs/change-gates/REQ-MIMI-TRACE-059.md",
+        "docs/change-gates/batches/delivery058-final-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "受控同步与远端检查",
+          "status": "passed",
+          "scope": "25附件全下载验签/哈希关联、代码2af远端3CI与历史覆盖",
+          "evidence": "output/delivery-sync-20261015/verified-result.json; ci060-remote-verified.json"
+        },
+        {
+          "name": "真实板卡/完整交付",
+          "status": "not_run",
+          "scope": "A133新安装/升级/断电/数据等",
+          "evidence": "docs/delivery/20261015-snapshot.md",
+          "reason": "用户明确后置至新SDK Ubuntu环境，不标整套完成"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-TRACE-059",
+      "record": "docs/change-gates/REQ-MIMI-TRACE-059.md",
+      "scope": "本轮真实结果和可接续交付说明",
+      "invariants": "不回填物理通过，不改候选/标签/原钥，历史失败保留",
+      "paths": [
+        "README.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/delivery/20261015-snapshot.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/REQ-MIMI-CI-060.md",
+        "docs/change-gates/REQ-MIMI-TRACE-059.md",
+        "docs/change-gates/batches/delivery058-final-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "受控同步与远端检查",
+          "status": "passed",
+          "scope": "25附件全下载验签/哈希关联、代码2af远端3CI与历史覆盖",
+          "evidence": "output/delivery-sync-20261015/verified-result.json; ci060-remote-verified.json"
+        },
+        {
+          "name": "真实板卡/完整交付",
+          "status": "not_run",
+          "scope": "A133新安装/升级/断电/数据等",
+          "evidence": "docs/delivery/20261015-snapshot.md",
+          "reason": "用户明确后置至新SDK Ubuntu环境，不标整套完成"
+        }
+      ]
+    }
+  ]
+}
