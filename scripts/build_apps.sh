@@ -86,7 +86,6 @@ python3 "${SELF_DIR}/audit_english_ui.py"
 # 前置输入检查
 require_file "${SDK}/build/envsetup.sh" "SDK 未初始化或路径错误：${SDK}"
 require_file "${PRODUCT_ROOT}/apps/lv_port_linux/build_openwrt.sh"
-require_file "${PRODUCT_ROOT}/apps/hdmi_preview/Makefile"
 require_file "${PRODUCT_ROOT}/apps/ipkvm/Makefile"
 
 # The IPKVM video sender uses Tina's aarch64 toolchain, while OpenWrt can
@@ -136,6 +135,7 @@ if [[ "${PROVIDER_PROFILE}" == "private" ]]; then
 fi
 python3 "${SELF_DIR}/build_a133_provider.py" "${PROVIDER_ARGS[@]}" --check
 python3 "${SELF_DIR}/build_a133_services.py" --sdk "${SDK}" --check
+python3 "${SELF_DIR}/build_a133_hdmi.py" --sdk "${SDK}" --check
 
 # Dependency staging may temporarily enable package symbols. Preserve the
 # caller's SDK configuration exactly so an application-only build does not
@@ -165,7 +165,6 @@ trap restore_sdk_configs EXIT
 
 if [[ "${CLEAN_BUILD}" -eq 1 ]]; then
     echo "==> 清理应用构建输出（保留源码、vendor、TuyaOpen venv 与下载缓存）"
-    make -C "${PRODUCT_ROOT}/apps/hdmi_preview" SDK_ROOT="${SDK}" clean
     make -C "${PRODUCT_ROOT}/apps/ipkvm" SDK_ROOT="${SDK}" \
         BUILD_DIR="${BUILD_OUT}/ipkvm" clean
     rm -rf -- \
@@ -341,10 +340,11 @@ cp -f "${PROVIDER_RUN}/compiled/product-provider-result.json" \
     "${BUILD_OUT}/lv_port_linux/provider-build-result.json"
 cp -f "${PRODUCT_ROOT}/apps/lv_port_linux/build/bin/lvglsim"    "${BUILD_OUT}/lv_port_linux/"
 
-echo "==> [2/5] hdmi_preview (out-of-tree)"
-make -C "${PRODUCT_ROOT}/apps/hdmi_preview" SDK_ROOT="${SDK}" -j"$(nproc)" \
-    || die "hdmi_preview 构建失败" "看上方 make 错误输出" "可单独跑：make -C apps/hdmi_preview SDK_ROOT=${SDK}"
-cp -f "${PRODUCT_ROOT}/apps/hdmi_preview/build/hdmi_preview" "${BUILD_OUT}/hdmi_preview/"
+echo "==> [2/5] SDK HDMI service (out-of-tree)"
+HDMI_RUN="$(mktemp -d "${BUILD_OUT}/hdmi.XXXXXX")"
+python3 "${SELF_DIR}/build_a133_hdmi.py" --sdk "${SDK}" --output "${HDMI_RUN}/compiled"
+cp -f "${HDMI_RUN}/compiled/hdmi_preview" "${BUILD_OUT}/hdmi_preview/"
+cp -f "${HDMI_RUN}/compiled/build-result.json" "${BUILD_OUT}/hdmi_preview/hdmi-build-result.json"
 
 echo "==> [3/5] platform services (out-of-tree)"
 SERVICES_RUN="$(mktemp -d "${BUILD_OUT}/services.XXXXXX")"

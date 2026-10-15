@@ -12,3 +12,6 @@ HDMI默认关闭，主机编译不打开采集、不操作板卡。原C++代码�
 
 ## 接续
 先固定原编译参考和实际依赖，再按上述步骤执行。剩余ipkvm、Tuya、混合业务、接口头/冻结客户端继续另项；ADB绑定/Xorg就绪后优先恢复必需真机验收。记录不替代验收，不把原产物锁改写为新源码。
+
+## SDK保存与上层切换
+原源fresh编译及SDK组件/标准overlay重放后编译43f026同字节passed。固定219真实头、20实际链接输入及别名、GCC11 C++逻辑名与IOMMU选择；原源不改。初次stager误匹配Makefile多行LDFLAGS且trace把命令回显当路径，失败保留，修正后r2实际闭包与输出passed。4267文件/95组件标准重放、7新增文本/已知凭据签名筛查0finding、旧4260清单保持passed。私有SDK7ed3fdd779cfdd171ddf54063e63a5c074314c95已推送且独立fetch/官方verify读回passed。只新组件7文件复制到实际SDK。上层移除3原实现/Makefile，入口改固定SDK，退休作用域和显式SDK测试保持；代码实际stage2/回归本批后执行，not_run。物理/新镜像not_run，migration_complete=false。

@@ -18,7 +18,7 @@ import tarfile
 import tempfile
 import threading
 import unittest
-from tests.sdk_source import provider_source, services_source
+from tests.sdk_source import hdmi_source, provider_source, services_source
 
 
 REPO = Path(__file__).resolve().parents[2]
@@ -720,7 +720,7 @@ int main(int argc, char **argv) {
 
     def test_hdmi_snapshot_providers_have_exclusive_socket_ownership(self):
         preview = (
-            REPO / "apps/hdmi_preview/src/main.cpp"
+            hdmi_source("src/main.cpp")
         ).read_text(encoding="utf-8")
         kvm_video = (
             REPO / "apps/ipkvm/video/main.cpp"
@@ -1009,7 +1009,7 @@ int main(int argc, char **argv) {
 
     def test_hdmi_i2s_passthrough_reports_signal_and_stability(self):
         source = (
-            REPO / "apps/hdmi_preview/src/main.cpp"
+            hdmi_source("src/main.cpp")
         ).read_text(encoding="utf-8")
 
         self.assertIn('HDMI_AUDIO_CAPTURE_DEFAULT "HDMIIn"', source)

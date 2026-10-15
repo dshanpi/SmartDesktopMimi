@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "summary": "HDMI归属收尾及用户授权先同步候选",
+  "context": "SPLIT057原字节/SDK4267重放和远端已过；用户058将物理验收后置",
+  "next_steps": "固定代码后上传受控draft并逐附件读回；物理等新SDK环境",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SPLIT-057",
+      "record": "docs/change-gates/REQ-MIMI-SPLIT-057.md",
+      "scope": "HDMI源/SDK构建入口/退休策略和明确SDK测试",
+      "invariants": "原C++与ELF不变，HDMI关闭，缺失不回退源，不改冻结候选",
+      "paths": [
+        "AGENTS.md",
+        "apps/hdmi_preview/Makefile",
+        "apps/hdmi_preview/README.md",
+        "apps/hdmi_preview/src/Makefile",
+        "apps/hdmi_preview/src/main.cpp",
+        "docs/CHANGE-GATES.md",
+        "docs/application-update-policy.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/REQ-MIMI-SPLIT-057.md",
+        "docs/change-gates/batches/split057-upload058-implementation-20261015.json",
+        "docs/update/source-ownership.json",
+        "scripts/build_a133_hdmi.py",
+        "scripts/build_apps.sh",
+        "tests/platform/test_host_integration.py",
+        "tests/sdk_source.py",
+        "tests/update/test_build_a133_hdmi.py"
+      ],
+      "checks": [
+        {
+          "name": "源重放和实际阶段2",
+          "status": "passed",
+          "scope": "4267/95/7新源，219头20链接输入和同字节",
+          "evidence": "output/hdmi-source-split-20261015/actual-stage2.log; remote-verify.log"
+        },
+        {
+          "name": "受影响回归",
+          "status": "not_run",
+          "scope": "边界已完成，整批平台检查运行中，完成另记",
+          "evidence": "output/hdmi-source-split-20261015",
+          "reason": "先固定本代码提交再记录全部结果"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "最新用户上传授权、门禁及调度提示接续",
+      "invariants": "仅草稿快照，真机保持未验收，常规正式门禁不放宽",
+      "paths": [
+        "AGENTS.md",
+        "apps/hdmi_preview/Makefile",
+        "apps/hdmi_preview/README.md",
+        "apps/hdmi_preview/src/Makefile",
+        "apps/hdmi_preview/src/main.cpp",
+        "docs/CHANGE-GATES.md",
+        "docs/application-update-policy.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/REQ-MIMI-SPLIT-057.md",
+        "docs/change-gates/batches/split057-upload058-implementation-20261015.json",
+        "docs/update/source-ownership.json",
+        "scripts/build_a133_hdmi.py",
+        "scripts/build_apps.sh",
+        "tests/platform/test_host_integration.py",
+        "tests/sdk_source.py",
+        "tests/update/test_build_a133_hdmi.py"
+      ],
+      "checks": [
+        {
+          "name": "最新授权及调度",
+          "status": "passed",
+          "scope": "真实用户消息及mimi原调度更新，不新增调度",
+          "evidence": "当前会话2026-10-15用户消息与automation mimi"
+        },
+        {
+          "name": "同步及下载复核",
+          "status": "not_run",
+          "scope": "统一仓库源码/镜像/应用",
+          "evidence": "output/delivery-sync-20261015",
+          "reason": "代码收尾后执行"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "用户无法进入控制台的外部阻塞记录",
+      "invariants": "不以greeter或Xvfb冒充真登录",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md"
+      ],
+      "checks": [
+        {
+          "name": "真实Xorg登录",
+          "status": "blocked",
+          "scope": "Ubuntu199/用户ubuntu",
+          "evidence": "当前会话用户答复",
+          "reason": "用户暂时无法进入虚拟机控制台"
+        }
+      ]
+    }
+  ]
+}

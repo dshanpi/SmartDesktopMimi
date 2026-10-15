@@ -279,6 +279,21 @@
   "migration_complete": false,
   "platform_id": "a133",
   "retired_platform_sources": {
+    "apps/hdmi_preview/Makefile": {
+      "sdk_component": "smartdesktopmimi-a133-hdmi",
+      "sha256": "29de201228c4c63c36a396779335e93342b7c91729e5af33c53eba8a204b00d0",
+      "source_lock_sha256": "7c6a78259a3dbb6b3b027235c7536349f6b50555c0aedecf9ec5bcf5cc05bdc5"
+    },
+    "apps/hdmi_preview/src/Makefile": {
+      "sdk_component": "smartdesktopmimi-a133-hdmi",
+      "sha256": "cbb03a5427bb6b62cc0d392f5bd7044f82ab29e964872c6277d7275a0b29cf83",
+      "source_lock_sha256": "7c6a78259a3dbb6b3b027235c7536349f6b50555c0aedecf9ec5bcf5cc05bdc5"
+    },
+    "apps/hdmi_preview/src/main.cpp": {
+      "sdk_component": "smartdesktopmimi-a133-hdmi",
+      "sha256": "6b12e41d7857cc177880591956e890c102d65eff87c7af10d671a22db2362e22",
+      "source_lock_sha256": "7c6a78259a3dbb6b3b027235c7536349f6b50555c0aedecf9ec5bcf5cc05bdc5"
+    },
     "apps/lv_port_linux/src/apps/video/tplayer_wrapper.c": {
       "sdk_profiles": [
         "private",
@@ -479,7 +494,8 @@
     }
   },
   "retired_scopes": [
-    "apps/platform_services"
+    "apps/platform_services",
+    "apps/hdmi_preview"
   ],
   "schema_version": 1,
   "scopes": [

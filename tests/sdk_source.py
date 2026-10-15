@@ -54,3 +54,23 @@ def services_source(name):
     if path.resolve() != path or lock['files'].get('code/' + name) != digest(path):
         raise ValueError('configured platform service source changed')
     return path
+
+
+HDMI_LOCK_SHA256 = '7c6a78259a3dbb6b3b027235c7536349f6b50555c0aedecf9ec5bcf5cc05bdc5'
+
+
+def hdmi_source(name):
+    value = os.environ.get('MIMI_A133_HDMI_ROOT')
+    if not value:
+        raise unittest.SkipTest('A133 HDMI implementation not_run: set MIMI_A133_HDMI_ROOT')
+    root = Path(value)
+    if not root.is_absolute() or root != root.resolve():
+        raise ValueError('configured HDMI root must be absolute and canonical')
+    lock_path = root / 'source-lock.json'
+    if lock_path.resolve() != lock_path or digest(lock_path) != HDMI_LOCK_SHA256:
+        raise ValueError('configured HDMI lock changed')
+    lock = json.loads(lock_path.read_text())
+    path = root / 'code' / name
+    if path.resolve() != path or lock['files'].get('code/' + name) != digest(path):
+        raise ValueError('configured HDMI source changed')
+    return path
