@@ -32,3 +32,5 @@ flowchart TD
 A133安装/失联/升级/断电验收继续按用户要求后置到新SDK Ubuntu环境，不能用本设计记录或主机编译判为通过。整套交付未完成。
 
 只读实际核对：用户指定dshanpi/SmartDesktopMimi-Private存在、private=true、当前size_kb=0、main默认分支且当前登录具有push/admin权限。只读取仓库metadata，未初始化/推送内容或复制凭据。证据output/edition-split-20261015/repository-access.json。
+
+接续进度已按实际SDK归档完成而系统入口未切换纠正；本轮只记录产品拆分设计与仓库访问，未对公开/私有配对功能作运行改动。

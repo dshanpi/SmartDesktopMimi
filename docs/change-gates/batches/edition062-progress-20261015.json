@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "新产品边界及真实进度接续",
+  "context": "061归档已完成但上层入口待改，062仅设计与访问核对",
+  "next_steps": "梳理实际专有接入与公开包边界，再实施拆分；冻结已有快照",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-EDITION-062",
+      "record": "docs/change-gates/REQ-MIMI-EDITION-062.md",
+      "scope": "当前进度记录",
+      "invariants": "不将设计/归档当运行隔离或实机完成",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-EDITION-062.md",
+        "docs/change-gates/batches/edition062-progress-20261015.json"
+      ],
+      "checks": [
+        {
+          "name": "记录与实际状态",
+          "status": "passed",
+          "scope": "当前用户边界/仓库访问、SDK归档和待实施状态",
+          "evidence": "output/edition-split-20261015/repository-access.json; output/capture-source-split-20261015/archived-result.json"
+        }
+      ]
+    }
+  ]
+}
