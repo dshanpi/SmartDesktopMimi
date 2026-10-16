@@ -522,8 +522,10 @@ static void test_environment_details(bool stale_view)
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
  sensor_status_t sensor={.valid=true,.temp_mC=30000,.humi_mpermil=36000};
  emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_scr_act(),"30°C") && find_label(lv_scr_act(),"36%"));
  lv_tick_inc(61000);pump();pump();
  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"数据已过期":"Data is stale"));
+ assert(!find_label(lv_scr_act(),"30°C") && !find_label(lv_scr_act(),"36%"));
  emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
  ui075_tap(ui075_card("环境","Environment"),pointer);
  assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));

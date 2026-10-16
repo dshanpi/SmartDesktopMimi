@@ -17,6 +17,7 @@ static mimi_widget_factory factory;
 static lv_obj_t *root, *grid, *editor, *library, *message, *edit_entry, *toolbar, *slot_objects[5];
 static lv_obj_t *values[MIMI_WIDGET_COUNT], *details[MIMI_WIDGET_COUNT], *iot_footer;
 static int iot_configuration;
+static lv_obj_t *environment_humidity,*environment_temp_caption,*environment_humidity_caption;
 static bool editing, valid_sensor, cloud_unavailable;
 /* Receipt age is a UI freshness policy, not a sensor sampling timestamp. */
 #define SENSOR_FRESH_MS 60000U
@@ -72,13 +73,19 @@ static void refresh(void)
     bool fresh = valid_sensor && !sensor_expired;
     lv_obj_t * v = values[MIMI_WIDGET_ENVIRONMENT];
     if(v && lv_obj_is_valid(v)) {
-        if(fresh)
-            lv_label_set_text_fmt(v, "%d°C    %d%%", temperature, humidity);
-        else
-            lv_label_set_text(v, "--°C    --%");
-        lv_label_set_text(details[MIMI_WIDGET_ENVIRONMENT], fresh
-                                                                ? tr("温度          湿度", "Temperature   Humidity")
-                                                                : sensor_expired ? tr("数据已过期", "Data is stale") : tr("暂未取得环境数据", "No sensor data"));
+        if(fresh) {
+            lv_label_set_text_fmt(v, "%d°C", temperature);
+            lv_label_set_text_fmt(environment_humidity, "%d%%", humidity);
+            lv_obj_clear_flag(environment_temp_caption,LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(environment_humidity_caption,LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(details[MIMI_WIDGET_ENVIRONMENT],LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_label_set_text(v,"--°C");lv_label_set_text(environment_humidity,"--%");
+            lv_obj_add_flag(environment_temp_caption,LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(environment_humidity_caption,LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(details[MIMI_WIDGET_ENVIRONMENT],LV_OBJ_FLAG_HIDDEN);
+            lv_label_set_text(details[MIMI_WIDGET_ENVIRONMENT],sensor_expired?tr("数据已过期","Data is stale"):tr("暂未取得环境数据","No sensor data"));
+        }
     }
     if(environment_dialog) {
         if(fresh) lv_label_set_text_fmt(environment_value, "%d°C     %d%%", temperature, humidity);
@@ -106,7 +113,9 @@ static void refresh(void)
                 ? tr("添加设备后显示状态","Add devices to see their status") : tr("打开应用刷新状态","Open app to refresh status");
         }
         lv_label_set_text(details[MIMI_WIDGET_IOT],hint);
-        if(iot_footer) lv_label_set_text(iot_footer,tr("查看设备  ›","View devices  >"));
+        if(iot_footer) lv_label_set_text(iot_footer,
+            snap.state==MIMI_IOT_SUMMARY_NOT_CONFIGURED || (snap.state==MIMI_IOT_SUMMARY_UNKNOWN && iot_configuration==0)
+                ? tr("前往配置  ›","Configure  >") : tr("查看设备  ›","View devices  >"));
     }
     v = values[MIMI_WIDGET_CONNECTION];
     if(v && lv_obj_is_valid(v)) {
@@ -202,6 +211,7 @@ static void home_deleted(lv_event_t *e)
     freshness_timer = NULL;
     root = grid = editor = library = toolbar = NULL;
     iot_footer = NULL;
+    environment_humidity=environment_temp_caption=environment_humidity_caption=NULL;
     memset(values,0,sizeof(values));memset(details,0,sizeof(details));
 }
 static void action(lv_event_t * e)
@@ -287,6 +297,7 @@ static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
     lv_obj_set_width(values[k], w - 44);
     lv_obj_set_style_text_align(values[k], LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(values[k], LV_LABEL_LONG_DOT);
+    lv_obj_set_height(values[k],k==MIMI_WIDGET_ENVIRONMENT?40:34);
     details[k] =
         label(c,
               k == MIMI_WIDGET_IOT
@@ -297,6 +308,18 @@ static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
     lv_obj_set_width(details[k], w - 44);
     lv_obj_set_style_text_align(details[k], LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_long_mode(details[k], LV_LABEL_LONG_DOT);
+    if(k==MIMI_WIDGET_ENVIRONMENT) {
+        int column=(w-64)/2;
+        lv_obj_set_x(values[k],24);lv_obj_set_width(values[k],column);
+        environment_humidity=label(c,"--%",w/2+8,84,ui_font_h1(),HOME_TEXT);
+        lv_obj_set_size(environment_humidity,column,40);lv_label_set_long_mode(environment_humidity,LV_LABEL_LONG_DOT);
+        lv_obj_set_style_text_align(environment_humidity,LV_TEXT_ALIGN_CENTER,0);
+        environment_temp_caption=label(c,tr("温度","Temperature"),24,120,ui_font_body_md(),HOME_TEXT_MUTED);
+        environment_humidity_caption=label(c,tr("湿度","Humidity"),w/2+8,120,ui_font_body_md(),HOME_TEXT_MUTED);
+        lv_obj_t *captions[]={environment_temp_caption,environment_humidity_caption};
+        for(unsigned i=0;i<2;i++){lv_obj_set_size(captions[i],column,24);lv_label_set_long_mode(captions[i],LV_LABEL_LONG_DOT);lv_obj_set_style_text_align(captions[i],LV_TEXT_ALIGN_CENTER,0);}
+        lv_obj_t *divider=box(c,w/2,85,1,50,false);lv_obj_set_style_bg_color(divider,HOME_BORDER,0);lv_obj_set_style_bg_opa(divider,LV_OPA_COVER,0);
+    }
     lv_obj_t * line = box(c, 24, h - 52, w - 48, 1, false);
     lv_obj_set_style_bg_opa(line, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(line, lv_color_mix(HOME_SURFACE, accent, 212), 0);
@@ -517,6 +540,7 @@ static void rebuild(void)
 {
     factory(NULL, MIMI_WIDGET_EMPTY, 0, 0);
     iot_footer = NULL;
+    environment_humidity=environment_temp_caption=environment_humidity_caption=NULL;
     memset(values, 0, sizeof(values));
     memset(details, 0, sizeof(details));
     if(grid) lv_obj_delete(grid);
@@ -594,10 +618,13 @@ void desktop_widgets_create(lv_obj_t * parent, mimi_widget_factory f)
     factory                 = f;
     mimi_widget_layout_default(&saved);
     if(!mimi_widget_layout_path(layout_path, sizeof(layout_path))) mimi_widget_layout_load(layout_path, &saved);
-    lv_obj_t * edit = box(root, HOME_SCREEN_W - HOME_CONTENT_X - 130, HOME_STATUS_H + 4, 130, 32, false);
+    lv_obj_t * edit = box(root, HOME_SCREEN_W - HOME_CONTENT_X - 160, HOME_STATUS_H + 4, 160, 32, false);
     lv_obj_add_flag(edit, LV_OBJ_FLAG_CLICKABLE);
     edit_entry = edit;
-    label(edit, tr("编辑组件", "Edit widgets"), 16, 4, ui_font_body_md(), HOME_TEXT_MUTED);
+    static const lv_point_precise_t pencil_points[]={{10,23},{13,14},{25,2},{31,8},{19,20},{10,23},{13,14},{19,20},{25,14},{19,8}};
+    lv_obj_t *pencil=lv_line_create(edit);lv_line_set_points(pencil,pencil_points,sizeof(pencil_points)/sizeof(pencil_points[0]));
+    lv_obj_set_pos(pencil,0,4);lv_obj_set_style_line_width(pencil,2,0);lv_obj_set_style_line_color(pencil,HOME_TEXT_MUTED,0);lv_obj_set_style_line_rounded(pencil,true,0);
+    label(edit, tr("编辑组件", "Edit widgets"), 43, 4, ui_font_body_md(), HOME_TEXT_MUTED);
     lv_obj_add_event_cb(edit, edit_event, LV_EVENT_CLICKED, NULL);
     rebuild();
 }
