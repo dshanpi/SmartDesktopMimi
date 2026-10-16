@@ -209,3 +209,5 @@ UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验�
 - UI075干净应用候选：`docs/validation/ui075-clean-candidate.json`；主机构建/来源核对passed，签名打包/上机not_run，保留两次失败。
 
 - UI075交互清单：`docs/validation/ui075-interaction-catalog.json`；原清单失败已修复，物理not_run。
+
+- UI075窄屏拖动：`docs/validation/ui075-small-drag.json`，保留旧失败，主机通过，编译/真机分别接续。

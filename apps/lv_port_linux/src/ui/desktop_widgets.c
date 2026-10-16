@@ -27,6 +27,10 @@ static lv_timer_t *freshness_timer;
 static lv_obj_t *environment_dialog, *environment_value, *environment_status;
 static int temperature, humidity, ownership = -1, selected = -1, drag_slot = -1;
 static lv_point_t drag_start;
+static lv_timer_t *drag_scroll_timer;
+static lv_indev_t *drag_pointer;
+static bool drag_armed;
+static void stop_drag(void);
 static char layout_path[4096];
 extern bool wifi_connected;
 static const char * tr(const char * zh, const char * en)
@@ -206,6 +210,7 @@ static void freshness_tick(lv_timer_t *t)
 static void home_deleted(lv_event_t *e)
 {
     if(lv_event_get_target(e) != root) return;
+    stop_drag();
     if(environment_dialog) lv_obj_delete(environment_dialog);
     if(freshness_timer) lv_timer_delete(freshness_timer);
     freshness_timer = NULL;
@@ -345,36 +350,57 @@ static void remove_slot(lv_event_t * e)
     unsigned slot = (unsigned)(uintptr_t)lv_event_get_user_data(e);
     if(editing && !mimi_widget_layout_set(&draft, slot, MIMI_WIDGET_EMPTY)) lv_async_call(redraw_async, NULL);
 }
+/* On a narrow viewport a normal swipe scrolls. Holding first owns a drag;
+ * its bounded presentation timer scrolls only this editor, never hardware. */
+static void stop_drag(void)
+{
+    if(drag_scroll_timer) lv_timer_delete(drag_scroll_timer);
+    drag_scroll_timer = NULL;
+    if(drag_slot >= 0 && drag_slot < 5 && slot_objects[drag_slot] && lv_obj_is_valid(slot_objects[drag_slot]))
+        lv_obj_set_style_outline_width(slot_objects[drag_slot],0,0);
+    if(grid && lv_obj_is_valid(grid) && HOME_SCREEN_W < 1000) lv_obj_add_flag(grid,LV_OBJ_FLAG_SCROLLABLE);
+    drag_slot=-1;drag_pointer=NULL;drag_armed=false;
+}
+static void drag_scroll(lv_timer_t *timer)
+{
+    (void)timer;
+    if(!editing || !drag_armed || !drag_pointer || !grid || !lv_obj_is_valid(grid)) {stop_drag();return;}
+    lv_point_t p;lv_area_t a;lv_indev_get_point(drag_pointer,&p);lv_obj_get_coords(grid,&a);
+    if(p.x<a.x1 || p.x>a.x2 || p.y<a.y1 || p.y>a.y2) return;
+    int delta=p.y<a.y1+28?14:p.y>a.y2-28?-14:0;
+    if(delta) lv_obj_scroll_by_bounded(grid,0,delta,LV_ANIM_OFF);
+}
 static void slot_event(lv_event_t * e)
 {
-    int slot             = (int)(intptr_t)lv_event_get_user_data(e);
-    lv_indev_t * indev   = lv_indev_active();
-    lv_event_code_t code = lv_event_get_code(e);
-    if(code == LV_EVENT_LONG_PRESSED && !editing) {
-        desktop_widgets_edit();
-        return;
-    }
+    int slot=(int)(intptr_t)lv_event_get_user_data(e);
+    lv_indev_t *indev=lv_indev_active();lv_event_code_t code=lv_event_get_code(e);
+    if(code==LV_EVENT_LONG_PRESSED && !editing) {desktop_widgets_edit();return;}
     if(!editing) return;
-    if(code == LV_EVENT_PRESSED && indev) {
-        drag_slot = slot;
-        lv_indev_get_point(indev, &drag_start);
+    if(code==LV_EVENT_PRESS_LOST) {stop_drag();return;}
+    if(code==LV_EVENT_PRESSED && indev) {
+        stop_drag();drag_slot=slot;drag_pointer=indev;lv_indev_get_point(indev,&drag_start);
     }
-    if(code == LV_EVENT_RELEASED && indev && drag_slot == slot) {
-        lv_point_t pt;
-        lv_indev_get_point(indev, &pt);
-        drag_slot = -1;
-        if(LV_ABS(pt.x - drag_start.x) > 24 || LV_ABS(pt.y - drag_start.y) > 24) {
-            for(int i = 0; i < 5; i++) {
-                lv_area_t a;
-                lv_obj_get_coords(slot_objects[i], &a);
-                if(pt.x >= a.x1 && pt.x <= a.x2 && pt.y >= a.y1 && pt.y <= a.y2 &&
-                   !mimi_widget_layout_swap(&draft, slot, i)) {
-                    lv_async_call(redraw_async, NULL);
-                    break;
-                }
+    if(code==LV_EVENT_LONG_PRESSED && indev && HOME_SCREEN_W<1000 && drag_slot==slot) {
+        drag_armed=true;
+        lv_obj_scroll_to_y(grid,lv_obj_get_scroll_y(grid),LV_ANIM_OFF);
+        lv_obj_clear_flag(grid,LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_style_outline_width(slot_objects[slot],2,0);
+        lv_obj_set_style_outline_color(slot_objects[slot],HOME_CORAL,0);
+        if(!drag_scroll_timer) drag_scroll_timer=lv_timer_create(drag_scroll,30,NULL);
+    }
+    if(code==LV_EVENT_RELEASED && indev && drag_slot==slot) {
+        lv_point_t pt;lv_area_t visible;lv_indev_get_point(indev,&pt);lv_obj_get_coords(grid,&visible);
+        bool moved=LV_ABS(pt.x-drag_start.x)>24 || LV_ABS(pt.y-drag_start.y)>24;
+        bool may_swap=HOME_SCREEN_W>=1000 || drag_armed;
+        stop_drag();
+        if(pt.x<visible.x1 || pt.x>visible.x2 || pt.y<visible.y1 || pt.y>visible.y2) return;
+        if(moved && may_swap) {
+            for(int i=0;i<5;i++) {
+                lv_area_t a;lv_obj_get_coords(slot_objects[i],&a);
+                if(pt.x>=a.x1 && pt.x<=a.x2 && pt.y>=a.y1 && pt.y<=a.y2 &&
+                   !mimi_widget_layout_swap(&draft,slot,i)) {lv_async_call(redraw_async,NULL);break;}
             }
-        } else if(draft.slots[slot] == MIMI_WIDGET_EMPTY)
-            show_library(slot);
+        } else if(!moved && draft.slots[slot]==MIMI_WIDGET_EMPTY) show_library(slot);
     }
 }
 static void toolbar_size(bool with_library)
@@ -410,6 +436,7 @@ static void close_library_event(lv_event_t * e)
 }
 static void show_library(int slot)
 {
+    stop_drag();
     close_library();
     selected = slot;
     library = box(editor, 0, 0, HOME_SCREEN_W, HOME_SCREEN_H, false);
@@ -476,6 +503,7 @@ static void show_library(int slot)
 }
 static void finish(lv_event_t * e)
 {
+    stop_drag();
     bool save = (bool)(intptr_t)lv_event_get_user_data(e);
     if(save) {
         int rc = mimi_widget_layout_save(layout_path, &draft);
@@ -538,6 +566,7 @@ void desktop_widgets_edit(void)
 }
 static void rebuild(void)
 {
+    stop_drag();
     factory(NULL, MIMI_WIDGET_EMPTY, 0, 0);
     iot_footer = NULL;
     environment_humidity=environment_temp_caption=environment_humidity_caption=NULL;
@@ -607,6 +636,7 @@ static void rebuild(void)
 }
 void desktop_widgets_create(lv_obj_t * parent, mimi_widget_factory f)
 {
+    stop_drag();
     /* New Home is built before the old one is deleted asynchronously. */
     if(environment_dialog) lv_obj_delete(environment_dialog);
     /* A theme rebuild cancels the uncommitted draft, never saving implicitly. */

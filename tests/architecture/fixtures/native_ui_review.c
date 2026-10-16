@@ -491,6 +491,67 @@ static void test_widget_editor(void)
  puts("PASS UI075 actual pointer editing: remove/cancel, compatible add, save/reload, failed save retains draft; no app launch/pairing/HDMI mutation");
 }
 
+static void test_small_widget_drag(void)
+{
+ assert(review_width<1000);
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ int opened=app_open_count,paired=pairing_refreshes,hdmi=hdmi_mutations;
+ desktop_widgets_edit();pump();pump();
+ lv_obj_t *from=ui075_card("环境","Environment"),*to=ui075_card("智能设备","Smart devices"),*g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_update_layout(g);
+ lv_area_t area;lv_obj_get_coords(g,&area);
+ touch_x=(area.x1+area.x2)/2;touch_y=area.y1+40;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y2-12;lv_indev_read(pointer);
+ bool reached=false;
+ for(int i=0;i<100;i++){
+  lv_tick_inc(30);lv_indev_read(pointer);lv_timer_handler();lv_obj_update_layout(g);
+  lv_area_t target;lv_obj_get_coords(to,&target);
+  if(touch_y>=target.y1+16 && touch_y<=target.y2-16){reached=true;break;}
+ }
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+ assert(reached && "cross-viewport target never reached");
+ lv_obj_t *save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ char path[4096];mimi_widget_layout loaded;assert(!mimi_widget_layout_path(path,sizeof(path)));assert(!mimi_widget_layout_load(path,&loaded));
+ assert(loaded.slots[2]==MIMI_WIDGET_IOT && loaded.slots[3]==MIMI_WIDGET_ENVIRONMENT);
+ /* Drag back up through the viewport, then use an ordinary swipe. */
+ desktop_widgets_edit();pump();pump();
+ from=ui075_card("环境","Environment");to=ui075_card("智能设备","Smart devices");g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_get_coords(g,&area);
+ touch_x=(area.x1+area.x2)/2;touch_y=area.y1+40;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y1+12;lv_indev_read(pointer);reached=false;
+ for(int i=0;i<100;i++){
+  lv_tick_inc(30);lv_indev_read(pointer);lv_timer_handler();lv_obj_update_layout(g);
+  lv_area_t target;lv_obj_get_coords(to,&target);
+  if(touch_y>=target.y1+16 && touch_y<=target.y2-16){reached=true;break;}
+ }
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();assert(reached);
+ from=ui075_card("环境","Environment");g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_get_coords(g,&area);
+ int previous_scroll=lv_obj_get_scroll_y(g);
+ touch_y=area.y2-25;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=1;i<=8;i++){touch_y=area.y2-25-i*8;lv_tick_inc(18);lv_indev_read(pointer);lv_timer_handler();}
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+ assert(lv_obj_get_scroll_y(g)>previous_scroll);
+ save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[2]==MIMI_WIDGET_ENVIRONMENT && loaded.slots[3]==MIMI_WIDGET_IOT);
+ /* Releasing outside the list cancels the drag and stops its timer. */
+ desktop_widgets_edit();pump();pump();from=ui075_card("环境","Environment");g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_get_coords(g,&area);
+ touch_y=area.y1+40;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y2-12;lv_indev_read(pointer);
+ for(int i=0;i<8;i++){lv_tick_inc(30);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y2+15;touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();
+ int stopped=lv_obj_get_scroll_y(g);for(int i=0;i<20;i++){lv_tick_inc(30);lv_timer_handler();}assert(lv_obj_get_scroll_y(g)==stopped);
+ lv_obj_t *cancel=find_label(lv_scr_act(),ui_i18n_is_zh()?"取消":"Cancel");ui075_tap(lv_obj_get_parent(cancel),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[2]==MIMI_WIDGET_ENVIRONMENT && loaded.slots[3]==MIMI_WIDGET_IOT);
+ assert(app_open_count==opened && pairing_refreshes==paired && hdmi_mutations==hdmi);
+ lv_indev_delete(pointer);
+ puts("PASS small-screen actual pointer long-hold edge scrolling swaps offscreen same-size target without app/cloud/HDMI actions");
+}
+
 static void test_center_pointer(void)
 {
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
@@ -734,6 +795,7 @@ int main(int argc,char**argv) {
  else if(!strcmp(argv[1],"home-iot-summary")){test_iot_summary();}
  else if(!strcmp(argv[1],"environment") || !strcmp(argv[1],"environment-stale")){test_environment_details(!strcmp(argv[1],"environment-stale"));}
  else if(!strcmp(argv[1],"notifications") || !strcmp(argv[1],"notifications-empty")){test_notice(!strcmp(argv[1],"notifications"));}
+ else if(!strcmp(argv[1],"widget-small-drag")){test_small_widget_drag();}
  else if(!strcmp(argv[1],"widget-behavior")){test_widget_editor();}
  else if(strcmp(argv[1],"widget-editor")==0 || strcmp(argv[1],"widget-library")==0){
   desktop_widgets_edit();pump();pump();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout"));

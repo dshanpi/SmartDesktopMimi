@@ -647,7 +647,7 @@
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_widgets.c": {
-      "sha256": "2205370cba3f77c05d7b344059c1186599158d3fdfc4012214c449dd117b6519",
+      "sha256": "073fa79ef4d5487f87f8702d0f435777302e8a9e58e5b864d291acbb11e0e437",
       "bindings": [
         "environment_dialog, environment_deleted, LV_EVENT_DELETE, NULL",
         "close,environment_close,LV_EVENT_CLICKED,NULL",
