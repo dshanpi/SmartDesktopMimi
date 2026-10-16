@@ -59,6 +59,7 @@ static lv_obj_t *control_center_wifi_detail = NULL;
 
 static lv_obj_t *control_center_hdmi_switch = NULL;
 static bool control_center_visible = false;
+static lv_obj_t *control_center_chevron = NULL;
 
 /* 前置声明 */
 static void on_hdmi_switch_changed(lv_event_t *e);
@@ -95,6 +96,8 @@ static void control_center_hide(bool animate)
 {
     if (!control_center_overlay || !control_center_panel || !control_center_visible) return;
     control_center_visible = false;
+    if (control_center_chevron && lv_obj_is_valid(control_center_chevron))
+        lv_label_set_text(control_center_chevron, LV_SYMBOL_DOWN);
     lv_anim_delete(control_center_panel, control_center_anim_y);
 
     if (!animate) {
@@ -333,6 +336,8 @@ static void control_center_show(void)
     if (!control_center_overlay || !control_center_panel || control_center_visible) return;
 
     control_center_visible = true;
+    if (control_center_chevron && lv_obj_is_valid(control_center_chevron))
+        lv_label_set_text(control_center_chevron, LV_SYMBOL_UP);
     lv_obj_scroll_to_y(control_center_panel,0,LV_ANIM_OFF);
     cc_controls_read();
     cc_status();
@@ -373,6 +378,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     if(control_center_overlay && lv_obj_is_valid(control_center_overlay))lv_obj_delete(control_center_overlay);
     control_center_overlay=control_center_panel=control_center_hdmi_switch=NULL;
     control_center_visible=false;
+    control_center_chevron=NULL;
 
     lv_obj_t *bar = lv_obj_create(parent);
     lv_obj_set_size(bar, HOME_SCREEN_W, HOME_STATUS_H);
@@ -570,7 +576,7 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_add_event_cb(notifications,control_center_trigger_event,LV_EVENT_CLICKED,NULL);
     lv_obj_t *expand=lv_obj_create(top_row);lv_obj_remove_style_all(expand);lv_obj_set_size(expand,48,48);
     lv_obj_align(expand,LV_ALIGN_TOP_RIGHT,4,8);lv_obj_add_flag(expand,LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_t *arrow=cc_label(expand,LV_SYMBOL_DOWN,0,0,&lv_font_montserrat_16,HOME_TEXT_MUTED);lv_obj_center(arrow);
+    lv_obj_t *arrow=cc_label(expand,LV_SYMBOL_DOWN,0,0,&lv_font_montserrat_16,HOME_TEXT_MUTED);lv_obj_center(arrow);control_center_chevron=arrow;
     lv_obj_add_event_cb(expand,control_center_trigger_event,LV_EVENT_CLICKED,NULL);
     lv_obj_add_event_cb(bar,control_center_trigger_event,LV_EVENT_GESTURE,NULL);
     /* Retain an invisible compatibility handle; the only visible home switch is in Control Center. */

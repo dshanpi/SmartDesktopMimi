@@ -617,7 +617,7 @@
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_status_bar.c": {
-      "sha256": "6be703ea1607d7acab2dbc79f7e76dff64968729107325c5eaa5b0163456ee5c",
+      "sha256": "d9aa09daf6e012aebdb87f3094483fc7fcc5f2158c3c753b791d7a7af8fb86d1",
       "bindings": [
         "card,control_center_action_event,LV_EVENT_CLICKED,(void*)(intptr_t)action",
         "control_center_overlay,control_center_overlay_event,LV_EVENT_CLICKED,NULL",
@@ -647,7 +647,7 @@
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_widgets.c": {
-      "sha256": "073fa79ef4d5487f87f8702d0f435777302e8a9e58e5b864d291acbb11e0e437",
+      "sha256": "f0ec2e87d8cde661638a8df5d92298c90a4c14aeb52f6a3763664a5e3f5d96da",
       "bindings": [
         "environment_dialog, environment_deleted, LV_EVENT_DELETE, NULL",
         "close,environment_close,LV_EVENT_CLICKED,NULL",

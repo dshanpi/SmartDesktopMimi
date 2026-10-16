@@ -461,14 +461,14 @@ static void show_library(int slot)
     lv_obj_t *list = box(panel, 24, 102, w - 48, h - 160, false);
     lv_obj_add_flag(list, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(list, LV_DIR_VER);
-    const char *zh[] = {"", "对话入口 · 大组件", "采集与控制 · 大组件", "温度与湿度 · 小组件", "家庭设备状态 · 小组件", "账号与连接 · 小组件", "当前网络 · 小组件", "设备设置 · 小组件"};
-    const char *en[] = {"", "Conversation · Large", "Capture & control · Large", "Temperature & humidity · Small", "Home devices · Small", "Account & connection · Small", "Current network · Small", "Device settings · Small"};
+    const char *zh[] = {"", "对话入口 · 大组件", "采集控制 · 大组件", "温湿度 · 小组件", "家庭设备 · 小组件", "账号连接 · 小组件", "当前网络 · 小组件", "设备设置 · 小组件"};
+    const char *en[] = {"", "Chat · Large", "Capture · Large", "Climate · Small", "Devices · Small", "Account · Small", "Network · Small", "Settings · Small"};
     for(int k = 1; k < MIMI_WIDGET_COUNT; k++) {
         mimi_widget_layout candidate = draft;
         bool allowed = !mimi_widget_layout_set(&candidate, slot, (mimi_widget_kind)k);
         lv_obj_t *row = box(list, 0, (k - 1) * 71, w - 48, 64, false);
         icon_badge(row, (mimi_widget_kind)k, 0, 3);
-        lv_obj_t *name = label(row, title((mimi_widget_kind)k), 73, 7, ui_font_body_lg(), HOME_TEXT);
+        lv_obj_t *name = label(row, k == MIMI_WIDGET_CONNECTION ? tr("设备连接", "Connection") : title((mimi_widget_kind)k), 73, 7, ui_font_body_lg(), HOME_TEXT);
         lv_obj_set_width(name, w - 196);
         lv_label_set_long_mode(name, LV_LABEL_LONG_DOT);
         lv_obj_t *caption = label(row, ui_i18n_is_zh() ? zh[k] : en[k], 73, 36, ui_font_body_md(), HOME_TEXT_MUTED);
