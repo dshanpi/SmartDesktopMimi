@@ -1,6 +1,7 @@
 #include "iot_client.h"
 #include "iot_json.h"
 #include <curl/curl.h>
+#include <errno.h>
 #include <json-c/json.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -132,4 +133,11 @@ int mimi_iot_request(const char * path, const char * command, char * out, size_t
         return -3;
     }
     return 0;
+}
+
+int mimi_iot_configuration_present(void)
+{
+ struct stat st;
+ if(lstat(MIMI_IOT_CONFIG,&st)==0)return S_ISREG(st.st_mode)?1:-1;
+ return errno==ENOENT?0:-1;
 }

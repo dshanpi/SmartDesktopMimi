@@ -9,6 +9,7 @@
 #include "../system/backend_types.h"
 #include "../system/service_wifi.h"
 #include "desktop_clock.h"
+#include "desktop_widgets.h"
 
 /* 图片声明（refresh_wifi_icon_visual 使用） */
 LV_IMAGE_DECLARE(close_wifi);
@@ -113,6 +114,7 @@ static void schedule_wifi_startup_scan_timer(void)
 
 void refresh_wifi_icon_visual(void)
 {
+    desktop_widgets_network();
     if (!wifi_icon_obj) return;
     if (!wifi_runtime_enabled || !wifi_connected) {
         lv_image_set_src(wifi_icon_obj, &close_wifi);
@@ -241,6 +243,7 @@ void hdmi_preview_status_callback(const mw_msg_t *msg)
         return;
     }
 
+    ui_clock_set_hdmi(((const hdmi_preview_status_t *)msg->data)->enabled);
     hdmi_ui_handle_status((const hdmi_preview_status_t *)msg->data);
 }
 
@@ -383,6 +386,7 @@ void cloud_status_callback(const mw_msg_t *msg)
     const cloud_status_t *s = (const cloud_status_t *)msg->data;
 
     cloud_conn_state = s->state;
+    desktop_widgets_cloud(s->state);
 
     /* 记录云端 OTA 推送状态，供 OTA 下载完成时弹窗 */
     cloud_ota_pending = s->ota_pending;

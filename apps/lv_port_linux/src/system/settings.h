@@ -55,5 +55,7 @@ sys_settings_t* sys_settings_get(void);
  * @brief Save current settings to file
  */
 void sys_settings_save(void);
+/* 0 only when the complete settings record was written and synced. */
+int sys_settings_save_checked(void);
 
 #endif /* SETTINGS_H */

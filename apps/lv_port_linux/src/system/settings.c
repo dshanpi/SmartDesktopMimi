@@ -35,13 +35,12 @@ static sys_settings_t current_settings = {
     .version = SETTINGS_VERSION,
     .theme_color = DEFAULT_THEME_COLOR,
     /* A value below 20% is not reliably visible on the R818 panel. */
-    .brightness = 50,
+    .brightness = 20,
     .volume = 50,
     .wifi_enabled = true,
     .bluetooth_enabled = true,
-    /* First boot enters the complete local HDMI video/audio application.
-     * A later user toggle is still persisted in the settings file. */
-    .hdmi_enabled = true,
+    /* Capture is opt-in on first boot; preserve later user choices. */
+    .hdmi_enabled = false,
     .theme_preset_id = DEFAULT_THEME_PRESET_ID,
     .theme_follow_time = true,
     .bluetooth_name = {0},
@@ -468,7 +467,8 @@ static void merge_local_settings_changes(sys_settings_t *target,
 #undef MERGE_CHANGED_FIELD
 }
 
-void sys_settings_save(void) {
+int sys_settings_save_checked(void) {
+    int result=-1;
     char path[256];
     sys_settings_t desired;
     sys_settings_t merged;
@@ -484,12 +484,12 @@ void sys_settings_save(void) {
     fd = open(path, O_RDWR | O_CREAT, 0600);
     if (fd < 0) {
         printf("Error saving settings to %s!\n", path);
-        return;
+        return -1;
     }
     if (flock(fd, LOCK_EX) != 0) {
         close(fd);
         printf("Error locking settings at %s!\n", path);
-        return;
+        return -1;
     }
     (void)fchmod(fd, 0600);
 
@@ -508,7 +508,7 @@ void sys_settings_save(void) {
         flock(fd, LOCK_UN);
         close(fd);
         printf("Error truncating settings at %s!\n", path);
-        return;
+        return -1;
     }
     while (written < sizeof(merged)) {
         count = pwrite(fd, (const char *)&merged + written,
@@ -518,6 +518,7 @@ void sys_settings_save(void) {
         written += (size_t)count;
     }
     if (written == sizeof(merged) && fsync(fd) == 0) {
+        result=0;
         current_settings = merged;
         persisted_settings_snapshot = merged;
         persisted_settings_snapshot_valid = true;
@@ -527,4 +528,7 @@ void sys_settings_save(void) {
     }
     flock(fd, LOCK_UN);
     close(fd);
+    return result;
 }
+
+void sys_settings_save(void) { (void)sys_settings_save_checked(); }
