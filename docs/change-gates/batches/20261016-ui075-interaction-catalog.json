@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "summary": "UI075 reviewed interactive source and scenario inventory",
+  "context": "Candidate pre-sign review rejected stale inventory; four actual source surfaces reviewed and host evidence mapped without claiming hardware execution",
+  "next_steps": "Final visual/interaction review and remote source gates; build next final product change once, not for inventory/docs.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Inventory tool, snapshot and trace records",
+      "invariants": "No runtime/UI/SDK/device change; default physical cases not_run; old built source identity unchanged",
+      "paths": [
+        "tools/update/ui_catalog.py",
+        "tests/update/ui-catalog.json",
+        "docs/validation/ui075-interaction-catalog.json",
+        "docs/change-gates/batches/20261016-ui075-interaction-catalog.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Original UI inventory",
+          "status": "failed",
+          "scope": "Stale inventory after component implementation",
+          "reason": "Four surfaces changed without refreshing inventory",
+          "evidence": "docs/validation/ui075-interaction-catalog.json"
+        },
+        {
+          "name": "Reviewed inventory",
+          "status": "passed",
+          "scope": "11 apps59sources and21 explicit new scenarios; requirements only",
+          "evidence": "docs/validation/ui075-interaction-catalog.json"
+        },
+        {
+          "name": "Physical and cross-viewport drag",
+          "status": "not_run",
+          "scope": "Target screen/touch and small-screen cross-viewport dragging",
+          "reason": "No corresponding hardware/cross-viewport evidence",
+          "evidence": "docs/validation/ui075-interaction-catalog.json"
+        }
+      ]
+    }
+  ]
+}
