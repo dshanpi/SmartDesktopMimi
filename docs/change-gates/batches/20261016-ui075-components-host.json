@@ -2,12 +2,7 @@
   "schema": 1,
   "summary": "UI075 component home and control center implementation checkpoint",
   "context": "Four approved reference renders; real LVGL implementation, not yet final visual or target acceptance",
-  "next_steps": [
-    "Continue visual alignment: editor toolbar, library icons/row spacing and empty slot appearance still differ from approved D01; home/control center final pixel comparison not accepted.",
-    "Complete environment details navigation, notification source/empty-state interaction, stale-state presentation and richer shared IoT status. Current environment card opens Settings; system card opens device settings.",
-    "Exercise physical drag/swap and smaller screen geometry; current host pointer evidence covers remove/cancel/add/save/reload/failure, not physical touch or all drag cases.",
-    "No target installation, new package, system image rebuild, or Release update. Existing device IPC baseline must be checked before installation; frozen artifacts unchanged."
-  ],
+  "next_steps": "Continue visual alignment: editor toolbar, library icons/row spacing and empty slot appearance still differ from approved D01; home/control center final pixel comparison not accepted. Complete environment details navigation, notification source/empty-state interaction, stale-state presentation and richer shared IoT status. Current environment card opens Settings; system card opens device settings. Exercise physical drag/swap and smaller screen geometry; current host pointer evidence covers remove/cancel/add/save/reload/failure, not physical touch or all drag cases. No target installation, new package, system image rebuild, or Release update. Existing device IPC baseline must be checked before installation; frozen artifacts unchanged.",
   "requirements": [
     {
       "id": "REQ-MIMI-UI-075",
