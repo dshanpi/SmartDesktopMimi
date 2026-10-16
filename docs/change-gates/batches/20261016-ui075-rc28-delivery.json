@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "UI075 rc28 final presentation fixes signed and remotely verified",
+  "context": "New immutable controlled draft under DELIVERY058; rc27 unchanged and failed scopes preserved",
+  "next_steps": "Final native UI source and controlled binary are aligned. Physical screen/touch needs compatible system; retain deferred full system and resource-dependent checks. Do not rebuild for documentation-only changes.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Delivery records only",
+      "invariants": "Exact built source918d2a7; no stable promotion or hardware change; no rebuild for records",
+      "paths": [
+        "docs/validation/ui075-rc28-delivery.json",
+        "docs/change-gates/batches/20261016-ui075-rc28-delivery.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Build signing and all remote assets",
+          "status": "passed",
+          "scope": "Clean desktop/Web,14 admission,17 full downloaded attachments",
+          "evidence": "docs/validation/ui075-rc28-delivery.json"
+        },
+        {
+          "name": "Physical and user visual acceptance",
+          "status": "not_run",
+          "scope": "Physical screen/touch and real full system matrix",
+          "reason": "Compatible system and user resource dependencies outstanding",
+          "evidence": "docs/validation/ui075-rc28-delivery.json"
+        }
+      ]
+    }
+  ]
+}
