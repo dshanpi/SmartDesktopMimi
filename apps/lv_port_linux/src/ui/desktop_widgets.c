@@ -16,6 +16,12 @@ static mimi_widget_factory factory;
 static lv_obj_t *root, *grid, *editor, *library, *message, *edit_entry, *toolbar, *slot_objects[5];
 static lv_obj_t *values[MIMI_WIDGET_COUNT], *details[MIMI_WIDGET_COUNT];
 static bool editing, valid_sensor, cloud_unavailable;
+/* Receipt age is a UI freshness policy, not a sensor sampling timestamp. */
+#define SENSOR_FRESH_MS 60000U
+static uint32_t sensor_received_at;
+static bool sensor_seen, sensor_expired;
+static lv_timer_t *freshness_timer;
+static lv_obj_t *environment_dialog, *environment_value, *environment_status;
 static int temperature, humidity, ownership = -1, selected = -1, drag_slot = -1;
 static lv_point_t drag_start;
 static char layout_path[4096];
@@ -26,6 +32,7 @@ static const char * tr(const char * zh, const char * en)
 }
 static void rebuild(void);
 static void show_library(int slot);
+static void show_environment(void);
 static const char * title(mimi_widget_kind k)
 {
     const char * zh[] = {"添加组件", "Mimi 助手", "HDMI 控制", "环境", "智能设备", "设备连接", "网络状态", "系统状态"};
@@ -59,15 +66,25 @@ static lv_obj_t * label(lv_obj_t * p, const char * text, int x, int y, const lv_
 }
 static void refresh(void)
 {
+    if(valid_sensor && lv_tick_elaps(sensor_received_at) >= SENSOR_FRESH_MS) sensor_expired = true;
+    bool fresh = valid_sensor && !sensor_expired;
     lv_obj_t * v = values[MIMI_WIDGET_ENVIRONMENT];
     if(v && lv_obj_is_valid(v)) {
-        if(valid_sensor)
+        if(fresh)
             lv_label_set_text_fmt(v, "%d°C    %d%%", temperature, humidity);
         else
             lv_label_set_text(v, "--°C    --%");
-        lv_label_set_text(details[MIMI_WIDGET_ENVIRONMENT], valid_sensor
+        lv_label_set_text(details[MIMI_WIDGET_ENVIRONMENT], fresh
                                                                 ? tr("温度          湿度", "Temperature   Humidity")
-                                                                : tr("暂未取得环境数据", "No sensor data"));
+                                                                : sensor_expired ? tr("数据已过期", "Data is stale") : tr("暂未取得环境数据", "No sensor data"));
+    }
+    if(environment_dialog) {
+        if(fresh) lv_label_set_text_fmt(environment_value, "%d°C     %d%%", temperature, humidity);
+        else lv_label_set_text(environment_value, "--°C     --%");
+        if(!sensor_seen) lv_label_set_text(environment_status, tr("尚未收到环境数据", "No environment data received"));
+        else if(sensor_expired) lv_label_set_text(environment_status, tr("数据已过期，等待新的读数", "Data is stale; waiting for a new reading"));
+        else if(!valid_sensor) lv_label_set_text(environment_status, tr("当前读数不可用", "Current reading unavailable"));
+        else lv_label_set_text_fmt(environment_status, tr("最近收到：%u 秒前", "Last received: %u seconds ago"), (unsigned)(lv_tick_elaps(sensor_received_at) / 1000U));
     }
     v = values[MIMI_WIDGET_CONNECTION];
     if(v && lv_obj_is_valid(v)) {
@@ -86,7 +103,10 @@ static void refresh(void)
 }
 void desktop_widgets_sensor(bool valid, int t, int h)
 {
-    valid_sensor = valid;
+    sensor_seen = true;
+    valid_sensor = valid && t >= -100 && t <= 150 && h >= 0 && h <= 100;
+    sensor_received_at = lv_tick_get();
+    sensor_expired = false;
     temperature  = t;
     humidity     = h;
     refresh();
@@ -110,10 +130,62 @@ void desktop_widgets_pairing(const mw_msg_t * msg)
     ownership = status.error ? -1 : (int)status.ownership;
     refresh(); /* Never retain the binding code. */
 }
+static void environment_deleted(lv_event_t *e)
+{
+    if(lv_event_get_target(e) == environment_dialog)
+        environment_dialog = environment_value = environment_status = NULL;
+}
+static void environment_close(lv_event_t *e)
+{
+    (void)e;
+    if(environment_dialog) lv_obj_delete(environment_dialog);
+}
+static void show_environment(void)
+{
+    if(environment_dialog) return;
+    environment_dialog = box(lv_layer_top(), 0, 0, HOME_SCREEN_W, HOME_SCREEN_H, false);
+    lv_obj_add_flag(environment_dialog, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_radius(environment_dialog, 0, 0);
+    lv_obj_set_style_bg_color(environment_dialog, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(environment_dialog, LV_OPA_40, 0);
+    lv_obj_add_event_cb(environment_dialog, environment_deleted, LV_EVENT_DELETE, NULL);
+    int w = LV_MIN(660, HOME_SCREEN_W - 40), h = LV_MIN(370, HOME_SCREEN_H - 40);
+    lv_obj_t *panel = box(environment_dialog, (HOME_SCREEN_W-w)/2, (HOME_SCREEN_H-h)/2, w, h, true);
+    lv_obj_add_flag(panel, LV_OBJ_FLAG_CLICKABLE);
+    label(panel, tr("环境详情", "Environment details"), 28, 24, ui_font_h2(), HOME_TEXT);
+    environment_value = label(panel, "--°C     --%", 28, 108, ui_font_h1(), HOME_TEXT);
+    lv_obj_set_width(environment_value, w-56);lv_obj_set_style_text_align(environment_value, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_t *units = label(panel, tr("温度                 湿度", "Temperature        Humidity"), 28, 155, ui_font_body_md(), HOME_TEXT_MUTED);
+    lv_obj_set_width(units,w-56);lv_obj_set_style_text_align(units,LV_TEXT_ALIGN_CENTER,0);
+    environment_status = label(panel, "", 28, 210, ui_font_body_lg(), HOME_TEXT_MUTED);
+    lv_obj_set_width(environment_status,w-56);lv_obj_set_style_text_align(environment_status,LV_TEXT_ALIGN_CENTER,0);
+    lv_obj_t *hint = label(panel, tr("本机传感器读数 · 暂无历史记录", "Local sensor readings · No history available"), 28, h-54, ui_font_body_md(), HOME_TEXT_MUTED);
+    lv_obj_set_width(hint,w-56);lv_obj_set_style_text_align(hint,LV_TEXT_ALIGN_CENTER,0);
+    lv_obj_t *close = box(panel,w-112,16,88,44,false);lv_obj_add_flag(close,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *l = label(close,tr("关闭","Close"),0,0,ui_font_body_lg(),HOME_TEXT);lv_obj_center(l);
+    lv_obj_add_event_cb(close,environment_close,LV_EVENT_CLICKED,NULL);
+    refresh();
+}
+static void freshness_tick(lv_timer_t *t)
+{
+    (void)t;
+    /* Presentation timer only. No sampling, transport or filesystem work. */
+    if(environment_dialog || (root && lv_screen_active() == lv_obj_get_screen(root))) refresh();
+}
+static void home_deleted(lv_event_t *e)
+{
+    if(lv_event_get_target(e) != root) return;
+    if(environment_dialog) lv_obj_delete(environment_dialog);
+    if(freshness_timer) lv_timer_delete(freshness_timer);
+    freshness_timer = NULL;
+    root = grid = editor = library = toolbar = NULL;
+    memset(values,0,sizeof(values));memset(details,0,sizeof(details));
+}
 static void action(lv_event_t * e)
 {
     if(editing) return;
     mimi_widget_kind k = (mimi_widget_kind)(intptr_t)lv_event_get_user_data(e);
+    if(k == MIMI_WIDGET_ENVIRONMENT) { show_environment(); return; }
     app_manager_open(k == MIMI_WIDGET_IOT
                          ? APP_ID_IOT
                          : k == MIMI_WIDGET_NETWORK
@@ -485,10 +557,14 @@ static void rebuild(void)
 }
 void desktop_widgets_create(lv_obj_t * parent, mimi_widget_factory f)
 {
+    /* New Home is built before the old one is deleted asynchronously. */
+    if(environment_dialog) lv_obj_delete(environment_dialog);
     /* A theme rebuild cancels the uncommitted draft, never saving implicitly. */
     editing = false;
     editor = library = grid = toolbar = NULL;
     root                    = parent;
+    lv_obj_add_event_cb(root,home_deleted,LV_EVENT_DELETE,NULL);
+    if(!freshness_timer) freshness_timer = lv_timer_create(freshness_tick,1000,NULL);
     factory                 = f;
     mimi_widget_layout_default(&saved);
     if(!mimi_widget_layout_path(layout_path, sizeof(layout_path))) mimi_widget_layout_load(layout_path, &saved);

@@ -10,6 +10,7 @@
 #include "../system/service_wifi.h"
 #include "desktop_clock.h"
 #include "desktop_widgets.h"
+#include "desktop_status_bar.h"
 
 /* 图片声明（refresh_wifi_icon_visual 使用） */
 LV_IMAGE_DECLARE(close_wifi);
@@ -223,7 +224,7 @@ void sensor_status_callback(const mw_msg_t *msg)
     const sensor_status_t *s = (const sensor_status_t *)msg->data;
 
     /* 温湿度（clock 模块） */
-    ui_clock_set_sensor(s->valid, s->temp_mC / 1000, s->humi_mpermil / 1000);
+    ui_clock_set_sensor(s->valid && s->err_code == 0, s->temp_mC / 1000, s->humi_mpermil / 1000);
 
     /* INA219 整机功耗/电流/电压（顶栏中间，独立于温湿度） */
     if (power_label) {
@@ -415,6 +416,7 @@ void cloud_ota_status_callback(const mw_msg_t *msg)
     }
     const ota_status_t *s = (const ota_status_t *)msg->data;
 
+    ui_statusbar_ota_notice(s);
     cloud_ota_state = s->state;
     cloud_ota_progress = s->progress;
     refresh_cloud_badge();

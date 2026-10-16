@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "UI075 environment detail, stale data and existing OTA notification projection",
+  "context": "Continue approved component UI afterf25fb45; no provider mutation or new polling",
+  "next_steps": "IoT aggregate shared state and final font/icon/orb/HDMI-dot visual alignment. Smaller-screen geometry and pointer coverage; physical touch/drag; compatible target installation. Notifications currently cover only existing system OTA events; desktop application update and other notification sources not integrated. No source push/new package/image/Release; frozen artifacts retained; other recorded hardware and resource dependencies remain.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Upper-layer read-only state projection, lifetime management and tests",
+      "invariants": "No sensor sampling/cloud request/OTA mutation from home or notifications; existing backend IPC and frozen artifacts untouched; no credentials retained",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_widgets.c",
+        "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+        "apps/lv_port_linux/src/ui/desktop_status_bar.h",
+        "apps/lv_port_linux/src/ui/ui_helpers.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/validation/ui075-state-details.json",
+        "docs/change-gates/batches/20261016-ui075-state-details.json"
+      ],
+      "checks": [
+        {
+          "name": "Host behavior and A133 compile",
+          "status": "passed",
+          "scope": "28 actual LVGL renders and status/pointer/lifetime checks;19 regressions;not physical",
+          "evidence": "docs/validation/ui075-state-details.json"
+        },
+        {
+          "name": "Physical and final visual acceptance",
+          "status": "not_run",
+          "scope": "Actual screen and device events",
+          "reason": "No device operations; visual and remaining sources still outstanding",
+          "evidence": "docs/validation/ui075-state-details.json"
+        }
+      ]
+    }
+  ]
+}

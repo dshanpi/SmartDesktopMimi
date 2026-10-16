@@ -509,6 +509,66 @@ static void test_center_controls(void)
  puts("PASS UI075 controls: sliders apply/read back/save on release; mute restores volume; HDMI request does not save before ACK; timeout does not report success");
 }
 
+static void test_environment_details(bool stale_view)
+{
+ int apps=app_open_count,updates=ota_commands,bindings=pairing_refreshes,capture=hdmi_mutations,stored=saves;
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+ sensor_status_t sensor={.valid=true,.temp_mC=30000,.humi_mpermil=36000};
+ emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ lv_tick_inc(61000);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"数据已过期":"Data is stale"));
+ emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ ui075_tap(ui075_card("环境","Environment"),pointer);
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ assert(find_label(lv_layer_top(),"30°C     36%"));
+ /* Covered Home card and control-bar touches must not activate apps. */
+ tap_screen(pointer,HOME_SCREEN_W-80,32);
+ assert(app_open_count==apps && find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ lv_tick_inc(61000);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"数据已过期":"Data is stale"));
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"数据已过期，等待新的读数":"Data is stale; waiting for a new reading"));
+ assert(!find_label(lv_layer_top(),"30°C     36%"));
+ sensor.temp_mC=27000;sensor.humi_mpermil=43000;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_layer_top(),"27°C     43%"));
+ sensor.err_code=-5;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"当前读数不可用":"Current reading unavailable"));
+ sensor.err_code=0;sensor.humi_mpermil=110000;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"当前读数不可用":"Current reading unavailable"));
+ sensor.humi_mpermil=43000;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ lv_obj_t *close=find_label(lv_layer_top(),ui_i18n_is_zh()?"关闭":"Close");ui075_tap(lv_obj_get_parent(close),pointer);
+ assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ ui075_tap(ui075_card("环境","Environment"),pointer);
+ ui_rebuild_home();pump();pump();
+ assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ ui075_tap(ui075_card("环境","Environment"),pointer);
+ assert(find_label(lv_layer_top(),"27°C     43%"));
+ if(stale_view){lv_tick_inc(61000);pump();pump();}
+ assert(app_open_count==apps && ota_commands==updates && pairing_refreshes==bindings && hdmi_mutations==capture && saves==stored);
+ lv_indev_delete(pointer);
+ puts("PASS UI075 environment: actual card tap, overlay blocking, expiry, valid recovery, provider error/out-of-range rejection, close/reopen and Home rebuild cleanup; no commands/saves");
+}
+static void test_notice(bool leave_error)
+{
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+ tap_screen(pointer,review_width/2,32);
+ int apps=app_open_count,updates=ota_commands,bindings=pairing_refreshes,capture=hdmi_mutations,stored=saves;
+ ota_status_t status={.state=OTA_STATE_IDLE};emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ lv_obj_t *l=find_label(lv_layer_top(),ui_i18n_is_zh()?"通知    暂无本地通知":"Notifications    No local notifications");assert(l);
+ ui075_tap(lv_obj_get_parent(l),pointer);assert(app_open_count==apps);
+ status.state=OTA_STATE_DOWNLOADING;status.progress=42;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ l=find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 下载中 42%":"System update · Downloading 42%");assert(l);
+ ui075_tap(lv_obj_get_parent(l),pointer);assert(app_open_count==apps+1 && last_app_open==APP_ID_OTA);
+ assert(ota_commands==updates && pairing_refreshes==bindings && hdmi_mutations==capture && saves==stored);
+ tap_screen(pointer,review_width/2,32);
+ status.state=OTA_STATE_UP_TO_DATE;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"通知    暂无本地通知":"Notifications    No local notifications"));
+ status.state=OTA_STATE_ERROR;status.error_code=-5;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 更新失败，点此查看":"System update · Update failed; tap for details"));
+ if(!leave_error){status.state=OTA_STATE_IDLE;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();}
+ lv_indev_delete(pointer);
+ puts("PASS UI075 notification: existing OTA event, empty row disabled, download progress, click only opens system OTA, up-to-date clears and failure remains visible; no mutation");
+}
+
 int main(int argc,char**argv) {
  assert(argc==5 || argc==7);
  if(argc==7){review_width=atoi(argv[5]);review_height=atoi(argv[6]);}
@@ -581,6 +641,8 @@ int main(int argc,char**argv) {
   lv_obj_send_event(strip,LV_EVENT_SCROLL_END,NULL);pump();
   assert(!ui_all_apps_is_visible());
  }
+ else if(!strcmp(argv[1],"environment") || !strcmp(argv[1],"environment-stale")){test_environment_details(!strcmp(argv[1],"environment-stale"));}
+ else if(!strcmp(argv[1],"notifications") || !strcmp(argv[1],"notifications-empty")){test_notice(!strcmp(argv[1],"notifications"));}
  else if(!strcmp(argv[1],"widget-behavior")){test_widget_editor();}
  else if(strcmp(argv[1],"widget-editor")==0 || strcmp(argv[1],"widget-library")==0){
   desktop_widgets_edit();pump();pump();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout"));

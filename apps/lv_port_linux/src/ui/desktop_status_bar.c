@@ -155,6 +155,29 @@ static lv_obj_t *center_connection,*center_hdmi_detail,*center_notice,*center_er
 static lv_obj_t *brightness_slider,*volume_slider,*brightness_value,*volume_value,*mute_switch,*mute_detail;
 static int volume_before_mute=40;
 static bool hdmi_actual,hdmi_known;
+static bool notice_known;
+static ota_state_t notice_state;
+static int notice_progress;
+static lv_obj_t *notice_row;
+void ui_statusbar_ota_notice(const ota_status_t *status)
+{
+ notice_known = status && status->state >= OTA_STATE_IDLE && status->state <= OTA_STATE_ERROR;
+ if(!notice_known) return;
+ notice_state = status->state;
+ notice_progress = LV_CLAMP(0,status->progress,100);
+ /* Never copy version strings, provider errors or cloud payloads into a notification. */
+}
+static bool notice_active(void)
+{
+ return notice_known && notice_state != OTA_STATE_IDLE && notice_state != OTA_STATE_UP_TO_DATE;
+}
+static void notice_open(lv_event_t *e)
+{
+ (void)e;
+ if(!notice_active()) return;
+ control_center_hide(false);
+ app_manager_open(APP_ID_OTA);
+}
 static const char *tr(const char *zh,const char *en){return ui_i18n_is_zh()?zh:en;}
 static lv_obj_t *cc_label(lv_obj_t *p,const char *text,int x,int y,const lv_font_t *font,lv_color_t color)
 {
@@ -222,10 +245,32 @@ static void cc_mute_event(lv_event_t *e)
  cc_apply_control(false,lv_obj_has_state(lv_event_get_target(e),LV_STATE_CHECKED)?0:volume_before_mute);
 }
 static void cc_close(lv_event_t *e){(void)e;control_center_hide(true);}
+static void notice_refresh(void)
+{
+ if(!center_notice || !notice_row) return;
+ if(!notice_active()) {
+  lv_label_set_text(center_notice,tr("通知    暂无本地通知","Notifications    No local notifications"));
+  lv_obj_add_state(notice_row,LV_STATE_DISABLED);
+  return;
+ }
+ lv_obj_clear_state(notice_row,LV_STATE_DISABLED);
+ const char *phase = notice_state == OTA_STATE_CHECKING ? tr("检查中","Checking")
+  : notice_state == OTA_STATE_UPDATE_AVAILABLE ? tr("发现可用更新","Update available")
+  : notice_state == OTA_STATE_DOWNLOADING ? tr("下载中","Downloading")
+  : notice_state == OTA_STATE_DOWNLOAD_DONE ? tr("下载完成，等待安装","Downloaded; awaiting installation")
+  : notice_state == OTA_STATE_APPLYING ? tr("安装中","Installing")
+  : notice_state == OTA_STATE_REBOOTING ? tr("等待重启","Awaiting restart")
+  : notice_state == OTA_STATE_COMMITTING ? tr("确认新系统","Confirming new system")
+  : tr("更新失败，点此查看","Update failed; tap for details");
+ if(notice_state == OTA_STATE_DOWNLOADING || notice_state == OTA_STATE_APPLYING)
+  lv_label_set_text_fmt(center_notice,tr("系统更新 · %s %d%%","System update · %s %d%%"),phase,notice_progress);
+ else lv_label_set_text_fmt(center_notice,tr("系统更新 · %s","System update · %s"),phase);
+}
 static void cc_status(void)
 {
  if(!control_center_visible)return;
  lv_label_set_text(control_center_wifi_detail,wifi_connected?tr("已连接","Connected"):wifi_runtime_enabled?tr("未连接","Disconnected"):ui_tr(UI_STR_WIFI_OFF));
+ notice_refresh();
  lv_label_set_text(center_connection,desktop_widgets_connection_text());
  lv_label_set_text(center_hdmi_detail,!desktop_hdmi_supported()?ui_tr(UI_STR_HDMI_UNSUPPORTED):hdmi_toggle_pending?tr("正在切换…","Switching…"):!hdmi_known?tr("状态待确认","Status unavailable"):hdmi_actual?tr("采集已开启","Capture enabled"):tr("采集已关闭","Capture disabled"));
 }
@@ -269,8 +314,10 @@ static void control_center_build(void)
  volume_slider=lv_slider_create(volume_card);lv_obj_set_pos(volume_slider,24,76);lv_obj_set_size(volume_slider,tw-48,16);lv_slider_set_range(volume_slider,0,100);
  lv_obj_set_style_bg_color(volume_slider,HOME_BLUE,LV_PART_INDICATOR);lv_obj_set_style_bg_color(volume_slider,lv_color_white(),LV_PART_KNOB);lv_obj_add_event_cb(volume_slider,cc_slider_event,LV_EVENT_ALL,0);
  lv_obj_t *notice=cc_surface(control_center_panel,24,440,w-48,76);
+ notice_row=notice;lv_obj_add_flag(notice,LV_OBJ_FLAG_CLICKABLE);lv_obj_add_event_cb(notice,notice_open,LV_EVENT_CLICKED,NULL);
  cc_label(notice,LV_SYMBOL_BELL,27,25,&lv_font_montserrat_24,HOME_GREEN);
  center_notice=cc_label(notice,tr("通知    暂无本地通知","Notifications    No local notifications"),96,25,ui_font_body_lg(),HOME_TEXT_MUTED);
+ lv_obj_set_size(center_notice,w-172,48);lv_obj_set_y(center_notice,14);lv_label_set_long_mode(center_notice,LV_LABEL_LONG_DOT);
  center_error=cc_label(control_center_panel,"",28,81,ui_font_body_md(),HOME_CORAL);lv_obj_set_width(center_error,w-56);lv_label_set_long_mode(center_error,LV_LABEL_LONG_DOT);
  lv_obj_t *close=cc_surface(control_center_panel,w/2-60,CONTROL_CENTER_HEIGHT-37,120,32);lv_obj_add_flag(close,LV_OBJ_FLAG_CLICKABLE);lv_obj_set_style_border_width(close,0,0);lv_obj_set_style_bg_opa(close,LV_OPA_TRANSP,0);
  cc_label(close,tr("收起  ∧","Collapse  ^"),18,4,ui_font_body_md(),HOME_TEXT_MUTED);lv_obj_add_event_cb(close,cc_close,LV_EVENT_CLICKED,NULL);

@@ -193,3 +193,5 @@ PAIR071/RELEASE072最新候选：共享rc26、公开系统rc5、私有系统rc6�
 REQ-MIMI-UI-075：[组件主页、顶栏与控制中心](change-gates/REQ-MIMI-UI-075.md)，四图已批准，实施中；视觉/目标验收 not_run。
 
 UI075批次二接续：编辑栏/组件库/真实指针验证，见[实际证据](validation/ui075-editor-refinement.json)。需求仍实施中，物理与最终视觉未通过。
+
+UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验证](validation/ui075-state-details.json)。不代表实机或完整通知源验收。
