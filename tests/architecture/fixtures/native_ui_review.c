@@ -23,6 +23,7 @@
 #include "src/ui/desktop_widgets.h"
 #include "src/ui/desktop_clock.h"
 #include <time.h>
+#include <stdatomic.h>
 #include "src/system/backlight_control.h"
 #include "src/system/volume_control.h"
 #include "src/system/app_registry.h"
@@ -40,11 +41,17 @@ static bool review_iot_connected;
 static unsigned review_iot_commands;
 static const char *review_iot_reply="{\"accepted\":true,\"state_confirmed\":false}";
 static unsigned review_iot_delay_us;
+static const char *review_iot_devices_reply;
+static int review_iot_devices_rc;
+static atomic_uint review_iot_requests;
 static const char *review_iot_name="TEST Lamp";
 int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_t cap){
+ atomic_fetch_add(&review_iot_requests,1);
+ const char *list_reply=review_iot_devices_reply;int list_rc=review_iot_devices_rc;
  if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
  if(command){review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
+ if(!strcmp(path,"/v1/devices") && list_reply){snprintf(out,cap,"%s",list_reply);return list_rc;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
  else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"%s\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}",review_iot_name);
  return 0;
@@ -569,6 +576,48 @@ static void test_notice(bool leave_error)
  puts("PASS UI075 notification: existing OTA event, empty row disabled, download progress, click only opens system OTA, up-to-date clears and failure remains visible; no mutation");
 }
 
+static mimi_iot_summary ui075_fetch_summary(const char *reply,int rc)
+{
+ review_iot_devices_reply=reply;review_iot_devices_rc=rc;review_iot_connected=true;
+ app_iot.init();for(int i=0;i<30;i++){usleep(10000);lv_tick_inc(100);pump();}
+ mimi_iot_summary result=mimi_iot_summary_get();app_iot.close();return result;
+}
+static void test_iot_summary(void)
+{
+ lv_obj_t *home=lv_scr_act();
+ int commands=review_iot_commands,bindings=pairing_refreshes,capture=hdmi_mutations;
+ assert(mimi_iot_summary_get().state==MIMI_IOT_SUMMARY_UNKNOWN);
+ mimi_iot_summary snap=ui075_fetch_summary("{\"devices\":[]}",0);
+ assert(snap.state==MIMI_IOT_SUMMARY_READY && snap.total==0 && snap.online==0);
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\",\"online\":true},{\"id\":\"socket\",\"online\":false}]}",0);
+ assert(snap.state==MIMI_IOT_SUMMARY_READY && snap.total==2 && snap.online==1);
+ lv_scr_load(home);lv_tick_inc(1100);pump();
+ assert(find_label(home,ui_i18n_is_zh()?"2 台设备 · 1 台在线":"2 devices · 1 online"));
+ unsigned requests=atomic_load(&review_iot_requests);
+ lv_tick_inc(61000);pump();pump();snap=mimi_iot_summary_get();
+ assert(snap.state==MIMI_IOT_SUMMARY_STALE && snap.total==0 && snap.online==0);
+ assert(find_label(home,ui_i18n_is_zh()?"状态已过期":"Status is stale"));
+ assert(atomic_load(&review_iot_requests)==requests);
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\"}]}",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\",\"online\":true},{\"id\":\"lamp\",\"online\":false}]}",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ snap=ui075_fetch_summary("{\"devices\":[42,null]}",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ snap=ui075_fetch_summary("{\"error\":\"authorization_required\"}",-2);assert(snap.state==MIMI_IOT_SUMMARY_UNAUTHORIZED && snap.total==0);
+ snap=ui075_fetch_summary("{\"error\":\"not_configured\"}",-2);assert(snap.state==MIMI_IOT_SUMMARY_NOT_CONFIGURED);
+ snap=ui075_fetch_summary("{\"devices\":[]} trailing",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ /* A completed response for an already-closed page must not populate Home. */
+ review_iot_devices_reply="{\"devices\":[]}";review_iot_devices_rc=0;review_iot_delay_us=150000;
+ app_iot.init();app_iot.close();
+ for(int i=0;i<25;i++){usleep(10000);lv_tick_inc(100);pump();}
+ assert(mimi_iot_summary_get().state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ review_iot_delay_us=0;
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\",\"online\":true},{\"id\":\"socket\",\"online\":false}]}",0);
+ assert(snap.state==MIMI_IOT_SUMMARY_READY && snap.total==2 && snap.online==1);
+ lv_scr_load(home);ui_rebuild_home();pump();pump();requests=atomic_load(&review_iot_requests);
+ lv_tick_inc(1100);pump();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"2 台设备 · 1 台在线":"2 devices · 1 online"));
+ assert(atomic_load(&review_iot_requests)==requests && review_iot_commands==commands && pairing_refreshes==bindings && hdmi_mutations==capture);
+ puts("PASS UI075 IoT aggregate: real worker/parser, empty/online counts, absent online and duplicate IDs rejected, auth/config/parse failures, expiry, late closed-page result ignored, recovery and zero Home requests");
+}
+
 int main(int argc,char**argv) {
  assert(argc==5 || argc==7);
  if(argc==7){review_width=atoi(argv[5]);review_height=atoi(argv[6]);}
@@ -641,6 +690,7 @@ int main(int argc,char**argv) {
   lv_obj_send_event(strip,LV_EVENT_SCROLL_END,NULL);pump();
   assert(!ui_all_apps_is_visible());
  }
+ else if(!strcmp(argv[1],"home-iot-summary")){test_iot_summary();}
  else if(!strcmp(argv[1],"environment") || !strcmp(argv[1],"environment-stale")){test_environment_details(!strcmp(argv[1],"environment-stale"));}
  else if(!strcmp(argv[1],"notifications") || !strcmp(argv[1],"notifications-empty")){test_notice(!strcmp(argv[1],"notifications"));}
  else if(!strcmp(argv[1],"widget-behavior")){test_widget_editor();}
@@ -851,6 +901,7 @@ int main(int argc,char**argv) {
    tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
    assert(review_iot_commands==1);
+   assert(mimi_iot_summary_get().state!=MIMI_IOT_SUMMARY_READY);
    const char *accepted=ui_i18n_is_zh()?"指令已受理，尚未确认设备状态。请刷新核对结果。":"Command accepted; device state is not confirmed. Refresh to check the result.";
    if(rejected || malformed){assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…"));assert(!find_label(lv_scr_act(),accepted));assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"未确认指令受理结果。请先刷新设备状态，避免重复操作。":"Command acceptance is unconfirmed. Refresh device state before retrying."));}
    else assert(find_label(lv_scr_act(),accepted));

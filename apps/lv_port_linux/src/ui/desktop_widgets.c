@@ -6,6 +6,7 @@
 #include "../system/cloud_pairing_status.h"
 #include "../system/backend_types.h"
 #include "../apps/iot/iot_client.h"
+#include "../apps/iot/iot_app.h"
 LV_IMAGE_DECLARE(cloud);
 #include <stdio.h>
 #include <string.h>
@@ -14,7 +15,8 @@ LV_IMAGE_DECLARE(cloud);
 static mimi_widget_layout saved, draft;
 static mimi_widget_factory factory;
 static lv_obj_t *root, *grid, *editor, *library, *message, *edit_entry, *toolbar, *slot_objects[5];
-static lv_obj_t *values[MIMI_WIDGET_COUNT], *details[MIMI_WIDGET_COUNT];
+static lv_obj_t *values[MIMI_WIDGET_COUNT], *details[MIMI_WIDGET_COUNT], *iot_footer;
+static int iot_configuration;
 static bool editing, valid_sensor, cloud_unavailable;
 /* Receipt age is a UI freshness policy, not a sensor sampling timestamp. */
 #define SENSOR_FRESH_MS 60000U
@@ -85,6 +87,26 @@ static void refresh(void)
         else if(sensor_expired) lv_label_set_text(environment_status, tr("数据已过期，等待新的读数", "Data is stale; waiting for a new reading"));
         else if(!valid_sensor) lv_label_set_text(environment_status, tr("当前读数不可用", "Current reading unavailable"));
         else lv_label_set_text_fmt(environment_status, tr("最近收到：%u 秒前", "Last received: %u seconds ago"), (unsigned)(lv_tick_elaps(sensor_received_at) / 1000U));
+    }
+    v = values[MIMI_WIDGET_IOT];
+    if(v && lv_obj_is_valid(v)) {
+        mimi_iot_summary snap = mimi_iot_summary_get();
+        const char *hint;
+        if(snap.state == MIMI_IOT_SUMMARY_READY) {
+            lv_label_set_text_fmt(v,tr("%u 台设备 · %u 台在线","%u devices · %u online"),snap.total,snap.online);
+            hint=tr("最近一次刷新 · 打开查看","Last refresh · Open to view");
+        } else {
+            const char *status=snap.state == MIMI_IOT_SUMMARY_STALE ? tr("状态已过期","Status is stale")
+                : snap.state == MIMI_IOT_SUMMARY_UNAUTHORIZED ? tr("需要重新授权","Authorization required")
+                : snap.state == MIMI_IOT_SUMMARY_UNAVAILABLE ? tr("状态暂不可用","Status unavailable")
+                : snap.state == MIMI_IOT_SUMMARY_NOT_CONFIGURED || (snap.state == MIMI_IOT_SUMMARY_UNKNOWN && iot_configuration == 0)
+                    ? tr("尚未配置","Not configured") : tr("状态待确认","Status unavailable");
+            lv_label_set_text(v,status);
+            hint = snap.state == MIMI_IOT_SUMMARY_NOT_CONFIGURED || (snap.state == MIMI_IOT_SUMMARY_UNKNOWN && iot_configuration == 0)
+                ? tr("添加设备后显示状态","Add devices to see their status") : tr("打开应用刷新状态","Open app to refresh status");
+        }
+        lv_label_set_text(details[MIMI_WIDGET_IOT],hint);
+        if(iot_footer) lv_label_set_text(iot_footer,tr("查看设备  ›","View devices  >"));
     }
     v = values[MIMI_WIDGET_CONNECTION];
     if(v && lv_obj_is_valid(v)) {
@@ -179,6 +201,7 @@ static void home_deleted(lv_event_t *e)
     if(freshness_timer) lv_timer_delete(freshness_timer);
     freshness_timer = NULL;
     root = grid = editor = library = toolbar = NULL;
+    iot_footer = NULL;
     memset(values,0,sizeof(values));memset(details,0,sizeof(details));
 }
 static void action(lv_event_t * e)
@@ -251,12 +274,13 @@ static void icon_badge(lv_obj_t *p, mimi_widget_kind k, int x, int y)
 static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
 {
     lv_obj_t * c      = box(p, 0, 0, w, h, true);
+    if(k == MIMI_WIDGET_IOT) iot_configuration = mimi_iot_configuration_present();
     lv_color_t accent = k == MIMI_WIDGET_ENVIRONMENT ? HOME_GREEN : k == MIMI_WIDGET_IOT ? lv_color_hex(0xFF8845) : HOME_BLUE;
     lv_obj_set_style_bg_color(c, lv_color_mix(HOME_SURFACE, accent, 247), 0);
     icon_badge(c, k, 24, 14);
     label(c, title(k), 96, 30, ui_font_h3(), HOME_TEXT);
     const char * value = k == MIMI_WIDGET_IOT
-                             ? (mimi_iot_configuration_present() == 0 ? tr("尚未配置", "Not configured")
+                             ? (iot_configuration == 0 ? tr("尚未配置", "Not configured")
                                                                       : tr("状态待确认", "Status unavailable"))
                              : k == MIMI_WIDGET_SYSTEM ? tr("设备设置", "Device settings") : "--";
     values[k] = label(c, value, 22, 84, k == MIMI_WIDGET_ENVIRONMENT ? ui_font_h1() : ui_font_h2(), HOME_TEXT);
@@ -266,7 +290,7 @@ static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
     details[k] =
         label(c,
               k == MIMI_WIDGET_IOT
-                  ? (mimi_iot_configuration_present() == 0 ? tr("添加设备后显示状态", "Add devices to see their status")
+                  ? (iot_configuration == 0 ? tr("添加设备后显示状态", "Add devices to see their status")
                                                            : tr("打开应用查看状态", "Open app to check status"))
                   : k == MIMI_WIDGET_SYSTEM ? tr("显示、声音与系统信息", "Display, sound and system info") : "",
               22, 118, ui_font_body_md(), HOME_TEXT_MUTED);
@@ -283,6 +307,7 @@ static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
                             0, h - 37, ui_font_body_md(), accent);
     lv_obj_set_width(foot, w);
     lv_obj_set_style_text_align(foot, LV_TEXT_ALIGN_CENTER, 0);
+    if(k == MIMI_WIDGET_IOT) iot_footer = foot;
     lv_obj_add_flag(c, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(c, action, LV_EVENT_CLICKED, (void *)(intptr_t)k);
     return c;
@@ -491,6 +516,7 @@ void desktop_widgets_edit(void)
 static void rebuild(void)
 {
     factory(NULL, MIMI_WIDGET_EMPTY, 0, 0);
+    iot_footer = NULL;
     memset(values, 0, sizeof(values));
     memset(details, 0, sizeof(details));
     if(grid) lv_obj_delete(grid);

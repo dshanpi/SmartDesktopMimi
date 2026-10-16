@@ -1,0 +1,61 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T09:26:14.108278+00:00",
+  "status": "in_progress",
+  "base_commit": "616cc969b8d8305896a2ae53e1ae2b3cba7490fb",
+  "implemented": [
+    "Home reads an in-memory count/online summary from the existing IoT worker response; no Home cloud requests or retained identities.",
+    "Strict valid list, boolean online and unique ID checks; empty list is valid; malformed responses are unavailable.",
+    "Separate not-configured/auth-required/unavailable/stale states; 60s receipt-age expiry and command invalidation clear displayed counts.",
+    "Late closed-page responses cannot update the summary; valid refresh recovers and home recreation is passive."
+  ],
+  "checks": [
+    {
+      "name": "Actual LVGL and production IoT parser/worker",
+      "status": "passed",
+      "scope": "24 affected views plus4 final summary rerenders across zh/en light/dark; empty/2of1/nonobject/missing-online/duplicate/auth/config/trailing JSON/expiry/closed-page/recovery/no-home-request cases, existing command and real app-manager checks"
+    },
+    {
+      "name": "Affected regressions and bilingual audit",
+      "status": "passed",
+      "scope": "19 tests including existing layout/settings ASAN/UBSAN; bilingual audit"
+    },
+    {
+      "name": "A133 desktop compile",
+      "status": "passed",
+      "sha256": "c6b1e31255c33ad48974181153f900dede6fdf1f9578f5791fd33be1eb378c3b",
+      "scope": "scratch ELF, not packaged/installed"
+    },
+    {
+      "name": "Real Tuya/physical screen/final visual acceptance",
+      "status": "not_run",
+      "reason": "No real resources or device operations; layout refinement pending"
+    }
+  ],
+  "failures_preserved": [],
+  "review_corrections": [
+    "Added explicit non-object list item rejection and exercised [42,null] before final validation."
+  ],
+  "source_sha256": {
+    "apps/lv_port_linux/src/apps/iot/iot_app.c": "ffd3f8368f20c3d8cf22bacb41e1e3001fd64f11aca6ec6db25b8139b7e4b628",
+    "apps/lv_port_linux/src/apps/iot/iot_app.h": "e1b64097a676faa3109f7fb8f17fe5f0f553893ec1a021ee15679037b4ac31a5",
+    "apps/lv_port_linux/src/ui/desktop_widgets.c": "07d5be057cc543063219978c0ea7d2694f56d72775c6c0af87886a65cd333e4b",
+    "tests/architecture/fixtures/native_ui_review.c": "c4806c6af2b7c1ad072441d392e2c83dbcbe2941b909fa8caad5e93bd701b108"
+  },
+  "logs": {
+    "bilingual.log": "6d41098abf1330e399d20b30702e2fbc9c7bcf7fa27a248ef5108cc546ef661e",
+    "render-final.log": "245dedcbb2b1cde9c30aa3e7e36f0bfee73385a3f36531ddc910abdfbb225763",
+    "a133-build.log": "0695b40d53f8a07b2087dc28515032d503019affd95a925388754997461784cc",
+    "regression.log": "4303af2f0a3b3f07ab20b2198a292993a84931c861418948db2116f4f8605695",
+    "render-01.log": "c8c23f1391508b28749223376067547207574e3b3a40c76855656cda9a9681a4",
+    "a133-build-final.log": "fe429368e3b5441e31df918aa9aac3bbfc3936c7ee5813a4c599a396772a96b1"
+  },
+  "fixture_disclosure": "Actual LVGL production UI with simulated IoT responses, sensor/account/clock. Counts shown are test fixtures, not user devices.",
+  "remaining": [
+    "Final home/control-center font, icon, orb and HDMI indicator visual alignment.",
+    "Smaller-screen geometry/pointer tests and compatible physical target installation/touch verification.",
+    "Notifications currently project existing system OTA only; other notification sources are not integrated.",
+    "Real Tuya resources unavailable; no live-device control acceptance. Frozen packages/images remain unchanged; no UI source push yet."
+  ],
+  "source_uploaded": false
+}
