@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "UI075 reviewed settings frozen-source baseline after candidate build rejection",
+  "context": "Initial build rejected stale settings hashes; exact structure/version and cross-version persisted file proof precedes scoped hash update",
+  "next_steps": "Retry clean application build once in a new output directory; preserve first failure. No SDK/system/device change.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Two frozen source hashes after explicit compatibility review",
+      "invariants": "Keep shared-frozen owner and all other hashes; old settings ABI/file v8 and void API preserved; no bypass of checker",
+      "paths": [
+        "docs/update/source-ownership.json",
+        "docs/validation/ui075-settings-compat.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/20261016-ui075-settings-baseline.json"
+      ],
+      "checks": [
+        {
+          "name": "Settings old/new compatibility",
+          "status": "passed",
+          "scope": "Host actual file roundtrip and exact struct/version comparison",
+          "evidence": "docs/validation/ui075-settings-compat.json"
+        },
+        {
+          "name": "First clean candidate",
+          "status": "failed",
+          "scope": "Source ownership gate",
+          "reason": "Prior frozen hashes mismatched; failed run retained outside published tree",
+          "evidence": "docs/validation/ui075-settings-compat.json"
+        },
+        {
+          "name": "Retried candidate and physical",
+          "status": "not_run",
+          "scope": "New clean build and physical target",
+          "reason": "Retry follows this commit; hardware deferred",
+          "evidence": "docs/validation/ui075-settings-compat.json"
+        }
+      ]
+    }
+  ]
+}
