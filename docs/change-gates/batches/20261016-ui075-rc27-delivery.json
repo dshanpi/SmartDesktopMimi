@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "UI075 rc27 signed controlled draft and complete remote readback",
+  "context": "DELIVERY058 user-authorized draft upload before deferred physical testing; immutable new version, all failures retained",
+  "next_steps": "Review final reference details and physical UI when compatible target environment is available; retain deferred full system and resource-dependent checks. Do not regenerate this artifact for documentation changes.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Delivery evidence only",
+      "invariants": "Exact built source0e04298; no stable promotion or device change; old artifacts immutable; documentation does not rebuild",
+      "paths": [
+        "docs/validation/ui075-rc27-delivery.json",
+        "docs/change-gates/batches/20261016-ui075-rc27-delivery.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Build signing and remote download verification",
+          "status": "passed",
+          "scope": "Actual clean candidate and all17 assets, not physical",
+          "evidence": "docs/validation/ui075-rc27-delivery.json"
+        },
+        {
+          "name": "Final visual and hardware",
+          "status": "not_run",
+          "scope": "Entity screen and real installation/full system acceptance",
+          "reason": "Deferred target and final visual acceptance remain",
+          "evidence": "docs/validation/ui075-rc27-delivery.json"
+        }
+      ]
+    }
+  ]
+}

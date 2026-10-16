@@ -211,3 +211,5 @@ UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验�
 - UI075交互清单：`docs/validation/ui075-interaction-catalog.json`；原清单失败已修复，物理not_run。
 
 - UI075窄屏拖动：`docs/validation/ui075-small-drag.json`，保留旧失败，主机通过，编译/真机分别接续。
+
+- UI075 rc27：`docs/validation/ui075-rc27-delivery.json`，签名/远端受控草稿复验passed，物理与最终视觉not_run。
