@@ -491,6 +491,45 @@ static void test_widget_editor(void)
  puts("PASS UI075 actual pointer editing: remove/cancel, compatible add, save/reload, failed save retains draft; no app launch/pairing/HDMI mutation");
 }
 
+static void test_center_pointer(void)
+{
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ const char *zh[]={"屏幕亮度","音量"},*en[]={"Brightness","Volume"};
+ const int targets[]={64,37};
+ for(int i=0;i<2;i++) {
+  lv_obj_t *name=find_label(lv_layer_top(),ui_i18n_is_zh()?zh[i]:en[i]);assert(name);
+  lv_obj_t *slider=lv_obj_get_child(lv_obj_get_parent(name),-1);assert(lv_obj_check_type(slider,&lv_slider_class));
+  lv_obj_scroll_to_view_recursive(slider,LV_ANIM_OFF);pump();lv_area_t area;lv_obj_get_coords(slider,&area);
+  assert(area.y1>=0 && area.y2<review_height);
+  tap_screen(pointer,area.x1+(area.x2-area.x1)*targets[i]/100,(area.y1+area.y2)/2);
+  int actual=lv_slider_get_value(slider);assert(abs(actual-targets[i])<=2);
+  assert(i?(volume==actual && settings.volume==actual):(backlight==actual && settings.brightness==actual));
+ }
+ int restore=volume;
+ lv_obj_t *name=find_label(lv_layer_top(),ui_i18n_is_zh()?"静音":"Mute");assert(name);
+ lv_obj_t *sw=lv_obj_get_child(lv_obj_get_parent(name),-1);assert(lv_obj_check_type(sw,&lv_switch_class));
+ ui075_tap(sw,pointer);assert(volume==0 && settings.volume==0);
+ ui075_tap(sw,pointer);assert(volume==restore && settings.volume==restore);
+ if(desktop_hdmi_supported()) {
+  name=find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 采集":"HDMI capture");assert(name);sw=lv_obj_get_child(lv_obj_get_parent(name),-1);
+  hdmi_preview_status_t status={0};emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();
+  int before=saves,mutations=hdmi_mutations;
+  ui075_tap(sw,pointer);assert(saves==before && hdmi_mutations==mutations+1 && !settings.hdmi_enabled);
+  status.enabled=true;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();assert(settings.hdmi_enabled && saves==before+1);
+  ui075_tap(sw,pointer);assert(saves==before+1);
+  status.enabled=false;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();assert(!settings.hdmi_enabled && saves==before+2);
+  ui075_tap(sw,pointer);lv_tick_inc(2600);pump();assert(!settings.hdmi_enabled && saves==before+2 && !lv_obj_has_state(sw,LV_STATE_CHECKED));
+ }
+ ota_status_t ota={.state=OTA_STATE_UPDATE_AVAILABLE};emit(TOPIC_OTA_STATUS,&ota,sizeof(ota));lv_tick_inc(1100);pump();
+ name=find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 发现可用更新":"System update · Update available");assert(name);
+ int opened=app_open_count,commands=ota_commands;ui075_tap(lv_obj_get_parent(name),pointer);
+ assert(app_open_count==opened+1 && last_app_open==APP_ID_OTA && ota_commands==commands);
+ app_manager_back_home();pump();tap_screen(pointer,review_width/2,review_width<1000?84:32);
+ assert(find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER)));
+ lv_indev_delete(pointer);
+ puts("PASS actual pointer controls: visible sliders/mute/restore/HDMI ACK+timeout and scroll-to-notification navigation; isolated providers only");
+}
+
 static void test_center_controls(void)
 {
  int index=0;test_sliders(lv_layer_top(),&index);assert(index==2);
@@ -703,7 +742,7 @@ int main(int argc,char**argv) {
    ui075_remove_iot(pointer);ui075_open_library(pointer);lv_indev_delete(pointer);
   }
  }
- else if(strcmp(argv[1],"control-center")==0 || !strcmp(argv[1],"control-behavior")){
+ else if(strcmp(argv[1],"control-center")==0 || !strcmp(argv[1],"control-behavior") || !strcmp(argv[1],"control-pointer")){
   lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
   tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_indev_delete(pointer);
@@ -724,6 +763,7 @@ int main(int argc,char**argv) {
    puts("PASS small control center: bounded viewport, scroll to collapse, real pointer close/reopen");
   }
   if(!strcmp(argv[1],"control-behavior"))test_center_controls();
+  if(!strcmp(argv[1],"control-pointer"))test_center_pointer();
   if(!desktop_hdmi_supported()){
    lv_obj_t *caption=find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 采集":"HDMI capture");assert(caption);
    lv_obj_t *sw=lv_obj_get_child(lv_obj_get_parent(caption),-1);

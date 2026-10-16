@@ -201,3 +201,5 @@ UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验�
 - UI075批次五：`docs/validation/ui075-visual-polish.json`；视觉缺陷/小屏滚动修复，主机passed，最终对齐及实机not_run。
 
 - UI075批次六：`docs/validation/ui075-card-alignment.json`；卡片文字/入口对齐与累计源码独立分支同步计划，实机not_run。
+
+- UI075批次七：`docs/validation/ui075-pointer-matrix.json`；真实主机指针命中8视图passed，硬件not_run。
