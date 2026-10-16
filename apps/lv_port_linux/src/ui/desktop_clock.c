@@ -278,13 +278,13 @@ static lv_obj_t *create_ai_card(lv_obj_t *parent)
     lv_obj_set_width(greeting_label, ai_width - 174);
     lv_label_set_long_mode(greeting_label,LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_align(greeting_label, LV_TEXT_ALIGN_LEFT, 0);
-    lv_obj_set_pos(greeting_label, 24, 100);
+    lv_obj_set_pos(greeting_label, 24, card_height < 270 ? 82 : 100);
 
     lv_obj_t *prompt = create_text(card, ui_tr(UI_STR_HOME_HELP_PROMPT),
                                    ui_font_body_lg(), HOME_TEXT_MUTED);
     lv_obj_set_width(prompt, ai_width - 48);
     lv_obj_set_style_text_align(prompt, LV_TEXT_ALIGN_LEFT, 0);
-    lv_obj_set_pos(prompt, 24, 148);
+    lv_obj_set_pos(prompt, 24, card_height < 270 ? 126 : 148);
 
     ai_action_button = create_action_button(card, LV_SYMBOL_AUDIO,
                                              ui_tr(UI_STR_HOME_TALK_MIMI), HOME_CORAL,

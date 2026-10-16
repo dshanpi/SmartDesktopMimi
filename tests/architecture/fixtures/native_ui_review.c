@@ -408,6 +408,54 @@ static void ui075_open_library(lv_indev_t *pointer)
  lv_obj_t *shield=lv_obj_get_child(lv_obj_get_parent(empty),-1);ui075_tap(shield,pointer);
  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
 }
+static lv_obj_t *ui075_card(const char *zh, const char *en)
+{
+ lv_obj_t *name=find_label(lv_scr_act(),ui_i18n_is_zh()?zh:en);assert(name);
+ return lv_obj_get_parent(name);
+}
+static void ui075_drag(lv_indev_t *pointer,lv_obj_t *from,lv_obj_t *to)
+{
+ lv_obj_update_layout(lv_scr_act());lv_area_t a,b;lv_obj_get_coords(from,&a);lv_obj_get_coords(to,&b);
+ int x=(a.x1+a.x2)/2,y=a.y1+80,tx=(b.x1+b.x2)/2,ty=b.y1+80;
+ touch_x=x;touch_y=y;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+ for(int i=1;i<=12;i++){touch_x=x+(tx-x)*i/12;touch_y=y+(ty-y)*i/12;lv_tick_inc(18);lv_indev_read(pointer);lv_timer_handler();}
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+}
+static void ui075_drag_and_library(lv_indev_t *pointer,const char *path)
+{
+ mimi_widget_layout loaded;
+ int before=app_open_count,cloud_before=pairing_refreshes,hdmi_before=hdmi_mutations;
+ /* Hold the real environment card; releasing after the editor rebuild must
+  * neither open Settings nor leak a click to a control below. */
+ lv_obj_t *env=ui075_card("环境","Environment");lv_area_t a;lv_obj_get_coords(env,&a);
+ touch_x=(a.x1+a.x2)/2;touch_y=a.y1+80;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"编辑桌面组件":"Edit desktop widgets"));
+ ui075_drag(pointer,ui075_card("环境","Environment"),ui075_card("智能设备","Smart devices"));
+ /* Cross-size drop is refused; the previous same-size swap remains. */
+ ui075_drag(pointer,ui075_card("环境","Environment"),ui075_card("Mimi 助手","Mimi Assistant"));
+ lv_obj_t *save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));
+ assert(loaded.slots[0]==MIMI_WIDGET_ASSISTANT && loaded.slots[2]==MIMI_WIDGET_IOT && loaded.slots[3]==MIMI_WIDGET_ENVIRONMENT);
+ assert(!unlink(path));ui_rebuild_home();pump();pump();
+ desktop_widgets_edit();pump();pump();ui075_remove_iot(pointer);ui075_open_library(pointer);
+ /* Existing and incompatible rows cannot write into the selected slot. */
+ lv_obj_t *row=lv_obj_get_parent(find_label(lv_scr_act(),ui_i18n_is_zh()?"网络状态":"Network"));
+ lv_obj_t *list=lv_obj_get_parent(row);
+ ui075_tap(lv_obj_get_child(lv_obj_get_child(list,0),-1),pointer);
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
+ lv_obj_t *close=find_label(lv_scr_act(),LV_SYMBOL_CLOSE);assert(close);ui075_tap(lv_obj_get_parent(close),pointer);
+ assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"添加组件":"Add widget"));
+ ui075_open_library(pointer);
+ /* Save remains reachable while the library is open on the approved screen. */
+ save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[3]==MIMI_WIDGET_EMPTY);
+ assert(!unlink(path));ui_rebuild_home();pump();pump();
+ assert(app_open_count==before && pairing_refreshes==cloud_before && hdmi_mutations==hdmi_before);
+ puts("PASS UI075 real pointer long press, same-size drag, cross-size rejection, disabled row, close/reopen retains draft, modal-open save; no background actions");
+}
 static void test_widget_editor(void)
 {
  int before=app_open_count,cloud_before=pairing_refreshes,hdmi_before=hdmi_mutations;
@@ -432,7 +480,7 @@ static void test_widget_editor(void)
  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout"));
  cancel=find_label(lv_scr_act(),ui_i18n_is_zh()?"取消":"Cancel");ui075_tap(lv_obj_get_parent(cancel),pointer);
  assert(app_open_count==before && pairing_refreshes==cloud_before && hdmi_mutations==hdmi_before);
- assert(!unlink(path));ui_rebuild_home();pump();pump();lv_indev_delete(pointer);
+ assert(!unlink(path));ui_rebuild_home();pump();pump();ui075_drag_and_library(pointer,path);lv_indev_delete(pointer);
  puts("PASS UI075 actual pointer editing: remove/cancel, compatible add, save/reload, failed save retains draft; no app launch/pairing/HDMI mutation");
 }
 

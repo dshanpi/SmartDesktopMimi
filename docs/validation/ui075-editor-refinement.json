@@ -1,0 +1,75 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T08:57:05.206816+00:00",
+  "status": "in_progress",
+  "base_commit": "8958178be92db6c6b1b820ca6beeb9847a6707fd",
+  "implemented": [
+    "Floating component library with native icons, captions, disabled/available controls and close button",
+    "Editor toolbar remains usable outside the library at1024x768; shortened editing cards and dashed empty slots",
+    "Press-locked edit shields allow real pointer cross-card drag without grid scroll consuming release"
+  ],
+  "checks": [
+    {
+      "name": "Actual LVGL pointer editing",
+      "status": "passed",
+      "scope": "zh/en light/dark: long press, same-size swap, cross-size rejection, disabled row, close/reopen draft preservation and save with library open; prior remove/add/cancel/reload/failure checks retained"
+    },
+    {
+      "name": "Host renders",
+      "status": "passed",
+      "scope": "16 actual LVGL 1024x768 renders; review found remaining font/icon/orb differences, not exact acceptance"
+    },
+    {
+      "name": "Affected regression",
+      "status": "passed",
+      "scope": "19 tests, layout/settings ASAN/UBSAN and bilingual audit"
+    },
+    {
+      "name": "A133 desktop compile",
+      "status": "passed",
+      "sha256": "50ff973d0d76c23e0c862cca41b4cceecf62d9f04be130847c4ebd55ea6a8553",
+      "scope": "scratch executable, no installation or package; LF normalization rebuilt identical binary"
+    },
+    {
+      "name": "Physical touch, installation and final exact visual acceptance",
+      "status": "not_run",
+      "reason": "No device operations; remaining differences and functionality below"
+    }
+  ],
+  "failures_preserved": [
+    "render-02 English drag fixture used Mimi assistant instead of production Mimi Assistant; corrected fixture selector, render-03/04 passed.",
+    "render-01 captions wrapped into following rows; bounded single-line captions. render-03 reused a 36px clock font and clipped text; restored18px body font with ellipsis, render-04 inspected. Earlier images retained.",
+    "Windows source edit introduced CRLF and noisy whitespace diff; restored LF, git diff --check passed and rebuilt identical A133 SHA."
+  ],
+  "remaining": [
+    "Environment details and notification source/interaction, stale-state presentation, richer shared IoT state.",
+    "Final font/icon/orb/HDMI status-dot alignment; library captions now bounded with ellipsis but not an exact typography match.",
+    "Smaller-screen layout and pointer tests, physical touch/drag, target compatibility and installation.",
+    "No new package/image/Release or source push in this batch; frozen candidates unchanged."
+  ],
+  "source_sha256": {
+    "apps/lv_port_linux/src/ui/desktop_widgets.c": "81ff14e5ebd7fef1aae1f30ff849245965c77db12603c2980bf002ffa88c26cf",
+    "apps/lv_port_linux/src/ui/desktop_clock.c": "ff33fcf194b8ea1a15feb8997f208018b31ceb2490b058571ef293d88f93060f",
+    "tests/architecture/fixtures/native_ui_review.c": "a3a16ad4a8a4172177c92237b40c8e8d3c48e0545165e3df9c66c59dfa099572"
+  },
+  "screenshots_sha256": {
+    "home-en-dark.png": "9354f7c1f32c314597ae0d9e91a8e7db86698b046b09f548600d60eab1ed9c11",
+    "widget-library-en-light.png": "a789cf63cda75687d1c1a886469e2c84cd923238b2e0560acd72819d265fb23e",
+    "widget-behavior-zh-dark.png": "085efe7d0fe473049cdb2f8913d09b3334b1b7e9d548dfb65f867269e28cff0a",
+    "widget-behavior-en-light.png": "9c6b70a98352a85847cb3c81346b9b734478a23a3355df93401ee299318f600d",
+    "widget-library-en-dark.png": "09aa4192e80b835fb14d3f3c8eebedd383601aa13021b8391a1be20365f568c7",
+    "home-zh-dark.png": "bfccf16d9ff091c59076a468b01f2abd33f575a7e37ca6bde68847107b6599d9",
+    "home-zh-light.png": "763877d321ec992f7768b5a8d52955934116de5a3d5d72f272754e38dbaf2120",
+    "widget-library-zh-dark.png": "6f37749e74c5adc6d0dd36351753a2bac74eb9d30a51fd26325c9482f3aeca06",
+    "widget-editor-en-light.png": "fb3bf31303460d6b2dc75aac6a8c0cb87f0853f560191d594edbf3d3e9125bd7",
+    "widget-library-zh-light.png": "f7a100cd5d958c5f0e1e4195a35a8618033b8b88d87311d0b1d59f5cbe6caad5",
+    "widget-behavior-en-dark.png": "29a0aef93a2fec79ed1af8c1e99a9d040554d005d8e1858e6ded73097e579446",
+    "widget-behavior-zh-light.png": "b2d80aa32dae98f0e8464c0aef2729b6f612f9744f2bb47528a5df3b751336c4",
+    "widget-editor-en-dark.png": "212f49922adcdf3e8bd2f3d791b7829a12227c7efbc5319241be38b229397a5d",
+    "home-en-light.png": "b2ba41157b3ba2653a658648b8049cb546aa98dfb60b50f1a121f1ccef8e1797",
+    "widget-editor-zh-dark.png": "23097cd533300a56f110457c79fc064632a45ace4937c641ec70b46e478e628d",
+    "widget-editor-zh-light.png": "7905185f4625017c9de38b8125012e680e1f4dede59fd0db04dda81a9bc378df"
+  },
+  "source_uploaded": false,
+  "fixture_disclosure": "Real production LVGL widgets with isolated mock backend and fixed synthetic sensor/account/clock data. No hardware, credentials or network during render."
+}

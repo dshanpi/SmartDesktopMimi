@@ -13,7 +13,7 @@ LV_IMAGE_DECLARE(cloud);
 
 static mimi_widget_layout saved, draft;
 static mimi_widget_factory factory;
-static lv_obj_t *root, *grid, *editor, *library, *message, *edit_entry, *slot_objects[5];
+static lv_obj_t *root, *grid, *editor, *library, *message, *edit_entry, *toolbar, *slot_objects[5];
 static lv_obj_t *values[MIMI_WIDGET_COUNT], *details[MIMI_WIDGET_COUNT];
 static bool editing, valid_sensor, cloud_unavailable;
 static int temperature, humidity, ownership = -1, selected = -1, drag_slot = -1;
@@ -120,16 +120,14 @@ static void action(lv_event_t * e)
                                ? APP_ID_WIFI
                                : k == MIMI_WIDGET_CONNECTION && !cloud_unavailable ? APP_ID_PAIRING : APP_ID_SETTING);
 }
-static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
+static void icon_badge(lv_obj_t *p, mimi_widget_kind k, int x, int y)
 {
-    lv_obj_t * c      = box(p, 0, 0, w, h, true);
-    lv_color_t accent = k == MIMI_WIDGET_ENVIRONMENT ? HOME_GREEN : k == MIMI_WIDGET_IOT ? lv_color_hex(0xFF8845) : HOME_BLUE;
-    lv_obj_set_style_bg_color(c, lv_color_mix(HOME_SURFACE, accent, 247), 0);
-    lv_obj_t * badge = box(c, 24, 14, 56, 56, false);
+    lv_color_t accent = k == MIMI_WIDGET_ENVIRONMENT ? HOME_GREEN : k == MIMI_WIDGET_IOT ? lv_color_hex(0xFF8845) : k == MIMI_WIDGET_NETWORK ? HOME_CORAL : HOME_BLUE;
+    lv_obj_t * badge = box(p, x, y, 56, 56, false);
     lv_obj_set_style_radius(badge, 12, 0);
     lv_obj_set_style_bg_opa(badge, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(badge, lv_color_mix(HOME_SURFACE, accent, 220), 0);
-    const char * icon = k == MIMI_WIDGET_IOT
+    const char * icon = k == MIMI_WIDGET_ASSISTANT ? LV_SYMBOL_AUDIO : k == MIMI_WIDGET_HDMI ? LV_SYMBOL_VIDEO : k == MIMI_WIDGET_IOT
                             ? LV_SYMBOL_HOME
                             : k == MIMI_WIDGET_NETWORK
                                   ? LV_SYMBOL_WIFI
@@ -155,6 +153,35 @@ static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
         lv_obj_set_style_image_recolor_opa(im, LV_OPA_COVER, 0);
         lv_obj_center(im);
     }
+    if(k == MIMI_WIDGET_HDMI) {
+        lv_obj_add_flag(s, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_t *screen = box(badge, 10, 13, 36, 25, false);
+        lv_obj_set_style_border_color(screen, accent, 0);lv_obj_set_style_border_width(screen, 3, 0);lv_obj_set_style_radius(screen, 3, 0);
+        lv_obj_t *stand = box(badge, 25, 38, 6, 5, false);
+        lv_obj_set_style_bg_color(stand, accent, 0);lv_obj_set_style_bg_opa(stand, LV_OPA_COVER, 0);
+        stand = box(badge, 18, 43, 20, 3, false);
+        lv_obj_set_style_bg_color(stand, accent, 0);lv_obj_set_style_bg_opa(stand, LV_OPA_COVER, 0);
+    }
+    if(k == MIMI_WIDGET_ASSISTANT) {
+        lv_obj_add_flag(s, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_t *orb = box(badge, 11, 11, 34, 34, false);
+        lv_obj_set_style_radius(orb, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_bg_opa(orb, LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_color(orb, lv_color_hex(0x37366E), 0);
+        lv_obj_set_style_bg_grad_color(orb, HOME_CORAL, 0);
+        lv_obj_set_style_bg_grad_dir(orb, LV_GRAD_DIR_VER, 0);
+        lv_obj_t *shine = box(orb, 7, 2, 17, 14, false);
+        lv_obj_set_style_radius(shine, LV_RADIUS_CIRCLE, 0);
+        lv_obj_set_style_bg_color(shine, lv_color_white(), 0);
+        lv_obj_set_style_bg_opa(shine, LV_OPA_40, 0);
+    }
+}
+static lv_obj_t * small(lv_obj_t * p, mimi_widget_kind k, int w, int h)
+{
+    lv_obj_t * c      = box(p, 0, 0, w, h, true);
+    lv_color_t accent = k == MIMI_WIDGET_ENVIRONMENT ? HOME_GREEN : k == MIMI_WIDGET_IOT ? lv_color_hex(0xFF8845) : HOME_BLUE;
+    lv_obj_set_style_bg_color(c, lv_color_mix(HOME_SURFACE, accent, 247), 0);
+    icon_badge(c, k, 24, 14);
     label(c, title(k), 96, 30, ui_font_h3(), HOME_TEXT);
     const char * value = k == MIMI_WIDGET_IOT
                              ? (mimi_iot_configuration_present() == 0 ? tr("尚未配置", "Not configured")
@@ -230,6 +257,14 @@ static void slot_event(lv_event_t * e)
             show_library(slot);
     }
 }
+static void toolbar_size(bool with_library)
+{
+    if(!toolbar) return;
+    int w = with_library && HOME_SCREEN_W >= 1000 ? HOME_SCREEN_W - 420 : HOME_SCREEN_W - 44;
+    lv_obj_set_width(toolbar, w);
+    lv_obj_set_width(message, w - 260);
+    lv_obj_move_foreground(toolbar);
+}
 static void close_library(void)
 {
     if(library) {
@@ -237,6 +272,7 @@ static void close_library(void)
         library = NULL;
     }
     selected = -1;
+    toolbar_size(false);
 }
 static void choose(lv_event_t * e)
 {
@@ -256,41 +292,67 @@ static void show_library(int slot)
 {
     close_library();
     selected = slot;
-    library  = box(editor, 0, 0, HOME_SCREEN_W, HOME_SCREEN_H, false);
+    library = box(editor, 0, 0, HOME_SCREEN_W, HOME_SCREEN_H, false);
     lv_obj_add_flag(library, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_set_style_radius(library, 0, 0);
-    lv_obj_set_style_bg_color(library, lv_color_black(), 0);
-    lv_obj_set_style_bg_opa(library, LV_OPA_20, 0);
+    lv_obj_set_style_bg_color(library, lv_color_hex(0x263642), 0);
+    lv_obj_set_style_bg_opa(library, LV_OPA_40, 0);
     lv_obj_add_event_cb(library, close_library_event, LV_EVENT_CLICKED, NULL);
-    int w            = HOME_SCREEN_W * 39 / 100;
-    lv_obj_t * panel = box(library, HOME_SCREEN_W - w, 0, w, HOME_SCREEN_H - HOME_STATUS_H, true);
+    int w = LV_MIN(356, HOME_SCREEN_W - 32);
+    int h = LV_MIN(660, HOME_SCREEN_H - 32);
+    lv_obj_t *panel = box(library, HOME_SCREEN_W - w - 21, (HOME_SCREEN_H - h) / 2 + 5, w, h, true);
     lv_obj_add_flag(panel, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_border_width(panel, 0, 0);
     label(panel, tr("添加组件", "Add widget"), 24, 24, ui_font_h2(), HOME_TEXT);
-    label(panel, tr("选择一个组件放到空位", "Choose a widget for the empty slot"), 24, 62, ui_font_body_md(),
-          HOME_TEXT_MUTED);
-    int rh = (HOME_SCREEN_H - HOME_STATUS_H - 156) / 7;
+    lv_obj_t *close = box(panel, w - 58, 16, 44, 44, false);
+    lv_obj_add_flag(close, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *cross = label(close, LV_SYMBOL_CLOSE, 0, 0, &lv_font_montserrat_24, HOME_TEXT_MUTED);
+    lv_obj_center(cross);
+    lv_obj_add_event_cb(close, close_library_event, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *hint = label(panel, tr("选择一个组件放到空位", "Choose a widget for the empty slot"), 24, 64, ui_font_body_md(), HOME_TEXT_MUTED);
+    lv_obj_set_width(hint, w - 48);
+    lv_obj_t *list = box(panel, 24, 102, w - 48, h - 160, false);
+    lv_obj_add_flag(list, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(list, LV_DIR_VER);
+    const char *zh[] = {"", "对话入口 · 大组件", "采集与控制 · 大组件", "温度与湿度 · 小组件", "家庭设备状态 · 小组件", "账号与连接 · 小组件", "当前网络 · 小组件", "设备设置 · 小组件"};
+    const char *en[] = {"", "Conversation · Large", "Capture & control · Large", "Temperature & humidity · Small", "Home devices · Small", "Account & connection · Small", "Current network · Small", "Device settings · Small"};
     for(int k = 1; k < MIMI_WIDGET_COUNT; k++) {
         mimi_widget_layout candidate = draft;
-        bool allowed                 = !mimi_widget_layout_set(&candidate, slot, (mimi_widget_kind)k);
-        lv_obj_t * row               = box(panel, 16, 102 + (k - 1) * rh, w - 32, rh - 7, true);
-        label(row, title((mimi_widget_kind)k), 14, 9, ui_font_body_lg(), HOME_TEXT);
-        label(row, k <= MIMI_WIDGET_HDMI ? tr("大组件", "Large widget") : tr("小组件", "Small widget"), 14, 34,
-              ui_font_body_md(), HOME_TEXT_MUTED);
-        lv_obj_t * button = box(row, w - 112, 9, 64, rh - 25, false);
-        lv_obj_add_flag(button, LV_OBJ_FLAG_CLICKABLE);
+        bool allowed = !mimi_widget_layout_set(&candidate, slot, (mimi_widget_kind)k);
+        lv_obj_t *row = box(list, 0, (k - 1) * 71, w - 48, 64, false);
+        icon_badge(row, (mimi_widget_kind)k, 0, 3);
+        lv_obj_t *name = label(row, title((mimi_widget_kind)k), 73, 7, ui_font_body_lg(), HOME_TEXT);
+        lv_obj_set_width(name, w - 196);
+        lv_label_set_long_mode(name, LV_LABEL_LONG_DOT);
+        lv_obj_t *caption = label(row, ui_i18n_is_zh() ? zh[k] : en[k], 73, 36, ui_font_body_md(), HOME_TEXT_MUTED);
+        lv_obj_set_width(caption, w - 196);
+        lv_obj_set_height(caption, 24);
+        lv_label_set_long_mode(caption, LV_LABEL_LONG_DOT);
         bool exists = false;
-        for(int i = 0; i < 5; i++)
-            if(draft.slots[i] == (mimi_widget_kind)k) exists = true;
-        lv_obj_t * l = label(button, allowed ? "+" : exists ? tr("已添加", "Added") : tr("不适用", "N/A"), 0, 0,
-                             ui_font_body_md(), allowed ? HOME_CORAL : HOME_TEXT_MUTED);
+        for(int i = 0; i < 5; i++) if(draft.slots[i] == (mimi_widget_kind)k) exists = true;
+        lv_obj_t *button = box(row, w - 114, 13, 66, 38, false);
+        lv_obj_add_flag(button, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_style_bg_opa(button, LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_color(button, allowed ? HOME_CORAL : lv_color_mix(HOME_SURFACE, HOME_TEXT_MUTED, 229), 0);
+        if(allowed) {
+            lv_obj_set_size(button, 42, 42);
+            lv_obj_set_x(button, w - 94);
+            lv_obj_set_style_radius(button, LV_RADIUS_CIRCLE, 0);
+        }
+        lv_obj_t *l = label(button, allowed ? "+" : exists ? tr("已添加", "Added") : tr("不适用", "N/A"), 0, 0,
+                           allowed ? ui_font_h2() : ui_font_body_md(), allowed ? HOME_TEXT_INVERSE : HOME_TEXT_MUTED);
         lv_obj_center(l);
-        if(allowed)
-            lv_obj_add_event_cb(button, choose, LV_EVENT_CLICKED, (void *)(intptr_t)k);
-        else
-            lv_obj_add_state(button, LV_STATE_DISABLED);
+        if(allowed) lv_obj_add_event_cb(button, choose, LV_EVENT_CLICKED, (void *)(intptr_t)k);
+        else lv_obj_add_state(button, LV_STATE_DISABLED);
     }
-    label(panel, tr("移除组件不会卸载应用", "Removing widgets does not uninstall apps"), 24,
-          HOME_SCREEN_H - HOME_STATUS_H - 40, ui_font_body_md(), HOME_TEXT_MUTED);
+    lv_obj_t *line = box(panel, 24, h - 58, w - 48, 1, false);
+    lv_obj_set_style_bg_color(line, HOME_BORDER, 0);
+    lv_obj_set_style_bg_opa(line, LV_OPA_COVER, 0);
+    lv_obj_t *foot = label(panel, tr("移除组件不会卸载应用", "Removing widgets does not uninstall apps"), 24, h - 42, ui_font_body_md(), HOME_TEXT_MUTED);
+    lv_obj_set_width(foot, w - 48);
+    /* Wide-screen actions stay outside the modal. On small screens close the
+     * library first, so toolbar buttons cannot overlap its rows. */
+    if(HOME_SCREEN_W >= 1000) toolbar_size(true);
 }
 static void finish(lv_event_t * e)
 {
@@ -313,7 +375,7 @@ static void finish(lv_event_t * e)
     close_library();
     grid = NULL;
     lv_obj_delete(editor);
-    editor = NULL;
+    editor = toolbar = NULL;
     lv_async_call(redraw_async, NULL);
 }
 static void edit_event(lv_event_t * e)
@@ -327,18 +389,29 @@ void desktop_widgets_edit(void)
     draft   = saved;
     editing = true;
     lv_obj_add_flag(edit_entry, LV_OBJ_FLAG_HIDDEN);
-    editor = box(root, 0, HOME_STATUS_H, HOME_SCREEN_W, HOME_SCREEN_H - HOME_STATUS_H, false);
+    editor = box(root, 0, 0, HOME_SCREEN_W, HOME_SCREEN_H, false);
     lv_obj_add_flag(editor, LV_OBJ_FLAG_CLICKABLE);
-    /* Full overlay captures every touch; Home actions below cannot run in edit mode. */
-    lv_obj_t * cancel = box(editor, HOME_CONTENT_X, 4, 90, 32, false);
+    /* Full overlay blocks underlying app actions, including the top bar. */
+    toolbar = box(editor, 22, HOME_STATUS_H + 10, HOME_SCREEN_W - 44, 65, true);
+    lv_obj_set_style_border_width(toolbar, 0, 0);
+    message = label(toolbar, tr("编辑桌面组件", "Edit desktop widgets"), 20, 20, ui_font_body_lg(), HOME_TEXT);
+    lv_obj_set_width(message, HOME_SCREEN_W - 304);
+    lv_obj_t *cancel = box(toolbar, 0, 0, 90, 43, false);
+    lv_obj_align(cancel, LV_ALIGN_TOP_RIGHT, -137, 11);
+    lv_obj_set_style_radius(cancel, 15, 0);
+    lv_obj_set_style_bg_opa(cancel, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(cancel, lv_color_mix(HOME_SURFACE, HOME_TEXT_MUTED, 218), 0);
     lv_obj_add_flag(cancel, LV_OBJ_FLAG_CLICKABLE);
-    label(cancel, tr("取消", "Cancel"), 0, 2, ui_font_body_lg(), HOME_TEXT_MUTED);
+    lv_obj_t *l = label(cancel, tr("取消", "Cancel"), 0, 0, ui_font_body_lg(), HOME_TEXT);
+    lv_obj_center(l);
     lv_obj_add_event_cb(cancel, finish, LV_EVENT_CLICKED, 0);
-    message = label(editor, tr("编辑组件", "Edit widgets"), HOME_SCREEN_W / 2 - 70, 7, ui_font_body_lg(), HOME_TEXT);
-    lv_obj_t * save = box(editor, HOME_SCREEN_W - HOME_CONTENT_X - 110, 2, 110, 34, true);
+    lv_obj_t *save = box(toolbar, 0, 0, 112, 43, false);
+    lv_obj_align(save, LV_ALIGN_TOP_RIGHT, -13, 11);
     lv_obj_add_flag(save, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_style_radius(save, 15, 0);
+    lv_obj_set_style_bg_opa(save, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(save, HOME_CORAL, 0);
-    lv_obj_t * l = label(save, tr("保存布局", "Save layout"), 0, 0, ui_font_body_md(), HOME_TEXT_INVERSE);
+    l = label(save, tr("保存布局", "Save layout"), 0, 0, ui_font_body_lg(), HOME_TEXT_INVERSE);
     lv_obj_center(l);
     lv_obj_add_event_cb(save, finish, LV_EVENT_CLICKED, (void *)1);
     lv_async_call(redraw_async, NULL);
@@ -354,9 +427,11 @@ static void rebuild(void)
     int large = narrow ? w : (w - 10) / 2, smallw = narrow ? w : (w - 22) / 3;
     int big_h   = narrow ? 286 : (HOME_DASHBOARD_H - 12) * 286 / 492,
         small_h = narrow ? 206 : HOME_DASHBOARD_H - big_h - 12;
-    grid        = box(editing ? editor : root, HOME_CONTENT_X, HOME_DASHBOARD_Y - (editing ? HOME_STATUS_H : 0), w,
-               HOME_DASHBOARD_H, false);
-    lv_obj_add_flag(grid, LV_OBJ_FLAG_SCROLLABLE);
+    if(editing && !narrow) { big_h = 246; small_h = 195; }
+    int grid_y = editing ? HOME_STATUS_H + 88 : HOME_DASHBOARD_Y;
+    grid = box(editing ? editor : root, HOME_CONTENT_X, grid_y, w,
+               HOME_DASHBOARD_H - (editing ? 50 : 0), false);
+    if(narrow) lv_obj_add_flag(grid, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_scroll_dir(grid, LV_DIR_VER);
     const mimi_widget_layout * layout = editing ? &draft : &saved;
     for(int i = 0; i < 5; i++) {
@@ -368,8 +443,25 @@ static void rebuild(void)
         lv_obj_t * card;
         if(k == MIMI_WIDGET_EMPTY) {
             card         = box(grid, 0, 0, cw, ch, true);
-            lv_obj_t * l = label(card, title(k), 0, 0, ui_font_h3(), HOME_TEXT_MUTED);
-            lv_obj_center(l);
+            lv_obj_set_style_border_width(card, 0, 0);
+            for(int edge = 0; edge < 2; edge++) {
+                for(int dx = 12; dx < cw - 12; dx += 18) {
+                    lv_obj_t *dash = box(card, dx, edge ? ch - 2 : 0, LV_MIN(11, cw - 12 - dx), 2, false);
+                    lv_obj_set_style_bg_color(dash, HOME_BORDER, 0);lv_obj_set_style_bg_opa(dash, LV_OPA_COVER, 0);
+                }
+                for(int dy = 12; dy < ch - 12; dy += 18) {
+                    lv_obj_t *dash = box(card, edge ? cw - 2 : 0, dy, 2, LV_MIN(11, ch - 12 - dy), false);
+                    lv_obj_set_style_bg_color(dash, HOME_BORDER, 0);lv_obj_set_style_bg_opa(dash, LV_OPA_COVER, 0);
+                }
+            }
+            lv_obj_t *circle = box(card, (cw - 52)/2, ch/2 - 53, 52, 52, false);
+            lv_obj_set_style_radius(circle, LV_RADIUS_CIRCLE, 0);
+            lv_obj_set_style_bg_color(circle, HOME_CORAL, 0);lv_obj_set_style_bg_opa(circle, LV_OPA_20, 0);
+            lv_obj_t *plus = label(circle, "+", 0, 0, ui_font_h1(), HOME_CORAL);lv_obj_center(plus);
+            lv_obj_t *l = label(card, title(k), 8, ch/2 + 8, ui_font_h3(), HOME_TEXT);
+            lv_obj_set_width(l, cw - 16);lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
+            l = label(card, tr("选择组件添加到此处", "Choose a widget to add here"), 8, ch/2 + 42, ui_font_body_md(), HOME_TEXT_MUTED);
+            lv_obj_set_width(l, cw - 16);lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
         } else
             card = i < 2 ? factory(grid, k, cw, ch) : small(grid, k, cw, ch);
         lv_obj_set_pos(card, x, y);
@@ -377,7 +469,7 @@ static void rebuild(void)
         lv_obj_add_event_cb(card, slot_event, LV_EVENT_LONG_PRESSED, (void *)(intptr_t)i);
         if(editing) {
             lv_obj_t * shield = box(card, 0, 0, cw, ch, false);
-            lv_obj_add_flag(shield, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(shield, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK);
             lv_obj_add_event_cb(shield, slot_event, LV_EVENT_ALL, (void *)(intptr_t)i);
             if(k) {
                 lv_obj_t * minus = box(shield, cw - 34, 7, 27, 27, true);
@@ -395,7 +487,7 @@ void desktop_widgets_create(lv_obj_t * parent, mimi_widget_factory f)
 {
     /* A theme rebuild cancels the uncommitted draft, never saving implicitly. */
     editing = false;
-    editor = library = grid = NULL;
+    editor = library = grid = toolbar = NULL;
     root                    = parent;
     factory                 = f;
     mimi_widget_layout_default(&saved);
