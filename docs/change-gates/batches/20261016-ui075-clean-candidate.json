@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "UI075 clean application candidate and retained failed attempts",
+  "context": "Exact clean source127611e; pinned application SDK; fixed noninteractive Node path without changing product source",
+  "next_steps": "Prepare separately versioned signed draft from this exact build after remaining review; do not rebuild for these documentation changes. Physical installation remains deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Host build evidence and handoff only",
+      "invariants": "No source identity reassignment, device installation or old candidate mutation; host is not physical qualification",
+      "paths": [
+        "docs/validation/ui075-clean-candidate.json",
+        "docs/change-gates/batches/20261016-ui075-clean-candidate.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Clean desktop/Web and staged hashes",
+          "status": "passed",
+          "scope": "Pinned SDK and exact source",
+          "evidence": "docs/validation/ui075-clean-candidate.json"
+        },
+        {
+          "name": "Prior attempts",
+          "status": "failed",
+          "scope": "Retained ownership and launcher failures",
+          "evidence": "docs/validation/ui075-clean-candidate.json",
+          "reason": "Both failures repaired in separately recorded attempts"
+        },
+        {
+          "name": "Signing/package and physical",
+          "status": "not_run",
+          "scope": "Subsequent delivery and hardware",
+          "evidence": "docs/validation/ui075-clean-candidate.json",
+          "reason": "Unsigned host candidate only"
+        }
+      ]
+    }
+  ]
+}

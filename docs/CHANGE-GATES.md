@@ -205,3 +205,5 @@ UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验�
 - UI075批次七：`docs/validation/ui075-pointer-matrix.json`；真实主机指针命中8视图passed，硬件not_run。
 
 - UI075候选边界修正：`docs/validation/ui075-settings-compat.json`，冻结设置文件双向兼容passed，首轮候选failed，重建pending。
+
+- UI075干净应用候选：`docs/validation/ui075-clean-candidate.json`；主机构建/来源核对passed，签名打包/上机not_run，保留两次失败。
