@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "UI075 visual corrections and bounded small-screen control center",
+  "context": "Continue approved four renders after4441278; preserve behavior and failed probes",
+  "next_steps": "Final reference alignment still pending: typography/icon detail, environmental value column spacing and precise appearance; no pixel-identical claim. Small-screen Home is vertically scrollable; more editor drag and all lower control interactions need coverage beyond tested navigation/library/center dismiss. Physical screen/touch and compatible installation not_run; old target IPC differs from current candidate. Other notification sources, real Tuya and prior deferred/resource-dependent delivery items remain; no UI source push or new package/image.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Presentation and scrolling, real pointer fixtures",
+      "invariants": "No backend IPC, credential, device, frozen artifact or default-HDMI changes; no host-to-physical pass promotion",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_clock.c",
+        "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/validation/ui075-visual-polish.json",
+        "docs/change-gates/batches/20261016-ui075-visual-polish.json"
+      ],
+      "checks": [
+        {
+          "name": "Host and cross compile",
+          "status": "passed",
+          "scope": "Recorded LVGL interactions/regressions and A133 ELF",
+          "evidence": "docs/validation/ui075-visual-polish.json"
+        },
+        {
+          "name": "Exact final visual and physical qualification",
+          "status": "not_run",
+          "scope": "Actual target and final approved-reference match",
+          "reason": "Outstanding detail and target checks",
+          "evidence": "docs/validation/ui075-visual-polish.json"
+        }
+      ]
+    }
+  ]
+}

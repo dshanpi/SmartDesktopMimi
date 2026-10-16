@@ -25,7 +25,7 @@ LV_IMAGE_DECLARE(cloud);
 #define TOP_STATUS_GROUP_WIDTH (HOME_SCREEN_W >= 1000 ? 232 : 210)
 #define TOP_POWER_LABEL_WIDTH 300
 #define CONTROL_CENTER_WIDTH (HOME_SCREEN_W >= 1000 ? 846 : HOME_SCREEN_W - 32)
-#define CONTROL_CENTER_HEIGHT 572
+#define CONTROL_CENTER_HEIGHT LV_MIN(572, HOME_SCREEN_H - 48)
 #define CONTROL_CENTER_CARD_WIDTH 216
 #define CONTROL_CENTER_CARD_HEIGHT 184
 
@@ -127,6 +127,7 @@ static void control_center_overlay_event(lv_event_t *event)
 static void control_center_panel_event(lv_event_t *event)
 {
     if (lv_event_get_code(event) != LV_EVENT_GESTURE) return;
+    if (CONTROL_CENTER_HEIGHT < 572) return;
     lv_indev_t *indev = lv_indev_active();
     if (indev && lv_indev_get_gesture_dir(indev) == LV_DIR_TOP) {
         control_center_hide(true);
@@ -284,6 +285,7 @@ static void control_center_build(void)
  control_center_panel=cc_surface(control_center_overlay,(HOME_SCREEN_W-CONTROL_CENTER_WIDTH)/2,87,CONTROL_CENTER_WIDTH,CONTROL_CENTER_HEIGHT);
  lv_obj_set_style_bg_color(control_center_panel,HOME_SURFACE,0);lv_obj_set_style_radius(control_center_panel,26,0);lv_obj_add_flag(control_center_panel,LV_OBJ_FLAG_CLICKABLE);
  lv_obj_add_event_cb(control_center_panel,control_center_panel_event,LV_EVENT_GESTURE,NULL);
+ if(CONTROL_CENTER_HEIGHT < 572){lv_obj_add_flag(control_center_panel,LV_OBJ_FLAG_SCROLLABLE);lv_obj_set_scroll_dir(control_center_panel,LV_DIR_VER);}
  int w=CONTROL_CENTER_WIDTH,tw=(w-60)/2;
  cc_label(control_center_panel,ui_tr(UI_STR_CONTROL_CENTER),28,22,ui_font_h1(),HOME_TEXT);
  cc_label(control_center_panel,tr("常用设置，轻触即达","Everyday controls, one touch away"),28,66,ui_font_body_md(),HOME_TEXT_MUTED);
@@ -319,7 +321,7 @@ static void control_center_build(void)
  center_notice=cc_label(notice,tr("通知    暂无本地通知","Notifications    No local notifications"),96,25,ui_font_body_lg(),HOME_TEXT_MUTED);
  lv_obj_set_size(center_notice,w-172,48);lv_obj_set_y(center_notice,14);lv_label_set_long_mode(center_notice,LV_LABEL_LONG_DOT);
  center_error=cc_label(control_center_panel,"",28,81,ui_font_body_md(),HOME_CORAL);lv_obj_set_width(center_error,w-56);lv_label_set_long_mode(center_error,LV_LABEL_LONG_DOT);
- lv_obj_t *close=cc_surface(control_center_panel,w/2-60,CONTROL_CENTER_HEIGHT-37,120,32);lv_obj_add_flag(close,LV_OBJ_FLAG_CLICKABLE);lv_obj_set_style_border_width(close,0,0);lv_obj_set_style_bg_opa(close,LV_OPA_TRANSP,0);
+ lv_obj_t *close=cc_surface(control_center_panel,w/2-60,572-37,120,32);lv_obj_add_flag(close,LV_OBJ_FLAG_CLICKABLE);lv_obj_set_style_border_width(close,0,0);lv_obj_set_style_bg_opa(close,LV_OPA_TRANSP,0);
  cc_label(close,tr("收起  ∧","Collapse  ^"),18,4,ui_font_body_md(),HOME_TEXT_MUTED);lv_obj_add_event_cb(close,cc_close,LV_EVENT_CLICKED,NULL);
  lv_obj_add_flag(control_center_overlay,LV_OBJ_FLAG_HIDDEN);
  static lv_timer_t *timer;if(!timer)timer=lv_timer_create(cc_status_tick,1000,NULL);
@@ -331,6 +333,7 @@ static void control_center_show(void)
     if (!control_center_overlay || !control_center_panel || control_center_visible) return;
 
     control_center_visible = true;
+    lv_obj_scroll_to_y(control_center_panel,0,LV_ANIM_OFF);
     cc_controls_read();
     cc_status();
     hdmi_switch_sync(hdmi_known?hdmi_actual:false);

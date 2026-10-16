@@ -35,6 +35,7 @@ static lv_obj_t *sensor_label;
 static lv_obj_t *hdmi_live_label;
 static bool home_hdmi_known,home_hdmi_enabled;
 static lv_obj_t *ai_orb_core;
+static lv_obj_t *hdmi_live_dot;
 static lv_obj_t *ai_orb_glow;
 static lv_obj_t *ai_action_button;
 static lv_obj_t *hdmi_action_button;
@@ -241,14 +242,19 @@ static void create_ai_orb(lv_obj_t *parent)
     make_noninteractive(ai_orb_core);
 
     lv_obj_t *highlight = lv_obj_create(ai_orb_core);
-    lv_obj_set_size(highlight, 82, 46);
-    lv_obj_align(highlight, LV_ALIGN_TOP_LEFT, 16, 16);
+    lv_obj_set_size(highlight, 56, 34);
+    lv_obj_align(highlight, LV_ALIGN_TOP_LEFT, 12, 8);
     lv_obj_set_style_radius(highlight, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(highlight, lv_color_hex(0xFFD3C7), 0);
     lv_obj_set_style_bg_opa(highlight, LV_OPA_50, 0);
     lv_obj_set_style_border_width(highlight, 0, 0);
     lv_obj_set_style_pad_all(highlight, 0, 0);
-    lv_obj_set_style_transform_rotation(highlight, 3350, 0);
+    lv_obj_set_style_transform_pivot_x(highlight,28,0);
+    lv_obj_set_style_transform_pivot_y(highlight,17,0);
+    lv_obj_set_style_transform_rotation(highlight,3350,0);
+    lv_obj_set_style_shadow_color(highlight, lv_color_hex(0xFFD3C7), 0);
+    lv_obj_set_style_shadow_width(highlight, 12, 0);
+    lv_obj_set_style_shadow_opa(highlight, LV_OPA_30, 0);
     make_noninteractive(highlight);
 
     start_orb_animation();
@@ -361,14 +367,15 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
     lv_obj_set_pos(title, 24, 20);
 
     lv_obj_t *live_dot = lv_obj_create(card);
+    hdmi_live_dot=live_dot;
     lv_obj_set_size(live_dot, 10, 10);
-    lv_obj_align(live_dot, LV_ALIGN_TOP_RIGHT, -110, 28);
+
     lv_obj_set_style_radius(live_dot, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(live_dot, desktop_hdmi_supported() ? HOME_CYAN : HOME_TEXT_MUTED, 0);
+    lv_obj_set_style_bg_color(live_dot, (home_hdmi_known && home_hdmi_enabled) ? HOME_CYAN : HOME_TEXT_MUTED, 0);
     lv_obj_set_style_bg_opa(live_dot, LV_OPA_COVER, 0);
     lv_obj_set_style_shadow_color(live_dot, HOME_CYAN, 0);
     lv_obj_set_style_shadow_opa(live_dot, LV_OPA_50, 0);
-    lv_obj_set_style_shadow_width(live_dot, desktop_hdmi_supported() ? 8 : 0, 0);
+    lv_obj_set_style_shadow_width(live_dot, (home_hdmi_known && home_hdmi_enabled) ? 8 : 0, 0);
     lv_obj_set_style_border_width(live_dot, 0, 0);
     lv_obj_set_style_pad_all(live_dot, 0, 0);
     make_noninteractive(live_dot);
@@ -379,6 +386,8 @@ static lv_obj_t *create_hdmi_card(lv_obj_t *parent)
     lv_label_set_text(live,!home_hdmi_known?(ui_i18n_is_zh()?"状态待确认":"Status unavailable"):home_hdmi_enabled?(ui_i18n_is_zh()?"采集已开启":"Capture enabled"):(ui_i18n_is_zh()?"采集已关闭":"Capture disabled"));
     lv_obj_set_style_text_color(live,HOME_TEXT_MUTED,0);
     lv_obj_align(live, LV_ALIGN_TOP_RIGHT, -22, 22);
+    lv_obj_update_layout(live);
+    lv_obj_align_to(live_dot, live, LV_ALIGN_OUT_LEFT_MID, -8, 0);
     if (!desktop_hdmi_supported()) {
         lv_obj_add_flag(live_dot, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(live, LV_OBJ_FLAG_HIDDEN);
@@ -488,7 +497,7 @@ static lv_obj_t *widget_factory(lv_obj_t *parent,mimi_widget_kind kind,int width
 {
     if(!parent) {
         stop_orb_animation();
-        hdmi_live_label=NULL;
+        hdmi_live_label=hdmi_live_dot=NULL;
         greeting_label=sensor_label=ai_orb_core=ai_orb_glow=ai_action_button=hdmi_action_button=NULL;
         return NULL;
     }
@@ -541,4 +550,10 @@ void ui_clock_set_hdmi(bool enabled)
 {
  home_hdmi_known=true;home_hdmi_enabled=enabled;
  label_set_text_if_changed(hdmi_live_label,enabled?(ui_i18n_is_zh()?"采集已开启":"Capture enabled"):(ui_i18n_is_zh()?"采集已关闭":"Capture disabled"));
+ if(hdmi_live_dot && lv_obj_is_valid(hdmi_live_dot) && hdmi_live_label && lv_obj_is_valid(hdmi_live_label)){
+  lv_obj_set_style_bg_color(hdmi_live_dot,enabled?HOME_CYAN:HOME_TEXT_MUTED,0);
+  lv_obj_set_style_shadow_width(hdmi_live_dot,enabled?8:0,0);
+  lv_obj_update_layout(hdmi_live_label);
+  lv_obj_align_to(hdmi_live_dot,hdmi_live_label,LV_ALIGN_OUT_LEFT_MID,-8,0);
+ }
 }

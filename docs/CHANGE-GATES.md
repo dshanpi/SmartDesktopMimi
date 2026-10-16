@@ -197,3 +197,5 @@ UI075批次二接续：编辑栏/组件库/真实指针验证，见[实际证据
 UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验证](validation/ui075-state-details.json)。不代表实机或完整通知源验收。
 
 - UI075 批次四 IoT摘要：`docs/validation/ui075-iot-summary.json`；主机 passed，真实设备/最终视觉 not_run。
+
+- UI075批次五：`docs/validation/ui075-visual-polish.json`；视觉缺陷/小屏滚动修复，主机passed，最终对齐及实机not_run。

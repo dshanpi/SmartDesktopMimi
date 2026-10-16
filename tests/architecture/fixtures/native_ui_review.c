@@ -399,7 +399,7 @@ static void test_responsive_home(void) {
 
 static void ui075_tap(lv_obj_t *obj,lv_indev_t *pointer)
 {
- assert(obj);lv_obj_update_layout(obj);lv_area_t a;lv_obj_get_coords(obj,&a);
+ assert(obj);lv_obj_scroll_to_view_recursive(obj,LV_ANIM_OFF);pump();lv_obj_update_layout(obj);lv_area_t a;lv_obj_get_coords(obj,&a);
  tap_screen(pointer,(a.x1+a.x2)/2,(a.y1+a.y2)/2);pump();pump();
 }
 static void ui075_remove_iot(lv_indev_t *pointer)
@@ -706,6 +706,21 @@ int main(int argc,char**argv) {
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
   tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_indev_delete(pointer);
   lv_obj_t *title=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));assert(title && lv_obj_is_visible(title));
+  if(review_height<620){
+   lv_obj_t *panel=lv_obj_get_parent(title);lv_area_t area;lv_obj_get_coords(panel,&area);
+   assert(area.y1>=0 && area.y2<review_height);
+   lv_obj_t *close=find_label(panel,ui_i18n_is_zh()?"收起  ∧":"Collapse  ^");assert(close);
+   pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+   touch_x=review_width/2;touch_y=review_height-100;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+   for(int step=1;step<=10;step++){touch_y=review_height-100-step*16;lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+   touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);lv_tick_inc(350);pump();
+   assert(lv_obj_is_visible(panel) && lv_obj_get_scroll_y(panel)>0);
+   ui075_tap(lv_obj_get_parent(close),pointer);lv_tick_inc(400);pump();
+   assert(!lv_obj_is_visible(title));
+   tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_tick_inc(400);pump();
+   assert(lv_obj_is_visible(title) && lv_obj_get_scroll_y(panel)==0);lv_indev_delete(pointer);
+   puts("PASS small control center: bounded viewport, scroll to collapse, real pointer close/reopen");
+  }
   if(!strcmp(argv[1],"control-behavior"))test_center_controls();
   if(!desktop_hdmi_supported()){
    lv_obj_t *caption=find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 采集":"HDMI capture");assert(caption);
