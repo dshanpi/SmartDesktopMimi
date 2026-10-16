@@ -506,7 +506,7 @@
       ]
     },
     "apps/lv_port_linux/src/apps/iot/iot_app.c": {
-      "sha256": "9ef8c68ae0f16ed085f9d237c7cab83bb08271529fcc2256847e5abb64891487",
+      "sha256": "ffd3f8368f20c3d8cf22bacb41e1e3001fd64f11aca6ec6db25b8139b7e4b628",
       "bindings": [
         "b, cb, LV_EVENT_CLICKED, data"
       ]
@@ -598,7 +598,7 @@
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_clock.c": {
-      "sha256": "2c4279bd59d272a76ad00b0d80dd98d091d5406c1f1ec45e7737c9be08ba3253",
+      "sha256": "07ba12c50d32a535e90cd2b2ac4c1b503f35c541a4afacda019f37a377304c8d",
       "bindings": [
         "button, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
         "card, home_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)HOME_ACTION_AI",
@@ -617,16 +617,24 @@
       ]
     },
     "apps/lv_port_linux/src/ui/desktop_status_bar.c": {
-      "sha256": "8b3336d3954d17e3ef8b30c865f41e38af1a21b2f3a3192dd4179b7c117955db",
+      "sha256": "d9aa09daf6e012aebdb87f3094483fc7fcc5f2158c3c753b791d7a7af8fb86d1",
       "bindings": [
-        "card, control_center_action_event, LV_EVENT_CLICKED, (void *)(intptr_t)action",
-        "control_center_overlay, control_center_overlay_event, LV_EVENT_CLICKED, NULL",
-        "control_center_panel, control_center_panel_event, LV_EVENT_GESTURE, NULL",
-        "control_center_hdmi_switch, on_control_center_hdmi_changed, LV_EVENT_VALUE_CHANGED, NULL",
+        "card,control_center_action_event,LV_EVENT_CLICKED,(void*)(intptr_t)action",
+        "control_center_overlay,control_center_overlay_event,LV_EVENT_CLICKED,NULL",
+        "control_center_panel,control_center_panel_event,LV_EVENT_GESTURE,NULL",
+        "settings,control_center_action_event,LV_EVENT_CLICKED,(void*)CONTROL_CENTER_ACTION_SETTINGS",
+        "control_center_hdmi_switch,on_control_center_hdmi_changed,LV_EVENT_VALUE_CHANGED,NULL",
+        "mute_switch,cc_mute_event,LV_EVENT_VALUE_CHANGED,NULL",
+        "brightness_slider,cc_slider_event,LV_EVENT_ALL,(void*)1",
+        "volume_slider,cc_slider_event,LV_EVENT_ALL,0",
+        "notice,notice_open,LV_EVENT_CLICKED,NULL",
+        "close,cc_close,LV_EVENT_CLICKED,NULL",
         "mid_col, control_center_trigger_event, LV_EVENT_CLICKED, NULL",
         "mid_col, control_center_trigger_event, LV_EVENT_GESTURE, NULL",
-        "hdmi_switch_obj, on_hdmi_switch_changed, LV_EVENT_VALUE_CHANGED, NULL",
-        "hdmi_row, on_hdmi_row_clicked, LV_EVENT_CLICKED, NULL",
+        "notifications,control_center_trigger_event,LV_EVENT_CLICKED,NULL",
+        "expand,control_center_trigger_event,LV_EVENT_CLICKED,NULL",
+        "bar,control_center_trigger_event,LV_EVENT_GESTURE,NULL",
+        "hdmi_switch_obj,on_hdmi_switch_changed,LV_EVENT_VALUE_CHANGED,NULL",
         "hdmi_overlay_switch, on_hdmi_overlay_switch_changed, LV_EVENT_VALUE_CHANGED, NULL"
       ]
     },
@@ -636,6 +644,24 @@
         "overlay, cleanup, LV_EVENT_DELETE, NULL",
         "buttons[i], action, LV_EVENT_CLICKED, (void *)operations[i]",
         "close, close_dialog, LV_EVENT_CLICKED, NULL"
+      ]
+    },
+    "apps/lv_port_linux/src/ui/desktop_widgets.c": {
+      "sha256": "f0ec2e87d8cde661638a8df5d92298c90a4c14aeb52f6a3763664a5e3f5d96da",
+      "bindings": [
+        "environment_dialog, environment_deleted, LV_EVENT_DELETE, NULL",
+        "close,environment_close,LV_EVENT_CLICKED,NULL",
+        "c, action, LV_EVENT_CLICKED, (void *)(intptr_t)k",
+        "library, close_library_event, LV_EVENT_CLICKED, NULL",
+        "close, close_library_event, LV_EVENT_CLICKED, NULL",
+        "button, choose, LV_EVENT_CLICKED, (void *)(intptr_t)k",
+        "cancel, finish, LV_EVENT_CLICKED, 0",
+        "save, finish, LV_EVENT_CLICKED, (void *)1",
+        "card, slot_event, LV_EVENT_LONG_PRESSED, (void *)(intptr_t)i",
+        "shield, slot_event, LV_EVENT_ALL, (void *)(intptr_t)i",
+        "minus, remove_slot, LV_EVENT_CLICKED, (void *)(intptr_t)i",
+        "root,home_deleted,LV_EVENT_DELETE,NULL",
+        "edit, edit_event, LV_EVENT_CLICKED, NULL"
       ]
     },
     "apps/lv_port_linux/src/ui/mimi_ui.c": {
@@ -662,6 +688,31 @@
       "no-duplicate-footer",
       "back-navigation",
       "modal-focus"
+    ],
+    "widgets": [
+      "default-five-slots",
+      "library-compatible-sizes",
+      "draft-cancel",
+      "save-persistence-error",
+      "concurrent-save-conflict",
+      "corrupt-or-future-layout",
+      "long-press-edit",
+      "same-size-drag",
+      "reject-cross-size-drag",
+      "small-screen-cross-viewport-drag",
+      "environment-details",
+      "environment-stale-recovery",
+      "iot-summary-empty-error-expired",
+      "no-home-cloud-poll"
+    ],
+    "control_center": [
+      "brightness-volume-readback-save",
+      "mute-restore",
+      "hdmi-ack-before-save",
+      "hdmi-timeout-restore",
+      "readonly-update-notification-navigation",
+      "short-screen-scroll-controls",
+      "dismiss-no-touch-through"
     ],
     "setting": [
       "sliders-persist",

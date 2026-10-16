@@ -22,6 +22,16 @@ static lv_timer_t * timer;
 static json_object * devices;
 static char selected_id[129], selected_name[256];
 static bool selected_online, selected_controls;
+/* LVGL-thread-only aggregate. No identifiers or response text survive here. */
+static mimi_iot_summary summary;
+mimi_iot_summary mimi_iot_summary_get(void)
+{
+    if(summary.state == MIMI_IOT_SUMMARY_READY && lv_tick_elaps(summary.received_at) >= 60000U)
+        summary.state = MIMI_IOT_SUMMARY_STALE;
+    mimi_iot_summary result = summary;
+    if(result.state != MIMI_IOT_SUMMARY_READY) result.total = result.online = 0;
+    return result;
+}
 static const char * tr(const char * z, const char * e)
 {
     return ui_i18n_is_zh() ? z : e;
@@ -89,6 +99,7 @@ static void launch(const char * path, const char * command)
         job_result[0] = 0;
     }
     pthread_mutex_unlock(&mutex);
+    if(command && *command) summary.state = MIMI_IOT_SUMMARY_STALE;
     lv_obj_set_style_max_height(message, LV_COORD_MAX, 0);
     lv_label_set_long_mode(message, LV_LABEL_LONG_WRAP);
     lv_label_set_text(message, tr("正在连接…", "Connecting…"));
@@ -317,11 +328,34 @@ static void select_device(lv_event_t * e)
     snprintf(path, sizeof(path), "/v1/devices/%s/functions", selected_id);
     launch(path, NULL);
 }
+static bool summarize_devices(json_object *items)
+{
+    json_object *ids = json_object_new_object();
+    if(!ids) return false;
+    unsigned total = (unsigned)json_object_array_length(items), online = 0;
+    bool valid = true;
+    for(unsigned i=0; i<total; i++) {
+        json_object *d=json_object_array_get_idx(items,i), *connected=NULL, *duplicate=NULL;
+        if(!d || json_object_get_type(d)!=json_type_object) { valid=false;break; }
+        const char *id=field(d,"id");
+        if(!identifier(id) || json_object_object_get_ex(ids,id,&duplicate) ||
+           !json_object_object_get_ex(d,"online",&connected) || json_object_get_type(connected)!=json_type_boolean) {
+            valid=false;break;
+        }
+        json_object_object_add(ids,id,json_object_new_boolean(true));
+        if(json_object_get_boolean(connected)) online++;
+    }
+    json_object_put(ids);
+    if(valid) summary=(mimi_iot_summary){MIMI_IOT_SUMMARY_READY,total,online,lv_tick_get()};
+    return valid;
+}
 static void show_devices(json_object * root)
 {
     json_object * items = NULL;
     if(!json_object_object_get_ex(root, "devices", &items) || json_object_get_type(items) != json_type_array ||
-       json_object_array_length(items) > 2000) {
+       json_object_array_length(items) > 2000 || !summarize_devices(items)) {
+        summary.state = MIMI_IOT_SUMMARY_UNAVAILABLE;
+        lv_obj_clean(content);
         lv_label_set_text(message, tr("设备列表不可用", "Device list unavailable"));
         return;
     }
@@ -385,6 +419,9 @@ static void tick(lv_timer_t * t)
     free(result);
     if(rc || !root || (strstr(path, "/commands") && !mimi_iot_command_accepted(root))) {
         const char * error = field(root, "error");
+        summary.state = !strcmp(error,"not_configured") ? MIMI_IOT_SUMMARY_NOT_CONFIGURED
+            : !strcmp(error,"authorization_required") ? MIMI_IOT_SUMMARY_UNAUTHORIZED
+            : MIMI_IOT_SUMMARY_UNAVAILABLE;
         if(strstr(path, "/commands")) {
             /* An unknown outcome may already have changed the real device. */
             lv_obj_clean(content);

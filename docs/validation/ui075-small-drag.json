@@ -1,0 +1,49 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T10:20:12.192505+00:00",
+  "base_commit": "be6b09e5d9898b5b35e24a063f5a4537bccc7abc",
+  "status": "passed_host_interaction",
+  "original_failure": {
+    "status": "failed",
+    "case": "800x480 real pointer long-hold drag cannot reach offscreen same-size target",
+    "evidence": "output/ui075-small-drag/before/800x480/widget-small-drag-zh-light.log"
+  },
+  "implementation": "Narrow screen normal swipe scrolls; long hold arms drag, bounded30ms timer scrolls14px at viewport edges; release outside, press loss, rebuild or cancel stops timer. Same-size layout policy unchanged; wide-screen interaction unchanged.",
+  "checks": [
+    {
+      "name": "800x480 up/down cross-viewport drag, ordinary swipe, outside release, cancel and saved-layout readback",
+      "status": "passed",
+      "scope": "4 actual LVGL pointer cases, zh/en light/dark; no app/pairing/HDMI fixture mutation"
+    },
+    {
+      "name": "1024x768 editor/library/home",
+      "status": "passed",
+      "scope": "12 actual LVGL renders with editor pointer behavior and navigation"
+    },
+    {
+      "name": "Layout and UI contracts",
+      "status": "passed",
+      "scope": "19 host tests, sanitizer enabled for layout fixture"
+    },
+    {
+      "name": "A133 clean application candidate",
+      "status": "not_run",
+      "scope": "Will build after this clean commit, no scratch duplicate build"
+    },
+    {
+      "name": "Physical screen/touch",
+      "status": "not_run",
+      "scope": "Host evidence only"
+    }
+  ],
+  "source_hashes": {
+    "apps/lv_port_linux/src/ui/desktop_widgets.c": "073fa79ef4d5487f87f8702d0f435777302e8a9e58e5b864d291acbb11e0e437",
+    "tests/architecture/fixtures/native_ui_review.c": "8bdcaff72ff5c2b8af32bf7ed821277fdc32b37dffed468fb2b494a51c1c1ac1",
+    "tests/update/ui-catalog.json": "7f06860c421d8ca6ab7981d17a84517cc652fc7b65e9fd628b9613dc11615677"
+  },
+  "remaining": [
+    "Final visual details and physical screen/touch acceptance",
+    "New clean candidate signing/package and remote binary verification",
+    "Compatible system installation deferred; no IPC1.2 application into existing IPC1.1 target"
+  ]
+}

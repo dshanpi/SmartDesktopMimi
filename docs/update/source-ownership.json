@@ -247,11 +247,11 @@
     },
     "apps/lv_port_linux/src/system/settings.c": {
       "owner": "shared-frozen",
-      "sha256": "848ed8a9150b11f82b6fddc4377325b19db1915d2953a3bdefeeea994848ba56"
+      "sha256": "375b4d677d51ed82c537ce36fec2faae1838ad7ed007110c239eec8a3ec2527d"
     },
     "apps/lv_port_linux/src/system/settings.h": {
       "owner": "shared-frozen",
-      "sha256": "483e2d8d125062d602820f5e5a03200276aeb5d0c52363905ea5ca847f546a03"
+      "sha256": "86786141b47ee8acabecb271b2f201af2a5c3f9245dedb0c0a9108a7e2f4a0d6"
     },
     "apps/lv_port_linux/src/system/volume_control.c": {
       "owner": "platform-client-frozen",

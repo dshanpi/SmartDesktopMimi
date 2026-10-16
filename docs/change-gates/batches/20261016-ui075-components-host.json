@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "summary": "UI075 component home and control center implementation checkpoint",
+  "context": "Four approved reference renders; real LVGL implementation, not yet final visual or target acceptance",
+  "next_steps": "Continue visual alignment: editor toolbar, library icons/row spacing and empty slot appearance still differ from approved D01; home/control center final pixel comparison not accepted. Complete environment details navigation, notification source/empty-state interaction, stale-state presentation and richer shared IoT status. Current environment card opens Settings; system card opens device settings. Exercise physical drag/swap and smaller screen geometry; current host pointer evidence covers remove/cancel/add/save/reload/failure, not physical touch or all drag cases. No target installation, new package, system image rebuild, or Release update. Existing device IPC baseline must be checked before installation; frozen artifacts unchanged.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Shared desktop, layout persistence, controls and isolated validation",
+      "invariants": "No credentials, provider IPC changes, device binding reset, device execution or frozen candidate overwrite; host tests are not target acceptance",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "apps/lv_port_linux/src/apps/iot/iot_client.c",
+        "apps/lv_port_linux/src/apps/iot/iot_client.h",
+        "apps/lv_port_linux/src/system/settings.c",
+        "apps/lv_port_linux/src/system/settings.h",
+        "apps/lv_port_linux/src/ui/desktop_clock.c",
+        "apps/lv_port_linux/src/ui/desktop_clock.h",
+        "apps/lv_port_linux/src/ui/desktop_home_tokens.h",
+        "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+        "apps/lv_port_linux/src/ui/desktop_widget_layout.c",
+        "apps/lv_port_linux/src/ui/desktop_widget_layout.h",
+        "apps/lv_port_linux/src/ui/desktop_widgets.c",
+        "apps/lv_port_linux/src/ui/desktop_widgets.h",
+        "apps/lv_port_linux/src/ui/ui.c",
+        "apps/lv_port_linux/src/ui/ui_helpers.c",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/change-gates/batches/20261016-ui075-components-host.json",
+        "docs/validation/ui075-components-host.json",
+        "scripts/render_ui_review.py",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/test_settings_ui075.c",
+        "tests/architecture/fixtures/test_widget_layout.c",
+        "tests/architecture/test_widget_layout.py"
+      ],
+      "checks": [
+        {
+          "name": "Host implementation and A133 compile",
+          "status": "passed",
+          "scope": "19 tests;24+12 LVGL renders and pointer/control checks; A133 desktop compile",
+          "evidence": "docs/validation/ui075-components-host.json"
+        },
+        {
+          "name": "Final visual and physical acceptance",
+          "status": "not_run",
+          "scope": "Exact reference alignment and physical UI/control validation",
+          "reason": "Remaining gaps explicitly recorded; device not changed",
+          "evidence": "docs/validation/ui075-components-host.json"
+        }
+      ]
+    }
+  ]
+}

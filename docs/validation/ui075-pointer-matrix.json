@@ -1,0 +1,32 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T09:52:47.884570+00:00",
+  "status": "in_progress",
+  "base_commit": "3551d887247d65c4d6cfaa6b1269d38e0e6037c0",
+  "checks": [
+    {
+      "name": "Real-pointer center controls",
+      "status": "passed",
+      "scope": "8 actual LVGL views at1024x768 and800x480, zh/en light/dark; scroll controls into view; tap sliders apply/readback/save, mute/restore, HDMI ACK-only save and timeout, bottom notification navigation without OTA mutation"
+    },
+    {
+      "name": "Physical control/screen",
+      "status": "not_run",
+      "reason": "Isolated fake providers only"
+    }
+  ],
+  "production_changes": false,
+  "build_reuse": {
+    "source_commit": "3551d887247d65c4d6cfaa6b1269d38e0e6037c0",
+    "a133_elf_sha256": "452091ef2b308a5597a34594231b4c4d8c2aa55ef65e3303dd812effb2298d6e",
+    "reason": "Only fixture/docs changed; no device rebuild or package change"
+  },
+  "failures_preserved": [],
+  "remaining": [
+    "Final reference detail acceptance and physical screen/touch remain not_run.",
+    "Small-screen cross-viewport component drag is not verified; default1024 same-size drag and cross-size rejection have prior pointer evidence.",
+    "Compatible system installation still pending; do not install current IPC1.2 app into existing IPC1.1 device.",
+    "Real Tuya/voice and recorded deferred/resource-dependent delivery items remain."
+  ],
+  "source_uploaded": false
+}

@@ -1,0 +1,60 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T09:14:27.063026+00:00",
+  "status": "in_progress",
+  "base_commit": "f25fb452004897abc5f3703a7107e22518fe6310",
+  "implemented": [
+    "Read-only environment details from existing sensor events; no history or hardware queries",
+    "Monotonic60s UI receipt-age policy: expiry/invalid/error/out-of-range readings show unknown, valid data recovers",
+    "Environment overlay blocks background actions, closes on Home rebuild, deletes its shared UI timer when current Home is destroyed",
+    "Control-center notifications project existing system OTA phase/progress and navigate only; empty/up-to-date disabled; no version strings/errors retained"
+  ],
+  "checks": [
+    {
+      "name": "Actual LVGL environment interaction",
+      "status": "passed",
+      "scope": "Home-only expiry, modal expiry, valid recovery, provider error/out-of-range, overlay blocking, close/reopen and asynchronous Home rebuild cleanup; both languages/themes"
+    },
+    {
+      "name": "Actual LVGL notification projection",
+      "status": "passed",
+      "scope": "Empty/disabled, downloading42%, target app routing, no callback mutation, up-to-date clearing and failure; both languages/themes. Existing real OTA app init reads GET_STATUS; no new check/download/install calls."
+    },
+    {
+      "name": "Affected views and regression",
+      "status": "passed",
+      "scope": "28 actual LVGL renders, real app-manager navigation checks, prior widget/control behaviors;19 regression tests including unchanged layout/settings ASAN/UBSAN; bilingual audit"
+    },
+    {
+      "name": "A133 desktop compile",
+      "status": "passed",
+      "sha256": "07d0d7a7ea8c011b277c9404b57cd3a47ffcfe435a1c183658ccc162556e8413",
+      "scope": "scratch desktop executable only, not installed or packaged"
+    },
+    {
+      "name": "Physical display, sensor, OTA event and exact visual acceptance",
+      "status": "not_run",
+      "reason": "No device operation; host fixture data is synthetic"
+    }
+  ],
+  "failures_preserved": [
+    "First render environment Home-rebuild assertion failed: new Home exists before asynchronous old Home deletion. Explicitly close the old detail overlay when constructing the new Home.",
+    "Review found freshness tick compared the main-card child with the active screen; corrected to its containing screen and added Home-only expiry test.",
+    "Initial header edit invoked Python text as shell; failed without changing the header; rerun through Python correctly."
+  ],
+  "remaining": [
+    "IoT aggregate shared state and final font/icon/orb/HDMI-dot visual alignment.",
+    "Smaller-screen geometry and pointer coverage; physical touch/drag; compatible target installation.",
+    "Notifications currently cover only existing system OTA events; desktop application update and other notification sources not integrated.",
+    "No source push/new package/image/Release; frozen artifacts retained; other recorded hardware and resource dependencies remain."
+  ],
+  "source_sha256": {
+    "apps/lv_port_linux/src/ui/desktop_widgets.c": "f6a4b85e5d0127e18a7c50f6a13222a226013f9b1824b67b3e67b998da6bb0cf",
+    "apps/lv_port_linux/src/ui/desktop_status_bar.c": "6584f66ffda1eb196b8d3c19cee7b1aa44a0c06abc4f1e35aec7243ec500ddec",
+    "apps/lv_port_linux/src/ui/desktop_status_bar.h": "95c1dd397a2beddf0cabc60ce08dcb3573ff12a90e50dd2c642225eb691ab966",
+    "apps/lv_port_linux/src/ui/ui_helpers.c": "157c4e2cebb62ff4858124181bba4f19b6a6c48f7b5bbcab70b4f950ab280a34",
+    "tests/architecture/fixtures/native_ui_review.c": "fbc495a59067acda524eaf08ea500634d906e434be8b77ca4ef4969685d1b1c5"
+  },
+  "fixture_disclosure": "Real production LVGL controls, mock backend/events and fixed clock/sensor/account values. No current device telemetry, network, credentials or hardware during render.",
+  "source_uploaded": false
+}

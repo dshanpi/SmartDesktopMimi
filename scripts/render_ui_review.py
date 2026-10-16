@@ -85,14 +85,14 @@ def main():
 
         with ThreadPoolExecutor(max_workers=4) as pool:
             objects = list(pool.map(compile_one, sources))
-        run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', *objects,
+        run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=time', '-Wl,--wrap=mimi_iot_configuration_present', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', *objects,
              build / 'lvgl/lib/liblvgl.a', '-lm', '-lpthread', '-ljson-c', '-lcurl', '-o', build / 'review'], log)
         manager_fixture = build / 'review_manager_fixture.o'
         run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
              '-DREVIEW_REAL_APP_MANAGER', '-DMIMI_ENABLE_VOICE_CONTROL=1', *capability_flags, f'-DLV_CONF_PATH="{config_path}"',
              f'-I{APP}', f'-I{APP / "lvgl"}', '-c', sources[0], '-o', manager_fixture], log)
         manager = compile_one(APP / 'src/system/app_manager.c')
-        run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', manager_fixture,
+        run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=time', '-Wl,--wrap=mimi_iot_configuration_present', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', manager_fixture,
              manager, *objects[1:], build / 'lvgl/lib/liblvgl.a', '-lm', '-lpthread', '-ljson-c', '-lcurl',
              '-o', build / 'review-manager'], log)
     from PIL import Image

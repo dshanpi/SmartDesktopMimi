@@ -4,6 +4,9 @@
 #include "desktop_home_tokens.h"
 #include "ui_i18n.h"
 #include "desktop_capabilities.h"
+#include "desktop_widgets.h"
+#include "../system/backlight_control.h"
+#include "../system/volume_control.h"
 #include "../system/app_manager.h"
 #include "../system/settings.h"
 #include "../system/backend_types.h"
@@ -21,8 +24,8 @@ LV_IMAGE_DECLARE(cloud);
 #define HDMI_MODE_LABEL_WIDTH (HOME_SCREEN_W >= 1000 ? 178 : 128)
 #define TOP_STATUS_GROUP_WIDTH (HOME_SCREEN_W >= 1000 ? 232 : 210)
 #define TOP_POWER_LABEL_WIDTH 300
-#define CONTROL_CENTER_WIDTH (HOME_SCREEN_W - 48)
-#define CONTROL_CENTER_HEIGHT 344
+#define CONTROL_CENTER_WIDTH (HOME_SCREEN_W >= 1000 ? 846 : HOME_SCREEN_W - 32)
+#define CONTROL_CENTER_HEIGHT LV_MIN(572, HOME_SCREEN_H - 48)
 #define CONTROL_CENTER_CARD_WIDTH 216
 #define CONTROL_CENTER_CARD_HEIGHT 184
 
@@ -53,13 +56,14 @@ static lv_obj_t *hdmi_overlay_switch = NULL;
 static lv_obj_t *control_center_overlay = NULL;
 static lv_obj_t *control_center_panel = NULL;
 static lv_obj_t *control_center_wifi_detail = NULL;
-static lv_obj_t *control_center_power_detail = NULL;
+
 static lv_obj_t *control_center_hdmi_switch = NULL;
 static bool control_center_visible = false;
+static lv_obj_t *control_center_chevron = NULL;
 
 /* 前置声明 */
 static void on_hdmi_switch_changed(lv_event_t *e);
-static void on_hdmi_row_clicked(lv_event_t *e);
+
 static void on_control_center_hdmi_changed(lv_event_t *e);
 static void hdmi_switch_sync(bool enabled);
 static void hdmi_send_enable(bool on);
@@ -72,6 +76,7 @@ typedef enum {
     CONTROL_CENTER_ACTION_WIFI = 1,
     CONTROL_CENTER_ACTION_USER_APPS,
     CONTROL_CENTER_ACTION_SETTINGS,
+    CONTROL_CENTER_ACTION_PAIRING,
 } control_center_action_t;
 
 static void control_center_anim_y(void *obj, int32_t y)
@@ -91,6 +96,8 @@ static void control_center_hide(bool animate)
 {
     if (!control_center_overlay || !control_center_panel || !control_center_visible) return;
     control_center_visible = false;
+    if (control_center_chevron && lv_obj_is_valid(control_center_chevron))
+        lv_label_set_text(control_center_chevron, LV_SYMBOL_DOWN);
     lv_anim_delete(control_center_panel, control_center_anim_y);
 
     if (!animate) {
@@ -123,6 +130,7 @@ static void control_center_overlay_event(lv_event_t *event)
 static void control_center_panel_event(lv_event_t *event)
 {
     if (lv_event_get_code(event) != LV_EVENT_GESTURE) return;
+    if (CONTROL_CENTER_HEIGHT < 572) return;
     lv_indev_t *indev = lv_indev_active();
     if (indev && lv_indev_get_gesture_dir(indev) == LV_DIR_TOP) {
         control_center_hide(true);
@@ -140,197 +148,186 @@ static void control_center_action_event(lv_event_t *event)
         app_manager_open(APP_ID_WIFI);
     } else if (action == CONTROL_CENTER_ACTION_USER_APPS) {
         app_manager_open(APP_ID_USER_APPS);
+    } else if (action == CONTROL_CENTER_ACTION_PAIRING) {
+        app_manager_open(APP_ID_PAIRING);
     } else if (action == CONTROL_CENTER_ACTION_SETTINGS) {
         app_manager_open(APP_ID_SETTING);
     }
 }
 
-static lv_obj_t *control_center_create_card(lv_obj_t *parent,
-                                            const char *eyebrow,
-                                            const char *title,
-                                            const char *detail,
-                                            lv_color_t accent,
-                                            control_center_action_t action)
+static lv_obj_t *center_connection,*center_hdmi_detail,*center_notice,*center_error;
+static lv_obj_t *brightness_slider,*volume_slider,*brightness_value,*volume_value,*mute_switch,*mute_detail;
+static int volume_before_mute=40;
+static bool hdmi_actual,hdmi_known;
+static bool notice_known;
+static ota_state_t notice_state;
+static int notice_progress;
+static lv_obj_t *notice_row;
+void ui_statusbar_ota_notice(const ota_status_t *status)
 {
-    lv_obj_t *card = lv_obj_create(parent);
-    lv_obj_set_size(card, CONTROL_CENTER_CARD_WIDTH, CONTROL_CENTER_CARD_HEIGHT);
-    lv_obj_set_style_radius(card, 24, 0);
-    lv_obj_set_style_bg_color(card, lv_color_hex(0x3B4258), 0);
-    lv_obj_set_style_bg_opa(card, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(card, 1, 0);
-    lv_obj_set_style_border_color(card, lv_color_hex(0x596179), 0);
-    lv_obj_set_style_border_opa(card, LV_OPA_70, 0);
-    lv_obj_set_style_shadow_width(card, 0, 0);
-    lv_obj_set_style_pad_all(card, 18, 0);
-    lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_flag(card, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_style_bg_color(card, lv_color_hex(0x48516B), LV_STATE_PRESSED);
-    if (action) {
-        lv_obj_add_event_cb(card, control_center_action_event, LV_EVENT_CLICKED,
-                            (void *)(intptr_t)action);
-    }
-
-    lv_obj_t *accent_dot = lv_obj_create(card);
-    lv_obj_set_size(accent_dot, 12, 12);
-    lv_obj_align(accent_dot, LV_ALIGN_TOP_RIGHT, 0, 0);
-    lv_obj_set_style_radius(accent_dot, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(accent_dot, accent, 0);
-    lv_obj_set_style_bg_opa(accent_dot, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(accent_dot, 0, 0);
-    lv_obj_set_style_pad_all(accent_dot, 0, 0);
-    lv_obj_clear_flag(accent_dot, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_t *eyebrow_label = lv_label_create(card);
-    lv_label_set_text(eyebrow_label, eyebrow);
-    lv_obj_align(eyebrow_label, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_text_font(eyebrow_label, ui_font_body_md(), 0);
-    lv_obj_set_style_text_color(eyebrow_label, lv_color_hex(0xAEB7CB), 0);
-    lv_obj_clear_flag(eyebrow_label, LV_OBJ_FLAG_CLICKABLE);
-
-    lv_obj_t *title_label = lv_label_create(card);
-    lv_label_set_text(title_label, title);
-    lv_obj_align(title_label, LV_ALIGN_LEFT_MID, 0, -4);
-    lv_obj_set_style_text_font(title_label, ui_font_h2(), 0);
-    lv_obj_set_style_text_color(title_label, lv_color_hex(0xFFFFFF), 0);
-    lv_obj_clear_flag(title_label, LV_OBJ_FLAG_CLICKABLE);
-
-    lv_obj_t *detail_label = lv_label_create(card);
-    lv_label_set_text(detail_label, detail);
-    lv_label_set_long_mode(detail_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_width(detail_label, CONTROL_CENTER_CARD_WIDTH - 36);
-    lv_obj_align(detail_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_obj_set_style_text_font(detail_label, ui_font_body_md(), 0);
-    lv_obj_set_style_text_color(detail_label, lv_color_hex(0xCBD2E0), 0);
-    lv_obj_clear_flag(detail_label, LV_OBJ_FLAG_CLICKABLE);
-    return detail_label;
+ notice_known = status && status->state >= OTA_STATE_IDLE && status->state <= OTA_STATE_ERROR;
+ if(!notice_known) return;
+ notice_state = status->state;
+ notice_progress = LV_CLAMP(0,status->progress,100);
+ /* Never copy version strings, provider errors or cloud payloads into a notification. */
 }
+static bool notice_active(void)
+{
+ return notice_known && notice_state != OTA_STATE_IDLE && notice_state != OTA_STATE_UP_TO_DATE;
+}
+static void notice_open(lv_event_t *e)
+{
+ (void)e;
+ if(!notice_active()) return;
+ control_center_hide(false);
+ app_manager_open(APP_ID_OTA);
+}
+static const char *tr(const char *zh,const char *en){return ui_i18n_is_zh()?zh:en;}
+static lv_obj_t *cc_label(lv_obj_t *p,const char *text,int x,int y,const lv_font_t *font,lv_color_t color)
+{
+ lv_obj_t *l=lv_label_create(p);lv_label_set_text(l,text);lv_obj_set_pos(l,x,y);
+ lv_obj_set_style_text_font(l,font,0);lv_obj_set_style_text_color(l,color,0);lv_obj_clear_flag(l,LV_OBJ_FLAG_CLICKABLE);return l;
+}
+static lv_obj_t *cc_surface(lv_obj_t *p,int x,int y,int w,int h)
+{
+ lv_obj_t *o=lv_obj_create(p);lv_obj_remove_style_all(o);lv_obj_set_pos(o,x,y);lv_obj_set_size(o,w,h);
+ lv_obj_set_style_radius(o,18,0);lv_obj_set_style_bg_opa(o,LV_OPA_COVER,0);lv_obj_set_style_bg_color(o,HOME_SURFACE_RAISED,0);
+ lv_obj_set_style_border_color(o,HOME_BORDER,0);lv_obj_set_style_border_width(o,1,0);lv_obj_clear_flag(o,LV_OBJ_FLAG_SCROLLABLE);return o;
+}
+static void cc_sun(lv_obj_t *parent)
+{
+ lv_obj_t *circle=cc_surface(parent,29,30,16,16);lv_obj_set_style_radius(circle,LV_RADIUS_CIRCLE,0);lv_obj_set_style_bg_color(circle,HOME_CORAL,0);lv_obj_set_style_border_width(circle,0,0);
+ static const lv_point_precise_t rays[8][2]={{{37,16},{37,23}},{{37,53},{37,60}},{{15,38},{22,38}},{{52,38},{59,38}},{{21,22},{26,27}},{{48,49},{53,54}},{{21,54},{26,49}},{{48,27},{53,22}}};
+ for(unsigned i=0;i<8;i++){lv_obj_t *line=lv_line_create(parent);lv_line_set_points(line,rays[i],2);lv_obj_set_style_line_width(line,3,0);lv_obj_set_style_line_color(line,HOME_CORAL,0);lv_obj_set_style_line_rounded(line,true,0);}
+}
+static lv_obj_t *cc_tile(int x,int y,int w,const char *name,const char *symbol,lv_color_t accent,control_center_action_t action,lv_obj_t **detail)
+{
+ lv_obj_t *card=cc_surface(control_center_panel,x,y,w,100);
+ lv_obj_set_style_bg_color(card,lv_color_mix(HOME_SURFACE,accent,246),0);
+ lv_obj_set_style_border_color(card,lv_color_mix(HOME_SURFACE,accent,219),0);
+ lv_obj_t *icon=cc_surface(card,22,18,64,64);lv_obj_set_style_bg_color(icon,lv_color_mix(HOME_SURFACE,accent,220),0);lv_obj_set_style_border_width(icon,0,0);
+ lv_obj_t *glyph=cc_label(icon,symbol,0,0,&lv_font_montserrat_32,accent);lv_obj_center(glyph);
+ if(!strcmp(symbol,LV_SYMBOL_REFRESH)){lv_obj_add_flag(glyph,LV_OBJ_FLAG_HIDDEN);lv_obj_t *image=lv_image_create(icon);lv_image_set_src(image,&cloud);lv_obj_set_size(image,54,54);lv_image_set_inner_align(image,LV_IMAGE_ALIGN_CONTAIN);lv_obj_set_style_image_recolor(image,accent,0);lv_obj_set_style_image_recolor_opa(image,LV_OPA_COVER,0);lv_obj_center(image);}
+ if(!strcmp(symbol,LV_SYMBOL_VIDEO)){lv_obj_add_flag(glyph,LV_OBJ_FLAG_HIDDEN);lv_obj_t *screen=cc_surface(icon,14,15,36,26);lv_obj_set_style_bg_opa(screen,LV_OPA_TRANSP,0);lv_obj_set_style_radius(screen,3,0);lv_obj_set_style_border_width(screen,3,0);lv_obj_set_style_border_color(screen,accent,0);lv_obj_t *stand=cc_surface(icon,24,46,18,3);lv_obj_set_style_bg_color(stand,accent,0);lv_obj_set_style_border_width(stand,0,0);}
 
+ cc_label(card,name,116,23,ui_font_h3(),HOME_TEXT);
+ *detail=cc_label(card,"--",116,56,ui_font_body_md(),HOME_TEXT_MUTED);lv_obj_set_width(*detail,w-178);lv_label_set_long_mode(*detail,LV_LABEL_LONG_DOT);
+ if(action){lv_obj_add_flag(card,LV_OBJ_FLAG_CLICKABLE);lv_obj_add_event_cb(card,control_center_action_event,LV_EVENT_CLICKED,(void*)(intptr_t)action);cc_label(card,LV_SYMBOL_RIGHT,w-31,35,&lv_font_montserrat_16,HOME_TEXT_MUTED);}
+ return card;
+}
+static void cc_controls_read(void)
+{
+ int value;
+ if(sys_backlight_get_percent(&value)==0){lv_slider_set_value(brightness_slider,value,LV_ANIM_OFF);lv_label_set_text_fmt(brightness_value,"%d%%",value);lv_obj_clear_state(brightness_slider,LV_STATE_DISABLED);}
+ else{lv_label_set_text(brightness_value,tr("不可用","Unavailable"));lv_obj_add_state(brightness_slider,LV_STATE_DISABLED);}
+ if(sys_volume_get_percent(&value)==0){lv_slider_set_value(volume_slider,value,LV_ANIM_OFF);lv_label_set_text_fmt(volume_value,"%d%%",value);lv_obj_clear_state(volume_slider,LV_STATE_DISABLED);lv_obj_clear_state(mute_switch,LV_STATE_DISABLED);
+  if(value>0){volume_before_mute=value;lv_obj_clear_state(mute_switch,LV_STATE_CHECKED);}else lv_obj_add_state(mute_switch,LV_STATE_CHECKED);
+  lv_label_set_text(mute_detail,value?tr("未开启","Off"):tr("已静音","Muted"));
+ }else{lv_label_set_text(volume_value,tr("不可用","Unavailable"));lv_label_set_text(mute_detail,tr("不可用","Unavailable"));lv_obj_add_state(volume_slider,LV_STATE_DISABLED);lv_obj_add_state(mute_switch,LV_STATE_DISABLED);}
+}
+static void cc_apply_control(bool brightness,int requested)
+{
+ if(brightness && requested<20)requested=20;
+ int actual=-1,rc=brightness?sys_backlight_set_percent(requested):sys_volume_set_percent(requested);
+ if(rc==0)rc=brightness?sys_backlight_get_percent(&actual):sys_volume_get_percent(&actual);
+ if(rc || actual<0 || actual>100){lv_label_set_text(center_error,tr("设置失败，请重试","Setting failed; please retry"));cc_controls_read();return;}
+ if(brightness)sys_settings_get()->brightness=actual;else sys_settings_get()->volume=actual;
+ int saved_rc=sys_settings_save_checked();
+ lv_label_set_text(center_error,saved_rc?tr("已应用，保存失败；重启后可能恢复旧值","Applied, but saving failed; may reset after restart"):"");
+ cc_controls_read();
+}
+static void cc_slider_event(lv_event_t *e)
+{
+ bool brightness=(bool)(intptr_t)lv_event_get_user_data(e);lv_obj_t *slider=lv_event_get_target(e);
+ if(lv_obj_has_state(slider,LV_STATE_DISABLED))return;
+ if(lv_event_get_code(e)==LV_EVENT_VALUE_CHANGED)lv_label_set_text_fmt(brightness?brightness_value:volume_value,"%d%%",(int)lv_slider_get_value(slider));
+ else if(lv_event_get_code(e)==LV_EVENT_RELEASED)cc_apply_control(brightness,lv_slider_get_value(slider));
+}
+static void cc_mute_event(lv_event_t *e)
+{
+ if(lv_obj_has_state(mute_switch,LV_STATE_DISABLED))return;
+ cc_apply_control(false,lv_obj_has_state(lv_event_get_target(e),LV_STATE_CHECKED)?0:volume_before_mute);
+}
+static void cc_close(lv_event_t *e){(void)e;control_center_hide(true);}
+static void notice_refresh(void)
+{
+ if(!center_notice || !notice_row) return;
+ if(!notice_active()) {
+  lv_label_set_text(center_notice,tr("通知    暂无本地通知","Notifications    No local notifications"));
+  lv_obj_add_state(notice_row,LV_STATE_DISABLED);
+  return;
+ }
+ lv_obj_clear_state(notice_row,LV_STATE_DISABLED);
+ const char *phase = notice_state == OTA_STATE_CHECKING ? tr("检查中","Checking")
+  : notice_state == OTA_STATE_UPDATE_AVAILABLE ? tr("发现可用更新","Update available")
+  : notice_state == OTA_STATE_DOWNLOADING ? tr("下载中","Downloading")
+  : notice_state == OTA_STATE_DOWNLOAD_DONE ? tr("下载完成，等待安装","Downloaded; awaiting installation")
+  : notice_state == OTA_STATE_APPLYING ? tr("安装中","Installing")
+  : notice_state == OTA_STATE_REBOOTING ? tr("等待重启","Awaiting restart")
+  : notice_state == OTA_STATE_COMMITTING ? tr("确认新系统","Confirming new system")
+  : tr("更新失败，点此查看","Update failed; tap for details");
+ if(notice_state == OTA_STATE_DOWNLOADING || notice_state == OTA_STATE_APPLYING)
+  lv_label_set_text_fmt(center_notice,tr("系统更新 · %s %d%%","System update · %s %d%%"),phase,notice_progress);
+ else lv_label_set_text_fmt(center_notice,tr("系统更新 · %s","System update · %s"),phase);
+}
+static void cc_status(void)
+{
+ if(!control_center_visible)return;
+ lv_label_set_text(control_center_wifi_detail,wifi_connected?tr("已连接","Connected"):wifi_runtime_enabled?tr("未连接","Disconnected"):ui_tr(UI_STR_WIFI_OFF));
+ notice_refresh();
+ lv_label_set_text(center_connection,desktop_widgets_connection_text());
+ lv_label_set_text(center_hdmi_detail,!desktop_hdmi_supported()?ui_tr(UI_STR_HDMI_UNSUPPORTED):hdmi_toggle_pending?tr("正在切换…","Switching…"):!hdmi_known?tr("状态待确认","Status unavailable"):hdmi_actual?tr("采集已开启","Capture enabled"):tr("采集已关闭","Capture disabled"));
+}
+static void cc_status_tick(lv_timer_t *t){(void)t;cc_status();}
 static void control_center_build(void)
 {
-    if (control_center_overlay && lv_obj_is_valid(control_center_overlay)) return;
-
-    control_center_overlay = lv_obj_create(lv_layer_top());
-    lv_obj_set_size(control_center_overlay, lv_pct(100), lv_pct(100));
-    lv_obj_set_pos(control_center_overlay, 0, 0);
-    lv_obj_set_style_bg_color(control_center_overlay, lv_color_hex(0x10131C), 0);
-    lv_obj_set_style_bg_opa(control_center_overlay, LV_OPA_50, 0);
-    lv_obj_set_style_border_width(control_center_overlay, 0, 0);
-    lv_obj_set_style_radius(control_center_overlay, 0, 0);
-    lv_obj_set_style_pad_all(control_center_overlay, 0, 0);
-    lv_obj_clear_flag(control_center_overlay, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_flag(control_center_overlay, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(control_center_overlay, control_center_overlay_event,
-                        LV_EVENT_CLICKED, NULL);
-
-    control_center_panel = lv_obj_create(control_center_overlay);
-    lv_obj_set_size(control_center_panel, CONTROL_CENTER_WIDTH, CONTROL_CENTER_HEIGHT);
-    lv_obj_set_pos(control_center_panel, 24, -CONTROL_CENTER_HEIGHT - 24);
-    lv_obj_set_style_radius(control_center_panel, 30, 0);
-    lv_obj_set_style_bg_color(control_center_panel, lv_color_hex(0x2F3548), 0);
-    lv_obj_set_style_bg_grad_color(control_center_panel, lv_color_hex(0x262B3B), 0);
-    lv_obj_set_style_bg_grad_dir(control_center_panel, LV_GRAD_DIR_VER, 0);
-    lv_obj_set_style_bg_opa(control_center_panel, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(control_center_panel, 1, 0);
-    lv_obj_set_style_border_color(control_center_panel, lv_color_hex(0x596179), 0);
-    lv_obj_set_style_shadow_color(control_center_panel, lv_color_hex(0x111522), 0);
-    lv_obj_set_style_shadow_opa(control_center_panel, LV_OPA_40, 0);
-    lv_obj_set_style_shadow_width(control_center_panel, 28, 0);
-    lv_obj_set_style_shadow_offset_y(control_center_panel, 10, 0);
-    lv_obj_set_style_pad_hor(control_center_panel, 24, 0);
-    lv_obj_set_style_pad_top(control_center_panel, 16, 0);
-    lv_obj_set_style_pad_bottom(control_center_panel, 18, 0);
-    lv_obj_clear_flag(control_center_panel, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_event_cb(control_center_panel, control_center_panel_event,
-                        LV_EVENT_GESTURE, NULL);
-
-    lv_obj_t *title = lv_label_create(control_center_panel);
-    lv_label_set_text(title, ui_tr(UI_STR_CONTROL_CENTER));
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 4, 2);
-    lv_obj_set_style_text_font(title, ui_font_h2(), 0);
-    lv_obj_set_style_text_color(title, lv_color_hex(0xFFFFFF), 0);
-
-    control_center_power_detail = lv_label_create(control_center_panel);
-    lv_label_set_text(control_center_power_detail, "--.-V ---mA --.-W");
-    lv_obj_align(control_center_power_detail, HOME_SCREEN_W < 700 ? LV_ALIGN_TOP_LEFT : LV_ALIGN_TOP_RIGHT, HOME_SCREEN_W < 700 ? 4 : -4, HOME_SCREEN_W < 700 ? 44 : 6);
-    lv_obj_set_style_text_font(control_center_power_detail, ui_font_body_lg(), 0);
-    lv_obj_set_style_text_color(control_center_power_detail, lv_color_hex(0xD8DEEA), 0);
-
-    lv_obj_t *cards = lv_obj_create(control_center_panel);
-    lv_obj_set_size(cards, lv_pct(100), CONTROL_CENTER_CARD_HEIGHT);
-    lv_obj_align(cards, LV_ALIGN_BOTTOM_MID, 0, -14);
-    lv_obj_set_style_bg_opa(cards, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cards, 0, 0);
-    lv_obj_set_style_pad_all(cards, 0, 0);
-    lv_obj_set_style_pad_column(cards, 20, 0);
-    lv_obj_add_flag(cards, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_scroll_dir(cards, LV_DIR_HOR);
-    lv_obj_set_scrollbar_mode(cards, LV_SCROLLBAR_MODE_AUTO);
-    lv_obj_set_flex_flow(cards, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(cards, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
-                          LV_FLEX_ALIGN_CENTER);
-
-    control_center_wifi_detail =
-        control_center_create_card(cards, ui_i18n_is_zh() ? "网络" : "Network",
-                                   ui_tr(UI_STR_APP_WIFI), ui_tr(UI_STR_NOT_CONNECTED),
-                                   lv_color_hex(0x4CB8FF),
-                                   CONTROL_CENTER_ACTION_WIFI);
-
-    lv_obj_t *hdmi_card = lv_obj_create(cards);
-    lv_obj_set_size(hdmi_card, CONTROL_CENTER_CARD_WIDTH, CONTROL_CENTER_CARD_HEIGHT);
-    lv_obj_set_style_radius(hdmi_card, 24, 0);
-    lv_obj_set_style_bg_color(hdmi_card, lv_color_hex(0x3B4258), 0);
-    lv_obj_set_style_bg_opa(hdmi_card, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(hdmi_card, 1, 0);
-    lv_obj_set_style_border_color(hdmi_card, lv_color_hex(0x596179), 0);
-    lv_obj_set_style_pad_all(hdmi_card, 18, 0);
-    lv_obj_clear_flag(hdmi_card, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_t *hdmi_eyebrow = lv_label_create(hdmi_card);
-    lv_label_set_text(hdmi_eyebrow, desktop_hdmi_supported() ? (ui_i18n_is_zh() ? "视频输入" : "Video input") : ui_tr(UI_STR_HDMI_UNSUPPORTED));
-    lv_obj_align(hdmi_eyebrow, LV_ALIGN_TOP_LEFT, 0, 0);
-    lv_obj_set_style_text_font(hdmi_eyebrow, ui_font_body_md(), 0);
-    lv_obj_set_style_text_color(hdmi_eyebrow, lv_color_hex(0xAEB7CB), 0);
-
-    lv_obj_t *hdmi_title = lv_label_create(hdmi_card);
-    lv_label_set_text(hdmi_title, ui_tr(UI_STR_HDMI_DISPLAY));
-    lv_obj_align(hdmi_title, LV_ALIGN_LEFT_MID, 0, -4);
-    lv_obj_set_style_text_font(hdmi_title, ui_font_h2(), 0);
-    lv_obj_set_style_text_color(hdmi_title, lv_color_hex(0xFFFFFF), 0);
-
-    control_center_hdmi_switch = lv_switch_create(hdmi_card);
-    lv_obj_set_size(control_center_hdmi_switch, 60, 32);
-    lv_obj_align(control_center_hdmi_switch, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_obj_set_ext_click_area(control_center_hdmi_switch, 12);
-    lv_obj_set_style_bg_color(control_center_hdmi_switch, UI_BORDER_DEFAULT,
-                              LV_PART_MAIN);
-    lv_obj_set_style_bg_color(control_center_hdmi_switch, UI_COLOR_PRIMARY,
-                              LV_PART_INDICATOR | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_color(control_center_hdmi_switch, lv_color_white(),
-                              LV_PART_KNOB);
-    lv_obj_add_event_cb(control_center_hdmi_switch,
-                        on_control_center_hdmi_changed,
-                        LV_EVENT_VALUE_CHANGED, NULL);
-
-    control_center_create_card(cards, ui_i18n_is_zh() ? "应用" : "Apps",
-                               ui_tr(UI_STR_APP_USER), ui_tr(UI_STR_CONTROL_APPS_HINT),
-                               lv_color_hex(0x42D3B0),
-                               CONTROL_CENTER_ACTION_USER_APPS);
-    control_center_create_card(cards, ui_i18n_is_zh() ? "系统" : "System",
-                               ui_tr(UI_STR_APP_SETTINGS), ui_tr(UI_STR_CONTROL_SETTINGS_HINT),
-                               lv_color_hex(0xA78BFA),
-                               CONTROL_CENTER_ACTION_SETTINGS);
-
-    lv_obj_t *handle = lv_obj_create(control_center_panel);
-    lv_obj_set_size(handle, 72, 5);
-    lv_obj_align(handle, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_set_style_radius(handle, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(handle, lv_color_hex(0x9AA4B8), 0);
-    lv_obj_set_style_bg_opa(handle, LV_OPA_80, 0);
-    lv_obj_set_style_border_width(handle, 0, 0);
-    lv_obj_set_style_pad_all(handle, 0, 0);
-    lv_obj_clear_flag(handle, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_add_flag(control_center_overlay, LV_OBJ_FLAG_HIDDEN);
+ if(control_center_overlay && lv_obj_is_valid(control_center_overlay))return;
+ control_center_overlay=cc_surface(lv_layer_top(),0,0,HOME_SCREEN_W,HOME_SCREEN_H);
+ lv_obj_set_style_bg_color(control_center_overlay,lv_color_black(),0);lv_obj_set_style_bg_opa(control_center_overlay,LV_OPA_30,0);lv_obj_set_style_radius(control_center_overlay,0,0);
+ lv_obj_add_flag(control_center_overlay,LV_OBJ_FLAG_CLICKABLE);lv_obj_add_event_cb(control_center_overlay,control_center_overlay_event,LV_EVENT_CLICKED,NULL);
+ control_center_panel=cc_surface(control_center_overlay,(HOME_SCREEN_W-CONTROL_CENTER_WIDTH)/2,87,CONTROL_CENTER_WIDTH,CONTROL_CENTER_HEIGHT);
+ lv_obj_set_style_bg_color(control_center_panel,HOME_SURFACE,0);lv_obj_set_style_radius(control_center_panel,26,0);lv_obj_add_flag(control_center_panel,LV_OBJ_FLAG_CLICKABLE);
+ lv_obj_add_event_cb(control_center_panel,control_center_panel_event,LV_EVENT_GESTURE,NULL);
+ if(CONTROL_CENTER_HEIGHT < 572){lv_obj_add_flag(control_center_panel,LV_OBJ_FLAG_SCROLLABLE);lv_obj_set_scroll_dir(control_center_panel,LV_DIR_VER);}
+ int w=CONTROL_CENTER_WIDTH,tw=(w-60)/2;
+ cc_label(control_center_panel,ui_tr(UI_STR_CONTROL_CENTER),28,22,ui_font_h1(),HOME_TEXT);
+ cc_label(control_center_panel,tr("常用设置，轻触即达","Everyday controls, one touch away"),28,66,ui_font_body_md(),HOME_TEXT_MUTED);
+ lv_obj_t *settings=cc_surface(control_center_panel,w-162,23,134,42);lv_obj_add_flag(settings,LV_OBJ_FLAG_CLICKABLE);
+ lv_obj_set_style_bg_opa(settings,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(settings,0,0);
+ cc_label(settings,LV_SYMBOL_SETTINGS,2,10,&lv_font_montserrat_24,HOME_TEXT);
+ cc_label(settings,tr("全部设置","All settings"),38,10,ui_font_body_md(),HOME_TEXT);lv_obj_add_event_cb(settings,control_center_action_event,LV_EVENT_CLICKED,(void*)CONTROL_CENTER_ACTION_SETTINGS);
+ cc_tile(24,97,tw,ui_tr(UI_STR_APP_WIFI),LV_SYMBOL_WIFI,HOME_CORAL,CONTROL_CENTER_ACTION_WIFI,&control_center_wifi_detail);
+ cc_tile(36+tw,97,tw,tr("设备连接","Device connection"),LV_SYMBOL_REFRESH,HOME_BLUE,CONTROL_CENTER_ACTION_PAIRING,&center_connection);
+ lv_obj_t *hdmi=cc_tile(24,208,tw,tr("HDMI 采集","HDMI capture"),LV_SYMBOL_VIDEO,HOME_BLUE,0,&center_hdmi_detail);
+ control_center_hdmi_switch=lv_switch_create(hdmi);lv_obj_set_size(control_center_hdmi_switch,48,28);lv_obj_set_pos(control_center_hdmi_switch,tw-65,30);
+ lv_obj_add_event_cb(control_center_hdmi_switch,on_control_center_hdmi_changed,LV_EVENT_VALUE_CHANGED,NULL);
+ lv_obj_t *mute=cc_tile(36+tw,208,tw,tr("静音","Mute"),LV_SYMBOL_VOLUME_MID,HOME_BLUE,0,&mute_detail);
+ mute_switch=lv_switch_create(mute);lv_obj_set_size(mute_switch,48,28);lv_obj_set_pos(mute_switch,tw-65,30);lv_obj_add_event_cb(mute_switch,cc_mute_event,LV_EVENT_VALUE_CHANGED,NULL);
+ lv_obj_t *brightness_card=cc_surface(control_center_panel,24,319,tw,110);
+ lv_obj_set_style_bg_color(brightness_card,lv_color_mix(HOME_SURFACE,HOME_CORAL,247),0);
+ cc_sun(brightness_card);
+ cc_label(brightness_card,tr("屏幕亮度","Brightness"),78,22,ui_font_h3(),HOME_TEXT);
+ brightness_value=cc_label(brightness_card,"--",tw-68,22,ui_font_body_lg(),HOME_TEXT);
+ brightness_slider=lv_slider_create(brightness_card);lv_obj_set_pos(brightness_slider,24,76);lv_obj_set_size(brightness_slider,tw-48,16);lv_slider_set_range(brightness_slider,0,100);
+ lv_obj_set_style_bg_color(brightness_slider,HOME_CORAL,LV_PART_INDICATOR);lv_obj_set_style_bg_color(brightness_slider,lv_color_white(),LV_PART_KNOB);
+ lv_obj_add_event_cb(brightness_slider,cc_slider_event,LV_EVENT_ALL,(void*)1);
+ lv_obj_t *volume_card=cc_surface(control_center_panel,36+tw,319,tw,110);
+ lv_obj_set_style_bg_color(volume_card,lv_color_mix(HOME_SURFACE,HOME_BLUE,247),0);
+ cc_label(volume_card,LV_SYMBOL_VOLUME_MAX,22,23,&lv_font_montserrat_24,HOME_BLUE);
+ cc_label(volume_card,tr("音量","Volume"),78,22,ui_font_h3(),HOME_TEXT);
+ volume_value=cc_label(volume_card,"--",tw-68,22,ui_font_body_lg(),HOME_TEXT);
+ volume_slider=lv_slider_create(volume_card);lv_obj_set_pos(volume_slider,24,76);lv_obj_set_size(volume_slider,tw-48,16);lv_slider_set_range(volume_slider,0,100);
+ lv_obj_set_style_bg_color(volume_slider,HOME_BLUE,LV_PART_INDICATOR);lv_obj_set_style_bg_color(volume_slider,lv_color_white(),LV_PART_KNOB);lv_obj_add_event_cb(volume_slider,cc_slider_event,LV_EVENT_ALL,0);
+ lv_obj_t *notice=cc_surface(control_center_panel,24,440,w-48,76);
+ notice_row=notice;lv_obj_add_flag(notice,LV_OBJ_FLAG_CLICKABLE);lv_obj_add_event_cb(notice,notice_open,LV_EVENT_CLICKED,NULL);
+ cc_label(notice,LV_SYMBOL_BELL,27,25,&lv_font_montserrat_24,HOME_GREEN);
+ center_notice=cc_label(notice,tr("通知    暂无本地通知","Notifications    No local notifications"),96,25,ui_font_body_lg(),HOME_TEXT_MUTED);
+ lv_obj_set_size(center_notice,w-172,48);lv_obj_set_y(center_notice,14);lv_label_set_long_mode(center_notice,LV_LABEL_LONG_DOT);
+ center_error=cc_label(control_center_panel,"",28,81,ui_font_body_md(),HOME_CORAL);lv_obj_set_width(center_error,w-56);lv_label_set_long_mode(center_error,LV_LABEL_LONG_DOT);
+ lv_obj_t *close=cc_surface(control_center_panel,w/2-60,572-37,120,32);lv_obj_add_flag(close,LV_OBJ_FLAG_CLICKABLE);lv_obj_set_style_border_width(close,0,0);lv_obj_set_style_bg_opa(close,LV_OPA_TRANSP,0);
+ cc_label(close,tr("收起  ∧","Collapse  ^"),18,4,ui_font_body_md(),HOME_TEXT_MUTED);lv_obj_add_event_cb(close,cc_close,LV_EVENT_CLICKED,NULL);
+ lv_obj_add_flag(control_center_overlay,LV_OBJ_FLAG_HIDDEN);
+ static lv_timer_t *timer;if(!timer)timer=lv_timer_create(cc_status_tick,1000,NULL);
 }
 
 static void control_center_show(void)
@@ -338,23 +335,13 @@ static void control_center_show(void)
     control_center_build();
     if (!control_center_overlay || !control_center_panel || control_center_visible) return;
 
-    if (control_center_wifi_detail) {
-        if (wifi_connected && wifi_connected_ssid[0]) {
-            lv_label_set_text_fmt(control_center_wifi_detail,
-                                  ui_i18n_is_zh() ? "已连接\n%s" : "Connected\n%s",
-                                  wifi_connected_ssid);
-        } else if (!wifi_runtime_enabled) {
-            lv_label_set_text(control_center_wifi_detail, ui_tr(UI_STR_WIFI_OFF));
-        } else {
-            lv_label_set_text(control_center_wifi_detail, ui_tr(UI_STR_NOT_CONNECTED));
-        }
-    }
-    if (control_center_power_detail && power_label) {
-        lv_label_set_text(control_center_power_detail, lv_label_get_text(power_label));
-    }
-    hdmi_switch_sync(sys_settings_get()->hdmi_enabled);
-
     control_center_visible = true;
+    if (control_center_chevron && lv_obj_is_valid(control_center_chevron))
+        lv_label_set_text(control_center_chevron, LV_SYMBOL_UP);
+    lv_obj_scroll_to_y(control_center_panel,0,LV_ANIM_OFF);
+    cc_controls_read();
+    cc_status();
+    hdmi_switch_sync(hdmi_known?hdmi_actual:false);
     lv_obj_clear_flag(control_center_overlay, LV_OBJ_FLAG_HIDDEN);
     lv_obj_move_foreground(control_center_overlay);
     lv_anim_delete(control_center_panel, control_center_anim_y);
@@ -363,7 +350,7 @@ static void control_center_show(void)
     lv_anim_t anim;
     lv_anim_init(&anim);
     lv_anim_set_var(&anim, control_center_panel);
-    lv_anim_set_values(&anim, -CONTROL_CENTER_HEIGHT - 24, 12);
+    lv_anim_set_values(&anim, -CONTROL_CENTER_HEIGHT - 24, HOME_SCREEN_W >= 1000 ? 87 : 24);
     lv_anim_set_time(&anim, 280);
     lv_anim_set_path_cb(&anim, lv_anim_path_ease_out);
     lv_anim_set_exec_cb(&anim, control_center_anim_y);
@@ -388,6 +375,11 @@ static void control_center_trigger_event(lv_event_t *event)
  * ======================= */
 void ui_statusbar_create(lv_obj_t *parent)
 {
+    if(control_center_overlay && lv_obj_is_valid(control_center_overlay))lv_obj_delete(control_center_overlay);
+    control_center_overlay=control_center_panel=control_center_hdmi_switch=NULL;
+    control_center_visible=false;
+    control_center_chevron=NULL;
+
     lv_obj_t *bar = lv_obj_create(parent);
     lv_obj_set_size(bar, HOME_SCREEN_W, HOME_STATUS_H);
     lv_obj_set_pos(bar, 0, 0);
@@ -425,8 +417,8 @@ void ui_statusbar_create(lv_obj_t *parent)
     apply_debug_outline(top_row, lv_color_hex(0xFF7F11));
 
     lv_obj_t *left_status_group = lv_obj_create(top_row);
-    lv_obj_set_size(left_status_group, TOP_STATUS_GROUP_WIDTH, 62);
-    lv_obj_align(left_status_group, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_size(left_status_group, 120, 62);
+    lv_obj_align(left_status_group, LV_ALIGN_TOP_RIGHT, -130, 0);
     lv_obj_set_style_bg_opa(left_status_group, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(left_status_group, 0, 0);
     lv_obj_set_style_pad_all(left_status_group, 0, 0);
@@ -439,8 +431,9 @@ void ui_statusbar_create(lv_obj_t *parent)
                           LV_FLEX_ALIGN_CENTER);
     apply_debug_outline(left_status_group, lv_color_hex(0x8EC63F));
 
-    lv_obj_t *brand = lv_label_create(left_status_group);
+    lv_obj_t *brand = lv_label_create(top_row);
     lv_label_set_text(brand, "Mimi");
+    lv_obj_set_pos(brand,0,10);
     lv_obj_set_width(brand, HOME_SCREEN_W >= 1000 ? 104 : 84);
     lv_obj_set_style_text_font(brand, ui_font_h1(), 0);
     lv_obj_set_style_text_color(brand, HOME_TEXT, 0);
@@ -570,71 +563,25 @@ void ui_statusbar_create(lv_obj_t *parent)
     lv_obj_align(pull_handle, LV_ALIGN_BOTTOM_MID, 0, -5);
     lv_obj_set_style_radius(pull_handle, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(pull_handle, HOME_TEXT_MUTED, 0);
-    lv_obj_set_style_bg_opa(pull_handle, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_bg_opa(pull_handle, LV_OPA_30, 0);
+    lv_obj_add_flag(pull_handle,LV_OBJ_FLAG_IGNORE_LAYOUT);
     lv_obj_set_style_border_width(pull_handle, 0, 0);
     lv_obj_set_style_pad_all(pull_handle, 0, 0);
     lv_obj_clear_flag(pull_handle, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *right_col = lv_obj_create(top_row);
-    lv_obj_set_size(right_col, HDMI_MODE_ROW_WIDTH + 12, 62);
-    lv_obj_align(right_col, LV_ALIGN_TOP_RIGHT, 0, 0);
-    lv_obj_set_style_bg_opa(right_col, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(right_col, 0, 0);
-    lv_obj_set_style_pad_all(right_col, 0, 0);
-    lv_obj_set_style_pad_row(right_col, 6, 0);
-    lv_obj_clear_flag(right_col, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_flex_flow(right_col, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(right_col,
-                          LV_FLEX_ALIGN_CENTER,
-                          LV_FLEX_ALIGN_END,
-                          LV_FLEX_ALIGN_END);
-    /* Keep right column above mid_col for hit-testing. */
-    lv_obj_move_foreground(right_col);
-    apply_debug_outline(right_col, lv_color_hex(0x118AB2));
-
-    lv_obj_t *hdmi_row = lv_obj_create(right_col);
-    lv_obj_set_size(hdmi_row, HDMI_MODE_ROW_WIDTH + 8, 48);
-    lv_obj_set_style_min_width(hdmi_row, HDMI_MODE_ROW_WIDTH, 0);
-    lv_obj_set_style_bg_opa(hdmi_row, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(hdmi_row, 0, 0);
-    lv_obj_set_style_pad_all(hdmi_row, 0, 0);
-    lv_obj_set_style_pad_column(hdmi_row, 10, 0);
-    lv_obj_clear_flag(hdmi_row, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_add_flag(hdmi_row, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_ext_click_area(hdmi_row, 8);
-    lv_obj_set_flex_flow(hdmi_row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(hdmi_row,
-                          LV_FLEX_ALIGN_END,
-                          LV_FLEX_ALIGN_CENTER,
-                          LV_FLEX_ALIGN_CENTER);
-    apply_debug_outline(hdmi_row, lv_color_hex(0x3A86FF));
-
-    lv_obj_t *hdmi_label = lv_label_create(hdmi_row);
-    lv_label_set_text(hdmi_label, HOME_SCREEN_W >= 1000 ? ui_tr(UI_STR_DISPLAY_MODE) : "HDMI");
-    lv_label_set_long_mode(hdmi_label, LV_LABEL_LONG_CLIP);
-    lv_obj_set_width(hdmi_label, HDMI_MODE_LABEL_WIDTH);
-    lv_obj_set_style_min_width(hdmi_label, HDMI_MODE_LABEL_WIDTH, 0);
-    lv_obj_set_style_text_color(hdmi_label, HOME_TEXT, 0);
-    /* 用带 CJK 的主题字体：font_interdisplay_regular_36 只含 ASCII（range 32-126），
-     * 渲染中文会乱码。顶栏中文文字须用 ui_font_* 系列。 */
-    lv_obj_set_style_text_font(hdmi_label, ui_font_body_md(), 0);
-    lv_obj_set_style_text_opa(hdmi_label, LV_OPA_90, 0);
-    lv_obj_clear_flag(hdmi_label, LV_OBJ_FLAG_CLICKABLE);
-
-    hdmi_switch_obj = lv_switch_create(hdmi_row);
-    lv_obj_set_size(hdmi_switch_obj, 56, 30);
-    lv_obj_set_ext_click_area(hdmi_switch_obj, 16);
-    lv_obj_set_style_bg_color(hdmi_switch_obj, UI_BORDER_DEFAULT, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(hdmi_switch_obj, UI_COLOR_PRIMARY, LV_PART_INDICATOR | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_opa(hdmi_switch_obj, LV_OPA_COVER, LV_PART_INDICATOR | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_color(hdmi_switch_obj, lv_color_white(), LV_PART_KNOB);
-    lv_obj_set_style_shadow_color(hdmi_switch_obj, UI_COLOR_PRIMARY, LV_PART_KNOB | LV_STATE_CHECKED);
-    lv_obj_set_style_shadow_width(hdmi_switch_obj, 8, LV_PART_KNOB | LV_STATE_CHECKED);
-    lv_obj_set_style_shadow_opa(hdmi_switch_obj, LV_OPA_20, LV_PART_KNOB | LV_STATE_CHECKED);
-    lv_obj_add_event_cb(hdmi_switch_obj, on_hdmi_switch_changed, LV_EVENT_VALUE_CHANGED, NULL);
-
-    /* Tap the whole row (label included) to flip the switch. */
-    lv_obj_add_event_cb(hdmi_row, on_hdmi_row_clicked, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *notifications=lv_obj_create(top_row);
+    lv_obj_remove_style_all(notifications);lv_obj_set_size(notifications,48,48);
+    lv_obj_align(notifications,LV_ALIGN_TOP_RIGHT,-60,8);lv_obj_add_flag(notifications,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *bell=cc_label(notifications,LV_SYMBOL_BELL,0,0,&lv_font_montserrat_24,HOME_TEXT);lv_obj_center(bell);
+    lv_obj_add_event_cb(notifications,control_center_trigger_event,LV_EVENT_CLICKED,NULL);
+    lv_obj_t *expand=lv_obj_create(top_row);lv_obj_remove_style_all(expand);lv_obj_set_size(expand,48,48);
+    lv_obj_align(expand,LV_ALIGN_TOP_RIGHT,4,8);lv_obj_add_flag(expand,LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_t *arrow=cc_label(expand,LV_SYMBOL_DOWN,0,0,&lv_font_montserrat_16,HOME_TEXT_MUTED);lv_obj_center(arrow);control_center_chevron=arrow;
+    lv_obj_add_event_cb(expand,control_center_trigger_event,LV_EVENT_CLICKED,NULL);
+    lv_obj_add_event_cb(bar,control_center_trigger_event,LV_EVENT_GESTURE,NULL);
+    /* Retain an invisible compatibility handle; the only visible home switch is in Control Center. */
+    hdmi_switch_obj=lv_switch_create(bar);lv_obj_add_flag(hdmi_switch_obj,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_event_cb(hdmi_switch_obj,on_hdmi_switch_changed,LV_EVENT_VALUE_CHANGED,NULL);
 
     /* 初始开关态取自持久化设置（默认关闭）。 */
     hdmi_switch_sync(sys_settings_get()->hdmi_enabled);
@@ -660,10 +607,10 @@ static void hdmi_pending_timeout_cb(lv_timer_t *timer)
     (void)timer;
     hdmi_pending_timer = NULL;
     if (!hdmi_toggle_pending) return;
-    printf("[HDMI] toggle ack timeout, keep UI target=%d\n",
-           hdmi_toggle_target ? 1 : 0);
     hdmi_toggle_pending = false;
-    /* Keep optimistic UI; user can toggle again freely. */
+    hdmi_switch_sync(hdmi_known?hdmi_actual:false);
+    if(center_error && lv_obj_is_valid(center_error))lv_label_set_text(center_error,tr("HDMI 未响应，请检查连接","HDMI did not respond; check connection"));
+    cc_status();
 }
 
 static void hdmi_switch_apply_visual(lv_obj_t *sw, bool enabled)
@@ -700,13 +647,8 @@ static void hdmi_send_enable(bool on)
     hdmi_toggle_pending = true;
     hdmi_toggle_target = on;
 
-    /* Optimistic UI + persist; backend ack only confirms / may re-sync. */
-    hdmi_switch_sync(on);
-    sys_settings_t *s = sys_settings_get();
-    if (s->hdmi_enabled != on) {
-        s->hdmi_enabled = on;
-        sys_settings_save();
-    }
+    hdmi_switch_sync(hdmi_known?hdmi_actual:false);
+    cc_status();
 
     if (hdmi_pending_timer) {
         lv_timer_del(hdmi_pending_timer);
@@ -730,26 +672,6 @@ static void on_hdmi_switch_changed(lv_event_t *e)
     bool on = lv_obj_has_state(sw, LV_STATE_CHECKED);
 
     /* Always accept the latest user intent; do not lock the switch. */
-    hdmi_send_enable(on);
-}
-
-static void on_hdmi_row_clicked(lv_event_t *e)
-{
-    if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
-    if (!hdmi_switch_obj) return;
-
-    /*
-     * Row CLICKED bubbles from children. If the press hit the switch, skip —
-     * VALUE_CHANGED already issued the command (avoid double-toggle).
-     */
-    lv_obj_t *row = lv_event_get_current_target(e);
-    lv_obj_t *orig = lv_event_get_target(e);
-    for (lv_obj_t *o = orig; o && o != row; o = lv_obj_get_parent(o)) {
-        if (o == hdmi_switch_obj) return;
-    }
-    if (orig == hdmi_switch_obj) return;
-
-    bool on = !lv_obj_has_state(hdmi_switch_obj, LV_STATE_CHECKED);
     hdmi_send_enable(on);
 }
 
@@ -822,8 +744,12 @@ void hdmi_ui_handle_status(const hdmi_preview_status_t *status)
         return;
     }
 
+    hdmi_actual=status->enabled;hdmi_known=true;
     if (hdmi_toggle_pending) {
         if (status->enabled == hdmi_toggle_target) {
+            sys_settings_get()->hdmi_enabled=status->enabled;
+            if(sys_settings_save_checked()!=0 && center_error && lv_obj_is_valid(center_error))
+                lv_label_set_text(center_error,tr("HDMI 已切换，保存失败","HDMI changed; saving failed"));
             hdmi_clear_pending();
             hdmi_switch_sync(status->enabled);
         }
@@ -832,6 +758,7 @@ void hdmi_ui_handle_status(const hdmi_preview_status_t *status)
         hdmi_switch_sync(status->enabled);
     }
 
+    cc_status();
     if (status->active) {
         app_manager_show_hdmi_preview_screen();
         /* Attach floating switch once the transparent screen is active. */

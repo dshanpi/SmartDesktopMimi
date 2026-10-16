@@ -1,0 +1,85 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T08:41:34.162226+00:00",
+  "status": "in_progress",
+  "base_commit": "38e3b502dd17213a67431bf5fa4c6c096637010e",
+  "approval": "Four renders approved by user; D02 header replaces D01 header",
+  "implemented": [
+    "Five-slot component home and seven-kind registry",
+    "Draft remove/add/compatible swap and atomic layout persistence with revisions",
+    "Revised header and control center",
+    "Brightness/volume apply-readback-save; mute restores volume",
+    "HDMI saves only after actual status acknowledgement; timeout is not success",
+    "First-use brightness20/HDMIoff without resetting persisted choices"
+  ],
+  "checks": [
+    {
+      "name": "Layout store and actual settings file tests",
+      "status": "passed",
+      "scope": "ASAN/UBSAN; corrupt/future data retained, revision conflict, real settings failure/default/preservation"
+    },
+    {
+      "name": "Affected architecture, pairing and localization regressions",
+      "status": "passed",
+      "scope": "19 tests including the two new native suites"
+    },
+    {
+      "name": "Actual LVGL views and pointer interactions",
+      "status": "passed",
+      "scope": "24 renders at1024x768; zh/en light/dark, editor/library/control behavior and real app manager"
+    },
+    {
+      "name": "Unsupported HDMI capability",
+      "status": "passed",
+      "scope": "12 renders and forced event/unsolicited status rejection"
+    },
+    {
+      "name": "A133 desktop executable compile",
+      "status": "passed",
+      "sha256": "653b91bd5d07e60a53e189235d89e4b671d8cdd9c13c6fe411f9818c19e4c875",
+      "scope": "Scratch executable only, not packaged or installed; existing init_array/fini_array linker warnings retained"
+    },
+    {
+      "name": "Exact visual match to four approved renders",
+      "status": "not_run",
+      "reason": "Visual review found remaining differences; no claim of pixel-identical completion"
+    },
+    {
+      "name": "Physical screen, touch and hardware controls",
+      "status": "not_run",
+      "reason": "No device operation in this batch"
+    }
+  ],
+  "fixture_disclosure": "Screenshots execute real LVGL production widgets with isolated fake backend, fixed 2026-10-16 15:47 clock, 30C/36%, synthetic linked account and HDMI off. They are not observed board telemetry. Layout writes use temporary directories, IoT configuration presence is stubbed; no credentials/network/device are used.",
+  "failures_preserved": [
+    "First renderer build: unavailable LV_SYMBOL_CLOUD; replaced with existing native cloud asset.",
+    "First A133 build: obsolete row callback/power variable and _GNU_SOURCE duplicate; repaired, build-02 passed.",
+    "Initial bilingual audit did not recognize cc_tr helper; renamed to verified tr selector; final audit passed.",
+    "Initial standalone test compile caught bounded temporary path warning; fixed test buffer before running."
+  ],
+  "remaining": [
+    "Continue visual alignment: editor toolbar, library icons/row spacing and empty slot appearance still differ from approved D01; home/control center final pixel comparison not accepted.",
+    "Complete environment details navigation, notification source/empty-state interaction, stale-state presentation and richer shared IoT status. Current environment card opens Settings; system card opens device settings.",
+    "Exercise physical drag/swap and smaller screen geometry; current host pointer evidence covers remove/cancel/add/save/reload/failure, not physical touch or all drag cases.",
+    "No target installation, new package, system image rebuild, or Release update. Existing device IPC baseline must be checked before installation; frozen artifacts unchanged."
+  ],
+  "logs": {
+    "bilingual-audit.log": "6d41098abf1330e399d20b30702e2fbc9c7bcf7fa27a248ef5108cc546ef661e",
+    "bilingual-audit-final.log": "6d41098abf1330e399d20b30702e2fbc9c7bcf7fa27a248ef5108cc546ef661e",
+    "affected-regression-final.log": "60102c2f4f841912ff93810d409699d4d0446a289e2a9a3696d5193650f3fbdc",
+    "a133-build-02.log": "7910edd4858e9e473e118b58c21cf811bcd2dc44eafc468c2f61c0cd54e23f5f",
+    "settings-test.log": "1049c0daf1b079a853385ef688c039f207f485495785b093b867d3f90bffc0bd",
+    "layout-test.log": "2543290fc6664e1943550e9669eed118d0b2b1e0086975ed2fb60841a65c380f",
+    "a133-build.log": "e49bdfb2ba28ba95f13555612ca4c357e03acd87d354e8d9510c3a634df2a900",
+    "affected-regression.log": "459c6bf36561f58e51617309d8f94785cb04467ff86fba96e134d480cf418b5d",
+    "layout-test-final.log": "6a2d71a1f08f2d34a0edafb150c91f6eef332dc0c12943f1506f4afed0bc1b6c"
+  },
+  "screenshots": {
+    "home-zh-light.png": "763877d321ec992f7768b5a8d52955934116de5a3d5d72f272754e38dbaf2120",
+    "control-center-zh-light.png": "9c8bcd11f1c265d40e9b96874171cccd8e2950f90113d0776d2ba1070888d309",
+    "widget-library-zh-light.png": "36517d4cfb5d658f99f0d474097bcff589a38403e781ec5d5c31ce734d49db71",
+    "widget-behavior-zh-light.png": "b2d80aa32dae98f0e8464c0aef2729b6f612f9744f2bb47528a5df3b751336c4",
+    "control-behavior-zh-light.png": "e3a02b593685b931da361bbc03ebe5bf5f52dce201d41c47e3849c0b3a7da951",
+    "widget-editor-zh-light.png": "6cff5c59ffa711cb560a0ae036f813d4194dbf18d826fa46ef5ad28b57d3f9d1"
+  }
+}

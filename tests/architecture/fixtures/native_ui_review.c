@@ -20,6 +20,10 @@
 #include "src/ui/desktop_dock.h"
 #include "src/ui/lockscreen.h"
 #include "src/system/settings.h"
+#include "src/ui/desktop_widgets.h"
+#include "src/ui/desktop_clock.h"
+#include <time.h>
+#include <stdatomic.h>
 #include "src/system/backlight_control.h"
 #include "src/system/volume_control.h"
 #include "src/system/app_registry.h"
@@ -37,11 +41,17 @@ static bool review_iot_connected;
 static unsigned review_iot_commands;
 static const char *review_iot_reply="{\"accepted\":true,\"state_confirmed\":false}";
 static unsigned review_iot_delay_us;
+static const char *review_iot_devices_reply;
+static int review_iot_devices_rc;
+static atomic_uint review_iot_requests;
 static const char *review_iot_name="TEST Lamp";
 int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_t cap){
+ atomic_fetch_add(&review_iot_requests,1);
+ const char *list_reply=review_iot_devices_reply;int list_rc=review_iot_devices_rc;
  if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
  if(command){review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
+ if(!strcmp(path,"/v1/devices") && list_reply){snprintf(out,cap,"%s",list_reply);return list_rc;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
  else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"%s\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}",review_iot_name);
  return 0;
@@ -86,10 +96,23 @@ void __wrap_lv_lottie_set_src_file(lv_obj_t *object, const char *source) {
  }
  fprintf(stderr,"Missing real emotion asset: %s\n",name);assert(false);
 }
+/* Fixed review clock: 2026-10-16 15:47 Asia/Shanghai. No system clock write. */
+time_t __wrap_time(time_t *out) {time_t value=1792136820;if(out)*out=value;return value;}
+int __wrap_mimi_iot_configuration_present(void) {return 0;}
+static char review_layout_dir[256];
+static void cleanup_review_layout(void) {
+ char path[512];
+ snprintf(path,sizeof(path),"%s/settings.widgets.json",review_layout_dir);unlink(path);
+ snprintf(path,sizeof(path),"%s/settings.widgets.json.lock",review_layout_dir);unlink(path);
+ rmdir(review_layout_dir);
+}
 static sys_settings_t settings = {.brightness=78,.volume=50,.wifi_enabled=true,.theme_preset_id=0};
 sys_settings_t *sys_settings_get(void) {return &settings;}
-static int saves, backlight, volume;
+static int saves, backlight=20, volume=40;
 void sys_settings_save(void) {saves++;}
+int sys_settings_save_checked(void) {saves++;return 0;}
+int sys_backlight_get_percent(int *p) {*p=backlight;return 0;}
+int sys_volume_get_percent(int *p) {*p=volume;return 0;}
 int sys_backlight_set_percent(int p) {backlight=p;return 0;}
 int sys_volume_set_percent(int p) {volume=p;return 0;}
 static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
@@ -374,6 +397,329 @@ static void test_responsive_home(void) {
  puts("PASS responsive Home: primary actions visible after scrolling and pointer navigation succeeds");
 }
 
+static void ui075_tap(lv_obj_t *obj,lv_indev_t *pointer)
+{
+ assert(obj);lv_obj_scroll_to_view_recursive(obj,LV_ANIM_OFF);pump();lv_obj_update_layout(obj);lv_area_t a;lv_obj_get_coords(obj,&a);
+ tap_screen(pointer,(a.x1+a.x2)/2,(a.y1+a.y2)/2);pump();pump();
+}
+static void ui075_remove_iot(lv_indev_t *pointer)
+{
+ lv_obj_t *name=find_label(lv_scr_act(),ui_i18n_is_zh()?"智能设备":"Smart devices");assert(name);
+ lv_obj_t *card=lv_obj_get_parent(name),*shield=lv_obj_get_child(card,-1),*minus=lv_obj_get_child(shield,-1);
+ ui075_tap(minus,pointer);
+ assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"智能设备":"Smart devices"));
+}
+static void ui075_open_library(lv_indev_t *pointer)
+{
+ lv_obj_t *empty=find_label(lv_scr_act(),ui_i18n_is_zh()?"添加组件":"Add widget");assert(empty);
+ lv_obj_t *shield=lv_obj_get_child(lv_obj_get_parent(empty),-1);ui075_tap(shield,pointer);
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
+}
+static lv_obj_t *ui075_card(const char *zh, const char *en)
+{
+ lv_obj_t *name=find_label(lv_scr_act(),ui_i18n_is_zh()?zh:en);assert(name);
+ return lv_obj_get_parent(name);
+}
+static void ui075_drag(lv_indev_t *pointer,lv_obj_t *from,lv_obj_t *to)
+{
+ lv_obj_update_layout(lv_scr_act());lv_area_t a,b;lv_obj_get_coords(from,&a);lv_obj_get_coords(to,&b);
+ int x=(a.x1+a.x2)/2,y=a.y1+80,tx=(b.x1+b.x2)/2,ty=b.y1+80;
+ touch_x=x;touch_y=y;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+ for(int i=1;i<=12;i++){touch_x=x+(tx-x)*i/12;touch_y=y+(ty-y)*i/12;lv_tick_inc(18);lv_indev_read(pointer);lv_timer_handler();}
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+}
+static void ui075_drag_and_library(lv_indev_t *pointer,const char *path)
+{
+ mimi_widget_layout loaded;
+ int before=app_open_count,cloud_before=pairing_refreshes,hdmi_before=hdmi_mutations;
+ /* Hold the real environment card; releasing after the editor rebuild must
+  * neither open Settings nor leak a click to a control below. */
+ lv_obj_t *env=ui075_card("环境","Environment");lv_area_t a;lv_obj_get_coords(env,&a);
+ touch_x=(a.x1+a.x2)/2;touch_y=a.y1+80;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"编辑桌面组件":"Edit desktop widgets"));
+ ui075_drag(pointer,ui075_card("环境","Environment"),ui075_card("智能设备","Smart devices"));
+ /* Cross-size drop is refused; the previous same-size swap remains. */
+ ui075_drag(pointer,ui075_card("环境","Environment"),ui075_card("Mimi 助手","Mimi Assistant"));
+ lv_obj_t *save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));
+ assert(loaded.slots[0]==MIMI_WIDGET_ASSISTANT && loaded.slots[2]==MIMI_WIDGET_IOT && loaded.slots[3]==MIMI_WIDGET_ENVIRONMENT);
+ assert(!unlink(path));ui_rebuild_home();pump();pump();
+ desktop_widgets_edit();pump();pump();ui075_remove_iot(pointer);ui075_open_library(pointer);
+ /* Existing and incompatible rows cannot write into the selected slot. */
+ lv_obj_t *row=lv_obj_get_parent(find_label(lv_scr_act(),ui_i18n_is_zh()?"网络状态":"Network"));
+ lv_obj_t *list=lv_obj_get_parent(row);
+ ui075_tap(lv_obj_get_child(lv_obj_get_child(list,0),-1),pointer);
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
+ lv_obj_t *close=find_label(lv_scr_act(),LV_SYMBOL_CLOSE);assert(close);ui075_tap(lv_obj_get_parent(close),pointer);
+ assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"添加组件":"Add widget"));
+ ui075_open_library(pointer);
+ /* Save remains reachable while the library is open on the approved screen. */
+ save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[3]==MIMI_WIDGET_EMPTY);
+ assert(!unlink(path));ui_rebuild_home();pump();pump();
+ assert(app_open_count==before && pairing_refreshes==cloud_before && hdmi_mutations==hdmi_before);
+ puts("PASS UI075 real pointer long press, same-size drag, cross-size rejection, disabled row, close/reopen retains draft, modal-open save; no background actions");
+}
+static void test_widget_editor(void)
+{
+ int before=app_open_count,cloud_before=pairing_refreshes,hdmi_before=hdmi_mutations;
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ char path[4096];assert(!mimi_widget_layout_path(path,sizeof(path)));
+ mimi_widget_layout initial,loaded;assert(!mimi_widget_layout_load(path,&initial));
+ desktop_widgets_edit();pump();pump();ui075_remove_iot(pointer);
+ lv_obj_t *cancel=find_label(lv_scr_act(),ui_i18n_is_zh()?"取消":"Cancel");ui075_tap(lv_obj_get_parent(cancel),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(!memcmp(&initial,&loaded,sizeof(initial)));
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"智能设备":"Smart devices"));
+ desktop_widgets_edit();pump();pump();ui075_remove_iot(pointer);ui075_open_library(pointer);
+ lv_obj_t *network=find_label(lv_scr_act(),ui_i18n_is_zh()?"网络状态":"Network");assert(network);
+ ui075_tap(lv_obj_get_child(lv_obj_get_parent(network),-1),pointer);
+ assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"移除组件不会卸载应用":"Removing widgets does not uninstall apps"));
+ lv_obj_t *save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[3]==MIMI_WIDGET_NETWORK && loaded.revision==1);
+ ui_rebuild_home();pump();pump();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"网络状态":"Network"));
+ /* Simulate an unsupported on-disk version. Saving must leave both it and the draft intact. */
+ FILE *f=fopen(path,"w");assert(f);fputs("{\"schema\":99}",f);fclose(f);
+ desktop_widgets_edit();pump();pump();save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"保存失败，草稿已保留":"Save failed; draft retained"));
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout"));
+ cancel=find_label(lv_scr_act(),ui_i18n_is_zh()?"取消":"Cancel");ui075_tap(lv_obj_get_parent(cancel),pointer);
+ assert(app_open_count==before && pairing_refreshes==cloud_before && hdmi_mutations==hdmi_before);
+ assert(!unlink(path));ui_rebuild_home();pump();pump();ui075_drag_and_library(pointer,path);lv_indev_delete(pointer);
+ puts("PASS UI075 actual pointer editing: remove/cancel, compatible add, save/reload, failed save retains draft; no app launch/pairing/HDMI mutation");
+}
+
+static void test_small_widget_drag(void)
+{
+ assert(review_width<1000);
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ int opened=app_open_count,paired=pairing_refreshes,hdmi=hdmi_mutations;
+ desktop_widgets_edit();pump();pump();
+ lv_obj_t *from=ui075_card("环境","Environment"),*to=ui075_card("智能设备","Smart devices"),*g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_update_layout(g);
+ lv_area_t area;lv_obj_get_coords(g,&area);
+ touch_x=(area.x1+area.x2)/2;touch_y=area.y1+40;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y2-12;lv_indev_read(pointer);
+ bool reached=false;
+ for(int i=0;i<100;i++){
+  lv_tick_inc(30);lv_indev_read(pointer);lv_timer_handler();lv_obj_update_layout(g);
+  lv_area_t target;lv_obj_get_coords(to,&target);
+  if(touch_y>=target.y1+16 && touch_y<=target.y2-16){reached=true;break;}
+ }
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+ assert(reached && "cross-viewport target never reached");
+ lv_obj_t *save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ char path[4096];mimi_widget_layout loaded;assert(!mimi_widget_layout_path(path,sizeof(path)));assert(!mimi_widget_layout_load(path,&loaded));
+ assert(loaded.slots[2]==MIMI_WIDGET_IOT && loaded.slots[3]==MIMI_WIDGET_ENVIRONMENT);
+ /* Drag back up through the viewport, then use an ordinary swipe. */
+ desktop_widgets_edit();pump();pump();
+ from=ui075_card("环境","Environment");to=ui075_card("智能设备","Smart devices");g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_get_coords(g,&area);
+ touch_x=(area.x1+area.x2)/2;touch_y=area.y1+40;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y1+12;lv_indev_read(pointer);reached=false;
+ for(int i=0;i<100;i++){
+  lv_tick_inc(30);lv_indev_read(pointer);lv_timer_handler();lv_obj_update_layout(g);
+  lv_area_t target;lv_obj_get_coords(to,&target);
+  if(touch_y>=target.y1+16 && touch_y<=target.y2-16){reached=true;break;}
+ }
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();assert(reached);
+ from=ui075_card("环境","Environment");g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_get_coords(g,&area);
+ int previous_scroll=lv_obj_get_scroll_y(g);
+ touch_y=area.y2-25;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=1;i<=8;i++){touch_y=area.y2-25-i*8;lv_tick_inc(18);lv_indev_read(pointer);lv_timer_handler();}
+ touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();pump();
+ assert(lv_obj_get_scroll_y(g)>previous_scroll);
+ save=find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout");ui075_tap(lv_obj_get_parent(save),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[2]==MIMI_WIDGET_ENVIRONMENT && loaded.slots[3]==MIMI_WIDGET_IOT);
+ /* Releasing outside the list cancels the drag and stops its timer. */
+ desktop_widgets_edit();pump();pump();from=ui075_card("环境","Environment");g=lv_obj_get_parent(from);
+ lv_obj_scroll_to_y(g,lv_obj_get_y(from),LV_ANIM_OFF);pump();lv_obj_get_coords(g,&area);
+ touch_y=area.y1+40;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);
+ for(int i=0;i<45;i++){lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y2-12;lv_indev_read(pointer);
+ for(int i=0;i<8;i++){lv_tick_inc(30);lv_indev_read(pointer);lv_timer_handler();}
+ touch_y=area.y2+15;touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);pump();
+ int stopped=lv_obj_get_scroll_y(g);for(int i=0;i<20;i++){lv_tick_inc(30);lv_timer_handler();}assert(lv_obj_get_scroll_y(g)==stopped);
+ lv_obj_t *cancel=find_label(lv_scr_act(),ui_i18n_is_zh()?"取消":"Cancel");ui075_tap(lv_obj_get_parent(cancel),pointer);
+ assert(!mimi_widget_layout_load(path,&loaded));assert(loaded.slots[2]==MIMI_WIDGET_ENVIRONMENT && loaded.slots[3]==MIMI_WIDGET_IOT);
+ assert(app_open_count==opened && pairing_refreshes==paired && hdmi_mutations==hdmi);
+ lv_indev_delete(pointer);
+ puts("PASS small-screen actual pointer long-hold edge scrolling swaps offscreen same-size target without app/cloud/HDMI actions");
+}
+
+static void test_center_pointer(void)
+{
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+ const char *zh[]={"屏幕亮度","音量"},*en[]={"Brightness","Volume"};
+ const int targets[]={64,37};
+ for(int i=0;i<2;i++) {
+  lv_obj_t *name=find_label(lv_layer_top(),ui_i18n_is_zh()?zh[i]:en[i]);assert(name);
+  lv_obj_t *slider=lv_obj_get_child(lv_obj_get_parent(name),-1);assert(lv_obj_check_type(slider,&lv_slider_class));
+  lv_obj_scroll_to_view_recursive(slider,LV_ANIM_OFF);pump();lv_area_t area;lv_obj_get_coords(slider,&area);
+  assert(area.y1>=0 && area.y2<review_height);
+  tap_screen(pointer,area.x1+(area.x2-area.x1)*targets[i]/100,(area.y1+area.y2)/2);
+  int actual=lv_slider_get_value(slider);assert(abs(actual-targets[i])<=2);
+  assert(i?(volume==actual && settings.volume==actual):(backlight==actual && settings.brightness==actual));
+ }
+ int restore=volume;
+ lv_obj_t *name=find_label(lv_layer_top(),ui_i18n_is_zh()?"静音":"Mute");assert(name);
+ lv_obj_t *sw=lv_obj_get_child(lv_obj_get_parent(name),-1);assert(lv_obj_check_type(sw,&lv_switch_class));
+ ui075_tap(sw,pointer);assert(volume==0 && settings.volume==0);
+ ui075_tap(sw,pointer);assert(volume==restore && settings.volume==restore);
+ if(desktop_hdmi_supported()) {
+  name=find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 采集":"HDMI capture");assert(name);sw=lv_obj_get_child(lv_obj_get_parent(name),-1);
+  hdmi_preview_status_t status={0};emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();
+  int before=saves,mutations=hdmi_mutations;
+  ui075_tap(sw,pointer);assert(saves==before && hdmi_mutations==mutations+1 && !settings.hdmi_enabled);
+  status.enabled=true;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();assert(settings.hdmi_enabled && saves==before+1);
+  ui075_tap(sw,pointer);assert(saves==before+1);
+  status.enabled=false;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();assert(!settings.hdmi_enabled && saves==before+2);
+  ui075_tap(sw,pointer);lv_tick_inc(2600);pump();assert(!settings.hdmi_enabled && saves==before+2 && !lv_obj_has_state(sw,LV_STATE_CHECKED));
+ }
+ ota_status_t ota={.state=OTA_STATE_UPDATE_AVAILABLE};emit(TOPIC_OTA_STATUS,&ota,sizeof(ota));lv_tick_inc(1100);pump();
+ name=find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 发现可用更新":"System update · Update available");assert(name);
+ int opened=app_open_count,commands=ota_commands;ui075_tap(lv_obj_get_parent(name),pointer);
+ assert(app_open_count==opened+1 && last_app_open==APP_ID_OTA && ota_commands==commands);
+ app_manager_back_home();pump();tap_screen(pointer,review_width/2,review_width<1000?84:32);
+ assert(find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER)));
+ lv_indev_delete(pointer);
+ puts("PASS actual pointer controls: visible sliders/mute/restore/HDMI ACK+timeout and scroll-to-notification navigation; isolated providers only");
+}
+
+static void test_center_controls(void)
+{
+ int index=0;test_sliders(lv_layer_top(),&index);assert(index==2);
+ assert(settings.brightness==64 && settings.volume==37 && backlight==64 && volume==37);
+ lv_obj_t *mute_name=find_label(lv_layer_top(),ui_i18n_is_zh()?"静音":"Mute");assert(mute_name);
+ lv_obj_t *mute=lv_obj_get_child(lv_obj_get_parent(mute_name),-1);assert(lv_obj_check_type(mute,&lv_switch_class));
+ lv_obj_add_state(mute,LV_STATE_CHECKED);lv_obj_send_event(mute,LV_EVENT_VALUE_CHANGED,NULL);assert(volume==0);
+ lv_obj_clear_state(mute,LV_STATE_CHECKED);lv_obj_send_event(mute,LV_EVENT_VALUE_CHANGED,NULL);assert(volume==37);
+ if(desktop_hdmi_supported()){
+  lv_obj_t *name=find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 采集":"HDMI capture");assert(name);
+  lv_obj_t *sw=lv_obj_get_child(lv_obj_get_parent(name),-1);assert(lv_obj_check_type(sw,&lv_switch_class));
+  hdmi_preview_status_t status={0};emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();
+  int before=saves,mutations=hdmi_mutations;
+  lv_obj_add_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);
+  assert(saves==before && hdmi_mutations==mutations+1 && !settings.hdmi_enabled);
+  status.enabled=true;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();assert(saves==before+1 && settings.hdmi_enabled && lv_obj_has_state(sw,LV_STATE_CHECKED));
+  lv_obj_clear_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);assert(saves==before+1);
+  status.enabled=false;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();assert(!settings.hdmi_enabled && saves==before+2);
+  lv_obj_add_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);lv_tick_inc(2600);pump();
+  assert(saves==before+2 && !settings.hdmi_enabled && !lv_obj_has_state(sw,LV_STATE_CHECKED));
+  assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 未响应，请检查连接":"HDMI did not respond; check connection"));
+ }
+ puts("PASS UI075 controls: sliders apply/read back/save on release; mute restores volume; HDMI request does not save before ACK; timeout does not report success");
+}
+
+static void test_environment_details(bool stale_view)
+{
+ int apps=app_open_count,updates=ota_commands,bindings=pairing_refreshes,capture=hdmi_mutations,stored=saves;
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+ sensor_status_t sensor={.valid=true,.temp_mC=30000,.humi_mpermil=36000};
+ emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_scr_act(),"30°C") && find_label(lv_scr_act(),"36%"));
+ lv_tick_inc(61000);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"数据已过期":"Data is stale"));
+ assert(!find_label(lv_scr_act(),"30°C") && !find_label(lv_scr_act(),"36%"));
+ emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ ui075_tap(ui075_card("环境","Environment"),pointer);
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ assert(find_label(lv_layer_top(),"30°C     36%"));
+ /* Covered Home card and control-bar touches must not activate apps. */
+ tap_screen(pointer,HOME_SCREEN_W-80,32);
+ assert(app_open_count==apps && find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ lv_tick_inc(61000);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"数据已过期":"Data is stale"));
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"数据已过期，等待新的读数":"Data is stale; waiting for a new reading"));
+ assert(!find_label(lv_layer_top(),"30°C     36%"));
+ sensor.temp_mC=27000;sensor.humi_mpermil=43000;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_layer_top(),"27°C     43%"));
+ sensor.err_code=-5;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"当前读数不可用":"Current reading unavailable"));
+ sensor.err_code=0;sensor.humi_mpermil=110000;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"当前读数不可用":"Current reading unavailable"));
+ sensor.humi_mpermil=43000;emit(TOPIC_SENSOR_STATUS,&sensor,sizeof(sensor));pump();
+ lv_obj_t *close=find_label(lv_layer_top(),ui_i18n_is_zh()?"关闭":"Close");ui075_tap(lv_obj_get_parent(close),pointer);
+ assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ ui075_tap(ui075_card("环境","Environment"),pointer);
+ ui_rebuild_home();pump();pump();
+ assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"环境详情":"Environment details"));
+ ui075_tap(ui075_card("环境","Environment"),pointer);
+ assert(find_label(lv_layer_top(),"27°C     43%"));
+ if(stale_view){lv_tick_inc(61000);pump();pump();}
+ assert(app_open_count==apps && ota_commands==updates && pairing_refreshes==bindings && hdmi_mutations==capture && saves==stored);
+ lv_indev_delete(pointer);
+ puts("PASS UI075 environment: actual card tap, overlay blocking, expiry, valid recovery, provider error/out-of-range rejection, close/reopen and Home rebuild cleanup; no commands/saves");
+}
+static void test_notice(bool leave_error)
+{
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+ tap_screen(pointer,review_width/2,32);
+ int apps=app_open_count,updates=ota_commands,bindings=pairing_refreshes,capture=hdmi_mutations,stored=saves;
+ ota_status_t status={.state=OTA_STATE_IDLE};emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ lv_obj_t *l=find_label(lv_layer_top(),ui_i18n_is_zh()?"通知    暂无本地通知":"Notifications    No local notifications");assert(l);
+ ui075_tap(lv_obj_get_parent(l),pointer);assert(app_open_count==apps);
+ status.state=OTA_STATE_DOWNLOADING;status.progress=42;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ l=find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 下载中 42%":"System update · Downloading 42%");assert(l);
+ ui075_tap(lv_obj_get_parent(l),pointer);assert(app_open_count==apps+1 && last_app_open==APP_ID_OTA);
+ assert(ota_commands==updates && pairing_refreshes==bindings && hdmi_mutations==capture && saves==stored);
+ tap_screen(pointer,review_width/2,32);
+ status.state=OTA_STATE_UP_TO_DATE;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"通知    暂无本地通知":"Notifications    No local notifications"));
+ status.state=OTA_STATE_ERROR;status.error_code=-5;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
+ assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 更新失败，点此查看":"System update · Update failed; tap for details"));
+ if(!leave_error){status.state=OTA_STATE_IDLE;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();}
+ lv_indev_delete(pointer);
+ puts("PASS UI075 notification: existing OTA event, empty row disabled, download progress, click only opens system OTA, up-to-date clears and failure remains visible; no mutation");
+}
+
+static mimi_iot_summary ui075_fetch_summary(const char *reply,int rc)
+{
+ review_iot_devices_reply=reply;review_iot_devices_rc=rc;review_iot_connected=true;
+ app_iot.init();for(int i=0;i<30;i++){usleep(10000);lv_tick_inc(100);pump();}
+ mimi_iot_summary result=mimi_iot_summary_get();app_iot.close();return result;
+}
+static void test_iot_summary(void)
+{
+ lv_obj_t *home=lv_scr_act();
+ int commands=review_iot_commands,bindings=pairing_refreshes,capture=hdmi_mutations;
+ assert(mimi_iot_summary_get().state==MIMI_IOT_SUMMARY_UNKNOWN);
+ mimi_iot_summary snap=ui075_fetch_summary("{\"devices\":[]}",0);
+ assert(snap.state==MIMI_IOT_SUMMARY_READY && snap.total==0 && snap.online==0);
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\",\"online\":true},{\"id\":\"socket\",\"online\":false}]}",0);
+ assert(snap.state==MIMI_IOT_SUMMARY_READY && snap.total==2 && snap.online==1);
+ lv_scr_load(home);lv_tick_inc(1100);pump();
+ assert(find_label(home,ui_i18n_is_zh()?"2 台设备 · 1 台在线":"2 devices · 1 online"));
+ unsigned requests=atomic_load(&review_iot_requests);
+ lv_tick_inc(61000);pump();pump();snap=mimi_iot_summary_get();
+ assert(snap.state==MIMI_IOT_SUMMARY_STALE && snap.total==0 && snap.online==0);
+ assert(find_label(home,ui_i18n_is_zh()?"状态已过期":"Status is stale"));
+ assert(atomic_load(&review_iot_requests)==requests);
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\"}]}",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\",\"online\":true},{\"id\":\"lamp\",\"online\":false}]}",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ snap=ui075_fetch_summary("{\"devices\":[42,null]}",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ snap=ui075_fetch_summary("{\"error\":\"authorization_required\"}",-2);assert(snap.state==MIMI_IOT_SUMMARY_UNAUTHORIZED && snap.total==0);
+ snap=ui075_fetch_summary("{\"error\":\"not_configured\"}",-2);assert(snap.state==MIMI_IOT_SUMMARY_NOT_CONFIGURED);
+ snap=ui075_fetch_summary("{\"devices\":[]} trailing",0);assert(snap.state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ /* A completed response for an already-closed page must not populate Home. */
+ review_iot_devices_reply="{\"devices\":[]}";review_iot_devices_rc=0;review_iot_delay_us=150000;
+ app_iot.init();app_iot.close();
+ for(int i=0;i<25;i++){usleep(10000);lv_tick_inc(100);pump();}
+ assert(mimi_iot_summary_get().state==MIMI_IOT_SUMMARY_UNAVAILABLE);
+ review_iot_delay_us=0;
+ snap=ui075_fetch_summary("{\"devices\":[{\"id\":\"lamp\",\"online\":true},{\"id\":\"socket\",\"online\":false}]}",0);
+ assert(snap.state==MIMI_IOT_SUMMARY_READY && snap.total==2 && snap.online==1);
+ lv_scr_load(home);ui_rebuild_home();pump();pump();requests=atomic_load(&review_iot_requests);
+ lv_tick_inc(1100);pump();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"2 台设备 · 1 台在线":"2 devices · 1 online"));
+ assert(atomic_load(&review_iot_requests)==requests && review_iot_commands==commands && pairing_refreshes==bindings && hdmi_mutations==capture);
+ puts("PASS UI075 IoT aggregate: real worker/parser, empty/online counts, absent online and duplicate IDs rejected, auth/config/parse failures, expiry, late closed-page result ignored, recovery and zero Home requests");
+}
+
 int main(int argc,char**argv) {
  assert(argc==5 || argc==7);
  if(argc==7){review_width=atoi(argv[5]);review_height=atoi(argv[6]);}
@@ -385,7 +731,16 @@ int main(int argc,char**argv) {
  lv_display_t*d=lv_display_create(review_width,review_height);lv_display_set_color_format(d,LV_COLOR_FORMAT_XRGB8888);
  static uint8_t buf[1920*100*4];lv_display_set_buffers(d,buf,NULL,sizeof(buf),LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,flush);
  if(!desktop_hdmi_supported())settings.hdmi_enabled=true; /* persisted legacy ON must not enable unsupported hardware */
+ char widget_fixture_dir[]="/tmp/mimi-ui075-render-XXXXXX";assert(mkdtemp(widget_fixture_dir));
+ snprintf(review_layout_dir,sizeof(review_layout_dir),"%s",widget_fixture_dir);atexit(cleanup_review_layout);setenv("TZ","Asia/Shanghai",1);tzset();
+ char widget_fixture_path[256];snprintf(widget_fixture_path,sizeof(widget_fixture_path),"%s/settings",widget_fixture_dir);setenv("LV_SETTINGS_FILE",widget_fixture_path,1);
  ui_init();
+ /* Deterministic visual fixture, not observed target telemetry. */
+ ui_clock_set_sensor(true,30,36);
+ cloud_status_t review_cloud={.state=CLOUD_STATE_CONNECTED};emit(TOPIC_CLOUD_STATUS,&review_cloud,sizeof(review_cloud));
+ cloud_pairing_status_v1_t review_owner={.version=1,.bytes=sizeof(review_owner),.ownership=CLOUD_PAIRING_BOUND};emit(TOPIC_CLOUD_PAIRING_STATUS,&review_owner,sizeof(review_owner));
+ hdmi_preview_status_t review_hdmi={0};emit(TOPIC_HDMI_PREVIEW_STATUS,&review_hdmi,sizeof(review_hdmi));
+
  if(!desktop_hdmi_supported()){
   pump();int before=saves;
   assert(find_label(lv_scr_act(),ui_tr(UI_STR_HDMI_UNSUPPORTED)));
@@ -437,13 +792,42 @@ int main(int argc,char**argv) {
   lv_obj_send_event(strip,LV_EVENT_SCROLL_END,NULL);pump();
   assert(!ui_all_apps_is_visible());
  }
- else if(strcmp(argv[1],"control-center")==0){
+ else if(!strcmp(argv[1],"home-iot-summary")){test_iot_summary();}
+ else if(!strcmp(argv[1],"environment") || !strcmp(argv[1],"environment-stale")){test_environment_details(!strcmp(argv[1],"environment-stale"));}
+ else if(!strcmp(argv[1],"notifications") || !strcmp(argv[1],"notifications-empty")){test_notice(!strcmp(argv[1],"notifications"));}
+ else if(!strcmp(argv[1],"widget-small-drag")){test_small_widget_drag();}
+ else if(!strcmp(argv[1],"widget-behavior")){test_widget_editor();}
+ else if(strcmp(argv[1],"widget-editor")==0 || strcmp(argv[1],"widget-library")==0){
+  desktop_widgets_edit();pump();pump();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"保存布局":"Save layout"));
+  if(!strcmp(argv[1],"widget-library")){
+   lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+   ui075_remove_iot(pointer);ui075_open_library(pointer);lv_indev_delete(pointer);
+  }
+ }
+ else if(strcmp(argv[1],"control-center")==0 || !strcmp(argv[1],"control-behavior") || !strcmp(argv[1],"control-pointer")){
   lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
   lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
   tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_indev_delete(pointer);
   lv_obj_t *title=find_label(lv_layer_top(),ui_tr(UI_STR_CONTROL_CENTER));assert(title && lv_obj_is_visible(title));
+  if(review_height<620){
+   lv_obj_t *panel=lv_obj_get_parent(title);lv_area_t area;lv_obj_get_coords(panel,&area);
+   assert(area.y1>=0 && area.y2<review_height);
+   lv_obj_t *close=find_label(panel,ui_i18n_is_zh()?"收起  ∧":"Collapse  ^");assert(close);
+   pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+   touch_x=review_width/2;touch_y=review_height-100;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+   for(int step=1;step<=10;step++){touch_y=review_height-100-step*16;lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+   touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);lv_tick_inc(350);pump();
+   assert(lv_obj_is_visible(panel) && lv_obj_get_scroll_y(panel)>0);
+   ui075_tap(lv_obj_get_parent(close),pointer);lv_tick_inc(400);pump();
+   assert(!lv_obj_is_visible(title));
+   tap_screen(pointer,review_width/2,review_width<1000?84:32);lv_tick_inc(400);pump();
+   assert(lv_obj_is_visible(title) && lv_obj_get_scroll_y(panel)==0);lv_indev_delete(pointer);
+   puts("PASS small control center: bounded viewport, scroll to collapse, real pointer close/reopen");
+  }
+  if(!strcmp(argv[1],"control-behavior"))test_center_controls();
+  if(!strcmp(argv[1],"control-pointer"))test_center_pointer();
   if(!desktop_hdmi_supported()){
-   lv_obj_t *caption=find_label(lv_layer_top(),ui_tr(UI_STR_HDMI_DISPLAY));assert(caption);
+   lv_obj_t *caption=find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 采集":"HDMI capture");assert(caption);
    lv_obj_t *sw=lv_obj_get_child(lv_obj_get_parent(caption),-1);
    assert(lv_obj_check_type(sw,&lv_switch_class));
    assert(lv_obj_has_state(sw,LV_STATE_DISABLED) && !lv_obj_has_state(sw,LV_STATE_CHECKED));
@@ -636,6 +1020,7 @@ int main(int argc,char**argv) {
    tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
    assert(review_iot_commands==1);
+   assert(mimi_iot_summary_get().state!=MIMI_IOT_SUMMARY_READY);
    const char *accepted=ui_i18n_is_zh()?"指令已受理，尚未确认设备状态。请刷新核对结果。":"Command accepted; device state is not confirmed. Refresh to check the result.";
    if(rejected || malformed){assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…"));assert(!find_label(lv_scr_act(),accepted));assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"未确认指令受理结果。请先刷新设备状态，避免重复操作。":"Command acceptance is unconfirmed. Refresh device state before retrying."));}
    else assert(find_label(lv_scr_act(),accepted));

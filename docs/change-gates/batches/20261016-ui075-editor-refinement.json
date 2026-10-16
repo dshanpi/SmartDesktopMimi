@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "UI075 editor and library alignment with actual pointer drag regression",
+  "context": "Approved four renders; continuation of8958178 without hardware or frozen artifact changes",
+  "next_steps": "Environment details and notification source/interaction, stale-state presentation, richer shared IoT state. Final font/icon/orb/HDMI status-dot alignment; library captions now bounded with ellipsis but not an exact typography match. Smaller-screen layout and pointer tests, physical touch/drag, target compatibility and installation. No new package/image/Release or source push in this batch; frozen candidates unchanged.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Upper-layer UI editing/library and host evidence",
+      "invariants": "No auto app launch/capture/pairing; draft cancel and compatibility restrictions; no credential/IPC/schema/device changes",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_widgets.c",
+        "apps/lv_port_linux/src/ui/desktop_clock.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/validation/ui075-editor-refinement.json",
+        "docs/change-gates/batches/20261016-ui075-editor-refinement.json"
+      ],
+      "checks": [
+        {
+          "name": "Host pointer/render/regression and A133 compile",
+          "status": "passed",
+          "scope": "Actual isolated LVGL, not physical touch",
+          "evidence": "docs/validation/ui075-editor-refinement.json"
+        },
+        {
+          "name": "Final visual and physical acceptance",
+          "status": "not_run",
+          "scope": "Exact reference match and target operation",
+          "reason": "Recorded remaining differences; no device operation",
+          "evidence": "docs/validation/ui075-editor-refinement.json"
+        }
+      ]
+    }
+  ]
+}

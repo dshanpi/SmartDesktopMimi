@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "UI075 narrow viewport drag and scroll separation",
+  "context": "Real pointer old failure then bounded long-hold edge scrolling repair",
+  "next_steps": "Build exact clean source once using existing pinned application SDK; preserve old candidate. Physical acceptance deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Narrow editor interaction, fixture and inventory",
+      "invariants": "Default1024 geometry unchanged; no backend or hardware calls; same-size only; cancel/rebuild stop timer; do not equate host with physical",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_widgets.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/update/ui-catalog.json",
+        "docs/validation/ui075-small-drag.json",
+        "docs/change-gates/batches/20261016-ui075-small-drag.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Before repair",
+          "status": "failed",
+          "scope": "Actual host pointer cannot reach target",
+          "reason": "No viewport edge scrolling",
+          "evidence": "docs/validation/ui075-small-drag.json"
+        },
+        {
+          "name": "After repair and regression",
+          "status": "passed",
+          "scope": "4small12large renders and19 tests",
+          "evidence": "docs/validation/ui075-small-drag.json"
+        },
+        {
+          "name": "Clean target build and physical",
+          "status": "not_run",
+          "scope": "After source commit and deferred real device",
+          "reason": "No build or hardware result borrowed",
+          "evidence": "docs/validation/ui075-small-drag.json"
+        }
+      ]
+    }
+  ]
+}

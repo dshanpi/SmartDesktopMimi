@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Repair UI075 trace manifest field type",
+  "context": "Initial implementation commit failed trace validator because next_steps was an array instead of nonempty text",
+  "next_steps": "Continue documented UI075 visual and functional gaps; no build input change in this correction",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Trace manifest correction only",
+      "invariants": "Preserve original failing commit and log; do not rebuild or alter device",
+      "paths": [
+        "docs/change-gates/batches/20261016-ui075-components-host.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/change-gates/batches/20261016-ui075-trace-format-repair.json"
+      ],
+      "checks": [
+        {
+          "name": "Manifest shape correction",
+          "status": "passed",
+          "scope": "next_steps converted to nonempty text",
+          "evidence": "docs/change-gates/REQ-MIMI-UI-075.md"
+        }
+      ]
+    }
+  ]
+}

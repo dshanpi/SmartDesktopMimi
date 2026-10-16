@@ -12,4 +12,6 @@ void ui_clock_apply_theme(void);
 /* 传感器温湿度更新。valid=false 显示占位；temp_c 单位 °C，humi_pct 单位 %。*/
 void ui_clock_set_sensor(bool valid, int temp_c, int humi_pct);
 
+void ui_clock_set_hdmi(bool enabled);
+
 #endif /* DESKTOP_CLOCK_H */

@@ -1,0 +1,32 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T10:09:27.170992+00:00",
+  "status": "passed_inventory_only",
+  "previous_check": "failed_stale_inventory",
+  "surfaces_reviewed": [
+    "apps/lv_port_linux/src/apps/iot/iot_app.c",
+    "apps/lv_port_linux/src/ui/desktop_clock.c",
+    "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+    "apps/lv_port_linux/src/ui/desktop_widgets.c"
+  ],
+  "scenarios_added": {
+    "widgets": 14,
+    "control_center": 7
+  },
+  "total_interactive_sources": 59,
+  "application_ids": 11,
+  "host_evidence": [
+    "docs/validation/ui075-components-host.json",
+    "docs/validation/ui075-editor-refinement.json",
+    "docs/validation/ui075-state-details.json",
+    "docs/validation/ui075-iot-summary.json",
+    "docs/validation/ui075-visual-polish.json",
+    "docs/validation/ui075-pointer-matrix.json"
+  ],
+  "physical": "not_run",
+  "small_screen_cross_viewport_drag": "not_run",
+  "candidate_source": "127611e912ef8b275c164d6456eba1256619bdc4",
+  "candidate_unchanged": true,
+  "signed_or_published": false,
+  "next": "Final visual/interaction review and remote source gates; build next final product change once, not for inventory/docs."
+}

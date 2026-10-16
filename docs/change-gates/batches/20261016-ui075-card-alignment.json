@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "UI075 card alignment and development branch sync plan",
+  "context": "Approved render continuation aftera6092a3; source synchronization authorized underDELIVERY058",
+  "next_steps": "Four approved views implemented and primary flows host-tested; final visual detail acceptance still pending, not pixel-identical qualified. Small-screen extended editor drag and lower controls need more coverage; physical screen/touch and compatible installation not_run. Existing target IPC differs from current candidate; no installation into incompatible old system. Real Tuya, other notification sources and recorded deferred/resource-dependent delivery items remain.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "UI projection and evidence; independent source branch planned",
+      "invariants": "No secrets, hardware or backend protocol change; no main/tag/frozen release alteration; target checks not promoted",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_widgets.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/validation/ui075-card-alignment.json",
+        "docs/change-gates/batches/20261016-ui075-card-alignment.json"
+      ],
+      "checks": [
+        {
+          "name": "Host/cross compile",
+          "status": "passed",
+          "scope": "20 views plus19 regression and A133 ELF",
+          "evidence": "docs/validation/ui075-card-alignment.json"
+        },
+        {
+          "name": "Physical/final visual acceptance",
+          "status": "not_run",
+          "scope": "Actual device and final visual acceptance",
+          "reason": "Retained pending items",
+          "evidence": "docs/validation/ui075-card-alignment.json"
+        }
+      ]
+    }
+  ]
+}

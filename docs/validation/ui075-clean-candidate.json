@@ -1,0 +1,50 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T10:05:35.452413+00:00",
+  "source_commit": "127611e912ef8b275c164d6456eba1256619bdc4",
+  "status": "passed_unsigned_host_candidate_only",
+  "sdk_lock_sha256": "bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261",
+  "desktop_sha256": "759507e6182ddfe38a7004e1395eec16fb6de8859cf8f925c1db269effe8bcf7",
+  "candidate_receipt_sha256": "8a48d07ae78564df03bbda30c2d1612e552c3cfdb810662e643497465304d875",
+  "compiled_source_count": 674,
+  "staged_files_verified": 28,
+  "source_clean_through_build": true,
+  "interface": {
+    "id": "mimi-ipc-v1.2",
+    "sha256": "3b3768efa8cecd37f4d4ef789c86257e7f0c4bfe9357cb1c271034fc6f80fdfb"
+  },
+  "display_profiles": [
+    "1024x768"
+  ],
+  "node_version": "v22.23.3",
+  "npm_version": "10.9.9",
+  "checks": {
+    "desktop_web_clean_build": "passed",
+    "public_source_audit": "passed",
+    "contracts_and_source_ownership": "passed",
+    "staged_file_hashes": "passed",
+    "settings_cross_version_host": "passed",
+    "signing_and_package": "not_run",
+    "physical_screen_touch": "not_run",
+    "remote_binary_readback": "not_run"
+  },
+  "failure_history": [
+    {
+      "attempt": 1,
+      "status": "failed",
+      "reason": "Frozen settings source hashes stale; reviewed exact settings ABI/v8 and old/new real-file compatibility before updating only two hashes in source127611e"
+    },
+    {
+      "attempt": 2,
+      "status": "failed",
+      "reason": "Desktop built, Web launch missing existing npm in noninteractive PATH; no source changes; explicit existing Node path used in third attempt"
+    }
+  ],
+  "limits": [
+    "Host build/fixtures do not qualify real hardware or exact visual match.",
+    "Candidate uses IPC1.2 and must not activate on existing IPC1.1 target.",
+    "Only1024x768 is compiled in this application receipt;800x480 checks belong to native fixtures.",
+    "Old rc26/system5/system6 assets unchanged; no version/signature/Release/device changes."
+  ],
+  "next": "Prepare separately versioned signed draft from this exact build after remaining review; do not rebuild for these documentation changes. Physical installation remains deferred."
+}

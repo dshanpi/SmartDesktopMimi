@@ -10,6 +10,8 @@ ROOT=Path(__file__).resolve().parents[2]
 CATALOG=ROOT/'tests/update/ui-catalog.json'
 SCENARIOS={
  'desktop':['topbar-hit-target','control-center','inline-app-routing','all-apps','inline-horizontal-pages','page-line-indicators','no-duplicate-footer','back-navigation','modal-focus'],
+ 'widgets':['default-five-slots','library-compatible-sizes','draft-cancel','save-persistence-error','concurrent-save-conflict','corrupt-or-future-layout','long-press-edit','same-size-drag','reject-cross-size-drag','small-screen-cross-viewport-drag','environment-details','environment-stale-recovery','iot-summary-empty-error-expired','no-home-cloud-poll'],
+ 'control_center':['brightness-volume-readback-save','mute-restore','hdmi-ack-before-save','hdmi-timeout-restore','readonly-update-notification-navigation','short-screen-scroll-controls','dismiss-no-touch-through'],
  'setting':['sliders-persist','language-theme','network-navigation','application-update','system-update'],
  'wifi':['scan','wrong-password','connect','disconnect','reconnect','cancel'],
  'bt':['enable-disable','scan-pair','rename-cancel','audio-playback','progress','reconnect'],

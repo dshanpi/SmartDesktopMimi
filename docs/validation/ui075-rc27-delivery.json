@@ -1,0 +1,40 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "related_requirements": [
+    "REQ-MIMI-DELIVERY-058",
+    "REQ-MIMI-RELEASE-072"
+  ],
+  "at_utc": "2026-10-16T10:33:39.583210+00:00",
+  "status": "controlled_draft_verified_not_product_complete",
+  "build_source_commit": "0e042980195199c8f1b18c7cf834f1ff3ce13866",
+  "version": "1.0.8-rc.27",
+  "package_sha256": "455ac9f1eb28f8e90432f9cea2c179f23e57eb056cf3d19d987e1dc62fdbc445",
+  "desktop_sha256": "2b2a25bc27442ee8e0f32b98b867753cba357e6a2dc67a542758244b06ccb82f",
+  "sdk_lock_sha256": "bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261",
+  "draft_url": "https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-a40a9887af954bd13ad3",
+  "assets_verified": 17,
+  "checks": {
+    "clean_desktop_web_build": "passed",
+    "source_ci_three_gates": "passed",
+    "signed_admission_14_cases": "passed",
+    "all_remote_asset_hashes_and_signature": "passed",
+    "old_release_inventory_unchanged": "passed",
+    "main_unchanged": "passed",
+    "physical_ui": "not_run",
+    "actual_system_upgrade_rollback_power_data": "not_run",
+    "final_visual_acceptance": "not_run"
+  },
+  "limits": [
+    "Controlled draft only, no stable release or auto update",
+    "Target1024x768 IPC1.2 and exact publicrc5/privaterc6; existing IPC1.1 device incompatible",
+    "800x480 is host interaction evidence, not target binary support",
+    "No device installation, binding reset, key replacement or system rebuild"
+  ],
+  "earlier_failures": [
+    "Initial candidate stale frozen settings source baseline rejected; reviewed old/new settings compatibility before hash update",
+    "Second candidate launcher missing existing npm PATH; corrected launcher only",
+    "Post-build UI inventory stale; reviewed21 scenarios and4 surfaces",
+    "Small-screen cross-viewport drag failed before bounded long-hold edge scroll repair"
+  ],
+  "next": "Review final reference details and physical UI when compatible target environment is available; retain deferred full system and resource-dependent checks. Do not regenerate this artifact for documentation changes."
+}

@@ -1,0 +1,40 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "related_requirements": [
+    "REQ-MIMI-DELIVERY-058",
+    "REQ-MIMI-RELEASE-072"
+  ],
+  "at_utc": "2026-10-16T11:04:11.302453+00:00",
+  "status": "controlled_draft_verified_not_product_complete",
+  "build_source_commit": "918d2a7cc2a71418c99ee7c5646a90e5210ec4cd",
+  "version": "1.0.8-rc.28",
+  "package_sha256": "6b085d4479a1e17b4766efcbae34e5386eaf1a99a3dfafc136e2af4adab0c4e2",
+  "desktop_sha256": "c82a5b78d5ea4b1b9bb65343b0a1e83c90489f797ea474c4d4131694f9471d29",
+  "sdk_lock_sha256": "bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261",
+  "draft_url": "https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-c271505a9e46e03a2fcf",
+  "assets_verified": 17,
+  "checks": {
+    "clean_desktop_web_build": "passed",
+    "source_ci_three_gates": "passed",
+    "signed_admission_14_cases": "passed",
+    "all_remote_asset_hashes_and_signature": "passed",
+    "old_release_inventory_unchanged": "passed",
+    "main_unchanged": "passed",
+    "physical_ui": "not_run",
+    "actual_system_upgrade_rollback_power_data": "not_run",
+    "user_final_visual_acceptance": "not_run"
+  },
+  "limits": [
+    "Controlled draft only, no stable release or auto update",
+    "Target1024x768 IPC1.2 and exact publicrc5/privaterc6; existing IPC1.1 device incompatible",
+    "800x480 is host interaction evidence, not target binary support",
+    "Native rendering differs from generated concept font/icon rasterization and shadows; no pixel-perfect claim",
+    "No device installation, binding reset, key replacement or system rebuild"
+  ],
+  "earlier_failure_evidence": [
+    "docs/validation/ui075-final-review.json",
+    "docs/validation/ui075-small-drag.json",
+    "docs/validation/ui075-rc27-delivery.json"
+  ],
+  "next": "Final native UI source and controlled binary are aligned. Physical screen/touch needs compatible system; retain deferred full system and resource-dependent checks. Do not rebuild for documentation-only changes."
+}

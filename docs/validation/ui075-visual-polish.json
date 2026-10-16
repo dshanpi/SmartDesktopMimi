@@ -1,0 +1,68 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T09:32:55.373043+00:00",
+  "status": "in_progress",
+  "base_commit": "444127860aa18bea3387fc6619297081e621791e",
+  "implemented": [
+    "Keep assistant orb highlight within sphere, center its rotation and soften shadow.",
+    "Place HDMI indicator relative to measured label width; disabled/unknown gray, enabled follows confirmed state.",
+    "Bound short-screen control panel height with vertical scrolling; preserve fixed1024 layout. Scroll gesture does not dismiss a clipped panel, reopening returns to top.",
+    "Pointer fixture scrolls offscreen editor targets into view before tapping."
+  ],
+  "checks": [
+    {
+      "name": "Final1024 LVGL views and interactions",
+      "status": "passed",
+      "scope": "24 views across zh/en light/dark; home/editor/library/center and existing pointer/control behavior; real app manager"
+    },
+    {
+      "name": "800x480 host investigation and fix",
+      "status": "passed",
+      "scope": "16 views after bounds/test-scroll correction; final4 center views with real pointer upward drag, scroll-to-close tap and reopen; main actions real-manager scrolling. Not all small-screen workflows."
+    },
+    {
+      "name": "Affected regressions",
+      "status": "passed",
+      "scope": "19 tests, existing layout/settings sanitizers"
+    },
+    {
+      "name": "A133 desktop compile",
+      "status": "passed",
+      "sha256": "f375615b55f1d76d880bf2f54f23097a11e3e9387c16785db17f8f3521bb1968",
+      "scope": "scratch ELF only"
+    },
+    {
+      "name": "Final precise visual and physical qualification",
+      "status": "not_run",
+      "reason": "Remaining gaps recorded; no hardware operation"
+    }
+  ],
+  "failures_preserved": [
+    "800x480 probe exposed clipped control-center bottom; bounded viewport and scroll fixed.",
+    "Initial800 library assertion clicked offscreen remove target; fixture now scrolls it into view before real pointer tap.",
+    "First touch-scroll assertion required scrolled-out title to remain visible; corrected to assert visible panel and positive scroll, then close/reopen."
+  ],
+  "source_sha256": {
+    "apps/lv_port_linux/src/ui/desktop_clock.c": "07ba12c50d32a535e90cd2b2ac4c1b503f35c541a4afacda019f37a377304c8d",
+    "apps/lv_port_linux/src/ui/desktop_status_bar.c": "6be703ea1607d7acab2dbc79f7e76dff64968729107325c5eaa5b0163456ee5c",
+    "tests/architecture/fixtures/native_ui_review.c": "744077e35b3f6840c66d55af42eef864a5b7e15ab7929edeed8e527f9cd98598"
+  },
+  "logs": {
+    "probe.log": "e24076e8dcafa16563fe54bcb73be3a71a890de3bc647b6dcdf2d5a2acd1b02c",
+    "small-final.log": "f4b482f2f275c91ee28cd1baf1624bfb1aca92899f0acd1aa4de4f46d48d1d0d",
+    "small-touch.log": "98a1c90be87e87db6d3f1a2e798eb93c1ae48c6fe8158525f810784ad2fa100e",
+    "a133-build.log": "a9c973698636a196253c5cc58778e81fcf0aa6295632aee6d0cc1dc910dbfbfd",
+    "final.log": "8a7c51aa23fbebfa0f46f58d129f504fbc3635d5379c381d3f975d9fa057fece",
+    "regression.log": "7cbb2794178b620d6246a4d044c4c87e8bcb96fe8a01c014d6233793a5f14086",
+    "a133-build-final.log": "701577fb71190c4161ced6942321be4ff2450c6a79061f0c6bf46640e9d61499",
+    "small-touch-final.log": "c2e9090b85123c893d61a872fb81bac486a0ecdcb85a11a8cdb792465e2aad0e"
+  },
+  "fixture_disclosure": "Real production LVGL with mock hardware/state and fixed clock; no physical validation.",
+  "remaining": [
+    "Final reference alignment still pending: typography/icon detail, environmental value column spacing and precise appearance; no pixel-identical claim.",
+    "Small-screen Home is vertically scrollable; more editor drag and all lower control interactions need coverage beyond tested navigation/library/center dismiss.",
+    "Physical screen/touch and compatible installation not_run; old target IPC differs from current candidate.",
+    "Other notification sources, real Tuya and prior deferred/resource-dependent delivery items remain; no UI source push or new package/image."
+  ],
+  "source_uploaded": false
+}

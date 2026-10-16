@@ -12,6 +12,7 @@
 #include "../middleware/middleware.h"
 #include "theme/theme.h"
 #include "desktop_clock.h"
+#include "desktop_widgets.h"
 #include "desktop_all_apps.h"
 #include "desktop_dock.h"
 #include "desktop_status_bar.h"
@@ -80,6 +81,7 @@ void ui_init(void)
     mw_subscribe(TOPIC_NETWORK_INFO, network_info_callback);
     mw_subscribe(TOPIC_HDMI_PREVIEW_STATUS, hdmi_preview_status_callback);
     mw_subscribe(TOPIC_CLOUD_STATUS, cloud_status_callback);
+    mw_subscribe(TOPIC_CLOUD_PAIRING_STATUS, desktop_widgets_pairing);
     mw_subscribe(TOPIC_OTA_STATUS, cloud_ota_status_callback);
     printf("[UI] Subscribed to WiFi status messages\n");
 
@@ -159,7 +161,7 @@ static void create_desktop_background_layers(lv_obj_t *parent)
     lv_obj_set_size(upper_field, lv_pct(100), 310);
     lv_obj_align(upper_field, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_color(upper_field,
-                              lv_color_mix(HOME_BG, UI_COLOR_PRIMARY, 230), 0);
+                              lv_color_mix(HOME_BG, HOME_CORAL, 248), 0);
     lv_obj_set_style_bg_grad_color(upper_field, HOME_BG, 0);
     lv_obj_set_style_bg_grad_dir(upper_field, LV_GRAD_DIR_VER, 0);
     lv_obj_set_style_bg_opa(upper_field, LV_OPA_COVER, 0);

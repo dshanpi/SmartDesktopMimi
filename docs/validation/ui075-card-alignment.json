@@ -1,0 +1,58 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "at_utc": "2026-10-16T09:38:04.059797+00:00",
+  "status": "in_progress",
+  "base_commit": "a6092a36ff4a48bb43c5912c06498bd513d2602c",
+  "implemented": [
+    "Independent temperature/humidity columns, separator and aligned captions.",
+    "Fresh/error/stale values retain existing semantics; extra label references cleared on rebuild/delete.",
+    "Single-line IoT summary bounded to avoid covering description; not-configured footer routes to existing app as Configure.",
+    "Line-drawn pencil in existing edit entry, preserving pointer action."
+  ],
+  "checks": [
+    {
+      "name": "Actual LVGL views/state/editor",
+      "status": "passed",
+      "scope": "20 zh/en light/dark views; existing environment freshness/error/close/rebuild, editor pointer and IoT worker tests; explicit independent values cleared on stale; real app-manager navigation"
+    },
+    {
+      "name": "Affected regressions",
+      "status": "passed",
+      "scope": "19 tests, existing layout/settings sanitizers"
+    },
+    {
+      "name": "A133 desktop compile",
+      "status": "passed",
+      "sha256": "452091ef2b308a5597a34594231b4c4d8c2aa55ef65e3303dd812effb2298d6e",
+      "scope": "scratch ELF only"
+    },
+    {
+      "name": "Final visual and physical acceptance",
+      "status": "not_run",
+      "reason": "No physical operation; manual review confirms corrected column positions but not full pixel equality"
+    }
+  ],
+  "failures_preserved": [],
+  "source_sha256": {
+    "apps/lv_port_linux/src/ui/desktop_widgets.c": "2205370cba3f77c05d7b344059c1186599158d3fdfc4012214c449dd117b6519",
+    "tests/architecture/fixtures/native_ui_review.c": "c529a9d31681f3465f5c40dd98616c6cac8f48efc7e0a2bc72e3cb32b7d88a93"
+  },
+  "logs": {
+    "a133-build.log": "0e33f72fc33214bd5281172c46f13fd7e11c983dcbc6a52d1244e08d4628e324",
+    "regression.log": "2fb8fa939734c8de55165bdbeefcc115773a91e662de6c9c5d663e73a0f9775f",
+    "render.log": "d7026fc302efc87cf90cbd33691c2dbd47830ff109df0c60b1263af6c99b5d4d"
+  },
+  "fixture_disclosure": "Production LVGL with mock events and fixed clock, not actual device telemetry.",
+  "remaining": [
+    "Four approved views implemented and primary flows host-tested; final visual detail acceptance still pending, not pixel-identical qualified.",
+    "Small-screen extended editor drag and lower controls need more coverage; physical screen/touch and compatible installation not_run.",
+    "Existing target IPC differs from current candidate; no installation into incompatible old system.",
+    "Real Tuya, other notification sources and recorded deferred/resource-dependent delivery items remain."
+  ],
+  "source_uploaded": false,
+  "planned_source_sync": {
+    "repository": "dshanpi/SmartDesktopMimi",
+    "branch": "delivery/component-home-ui075",
+    "basis": "User authorized source sync before deferred physical tests; independent development branch only, no stable release/tag/package change."
+  }
+}

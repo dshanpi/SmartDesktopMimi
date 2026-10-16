@@ -189,3 +189,31 @@ REQ-MIMI-RELEASE-072：[相同硬件不同runtime发布证据](change-gates/REQ-
 2026-10-15 最新交付入口：[受控交付快照](delivery/CONTROLLED-SNAPSHOTS-20261015.md)及[56附件元数据](delivery/controlled-snapshots-20261015.json)，对应RELEASE072；三份完整远端复验已通过，原固定产物不变。STABILITY023补充用户Logo后黑屏与只读面板登记分析，原板仍rc17、实体修复和持续健康未通过。历史PAIR071后台“只读未实施”已被用户扩权和独立补丁分支取代，但未部署、桌面消费者未接。
 
 PAIR071/RELEASE072最新候选：共享rc26、公开系统rc5、私有系统rc6及59附件下载复验passed；全产品仍未完成。见[新草稿交接](delivery/PAIR071-SNAPSHOTS-20261015.md)。旧阶段未接客户端/只读服务器描述仅为历史。
+
+REQ-MIMI-UI-075：[组件主页、顶栏与控制中心](change-gates/REQ-MIMI-UI-075.md)，四图已批准，实施中；视觉/目标验收 not_run。
+
+UI075批次二接续：编辑栏/组件库/真实指针验证，见[实际证据](validation/ui075-editor-refinement.json)。需求仍实施中，物理与最终视觉未通过。
+
+UI075批次三：环境详情、新鲜度、系统OTA通知，见[状态与验证](validation/ui075-state-details.json)。不代表实机或完整通知源验收。
+
+- UI075 批次四 IoT摘要：`docs/validation/ui075-iot-summary.json`；主机 passed，真实设备/最终视觉 not_run。
+
+- UI075批次五：`docs/validation/ui075-visual-polish.json`；视觉缺陷/小屏滚动修复，主机passed，最终对齐及实机not_run。
+
+- UI075批次六：`docs/validation/ui075-card-alignment.json`；卡片文字/入口对齐与累计源码独立分支同步计划，实机not_run。
+
+- UI075批次七：`docs/validation/ui075-pointer-matrix.json`；真实主机指针命中8视图passed，硬件not_run。
+
+- UI075候选边界修正：`docs/validation/ui075-settings-compat.json`，冻结设置文件双向兼容passed，首轮候选failed，重建pending。
+
+- UI075干净应用候选：`docs/validation/ui075-clean-candidate.json`；主机构建/来源核对passed，签名打包/上机not_run，保留两次失败。
+
+- UI075交互清单：`docs/validation/ui075-interaction-catalog.json`；原清单失败已修复，物理not_run。
+
+- UI075窄屏拖动：`docs/validation/ui075-small-drag.json`，保留旧失败，主机通过，编译/真机分别接续。
+
+- UI075 rc27：`docs/validation/ui075-rc27-delivery.json`，签名/远端受控草稿复验passed，物理与最终视觉not_run。
+
+UI075最终展示细节与范围校正：见docs/validation/ui075-final-review.json；新增源码不冒充已发布rc27，物理not_run。
+
+UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已完整打包并远端复核，未上机或声明逐像素/稳定合格。

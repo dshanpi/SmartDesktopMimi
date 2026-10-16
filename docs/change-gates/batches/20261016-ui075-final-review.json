@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "UI075 final reference review and readable library captions",
+  "context": "Approved four images compared with actual native output; fix two presentation mismatches",
+  "next_steps": "Batch source refinements into next clean candidate; physical review only on compatible target. Keep rc27 immutable.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Presentation labels and chevron; documentation/inventory",
+      "invariants": "No provider or layout persistence changes; no hardware or artifact overwrite; preserve failed scopes",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+        "apps/lv_port_linux/src/ui/desktop_widgets.c",
+        "tests/update/ui-catalog.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/validation/ui075-final-review.json",
+        "docs/change-gates/batches/20261016-ui075-final-review.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Native visual and relevant pointer checks",
+          "status": "passed",
+          "scope": "32 four-surface views,8wide8dedicated-narrow;A133 scratch compile",
+          "evidence": "docs/validation/ui075-final-review.json"
+        },
+        {
+          "name": "Wide pointer helper at narrow viewport",
+          "status": "failed",
+          "scope": "Offscreen coordinates before long press; dedicated narrow suite separately passed",
+          "reason": "Wide helper does not scroll card before obtaining pointer coordinates",
+          "evidence": "docs/validation/ui075-final-review.json"
+        },
+        {
+          "name": "New signed candidate and physical",
+          "status": "not_run",
+          "scope": "No reuse of rc27 binary evidence for this source",
+          "reason": "Batch presentation refinements into next candidate; compatible physical system pending",
+          "evidence": "docs/validation/ui075-final-review.json"
+        }
+      ]
+    }
+  ]
+}
