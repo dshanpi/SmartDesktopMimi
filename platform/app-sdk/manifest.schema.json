@@ -3,29 +3,70 @@
   "title": "AITVBox App Manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "id", "name", "version", "publisher", "ui", "permissions"],
+  "required": [
+    "schema",
+    "id",
+    "name",
+    "version",
+    "publisher",
+    "ui",
+    "permissions"
+  ],
   "properties": {
-    "schema": {"enum": [1, 2]},
-    "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$", "maxLength": 96},
-    "name": {"type": "string", "minLength": 1, "maxLength": 48},
+    "schema": {
+      "type": "integer",
+      "enum": [
+        1,
+        2,
+        3
+      ]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z0-9][a-z0-9-]*)+$",
+      "maxLength": 96
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 48
+    },
     "localizations": {
       "type": "object",
       "additionalProperties": false,
       "minProperties": 1,
       "properties": {
-        "zh-CN": {"$ref": "#/definitions/localization"},
-        "en-US": {"$ref": "#/definitions/localization"}
+        "zh-CN": {
+          "$ref": "#/definitions/localization"
+        },
+        "en-US": {
+          "$ref": "#/definitions/localization"
+        }
       }
     },
-    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
-    "publisher": {"type": "string", "pattern": "^[a-zA-Z0-9._-]{1,64}$"},
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "publisher": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._-]{1,64}$"
+    },
     "ui": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["entry", "presentation"],
+      "required": [
+        "entry",
+        "presentation"
+      ],
       "properties": {
-        "entry": {"type": "string", "pattern": "^ui/[a-zA-Z0-9._/-]+\\.json$"},
-        "presentation": {"const": "embedded"}
+        "entry": {
+          "type": "string",
+          "pattern": "^ui/[a-zA-Z0-9._/-]+\\.json$"
+        },
+        "presentation": {
+          "const": "embedded"
+        }
       }
     },
     "permissions": {
@@ -50,11 +91,52 @@
     "runtime": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["type", "entry", "api"],
+      "required": [
+        "type",
+        "entry",
+        "api"
+      ],
       "properties": {
-        "type": {"const": "native-rpc"},
-        "entry": {"type": "string", "pattern": "^bin/[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"},
-        "api": {"const": 1}
+        "type": {
+          "const": "native-rpc"
+        },
+        "entry": {
+          "type": "string",
+          "pattern": "^bin/[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"
+        },
+        "api": {
+          "type": "integer",
+          "const": 1
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "architecture",
+        "libc",
+        "app_api",
+        "profile"
+      ],
+      "properties": {
+        "os": {
+          "const": "ubuntu"
+        },
+        "architecture": {
+          "const": "x86_64"
+        },
+        "libc": {
+          "const": "glibc"
+        },
+        "app_api": {
+          "const": 1,
+          "type": "integer"
+        },
+        "profile": {
+          "const": "mimi-ubuntu-native-v1"
+        }
       }
     }
   },
@@ -62,18 +144,68 @@
     "localization": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "uiEntry"],
+      "required": [
+        "name",
+        "uiEntry"
+      ],
       "properties": {
-        "name": {"type": "string", "minLength": 1, "maxLength": 48},
-        "uiEntry": {"type": "string", "pattern": "^ui/[a-zA-Z0-9._/-]+\\.json$"}
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 48
+        },
+        "uiEntry": {
+          "type": "string",
+          "pattern": "^ui/[a-zA-Z0-9._/-]+\\.json$"
+        }
       }
     }
   },
   "allOf": [
     {
-      "if": {"properties": {"schema": {"const": 2}}},
-      "then": {"required": ["runtime"]},
-      "else": {"not": {"required": ["runtime"]}}
+      "if": {
+        "properties": {
+          "schema": {
+            "enum": [
+              2,
+              3
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "runtime"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "runtime"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "schema": {
+            "const": 3
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "target"
+        ]
+      },
+      "else": {
+        "not": {
+          "required": [
+            "target"
+          ]
+        }
+      }
     }
   ]
 }

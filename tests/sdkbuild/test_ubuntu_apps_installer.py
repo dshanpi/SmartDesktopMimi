@@ -164,7 +164,7 @@ class InstallerTests(unittest.TestCase):
             if m.name=='manifest.json':
                 j=json.loads(b);j['schema']=True;b=json.dumps(j).encode()
             return m,b
-        with self.assertRaisesRegex(ValueError,'native target'):self.i.install(self.rewrite(self.package(),change))
+        with self.assertRaisesRegex(SystemExit,'manifest schema'):self.i.install(self.rewrite(self.package(),change))
 
     def test_reject_native_manifest_before_architecture_fallback(self):
         def change(m,b):

@@ -1,0 +1,61 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "23c456c2fa8a4dabb9870e5499976dff1c992554",
+  "status": "passed_native_signed_preflight_only",
+  "tests": {
+    "native_admission": 23,
+    "signed_package_extracted_execution": 1,
+    "installer": 24,
+    "localization": 6
+  },
+  "signed_execution": {
+    "signed_package_sha256": "910c4b2dd379608c6f3c4e3ddc82ab76726a4b1a902993d6a6c11c83c2163ff7",
+    "native_sha256": "2adbfc611c9d92d4614cbc40588b57648b461b09207c2b37e7dcdc8779988e42",
+    "target": {
+      "os": "ubuntu",
+      "architecture": "x86_64",
+      "libc": "glibc",
+      "app_api": 1,
+      "profile": "mimi-ubuntu-native-v1"
+    },
+    "host_libraries": {
+      "ld-linux-x86-64.so.2": "cfd44e4341767033532d1483c8250d200ad4cdf535d0abc19064ae34cdc51ca0",
+      "libc.so.6": "53b909551f8e581120ddc2d24cfb5df76c52e3c2e2a5dac0d202b25638b3e902",
+      "libjson-c.so.4": "3768995f31e8e83e3bc8945d156677b3fd3d2e6d5444a57b62290f28b9b0e2aa"
+    }
+  },
+  "scope": "Real compiler/public App SDK/ephemeral RSA publisher/Ubuntu dynamic dependencies and restricted process; not production install",
+  "failure_history": [
+    "untrusted-path test referenced nonexistent path",
+    "boolean schema now rejected earlier by parser; old installer test exception mismatch"
+  ],
+  "not_run": [
+    "authenticated capability/storage broker",
+    "native installer/profile activation",
+    "complete user extension/media data across desktop update/rollback",
+    "real logout/relogin",
+    "A133 physical acceptance"
+  ],
+  "source_files_sha256": {
+    "tools/aitapp/aitapp.py": "09b7f475c2c2693695649273d75b81d3c9ffc22eaf1b25ac4a08484c26f8b2e7",
+    "tools/aitapp/ubuntu_native.py": "182bb20937222089aa756dfe6b99583b2be75eb571a8c1b115440e203935a828",
+    "tools/aitapp/README.md": "fa7f8fd8e53aa11f36de71c2df47c4bdb02eda508849021242872c23ce30aa05",
+    "platform/app-sdk/manifest.schema.json": "03b9dafc2a412c7732d7648dfc1bb6a1680cbb48d52fd786a280d61c35adcc20",
+    "services/mimi-ubuntu-apps/README.md": "5c9ea66f51d505a55073076a9abceb3e3b0423c4a3e66930cfe868340c6f61a9",
+    "tests/sdkbuild/test_ubuntu_native_admission.py": "8d3a3c31e6dc8e5a2147da78ee6129d87efe30f102368d650dcfc40e58c33057",
+    "tests/sdkbuild/test_ubuntu_apps_installer.py": "332597adec97955e9d1e727320aeee81a1116ae48b06b6d994080ee8769dbaf2",
+    ".github/workflows/application-update.yml": "24ca87d9ef0a5cfd8db132a727daa3349efa483be15589626be3cf3800eba729"
+  },
+  "evidence_sha256": {
+    "native-final.log": "efd53b5db308d7256c5b26fef92e2e40d16a3fe9f87b760ca00600ec4523b9cf",
+    "localization.log": "2dc42146eb9139ebd2d7308b443470045254eea17cd76b5b982a45240490b7ce",
+    "installer-first.log": "2709e4232ec42cda2631fc07f1b5f1a34655e8bf67c30fd3158ee248496277fc",
+    "contracts.log": "fa594bc3a86034a278217c1d238556f665ce5c925b8a4477ef8bddc0cb408a3c",
+    "installer-final.log": "3081b4fdaf67725b0ec1a56c7bebd0e37078c473ed9ec9b4f84065ba0061988d",
+    "tests-first.log": "af1a39941c32542b924a2cafe0812779b61cb07cb517820f65e3d959a97dc9e5",
+    "elf-first.log": "87b98020a3fde100b648cdf336aab9f78faa686220c895aa259dd70acfe2d390",
+    "ui-inventory.log": "a6092561389f98beb15d7cb299ebb4ad3014dc167f22dd184f4dd97098450cfa",
+    "ownership.log": "bbe7507a0c197c383609be14cfc898168c2cd186957d589266eb2270a47c4d31",
+    "signed-exec-final.log": "58a54b6588cec639acf8fbc22bb4834a665e78c512101ebae581c3eb0d80d850"
+  }
+}

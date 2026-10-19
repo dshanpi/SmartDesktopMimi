@@ -248,3 +248,6 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 
 
 2026-10-19 UBUNTUAPPS076：独立Ubuntu执行原语32项实际进程测试及父退出链复验passed；execveat绝对路径绕过已复现修复，全部失败日志保留。仅平台前置，签名native准入/storage/broker/profile未完成，安装器继续拒绝native；生产rc29/原信任/身份/A133不变。详见docs/validation/ubuntuapps076-native-runner-20261019.json。
+
+
+2026-10-19 UBUNTUAPPS076：schema3明确Ubuntu native构建/签名/真实宿主ABI预检及签名包二进制受限执行通过；23新检查+24安装回归+6语言回归passed，失败历史保留。原schema2仍AArch64；安装器尚不开放native，认证storage/broker/profile继续。详见docs/validation/ubuntuapps076-native-admission-20261019.json。

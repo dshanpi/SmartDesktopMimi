@@ -56,3 +56,12 @@ Ubuntu共享桌面应消费平台安装的扩展应用，签名安装/发行者�
 实际32项测试passed，额外父进程链检查passed：真实公共SDK Unix传输、内核UID/GID/组/能力/限制读回、写入/私有读取/直接Internet/fork/ioctl/再执行/绝对路径/过滤替换/FD泄漏拒绝，CPU或独立5秒墙钟终止，父进程退出后监督及native均终止。stdout必须为pipe，避免继承root已开可写文件。源码以-Wall -Wextra -Werror实际编译；完整安装器/ABI/storage/profile尚未接通，不能称原生扩展可用。
 失败历史全部保留：/run noexec拒绝（改测试目录、不改mount）；过滤跳转误放行；收紧后动态加载pread64被拒；父退出测试读取/proc竞态；execveat绝对路径漏洞；CPU测试只期望CPU信号而先到墙钟期限（补内核CPU限制断言并接受两种受限终止）。最后32项与额外链路通过见docs/validation/ubuntuapps076-native-runner-20261019.json。
 边界：65534共享UID、只读世界可读文件及Unix stream按系统DAC仍可访问；此原语不宣称文件/IPC命名空间隔离。完整签名目标准入、真实broker身份/权限及storage、响应大小限制、产品部署、更新/回退完整用户数据仍not_run。安装器继续拒绝native，未改rc29、生产身份/可信钥/登录服务或A133，未重建不变的桌面。
+
+## Ubuntu原生目标格式与兼容性：实施前（2026-10-19）
+基准23c456c。现有schema2固定AArch64，不改成按本机猜测。新增schema3，要求明确Ubuntu/x86_64/glibc/API1/独立native profile；旧1/2含义和拒绝规则保留。公共打包工具新增Ubuntu原生构建/验证入口，复用已有签名与载荷白名单，不执行待验证程序或ldd。检查ELF程序头/动态表的真实机器、解释器、依赖、版本及未定义符号，与实际受控宿主库匹配；拒绝私带加载器/库、额外搜索路径、错架构/运行时、未知依赖和缺失符号。不将清单声称当作ABI证据。
+本批实际构建公共SDK程序、签名生成包、独立验证签名及宿主兼容，另测错目标/错误ELF/依赖篡改/缺库/缺符号及旧格式回归。此为安装前置，Ubuntu安装器继续拒绝native及storage权限，下一批完成认证broker/storage后接通。共享UI及已签rc29不变；源码、真实运行库证据和失败日志单独保存，不重建未变桌面、不改产品可信钥、不操作A133。临时测试钥不入产品信任。目录output/ubuntu-native-admission-076-20261019。
+
+### Ubuntu原生格式实际结果
+新增schema3明确Ubuntu/x86_64/glibc/API1/native-v1目标；原schema2继续只接受AArch64。init --native-ubuntu、compile-ubuntu、签名build及verify-ubuntu真实执行通过。ELF检查读取程序/动态表、依赖及符号版本/强未定义符号，与受控宿主loader/cache/递归库匹配；不运行候选或ldd，拒绝额外搜索路径/可执行栈等。构建receipt绑定实际源码SDK和宿主库SHA。完整ABI范围仅为文档列明的首个profile，未声明静态ELF/其他库和平台支持。
+23项新测试passed，追加实际从签名包解出二进制并核对其SHA后经受限runner执行passed；24项安装事务回归和6项语言资源回归passed。schema1签名/验证及schema2拒绝真实x86_64保留。首次测试夹具把不存在路径当不可信路径造成FileNotFoundError；布尔schema提前被共享parser拒绝导致旧测试异常类别不符，两项失败留证后修正为真实可写父目录/更早的明确拒绝。未更改签名或安装准入来绕过测试。
+安装器仍拒绝所有native和未提供权限，不宣称已完成应用安装/数据服务/更新回退验收。未重建共享桌面、未部署生产、未改rc29/身份/可信钥或A133。下一步认证broker与storage.app共享安装锁，真实签名程序通过SDK写读数据后再接通平台profile。证据docs/validation/ubuntuapps076-native-admission-20261019.json；原始output/ubuntu-native-admission-076-20261019。

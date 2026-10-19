@@ -108,3 +108,9 @@ hostile publisher isolation. Per-application storage authorization, bounded
 response consumption and complete signed native admission remain mandatory
 before activation. Tests use isolated /var/lib fixtures because /run is noexec;
 no mount restrictions or product trust are changed.
+
+Schema-3 Ubuntu native build/sign/host compatibility preflight is now available
+in `tools/aitapp/README.md`. It preserves schema-2 AArch64 meaning and checks real
+host symbol/library dependencies. This installer still refuses native packages:
+authenticated execution/storage broker and trusted session integration remain
+required before activation. A successful preflight does not change that policy.

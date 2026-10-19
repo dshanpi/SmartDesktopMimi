@@ -5,6 +5,7 @@ import argparse
 import getpass
 import hashlib
 import http.cookiejar
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -33,6 +34,21 @@ PAYLOAD_PATH = re.compile(r"^[A-Za-z0-9._/-]+$")
 MAX_PACKAGE_BYTES = 32 * 1024 * 1024
 MAX_FILE_BYTES = 8 * 1024 * 1024
 MAX_EXTRACTED_BYTES = 64 * 1024 * 1024
+
+
+def ubuntu_module():
+    spec = importlib.util.spec_from_file_location('aitapp_ubuntu_native',
+                                                Path(__file__).with_name('ubuntu_native.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def ubuntu_check(callback):
+    try:
+        return callback(ubuntu_module())
+    except (ValueError, OSError, subprocess.SubprocessError) as exc:
+        fail(str(exc))
 
 
 def fail(message):
@@ -103,7 +119,7 @@ def validate_ui(root, manifest, entry_name=None):
             if not isinstance(command, str):
                 fail("unsupported action command")
             if command == "app.invoke":
-                if manifest["schema"] != 2:
+                if manifest["schema"] not in {2, 3}:
                     fail("app.invoke requires a native application")
                 arguments = node.get("arguments")
                 if not isinstance(arguments, dict) or set(arguments) != {"name"} or \
@@ -128,10 +144,13 @@ def validate_ui(root, manifest, entry_name=None):
 def load_manifest(root):
     data = read_json(root / "manifest.json", "manifest.json")
     required = {"schema", "id", "name", "version", "publisher", "ui", "permissions"}
-    if not isinstance(data, dict) or data.get("schema") not in {1, 2}:
-        fail("manifest schema must be 1 or 2")
-    if data["schema"] == 2:
+    if not isinstance(data, dict) or type(data.get("schema")) is not int or data.get("schema") not in {1, 2, 3}:
+        fail("manifest schema must be integer 1, 2 or 3")
+    if data["schema"] in {2, 3}:
         required.add("runtime")
+    if data["schema"] == 3:
+        required.add("target")
+        ubuntu_check(lambda u: u.target(data.get("target")))
     allowed = required | {"localizations"}
     if set(data) - allowed or not required <= set(data):
         fail("manifest fields do not match schema version")
@@ -186,11 +205,11 @@ def load_manifest(root):
     unknown = set(data["permissions"]) - PERMISSIONS
     if unknown:
         fail("unsupported permissions: " + ", ".join(sorted(unknown)))
-    if data["schema"] == 2:
+    if data["schema"] in {2, 3}:
         runtime = data["runtime"]
         if not isinstance(runtime, dict) or \
                 set(runtime) != {"type", "entry", "api"} or \
-                runtime["type"] != "native-rpc" or runtime["api"] != 1:
+                runtime["type"] != "native-rpc" or type(runtime["api"]) is not int or runtime["api"] != 1:
             fail("unsupported native runtime")
         if not isinstance(runtime["entry"], str) or \
                 not re.fullmatch(r"bin/[A-Za-z0-9][A-Za-z0-9._-]{0,63}",
@@ -227,7 +246,7 @@ def payload_files(root, manifest):
     result = []
     total_size = 0
     runtime_entry = Path(manifest["runtime"]["entry"]) \
-        if manifest["schema"] == 2 else None
+        if manifest["schema"] in {2, 3} else None
     runtime_found = False
     for path in sorted(root.rglob("*")):
         if path.is_symlink():
@@ -237,7 +256,7 @@ def payload_files(root, manifest):
         if not path.is_file():
             continue
         relative = path.relative_to(root)
-        if manifest["schema"] == 2 and relative.parts[0] == "src":
+        if manifest["schema"] in {2, 3} and relative.parts[0] == "src":
             continue
         if not PAYLOAD_PATH.fullmatch(relative.as_posix()):
             fail("invalid payload path: {}".format(relative))
@@ -252,7 +271,10 @@ def payload_files(root, manifest):
         if is_runtime:
             if not path.stat().st_mode & 0o111:
                 fail("native runtime entry must be executable")
-            validate_native_elf(path)
+            if manifest["schema"] == 3:
+                ubuntu_check(lambda u: u.Elf(path))
+            else:
+                validate_native_elf(path)
             runtime_found = True
         elif path.stat().st_mode & 0o111:
             fail("executables and symlinks are prohibited: {}".format(relative))
@@ -325,8 +347,10 @@ def init_app(args):
         },
         "permissions": [],
     }
-    if args.native:
-        manifest["schema"] = 2
+    if args.native or getattr(args, "native_ubuntu", False):
+        manifest["schema"] = 3 if getattr(args, "native_ubuntu", False) else 2
+        if manifest["schema"] == 3:
+            manifest["target"] = ubuntu_module().TARGET.copy()
         manifest["runtime"] = {
             "type": "native-rpc",
             "entry": "bin/app",
@@ -345,7 +369,7 @@ def init_app(args):
             ],
         },
     }
-    if args.native:
+    if args.native or getattr(args, "native_ubuntu", False):
         page["layout"]["children"].append({
             "type": "action",
             "label": "Run application action",
@@ -361,7 +385,7 @@ def init_app(args):
         json.dumps(page, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    if args.native:
+    if args.native or getattr(args, "native_ubuntu", False):
         (target / "src").mkdir()
         (target / "src/main.c").write_text(
             '#include "aitvbox/app.h"\n\n'
@@ -487,6 +511,62 @@ def compile_native(args):
     runtime.chmod(0o755)
     validate_native_elf(runtime)
     print(runtime)
+
+
+def compile_ubuntu(args):
+    source = Path(args.source).resolve()
+    manifest = load_manifest(source)
+    if manifest["schema"] != 3:
+        fail("compile-ubuntu requires explicit schema 3 Ubuntu target")
+    sources = sorted((source / "src").glob("*.c"))
+    if not sources:
+        fail("native application has no src/*.c files")
+    sdk = Path(__file__).resolve().parents[2] / "platform/app-sdk"
+    runtime = source / manifest["runtime"]["entry"]
+    runtime.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=".native-", dir=runtime.parent)
+    os.close(fd)
+    temporary = Path(temporary)
+    command = [args.cc or "cc", "-std=gnu11", "-O2", "-fPIE", "-pie",
+               "-Wall", "-Wextra", "-Werror", "-Wl,-z,relro,-z,now,-z,noexecstack",
+               "-I", str(sdk / "include"), *[str(p) for p in sources],
+               str(sdk / "src/app.c"), "-ljson-c", "-o", str(temporary)]
+    try:
+        subprocess.run(command, check=True)
+        temporary.chmod(0o755)
+        receipt = ubuntu_check(lambda u: u.inspect_host(u.Elf(temporary)))
+        os.replace(temporary, runtime)
+        if args.receipt:
+            receipt["source_sha256"] = {str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+            receipt["sdk_source_sha256"] = hashlib.sha256((sdk / "src/app.c").read_bytes()).hexdigest()
+            Path(args.receipt).write_text(json.dumps(receipt, indent=2)+"\n")
+    except (OSError, subprocess.SubprocessError) as exc:
+        fail("native Ubuntu compilation failed: " + str(exc))
+    finally:
+        temporary.unlink(missing_ok=True)
+    print(runtime)
+
+
+def verify_ubuntu(args):
+    # Signature and complete payload checks precede host-library inspection.
+    with tempfile.TemporaryDirectory(prefix="aitapp-ubuntu-") as tmp:
+        root = Path(tmp)
+        safe_extract(Path(args.package), root)
+        manifest = load_manifest(root)
+        if manifest["schema"] != 3:
+            fail("verify-ubuntu requires explicit schema 3 Ubuntu target")
+        files = payload_files(root, manifest)
+        if checksums(root, files) != (root / "SHA256SUMS").read_bytes():
+            fail("payload checksum list mismatch")
+        run_openssl("dgst", "-sha256", "-verify", args.public_key,
+                    "-signature", str(root / "SIGNATURE"), str(root / "SHA256SUMS"))
+        receipt = ubuntu_check(lambda u: u.inspect_host(u.Elf(root / manifest["runtime"]["entry"])))
+        receipt["id"] = manifest["id"]
+        receipt["version"] = manifest["version"]
+        receipt["package_sha256"] = hashlib.sha256(Path(args.package).read_bytes()).hexdigest()
+        if args.receipt:
+            Path(args.receipt).write_text(json.dumps(receipt, indent=2)+"\n")
+        print("OK Ubuntu compatibility preflight only " + manifest["id"])
 
 
 def safe_extract(package, destination):
@@ -662,10 +742,12 @@ def main():
     init_parser.add_argument("--id", dest="app_id", required=True)
     init_parser.add_argument("--name", required=True)
     init_parser.add_argument("--publisher", required=True)
-    init_parser.add_argument(
+    native_kind = init_parser.add_mutually_exclusive_group()
+    native_kind.add_argument(
         "--native", action="store_true",
         help="create a schema 2 native-rpc application skeleton",
     )
+    native_kind.add_argument("--native-ubuntu", action="store_true", help="create explicit schema 3 Ubuntu x86_64 native skeleton")
     init_parser.set_defaults(func=init_app)
     build_parser = sub.add_parser("build")
     build_parser.add_argument("source")
@@ -677,6 +759,16 @@ def main():
     compile_parser.add_argument("--sdk", required=True)
     compile_parser.add_argument("--cc")
     compile_parser.set_defaults(func=compile_native)
+    ubuntu_compile = sub.add_parser("compile-ubuntu")
+    ubuntu_compile.add_argument("source")
+    ubuntu_compile.add_argument("--cc")
+    ubuntu_compile.add_argument("--receipt")
+    ubuntu_compile.set_defaults(func=compile_ubuntu)
+    ubuntu_verify = sub.add_parser("verify-ubuntu")
+    ubuntu_verify.add_argument("package")
+    ubuntu_verify.add_argument("--public-key", required=True)
+    ubuntu_verify.add_argument("--receipt")
+    ubuntu_verify.set_defaults(func=verify_ubuntu)
     verify_parser = sub.add_parser("verify")
     verify_parser.add_argument("package")
     verify_parser.add_argument("--public-key", required=True)
