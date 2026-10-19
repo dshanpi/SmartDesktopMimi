@@ -58,3 +58,53 @@ root filesystem tests. Tests generate ephemeral publisher keys under a temporary
 They cover real RSA verification, data copying, publisher/version rejection,
 controlled CLI deployment and eight forced process exits at transaction phases.
 They are not physical power-loss, native execution or real-user data acceptance.
+
+## Experimental native execution primitive
+
+`native_runner.c` is an independent Ubuntu Linux x86_64 platform prerequisite,
+not an activated service or package admission path. The installer still refuses
+native packages. Build with `cc -std=gnu11 -O2 -Wall -Wextra -Werror
+services/mimi-ubuntu-apps/native_runner.c -o mimi-native-runner` and run the actual
+process tests with `sudo python3 tests/sdkbuild/test_ubuntu_native_runner.py -v`.
+No A133 SDK implementation was copied into this component.
+
+The future root-controlled broker must verify the signed installation, publisher,
+explicit native ABI/dependencies and permissions under the installer lock before
+opening immutable root-owned code read-only. It invokes the root-owned runner as
+`mimi-native-runner --executable-fd FD --action ACTION --socket ABSOLUTE_PATH`,
+with stdout connected to a pipe. The broker must cap/read the response (4 KiB),
+validate its JSON and authenticate every capability request against the actual
+native child PID, parent monitor and admitted application. The ELF header check
+alone is not ABI, signature or dependency validation. Do not install setuid or
+expose a user-writable root deployment. Neither production integration nor these
+future broker responsibilities are provided by this primitive.
+
+A small root monitor forks a trusted setup stub. The stub clears environment,
+extra descriptors and groups, drops to UID/GID 65534, sets resource limits and
+no-new-privileges, then installs a deny-default syscall filter with a seccomp
+notification listener. Only the stub's first execveat notification is continued;
+all later execution requests are denied, including re-execution of the same FD
+and absolute-path overrides. This use of CONTINUE does not inspect mutable native
+application pointers: at first exec no untrusted code or threads have run. The
+listener crosses a private socketpair; its reserved FD cannot be closed/replaced
+or reconnected and its monitor-side peer is closed before native execution.
+Unsupported notification kernels fail closed. Requires Linux x86_64 seccomp user
+notification plus CONTINUE support (tested here on Ubuntu kernel 5.15).
+
+Native code has a 2-second CPU, 128 MiB address-space and 32-descriptor limit, no
+core/file output and no process creation. A separate 5-second wall timer bounds
+startup, execution and notification handling. Monitor exit follows caller exit;
+native exit follows monitor exit. Exit 124 means wall timeout, 125 invalid entry,
+126 setup/monitor failure, 127 initial exec failure, and 128+signal a signal-killed
+native process. Ordinary native exit codes are relayed and are not trusted success
+claims. The root monitor does not parse application requests or write app data.
+
+This is not filesystem/IPC namespace isolation: world-readable files and allowed
+Unix stream services are accessible under normal DAC permissions, and UID 65534
+is shared. Direct Internet sockets, writable filesystem opens, device ioctls,
+process creation, filter changes and subsequent exec are refused. It is suitable
+only as a prerequisite under the approved-publisher trust model, not arbitrary
+hostile publisher isolation. Per-application storage authorization, bounded
+response consumption and complete signed native admission remain mandatory
+before activation. Tests use isolated /var/lib fixtures because /run is noexec;
+no mount restrictions or product trust are changed.

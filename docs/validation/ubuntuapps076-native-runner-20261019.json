@@ -1,0 +1,52 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "3c47e5221f1d941bae8571c7e5469c6254d2565b",
+  "status": "passed_isolated_native_primitive_only",
+  "tests": 32,
+  "additional_parent_chain_tests": 1,
+  "build": "cc -std=gnu11 -O2 -Wall -Wextra -Werror",
+  "runner_sha256": "645dbcb69c3ec0eb48205ec6de84828db792e9eba5bae8bb7dffd238dedf6653",
+  "target": "Ubuntu x86_64 Linux 5.15.0-139-generic",
+  "scope": "Root-created temporary native ELF linked to actual public App SDK; no production activation; schema2 native packages still rejected",
+  "failure_history": [
+    "noexec fixture mount",
+    "filter jump allowed forbidden calls",
+    "loader pread64 denied after tightening",
+    "proc exit race in test",
+    "absolute path bypassed fd-only execveat guard",
+    "wall timeout occurred before expected CPU signal"
+  ],
+  "not_run": [
+    "full signed native ABI/dependency admission",
+    "per-app runtime/storage broker and bounded response reader",
+    "production platform and login integration",
+    "complete user extension/media data through desktop update/rollback",
+    "real logout/relogin",
+    "A133 physical install/upgrade/rollback/power acceptance"
+  ],
+  "limitations": [
+    "shared UID65534 and DAC-readable host filesystem",
+    "Unix stream sockets not namespaced",
+    "approved publisher trust model; not arbitrary hostile code isolation"
+  ],
+  "evidence_sha256": {
+    "absolute-exec-before.log": "71cc982d4ce90d73f7866c456f1905eee3c0b79af6d110d1a66bb210d61f9dd8",
+    "build-first.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "parent-chain-final.log": "b86d44676fb9c6556d3a80edc7726ea01df6951a7404dbcd161e362a41a05a21",
+    "tests-final-r2.log": "4d6f12abb25de1c1bfd71096804445ec4a517c64a01589769e3b8e654ade4da8",
+    "tests-final.log": "1b2b49c95e97961a03a5a49612ac1a1624b9e9634e064d99a80194973bfe8279",
+    "tests-first.log": "30a5aad06886c58ee14c4dbc7a68813094921babac4806cb22e066ecf8dc509d",
+    "tests-notify-final-r2.log": "206f9dd115c3d793ffd05bc069ecb83a0e31500bb3b71456d20b0feb9f82fb2b",
+    "tests-notify-final.log": "54a7b030fe892d12e26d829152acd3dfc3e4292aeea59b4a1e027d01b55519f8",
+    "tests-notify-r1.log": "c10e1f87c14a0603ea4c4c71e41d5829197b20ee421336e9eab927cf3b0ca572",
+    "tests-r2.log": "edcfd3ec6652a96519de349cabbedc4484c5b3824cf7f243b026d0c3e022cbdc",
+    "tests-r3.log": "f51bdbe02cc18af685a70a40645e4791548d08e54460ab2e9c9667c586127938",
+    "tests-r4.log": "548293528be2ab2711959918774b3290247afb8a381b55af5e39068d9ed5f98d"
+  },
+  "source_files_sha256": {
+    "services/mimi-ubuntu-apps/native_runner.c": "2c0f4c483d1630b325f002e1f5c39cdae883f83cd303047dc6d83292202421fe",
+    "services/mimi-ubuntu-apps/README.md": "446f6562aed54fe99cacaca663854a85209e9a098301934c3e89e0a4b8dbe89c",
+    "tests/sdkbuild/fixtures/ubuntu_native_probe.c": "60d39aaf26f2795f650ad71837cfcd66fff24f17aa83dc3d9703f4574d9d5a5c",
+    "tests/sdkbuild/test_ubuntu_native_runner.py": "be0ab573437d4ea1c067fe472561cded5cb8e32d5e2d5b00b4ab494e749b500c"
+  }
+}
