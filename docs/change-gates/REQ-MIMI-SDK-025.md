@@ -39,3 +39,7 @@ Ubuntu完整应用构建passed（桌面、Web、资源树、SBOM、构建后SDK�
 A133 SDK `bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261` 回归编译passed，桌面SHA256 `1abae4491a05b15245cfe483aa6461462894ef69cfb59273d9b394ba6a32a269` 与前序rc18相同；不安装到设备、不把旧包当成本轮新包。
 实际签名amd64 deb、Ubuntu可信登记/平台会话启动/激活/升级回退数据仍not_run；现有amd64 deb测试是夹具归档验证。全发布未完成、未上传。
 A133通道空闲后本轮读健康再次failed（串口空两次+ping超时），按STABILITY-023已有授权恢复，实际确认原rc17/current34fc809a/previousrc16/trialfalse/health0，内存可用约1.8GB、ext4p7错误0、恢复后温度50.210摄氏度、频率1512000kHz。首条命令在getty就绪前not_run，第二条实际执行；serial-1已关闭、无临时SSH。根因仍未定，不以启动后读数排除故障原因或宣称稳定性通过。
+
+## 2026-10-19 当前Ubuntu产品缺口（构建前）
+原Ubuntu rc22早于当前UI075组件/设置代码；本轮先按锁定SDK d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740构建当前完整应用（desktop/Web/receipt），支持既有三分辨率与可选voice编译，runtime voice仍默认关闭。需要重建是应用输入自rc22已有变化，不是因文档变更。不重建A133、不改原运行rc22、不签名或复用旧版本发布标签。
+先执行原SDK/来源/契约守卫，失败保留日志并按实际原因修复；构建后逐文件复核。后续另做设置/布局兼容及受控升级。完整数据目前不能判通过：已知平台仅设置文件和后续widgets，扩展应用仍板端路径，Ubuntu Provider没有媒体/扩展能力。禁止用无消费者的样例文件替代功能验收。事前证据output/ubuntu-current-app-20261019/intent.json；真实升级/退出再登录/完整数据均not_run。
