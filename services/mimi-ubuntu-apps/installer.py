@@ -248,6 +248,8 @@ class Installer:
                                     if count > 256 or member.size > self.package.MAX_FILE_BYTES or total_bytes > self.package.MAX_EXTRACTED_BYTES:
                                         reject('archive count or size exceeds limit')
                                     name = member.name
+                                    if Path(name).parts and Path(name).parts[0] == 'data':
+                                        reject('package contains reserved data path')
                                     if not name or name != '/'.join(Path(name).parts) or name.startswith('/'):
                                         reject('noncanonical archive path')
                         self.package.safe_extract(Path('/proc/self/fd/' + str(snapshot.fileno())), stage)
@@ -278,6 +280,7 @@ class Installer:
                         self.tree_safe(data, data=True)
                         shutil.copytree(data, stage / 'data')
                 (stage / 'data').mkdir(mode=0o700, exist_ok=True)
+                (stage / 'data').chmod(0o700)
                 (stage / MARKER).write_text(fingerprint + '\n')
                 stage.chmod(0o755)
                 sync_tree(stage)

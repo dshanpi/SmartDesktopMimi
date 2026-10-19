@@ -2,7 +2,7 @@
   "requirement": "REQ-MIMI-UBUNTUAPPS-076",
   "base_commit": "f904620294c801707f4f4d8b97eb4e06520c3c3b",
   "status": "passed_isolated_platform_installer_tests",
-  "tests": 23,
+  "tests": 24,
   "forced_process_exits": 8,
   "scope": "Real RSA packages,root-controlled temporary files and CLI copies; schema1 no-permission admission; no production deployment",
   "checks": [
@@ -17,7 +17,7 @@
     "flock exclusion and stale journal temp recovery",
     "root-controlled deployed CLI success; developer checkout CLI refused"
   ],
-  "failure_history": "Initial tests used Python3.9 waitstatus_to_exitcode on UbuntuPython3.8; fixed test runner using POSIX WIFEXITED/WEXITSTATUS. Original log retained.",
+  "failure_history": "Initial tests used Python3.9 waitstatus_to_exitcode on UbuntuPython3.8; fixed test runner using POSIX WIFEXITED/WEXITSTATUS. Original log retained. Empty reserved data tar directory was accepted; reproduced, now denied before extraction, data mode explicitly0700.",
   "not_run": [
     "production platform deployment and login profile integration",
     "explicit Ubuntu native target/ABI admission",
@@ -29,13 +29,19 @@
   ],
   "evidence_sha256": {
     "tests-final.log": "b8f4e0a1d2c7cf10d4b3698584bc104a33e8a4abdb65bab98fe966c5b293618e",
+    "reserved-data-before.log": "7e6e7f4a26753b26e0c3799209e23af4bb8257d397e215880b883eca648a6032",
     "tests-final-r2.log": "ca45d41bc98371228929d70a3d1505c7f44c8fe82496cc8c3ba27f9f38f84a7e",
+    "tests-final-r3.log": "5d8f4ee60503eb54db6f0bd9d4aea2b48944f249ff77b041a7bdd1eddcd81005",
     "signed-catalog.log": "a6ead6c07f80020476e95f9361cf8d48a80e6e2f97fe6d1e8aeccd6ada3bd0af",
     "tests-r2.log": "7c3b7afa4a131de5be30fcc0a3322a1167024b3ad89c63f0dfd644b9204367ba",
+    "source-ownership.log": "bbe7507a0c197c383609be14cfc898168c2cd186957d589266eb2270a47c4d31",
     "harness-build.log": "8fa0d9933dbeccda76f729e97d0f11c5a58ec955e2a23d47911f656fa616101a",
+    "contracts.log": "fa594bc3a86034a278217c1d238556f665ce5c925b8a4477ef8bddc0cb408a3c",
     "signed-catalog-run.log": "858c0ff28faf7d484bd23ccab60eb31a2c8366396fffedce62881946bb4e1ee5",
     "tests-first.log": "3de9882465c662818a54c877c8cf9787478286cf1a1d5cdf2747313ad1497ed0",
-    "signed-catalog-final-run.log": "9381e21b31d5cd542f6f22e581f328e3277183f92bdac4df951553160b9f14f6"
+    "ui-inventory.log": "a6092561389f98beb15d7cb299ebb4ad3014dc167f22dd184f4dd97098450cfa",
+    "signed-catalog-final-run.log": "9381e21b31d5cd542f6f22e581f328e3277183f92bdac4df951553160b9f14f6",
+    "signed-catalog-final-r3.log": "6de3d3829a16e51afa47d74dab6ead82d4e7414aa310a84d6dcd37cc81139d0c"
   },
   "signed_catalog_consumer": {
     "status": "passed",
@@ -43,12 +49,12 @@
     "user_uid": 1000,
     "installed": {
       "id": "com.mimi.notes",
-      "publisher_sha256": "610c8bf411c49a11c9208a42e484f87c63ae2cb704fedbfd8db2309ddca3efdc",
+      "publisher_sha256": "ea741a2124b31eb74b816cf6238a16cebf6513f7425ade031afad3ab828d24e3",
       "runtime": "declarative",
       "status": "installed",
       "version": "1.0.0"
     },
-    "package_sha256": "1c29679f67a3c049eba13ea70beeee36b901ce7ccbddc3da670c49da5e4a1a90",
+    "package_sha256": "1763ecbb5a63f37ad8a1b26c89abcae651864ab3f188617fb13e2a272720b4d7",
     "desktop_fixture_sha256": "9eaaa0a3d5c31c6e9cc9e826d0a5d0a276825ee7b3827ff5710d7e7c44c7d9d9",
     "screenshot_sha256": "f1372a89c511c1211c543c8f85a65bebc466ac1fd1143abb83922c7f5ffc7304",
     "production_modified": false,
@@ -57,9 +63,9 @@
     "physical_acceptance": "not_run"
   },
   "source_files_sha256": {
-    "services/mimi-ubuntu-apps/installer.py": "85f053f49f0e465820257a824aedccaea1918279e446e66dd3abafef626e86b9",
+    "services/mimi-ubuntu-apps/installer.py": "2dd4c4e5cd27f66bc0006528dc11cdc19cff551b5d0e536bb382af960eb59152",
     "tools/aitapp/aitapp.py": "9989a893dc4415baf5943b5ff074dffc020fbfc86273820ecac6ee11b3c44d35",
-    "tests/sdkbuild/test_ubuntu_apps_installer.py": "3e4851774d1b0fd1be8b88b0e490469fd212d70fc0ed9709028edcf3132e7c1f",
+    "tests/sdkbuild/test_ubuntu_apps_installer.py": "fc0ef2a7671e0fdcaea9b429d57af5a8b74512b065fbde433a4e86ad21202c05",
     "tests/sdkbuild/ubuntu_apps_catalog_smoke.py": "38bac5e695298ca43b62f6921205c6f4bb186be8510d9db693419f339825b7c7",
     "tests/architecture/fixtures/native_ui_review.c": "cd142cb30cf1bdcade5511f0984f6dd0141ceea1d893b7456c5b561c179201f6"
   },

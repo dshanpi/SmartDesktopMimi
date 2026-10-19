@@ -226,6 +226,15 @@ class InstallerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'limit'):self.i.install(out)
         self.assertFalse(self.target.exists())
 
+    def test_reject_reserved_empty_data_directory(self):
+        pkg=self.package();out=self.r/'data-dir.aitapp'
+        with tarfile.open(pkg,'r:gz') as src,tarfile.open(out,'w:gz') as dst:
+            for member in src.getmembers():
+                dst.addfile(member,src.extractfile(member))
+            extra=tarfile.TarInfo('data');extra.type=tarfile.DIRTYPE;extra.mode=0o755;dst.addfile(extra)
+        with self.assertRaisesRegex(ValueError,'reserved data'):self.i.install(out)
+        self.assertFalse(self.target.exists())
+
     def test_reject_symlink_archive(self):
         out=self.r/'link.aitapp'
         with tarfile.open(out,'w:gz') as archive:

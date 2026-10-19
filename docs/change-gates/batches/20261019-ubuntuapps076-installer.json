@@ -26,7 +26,7 @@
         {
           "name": "root-isolated real signed install and transaction interruption",
           "status": "passed",
-          "scope": "23tests,8process exits; root-installed signed test package consumed by actualLVGL UID1000; not physical cuts/production/native execution",
+          "scope": "24tests,8process exits; root-installed signed test package consumed by actualLVGL UID1000; not physical cuts/production/native execution",
           "evidence": "docs/validation/ubuntuapps076-installer-20261019.json"
         },
         {
