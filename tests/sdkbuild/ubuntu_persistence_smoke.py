@@ -24,6 +24,7 @@ def main():
     p.add_argument('--release', type=Path, required=True)
     p.add_argument('--provider', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--corrupt-inputs', action='store_true', help='Also reject ambiguous layout files through real save UI')
     a = p.parse_args()
     out = a.output.absolute()
     out.mkdir(parents=True, mode=0o700, exist_ok=False)
@@ -112,6 +113,28 @@ def main():
         assert ImageChops.difference(first, final).getbbox() is None
         close(w)
         result['checks'].append({'name': 'cancelled_removal_never_written_or_reloaded', 'status': 'passed'})
+        if a.corrupt_inputs:
+            bad_inputs = {
+                'duplicate-schema': saved.replace(b'"schema":1', b'"schema":2,"schema":1'),
+                'nul-tail': saved + b'\0future-layout-data',
+            }
+            for label, data in bad_inputs.items():
+                assert data != saved
+                layout.write_bytes(data)
+                w = start('corrupt-' + label)
+                assert layout.read_bytes() == data, 'Startup must preserve rejected data'
+                click(w, 900, 84)
+                click(w, 328, 434)
+                click(w, 932, 110)
+                capture(w, 'rejected-' + label)
+                assert layout.read_bytes() == data, 'Save must not rewrite ambiguous data'
+                assert settings.read_bytes() == settings_before
+                close(w)
+                result['checks'].append({'name': 'actual_GUI_reject_' + label,
+                                         'status': 'passed',
+                                         'original_sha256': hashlib.sha256(data).hexdigest()})
+            layout.write_bytes(saved)  # Only this test's isolated data directory.
+
         result['settings_sha256'] = hashlib.sha256(settings_before).hexdigest()
         result['desktop_sha256'] = hashlib.sha256((a.release/'bin/lvglsim').read_bytes()).hexdigest()
         result['status'] = 'passed'

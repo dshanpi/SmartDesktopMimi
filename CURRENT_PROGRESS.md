@@ -69,3 +69,5 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 2026-10-19 DELIVERY058/DEBACTIVATE030：Ubuntu rc29受控草稿20附件完整下载/验签/哈希与deb内嵌载荷核对passed，旧发布/main不变；实际Ubuntu传输包升级/卸载/再暂存通过。GitHub附件名规范化失败已保留，追加映射/远端SHA清单解决；后续命名修复16回归通过，未重打包rc29。来源c84，评审0b73057三CI通过。见docs/delivery/20261019-ubuntu-rc29.md；完整数据、logout/relogin与A133物理未完。
 
 2026-10-19 UI075：布局异常输入丢弃数据已复现并修复，12项真实C检查及原存储2项ASAN/UBSAN通过；完整构建/GUI待续，安装rc29保持。见docs/validation/ui075-layout-input-20261019.json。扩展/媒体Ubuntu消费者未接通，不以文件哈希保留代替功能验收。
+
+2026-10-19 UI075：30ecfc2完整Ubuntu构建及布局保存/取消/损坏拒绝四组实际SDL检查passed，原rc29与设置/信任/登记健康保持。首次npm PATH构建失败保留；详见docs/validation/ui075-layout-input-build-20261019.json。扩展/媒体平台集成与真实logout/relogin继续未验收，不强制注销。

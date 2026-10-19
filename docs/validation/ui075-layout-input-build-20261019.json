@@ -1,0 +1,80 @@
+{
+  "requirement": "REQ-MIMI-UI-075",
+  "build_source_commit": "30ecfc21cc16ec6e7b7bee23d13444fbac73f8ab",
+  "desktop_sha256": "d890ec30c20edd641e9bf702bf143ccaaceb9523ee6fa71423fb62f18d412a4d",
+  "sdk_sha256": "d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740",
+  "full_build": {
+    "exit_code": 0,
+    "seconds": 80.43066627000007,
+    "command": [
+      "python3",
+      "tools/update/build_application.py",
+      "--sdk-root",
+      "/home/ubuntu/AI-DeskTopBox/.delivery",
+      "--sdk-id",
+      "application-sdk-ubuntu-x86_64",
+      "--expected-sdk-sha256",
+      "d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740",
+      "--output",
+      "/home/ubuntu/AI-DeskTopBox/.delivery/ubuntu-layout-input-20261019-r2"
+    ],
+    "source_commit": "30ecfc21cc16ec6e7b7bee23d13444fbac73f8ab"
+  },
+  "staged_files_verified": 28,
+  "native_tests": 12,
+  "existing_store_sanitizers": 2,
+  "GUI": {
+    "scope": "Actual current native SDL/Provider in isolated Xvfb; synthetic pointer input and dedicated data; not signed upgrade, real login, media or extension acceptance",
+    "checks": [
+      {
+        "name": "pointer_save_consumed_after_native_process_restart",
+        "status": "passed",
+        "revision": 1,
+        "layout_sha256": "4283d51ebcb2c2f884f01f62956abc716f4287d3358831445fefd4695b9791e9"
+      },
+      {
+        "name": "cancelled_removal_never_written_or_reloaded",
+        "status": "passed"
+      },
+      {
+        "name": "actual_GUI_reject_duplicate-schema",
+        "status": "passed",
+        "original_sha256": "1902b3a3d41750c1faebfc24e15498668122befe512c1b030133f39a6b50c2c4"
+      },
+      {
+        "name": "actual_GUI_reject_nul-tail",
+        "status": "passed",
+        "original_sha256": "5df4e23b65c7ca143e08361c0577bdbcd9476ea5087ebc97ca826673697be7f5"
+      }
+    ],
+    "settings_sha256": "8fd697cfbbd865913026fd0ffe42d3c944c8b7af771ca07479e334f6586412b5",
+    "desktop_sha256": "d890ec30c20edd641e9bf702bf143ccaaceb9523ee6fa71423fb62f18d412a4d",
+    "status": "passed"
+  },
+  "visual_review": "Save failed; draft retained visible, editor remains open; original malformed bytes retained",
+  "rc29_previous_record_CI": "all three passed at1201b58",
+  "installed_release": "rc29 unchanged and health passed; trust/enrollment/provider checks unchanged",
+  "not_run": [
+    "new signed package/upgrade",
+    "complete extension/media data consumers",
+    "real logout/relogin",
+    "A133 physical/new SDK acceptance"
+  ],
+  "failures_preserved": [
+    "original malformed-file overwrite reproductions",
+    "original FIFO blocking/nonregular lock behavior",
+    "first full build missing npm PATH; BUILD-INCOMPLETE retained"
+  ],
+  "evidence_sha256": {
+    "native-tests-r2.log": "88c6899eb3d68e052ab4784037355e622bb4096515d096aa71ded8d35c719167",
+    "sanitizer-tests-r2.log": "aa279e6e48eb5d7eb0f1d899949618456d83584871a6608e1fb34a04b6f2d1a7",
+    "before-reproduction.json": "41bdf46c79fa747b9bc6bb597ecd0a4496a15edcdde2be5df2c7b816aa337f7d",
+    "baseline-regressions.log": "7feab447fd21dd3d1a53e5db94735104031554aa3d8d3533cef54b3e6a2319f3",
+    "build-result.json": "6a045e0a65777525e772fcbc07347a4c1225a10a24be9b6b276ea7c9a0ad859a",
+    "build-result-r2.json": "56cfaf43d87204adf020eea96bc7a4997beb69f1bfad8fff3bfc53ebb1824835",
+    "gui/result.json": "95b8f2e26fe026226702f2f63d8babf5808de71dc2584fc201b4a293f0d2be5c",
+    "gui/rejected-duplicate-schema.png": "4794c25655bce80b2b3eaf6bb0a0a76dffde872ed8727f0c48d1dafd238b7997",
+    "gui/rejected-nul-tail.png": "4794c25655bce80b2b3eaf6bb0a0a76dffde872ed8727f0c48d1dafd238b7997",
+    "consumer-audit.json": "6e363fed74f9b86e62b57b645f6086480cad60c633ebeef7894f07afd9465ece"
+  }
+}
