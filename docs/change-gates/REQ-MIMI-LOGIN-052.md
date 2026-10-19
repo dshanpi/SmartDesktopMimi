@@ -67,3 +67,5 @@ A133 MCP可读scope，无活动hardware任务，device4保存ADBbinding仍空；
 当前UID1000/seat0/user/x11已登录，logind Display为空，旧筛选实际返回None；同session scope的固定GNOME会话程序提供:0。不猜显示编号，不改GDM登录配置。实施计划和不变量见开发证据output/ubuntu-login-resume-20261019/intent.json：Python桥接与Go启动前复核均按UID、固定可信GNOME可执行路径、精确session cgroup、XDG会话身份、有限环境读取和前后进程身份导出唯一编号；空缺/冲突/变化拒绝。原验签、设备身份、Xauthority读取、事务锁、非root启动和退出绑定保持。先主机正反例和实际只读发现，再单独部署读回；真实窗口/退出/数据仍not_run。系统服务逗号属性查询实测有效，排除该怀疑，不做无依据改动。
 
 2026-10-19 LOGIN052：已复现并修复GDM真实X11会话Display为空导致等待。严格从固定GNOME程序/同UID/精确scope/稳定进程身份导出唯一编号，Go启动前独立复核。23 Python及16 Go顶层race测试、当前真实会话发现/错误显示拒绝passed；尚未部署/窗口验收。证据docs/validation/login052-empty-display.json，A133与旧草稿不变。
+
+首次追溯检查拒绝：5827cfb批次清单未覆盖新批次JSON自身，原失败保留。新增覆盖记录修正元数据覆盖，不改运行时代码、不重复已通过回归。
