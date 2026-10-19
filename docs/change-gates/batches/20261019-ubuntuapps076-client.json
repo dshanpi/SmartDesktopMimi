@@ -21,7 +21,8 @@
         "docs/validation/ubuntuapps076-client-20261019.json",
         "docs/change-gates/batches/20261019-ubuntuapps076-client.json",
         "CURRENT_PROGRESS.md",
-        "docs/CHANGE-GATES.md"
+        "docs/CHANGE-GATES.md",
+        "docs/validation/ubuntuapps076-build-20261019.json"
       ],
       "checks": [
         {
@@ -36,6 +37,12 @@
           "scope": "Signed install/native admission/sandbox/storage/upgrade",
           "reason": "Platform chain still pending",
           "evidence": "docs/validation/ubuntuapps076-client-20261019.json"
+        },
+        {
+          "name": "clean complete Ubuntu build",
+          "status": "passed",
+          "scope": "source866f7e0 SDK original lock,28 staged hashes; unsigned and not installed",
+          "evidence": "docs/validation/ubuntuapps076-build-20261019.json"
         }
       ]
     }

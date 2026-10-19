@@ -18,3 +18,7 @@ Ubuntu共享桌面应消费平台安装的扩展应用，签名安装/发行者�
 
 ## 本批实际结果
 应用侧user_app_config.c/h与实际user_app.c接通；10项真实C配置检查passed。真实LVGL临时声明式目录读取、选择/重开与服务不可用失败检查在三尺寸/双语言/双主题共12图通过，另禁用service端点1组通过；没有使用真实appd，不能叫签名安装或storage验收。小屏布局已人工看图。源归属原锁73491272和IPC1.2通过，冻结文件字节保持。原归属拒绝与配置截断失败历史保留；完整新desktop构建、平台安装/架构准入、sandbox/storage、升级数据、真实登录与物理尚未执行。详见docs/validation/ubuntuapps076-client-20261019.json。
+
+
+### 完整构建追加结果
+干净源码866f7e0fbcc87a45fbec31d263a987be42cbf704使用原Ubuntu SDK锁完成desktop/Web构建，89.24秒退出0；28个暂存文件逐项SHA256通过，编译数据库确认新增客户端读取器实际编入。桌面SHA256 e988a25c20e1e819c270097b4a7c009757e5434e8c3380c58f887d8a63bf33fb。此为未签名、未安装测试候选，未替代rc29；前一阶段not_run记录保留为历史。未来签名必须换新版本重新形成干净源码构建证据。Ubuntu真实扩展安装/运行/storage与媒体完整数据、真实重登录、A133物理验收仍未完成。详见docs/validation/ubuntuapps076-build-20261019.json。
