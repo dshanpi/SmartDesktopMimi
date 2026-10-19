@@ -57,6 +57,13 @@ class LoginTests(unittest.TestCase):
             p.write_bytes(b'test-cookie-fixture')
             p.chmod(0o600)
             self.assertEqual(login.read_authority(p, os.getuid()), b'test-cookie-fixture')
+            p.chmod(0o700)
+            self.assertEqual(login.read_authority(p, os.getuid()), b'test-cookie-fixture')
+            for mode in (0o640, 0o644, 0o710, 0o701, 0o711, 0o1600, 0o4600):
+                p.chmod(mode)
+                with self.subTest(mode=oct(mode)), self.assertRaises(ValueError):
+                    login.read_authority(p, os.getuid())
+            p.chmod(0o600)
             link = Path(d) / 'alias'
             link.symlink_to(p)
             with self.assertRaises(OSError):

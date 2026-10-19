@@ -202,7 +202,7 @@ def read_authority(path, uid):
         leaf = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
         try:
             s = os.fstat(leaf)
-            if s.st_uid != uid or not stat.S_ISREG(s.st_mode) or stat.S_IMODE(s.st_mode) != 0o600 or s.st_nlink != 1 or not 0 < s.st_size <= 65536:
+            if s.st_uid != uid or not stat.S_ISREG(s.st_mode) or stat.S_IMODE(s.st_mode) not in (0o600, 0o700) or s.st_nlink != 1 or not 0 < s.st_size <= 65536:
                 raise ValueError('unsafe display authorization')
             raw = os.read(leaf, 65537)
             after = os.fstat(leaf)
