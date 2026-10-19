@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Keep fixed root runtime parent traversable under service private umask",
+  "context": "Actual service UMask0077 overrides mkdir0755. Enrollment mismatch separately blocks deployment; no re-enrollment authorized.",
+  "next_steps": "Build fixed native updater; backup and deploy platform components only; verify actual window health without forcing logout. Physical A133 remains deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Python bridge and Go independent session recheck",
+      "invariants": "Exact UID/local X11/scope/executable/process identity; no guessed display or caller environment; original trust/transaction/authorization guards preserved",
+      "paths": [
+        "services/mimi-ubuntu-provider/login.py",
+        "tests/sdkbuild/test_ubuntu_login.py",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/batches/20261019-login052-runtime-traversal.json"
+      ],
+      "checks": [
+        {
+          "name": "Runtime parent regression",
+          "scope": "Actual filesystem with service umask; child private and parent traversable",
+          "status": "passed",
+          "evidence": "output/ubuntu-login-resume-20261019/python-runtime-r3.log"
+        },
+        {
+          "name": "Current host enrollment",
+          "scope": "Current Ubuntu DMI identity compared with original registered host",
+          "status": "blocked",
+          "reason": "VM machine identity differs; do not replace registration without confirmation",
+          "evidence": "output/ubuntu-login-resume-20261019/enrollment-diff.json"
+        }
+      ]
+    }
+  ]
+}

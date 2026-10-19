@@ -295,6 +295,8 @@ class Bridge:
         if not self.base.exists():
             self.base.mkdir(mode=0o755)
         trusted(self.base)
+        # The service has UMask=0077; the enrolled user must traverse this root-owned parent.
+        os.chmod(self.base, 0o755)
         runtime = self.base / 'session'
         if not runtime.exists():
             runtime.mkdir(mode=0o700)
