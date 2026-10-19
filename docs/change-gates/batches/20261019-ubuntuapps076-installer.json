@@ -33,7 +33,8 @@
           "name": "full runtime and user data acceptance",
           "status": "not_run",
           "reason": "Native runtime/storage/media and production profile incomplete",
-          "evidence": "docs/validation/ubuntuapps076-installer-20261019.json"
+          "evidence": "docs/validation/ubuntuapps076-installer-20261019.json",
+          "scope": "Native ABI admission,restricted runtime/storage,production login integration and complete data acceptance"
         }
       ]
     }
