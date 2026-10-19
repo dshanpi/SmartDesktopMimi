@@ -129,7 +129,7 @@ func (s UbuntuSession) environment() ([]string, error) {
 func checkUbuntuLoginProperties(s UbuntuSession, values map[string]string) error {
 	expected := map[string]string{"Id": s.LoginSession, "User": strconv.FormatUint(uint64(s.UID), 10), "Class": "user", "Type": "x11", "Remote": "no", "Active": "yes", "Seat": "seat0", "Display": s.Display, "Scope": "session-" + s.LoginSession + ".scope"}
 	for k, v := range expected {
-		if values[k] != v {
+		if actual, present := values[k]; !present || actual != v {
 			return fmt.Errorf("graphical login scope differs: %s", k)
 		}
 	}
@@ -146,7 +146,7 @@ func (s UbuntuSession) readyLogin() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	args := []string{"show-session", s.LoginSession}
-	for _, key := range []string{"Id", "User", "Class", "Type", "Remote", "Active", "Seat", "Display", "Scope"} {
+	for _, key := range []string{"Id", "User", "Class", "Type", "Remote", "Active", "Seat", "Display", "Scope", "Service"} {
 		args = append(args, "--property="+key)
 	}
 	cmd := exec.CommandContext(ctx, program, args...)
@@ -158,6 +158,21 @@ func (s UbuntuSession) readyLogin() error {
 	values, err := unitProperties(raw)
 	if err != nil {
 		return err
+	}
+	if display, present := values["Display"]; present && display == "" {
+		probe := s
+		probe.Display = ""
+		if err := checkUbuntuLoginProperties(probe, values); err != nil {
+			return err
+		}
+		if values["Service"] != "gdm-password" && values["Service"] != "gdm-autologin" {
+			return fmt.Errorf("unsupported display manager for missing display")
+		}
+		resolved, err := ubuntuSessionProcessDisplay("/proc", s.UID, s.LoginSession)
+		if err != nil {
+			return err
+		}
+		values["Display"] = resolved
 	}
 	return checkUbuntuLoginProperties(s, values)
 }

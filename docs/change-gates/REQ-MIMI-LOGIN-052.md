@@ -62,3 +62,8 @@ A133 MCP可读scope，无活动hardware任务，device4保存ADBbinding仍空；
 最终桥接源码8258178（更新器仍642/d53；二进制不重编）已部署。额外日志中的暂态failed保留，不推定为永久根因。改为固定UID且seat0列表行才读取详情，SSH不查询；15Python回归passed，部署后5次/10秒真实等待与无UI/新日志无failed读回passed，仅短时范围，不当作长期稳定或图形登录。root服务继续enabled/active；签名rc22 deb保留安装。实际登录/退出/完整数据和外部ADB输入仍pending。证据deployment-result-r4.json、python-boundaries-r5.log。
 
 2026-10-15 用户答复：暂时无法进入虚拟机控制台。真实ubuntu Xorg图形登录/窗口/退出再登录验收blocked；不以greeter/Xvfb通过代替，不反复要求当前无法提供的操作。其他独立工作继续。
+
+## 2026-10-19 原服务器恢复：真实X11空Display缺陷（实施前）
+当前UID1000/seat0/user/x11已登录，logind Display为空，旧筛选实际返回None；同session scope的固定GNOME会话程序提供:0。不猜显示编号，不改GDM登录配置。实施计划和不变量见开发证据output/ubuntu-login-resume-20261019/intent.json：Python桥接与Go启动前复核均按UID、固定可信GNOME可执行路径、精确session cgroup、XDG会话身份、有限环境读取和前后进程身份导出唯一编号；空缺/冲突/变化拒绝。原验签、设备身份、Xauthority读取、事务锁、非root启动和退出绑定保持。先主机正反例和实际只读发现，再单独部署读回；真实窗口/退出/数据仍not_run。系统服务逗号属性查询实测有效，排除该怀疑，不做无依据改动。
+
+2026-10-19 LOGIN052：已复现并修复GDM真实X11会话Display为空导致等待。严格从固定GNOME程序/同UID/精确scope/稳定进程身份导出唯一编号，Go启动前独立复核。23 Python及16 Go顶层race测试、当前真实会话发现/错误显示拒绝passed；尚未部署/窗口验收。证据docs/validation/login052-empty-display.json，A133与旧草稿不变。

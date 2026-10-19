@@ -1,0 +1,22 @@
+{
+  "requirement": "REQ-MIMI-LOGIN-052",
+  "at_utc": "2026-10-19T03:43:03.896295+00:00",
+  "base_commit": "d0ec6ac39d03a3024a8df9aa65d907a556621349",
+  "source_state": "working tree before source commit",
+  "python_tests": 23,
+  "go_top_level_tests": 16,
+  "go_race": "passed",
+  "actual_x11_discovery": "passed on active UID1000 local GDM session with blank logind display",
+  "actual_launcher_login_recheck": "passed; mismatched display rejected",
+  "deployment": "not_run",
+  "actual_window_health": "not_run",
+  "logout_relogin_full_data": "not_run",
+  "A133": "deferred_not_run",
+  "historical_failure": "Old bridge returned None for actual active X11 session; old files preserved",
+  "logs": {
+    "python-final.log": "f771c0be181717d9e5136006c2a11e4b51690b7dcb2f72bc1df6beb1910f2eb0",
+    "python-login.log": "4c8e1ed4f12fbb55e9fb708e8a790ffe355107ae5263f6d103cc67c3ac48af79",
+    "python-session.log": "4ab7e76278fc5209013d324a72c8320652fe46e322e99a953edf9087d7c823b2",
+    "go-final.jsonl": "120dfd3c8d801d030249ad374c9d7ffc9bd0d948a1a6aaa25a14edcee2403cb2"
+  }
+}

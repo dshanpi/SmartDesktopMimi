@@ -82,10 +82,14 @@ def properties(raw):
     return result
 
 
-def allowed_session(s, uid):
+def local_session(s, uid):
     required = {'User': str(uid), 'Seat': 'seat0', 'Remote': 'no', 'Active': 'yes', 'Class': 'user', 'Type': 'x11'}
     return (all(s.get(k) == v for k, v in required.items()) and ID.fullmatch(s.get('Id', ''))
-            and DISPLAY.fullmatch(s.get('Display', '')) and s.get('Scope') == 'session-' + s['Id'] + '.scope')
+            and s.get('Scope') == 'session-' + s['Id'] + '.scope')
+
+
+def allowed_session(s, uid):
+    return local_session(s, uid) and DISPLAY.fullmatch(s.get('Display', ''))
 
 
 def select_session(sessions, uid):
@@ -93,6 +97,63 @@ def select_session(sessions, uid):
     if len(matches) > 1:
         raise ValueError('multiple active graphical sessions')
     return matches[0] if matches else None
+
+
+
+def session_process_display(uid, session_id, proc=Path('/proc')):
+    """Resolve GDM's missing logind display from its enrolled GNOME session."""
+    if not ID.fullmatch(session_id):
+        raise ValueError('invalid session identity')
+    expected = '/user.slice/user-%d.slice/session-%s.scope' % (uid, session_id)
+    executable = '/usr/libexec/gnome-session-binary'
+    trusted(executable)
+    displays = set()
+    for root in proc.iterdir():
+        if not root.name.isdigit():
+            continue
+        try:
+            try:
+                owned = root.stat().st_uid == uid and os.readlink(root / 'exe') == executable
+            except PermissionError:
+                continue
+            if not owned:
+                continue
+            def bounded(name, limit):
+                with (root / name).open('rb') as f:
+                    raw = f.read(limit + 1)
+                if len(raw) > limit:
+                    raise ValueError('oversized session metadata')
+                return raw
+            def identity():
+                raw = bounded('stat', 16384)
+                if b')' not in raw:
+                    raise ValueError('invalid process stat')
+                fields = raw[raw.rfind(b')') + 1:].split()
+                if len(fields) < 20 or not fields[19].isdigit():
+                    raise ValueError('invalid process identity')
+                return (root.stat().st_uid, os.readlink(root/'exe'), fields[19], bounded('cgroup', 65536))
+            before = identity()
+            groups = [line.split(b':', 2) for line in before[3].splitlines()]
+            groups = [v[2].decode() for v in groups if len(v)==3 and v[1] in (b'', b'name=systemd')]
+            if not groups or any(v != expected for v in groups):
+                continue
+            env = {}
+            for entry in bounded('environ', 1048576).split(b'\0'):
+                k, sep, value = entry.partition(b'=')
+                if k in (b'DISPLAY', b'XDG_SESSION_ID', b'XDG_SESSION_TYPE'):
+                    if not sep or k in env:
+                        raise ValueError('ambiguous session environment')
+                    env[k] = value.decode('ascii')
+            if env.get(b'XDG_SESSION_ID') != session_id or env.get(b'XDG_SESSION_TYPE') != 'x11' or not DISPLAY.fullmatch(env.get(b'DISPLAY', '')):
+                raise ValueError('session display metadata differs')
+            if before != identity() or before[:2] != (uid, executable):
+                raise ValueError('session process changed')
+            displays.add(env[b'DISPLAY'])
+        except (FileNotFoundError, ProcessLookupError):
+            continue
+    if len(displays) != 1:
+        raise ValueError('no unique session display')
+    return displays.pop()
 
 
 def discover(uid):
@@ -109,6 +170,9 @@ def discover(uid):
         values = properties(p)
         if set(values) != set(keys) or values['Id'] != fields[0] or values['User'] != str(uid):
             raise ValueError('incomplete or changed logind projection')
+        # A blank field is supported only for an otherwise eligible GDM session.
+        if values['Display'] == '' and values['Service'] in ('gdm-password', 'gdm-autologin') and local_session(values, uid):
+            values['Display'] = session_process_display(uid, values['Id'])
         sessions.append(values)
     return select_session(sessions, uid)
 
