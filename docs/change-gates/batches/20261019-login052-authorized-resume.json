@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Authorized Ubuntu VM registration and actual X11 login validation",
+  "context": "Continuation after two preserved rollback results; user explicitly authorizes replacement developer VM local registration only. No application rebuild.",
+  "next_steps": "Read-only source synchronization and evidence backup; logout/relogin, complete data and deferred A133 acceptance remain separate.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Authorized local registration, platform deployment and true logged-in Ubuntu health; documentation of measured results",
+      "invariants": "Preserve original trust, signed rc22, user data, A133 and cloud identity; no stability claim or old artifact overwrite",
+      "paths": [
+        "docs/validation/login052-actual-x11-resume.json",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/20261019-login052-authorized-resume.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual X11 deployment and health",
+          "scope": "Local GDM session, UID1000 processes, active loop and Provider contract",
+          "status": "passed",
+          "evidence": "docs/validation/login052-actual-x11-resume.json"
+        },
+        {
+          "name": "Historical deployment attempts",
+          "scope": "GDM authority mode and changed machine enrollment refused; both rolled back",
+          "status": "failed",
+          "reason": "Resolved by bounded permission handling, umask fix and explicitly authorized local re-enrollment; history retained",
+          "evidence": "output/ubuntu-login-resume-20261019/deployment-result-r2.json"
+        },
+        {
+          "name": "Remaining acceptance",
+          "scope": "Logout/relogin, full data, upgrade login and physical targets",
+          "status": "not_run",
+          "reason": "No forced logout; A133 remains user-deferred",
+          "evidence": "docs/validation/login052-actual-x11-resume.json"
+        }
+      ]
+    }
+  ]
+}
