@@ -1,0 +1,210 @@
+{
+  "requirement": "REQ-MIMI-DELIVERY-058",
+  "related": [
+    "REQ-MIMI-DEBACTIVATE-030",
+    "REQ-MIMI-RELEASE-072",
+    "REQ-MIMI-LOGIN-052"
+  ],
+  "at_utc": "2026-10-19T04:55:23.952646+00:00",
+  "status": "passed_scoped_remote_draft_not_product_qualification",
+  "remote": {
+    "status": "passed_remote_controlled_draft",
+    "requirement": "REQ-MIMI-DELIVERY-058",
+    "source_commit": "c84c564fbdb878c855ab48cebb1bc6f19da4492e",
+    "review_tools_commit": "0b73057375b6f2eb6502bd615eff4a4ed1023d3e",
+    "version": "1.0.8-rc.29",
+    "url": "https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-51f11a7e23bfe0bbbc86",
+    "release_id": 416908842,
+    "assets_verified": 20,
+    "package_sha256": "a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f",
+    "old_releases_unchanged": true,
+    "original_18_new_assets_unchanged": true,
+    "filename_mapping": {
+      "logical": "smartdesktopmimi-bundle-ubuntu-host_1.0.8~rc.29-1_amd64.deb",
+      "remote": "smartdesktopmimi-bundle-ubuntu-host_1.0.8.rc.29-1_amd64.deb"
+    },
+    "main_unchanged": true,
+    "physical": "not_run",
+    "stable_release": false,
+    "automatic_update_eligible": false,
+    "checks": {
+      "sdk-lock.json": {
+        "sha256": "d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740",
+        "bytes": 886882
+      },
+      "sbom.spdx.json": {
+        "sha256": "f47eb4c258011b81c9536f75c39ce7debe21c50da7dd6204e2fc4b14e85df4c3",
+        "bytes": 3398
+      },
+      "source-ownership.json": {
+        "sha256": "7349127262a553c2381b0b7eda257703d47c9b65153f68cd8f2460e99510fd25",
+        "bytes": 21452
+      },
+      "release-lock.json": {
+        "sha256": "76f890e0727eea9c6cb07e026cd12f5174a67197f9f2acf46ba594552efb8704",
+        "bytes": 1790
+      },
+      "manifest.json": {
+        "sha256": "1e1d92d3b7ef5015f4f6c50c312a0d943810fb43f44080f287433fb101cd5072",
+        "bytes": 18061
+      },
+      "host-verification.json": {
+        "sha256": "efe1ac2f45884268428e8f1ccc35048b030821ad5547310c9d2d6c429d15d178",
+        "bytes": 8095
+      },
+      "platform-contract-lock.json": {
+        "sha256": "3b3768efa8cecd37f4d4ef789c86257e7f0c4bfe9357cb1c271034fc6f80fdfb",
+        "bytes": 1420
+      },
+      "manifest.sig": {
+        "sha256": "eb39fc62e3a2940570da331d3bcc28257a108e801c214a28164946514127afe3",
+        "bytes": 384
+      },
+      "application-build.json": {
+        "sha256": "d415a86bb432c5d9d90592367360448d79e33c90c6cd8e45001f5c26f6a8b0ca",
+        "bytes": 1076
+      },
+      "smartdesktopmimi-bundle-ubuntu-host_1.0.8.rc.29-1_amd64.deb": {
+        "sha256": "195f6373bd54306ab6c14a487ee9d210ed4420113bff30e4987a394eeccec122",
+        "bytes": 27412838
+      },
+      "application.tar.gz": {
+        "sha256": "a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f",
+        "bytes": 27406428
+      },
+      "device-ubuntu.json": {
+        "sha256": "b782e7b3ff5fc6361d9fa912b79eb4146e3e692509cccefcfa8ebf43c5e5cce5",
+        "bytes": 4398
+      },
+      "dependency-lock.json": {
+        "sha256": "973ab4eac65745b64f9c94f2fdd218cb7252b2e10c93089e384f88a1cccb7094",
+        "bytes": 325
+      },
+      "deb-build.json": {
+        "sha256": "f78290b393cb560a625ceb517f855be76f8fc1e6df1f887d236744bf3e78f67e",
+        "bytes": 823
+      },
+      "source.tar.gz": {
+        "sha256": "d238aa5171683e83725325bfdc0a146871e27ef2881bf3e97893a680182a5592",
+        "bytes": 65719516
+      },
+      "validation.json": {
+        "sha256": "2677ff8b249e8553b5c4c0c0c543f6b333e955e40522704848e4a1ee1f69a57e",
+        "bytes": 4113
+      },
+      "SHA256SUMS": {
+        "sha256": "aa56cbb125a2ba115df2f9e62ba738e860d55a2c08b3a3c6c99f7f475c8e2dba",
+        "bytes": 1479
+      },
+      "delivery-snapshot.json": {
+        "sha256": "c37c207c0e0b9c00236312338a23962490ff517348431e0688af01c508580c99",
+        "bytes": 3305
+      },
+      "REMOTE-SHA256SUMS": {
+        "sha256": "a6a3c7f987a47b331c2d887dc674b8a6b9ece6957a96fe908c3723979821cb83",
+        "bytes": 1647
+      },
+      "remote-filename-map.json": {
+        "sha256": "319dd1a4786bc720e0f3cf49348e84810870ebbe7af721a64b155bec181e7a5d",
+        "bytes": 575
+      }
+    },
+    "at_utc": "2026-10-19T04:55:01.168649+00:00"
+  },
+  "nested_deb": {
+    "status": "passed",
+    "scope": "Full downloaded deb contents bound to independently downloaded original signed manifest/signature/archive; no maintainer scripts",
+    "deb_sha256": "195f6373bd54306ab6c14a487ee9d210ed4420113bff30e4987a394eeccec122",
+    "checked_payloads": [
+      "manifest.json",
+      "manifest.sig",
+      "application.tar.gz"
+    ],
+    "package_sha256": "a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f"
+  },
+  "deb_transport": {
+    "requirement": "REQ-MIMI-DEBACTIVATE-030",
+    "scope": "Actual Ubuntu transport .deb install/verify/purge only; selected rc29 must remain active unchanged",
+    "checks": [
+      {
+        "name": "deb-install",
+        "exit_code": 0
+      },
+      {
+        "name": "deb-installed-signature",
+        "exit_code": 0
+      },
+      {
+        "name": "deb-purge",
+        "exit_code": 0
+      },
+      {
+        "name": "deb-purge-health",
+        "exit_code": 0
+      },
+      {
+        "name": "deb-restage-rc29",
+        "exit_code": 0
+      }
+    ],
+    "status": "passed",
+    "previous_transport": "1.0.8~rc.22-1",
+    "old_deb_sha256": "9daeff49a71056b3b1f44d7b9407a85e7a26a50bbfe3d1573b542005e692b711",
+    "no_maintainer_scripts": true,
+    "installed_payload_exact": true,
+    "protected_files_unchanged": true,
+    "selected_process_unchanged": true,
+    "deb_sha256": "195f6373bd54306ab6c14a487ee9d210ed4420113bff30e4987a394eeccec122",
+    "product_qualified": false
+  },
+  "review_ci": [
+    {
+      "id": 39200561537,
+      "name": "Change traceability coverage",
+      "head_sha": "0b73057375b6f2eb6502bd615eff4a4ed1023d3e",
+      "html_url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39200561537",
+      "conclusion": "success"
+    },
+    {
+      "id": 39200561529,
+      "name": "Application update gates",
+      "head_sha": "0b73057375b6f2eb6502bd615eff4a4ed1023d3e",
+      "html_url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39200561529",
+      "conclusion": "success"
+    },
+    {
+      "id": 39200561554,
+      "name": "Public source validation",
+      "head_sha": "0b73057375b6f2eb6502bd615eff4a4ed1023d3e",
+      "html_url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39200561554",
+      "conclusion": "success"
+    }
+  ],
+  "review_pr": {
+    "number": 2,
+    "html_url": "https://github.com/dshanpi/SmartDesktopMimi/pull/2",
+    "draft": true,
+    "state": "open"
+  },
+  "packaging_filename_fix": {
+    "scope": "Future artifact filenames use application SemVer, with build metadata encoded as _build_; Debian internal tilde ordering unchanged",
+    "tests_passed": 16,
+    "existing_rc29_repacked": false,
+    "remote_new_naming_product_test": "not_run"
+  },
+  "failures_retained": [
+    "deb-precondition-r1-failure.json",
+    "asset-inventory-mismatch.json",
+    "sync.log",
+    "resume-sync.log",
+    "serial-transfer-stop.json"
+  ],
+  "remaining": {
+    "full_data_media_extensions": "not_run",
+    "logout_relogin": "not_run",
+    "a133_physical": "deferred/not_run",
+    "cloud_voice_account": "not_run",
+    "product_qualified": false
+  },
+  "next_action": "Read new record/filename-fix CI without rebuilding application. Continue Ubuntu actual extension/media data consumers and actual logout/login where feasible; preserve rc29/rc22, original trust and all immutable drafts. Deferred A133 waits for new SDK environment."
+}

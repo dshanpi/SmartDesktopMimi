@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu rc29 controlled draft and portable Debian asset naming",
+  "context": "GitHub normalized a tilde after upload; preserve current assets and prevent future naming drift without changing Debian version ordering",
+  "next_steps": "Read new record/filename-fix CI without rebuilding application. Continue Ubuntu actual extension/media data consumers and actual logout/login where feasible; preserve rc29/rc22, original trust and all immutable drafts. Deferred A133 waits for new SDK environment.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "Controlled draft and immutable full readback with failure history",
+      "invariants": "No old tag/asset overwrite, no trust/enrollment change, no production claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/validation/delivery058-ubuntu-rc29-20261019.json",
+        "docs/delivery/20261019-ubuntu-rc29.md",
+        "docs/change-gates/batches/20261019-delivery058-ubuntu-rc29.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "deb and draft delivery",
+          "scope": "16 packaging regressions, actual original Ubuntu transport lifecycle,20 downloaded assets and nested payload",
+          "status": "passed",
+          "evidence": "docs/validation/delivery058-ubuntu-rc29-20261019.json"
+        },
+        {
+          "name": "complete product acceptance",
+          "scope": "full consumers/logout/cloud/physical",
+          "status": "not_run",
+          "reason": "Separate original requirements remain",
+          "evidence": "docs/validation/delivery058-ubuntu-rc29-20261019.json"
+        }
+      ]
+    },
+    {
+      "id": "REQ-MIMI-DEBACTIVATE-030",
+      "record": "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md",
+      "scope": "Future portable external filename and original VM transport tests",
+      "invariants": "Internal Debian version ordering, signed payload and no-maintainer-script behavior unchanged; oldrc29 not repacked",
+      "paths": [
+        "tools/sdkbuild/package_deb.py",
+        "tests/sdkbuild/test_deb.py",
+        "docs/change-gates/REQ-MIMI-DEBACTIVATE-030.md"
+      ],
+      "checks": [
+        {
+          "name": "deb and draft delivery",
+          "scope": "16 packaging regressions, actual original Ubuntu transport lifecycle,20 downloaded assets and nested payload",
+          "status": "passed",
+          "evidence": "docs/validation/delivery058-ubuntu-rc29-20261019.json"
+        },
+        {
+          "name": "complete product acceptance",
+          "scope": "full consumers/logout/cloud/physical",
+          "status": "not_run",
+          "reason": "Separate original requirements remain",
+          "evidence": "docs/validation/delivery058-ubuntu-rc29-20261019.json"
+        }
+      ]
+    }
+  ]
+}

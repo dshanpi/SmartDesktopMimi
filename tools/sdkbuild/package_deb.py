@@ -158,7 +158,10 @@ verified release hash. Its inner signature covers the application, not dpkg meta
             os.utime(path, (epoch, epoch))
         os.utime(stage, (epoch, epoch))
         result = temp/'result'; result.mkdir()
-        archive = result/f'{package}_{version}_{deb_arch}.deb'
+        # GitHub rewrites '~' in asset filenames. Keep Debian's prerelease
+        # ordering inside control metadata, with a portable external filename.
+        artifact_version = manifest['version'].replace('+', '_build_') + '-1'
+        archive = result/f'{package}_{artifact_version}_{deb_arch}.deb'
         subprocess.run(['dpkg-deb', '--root-owner-group', '-Zgzip', '--build', str(stage), str(archive)],
                        env={**os.environ, 'SOURCE_DATE_EPOCH': str(epoch)}, check=True)
         lock = dict(schema_version=1, kind='application-deb-transport', source_commit=manifest['commit'],

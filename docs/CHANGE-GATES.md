@@ -225,3 +225,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-19 SDK025/DEBACTIVATE030：当前Ubuntu干净源码c84c564完整desktop/Web构建通过（672编译源、28暂存文件逐哈希复核，原SDK d92c1a17）。三分辨率窗口及未编译尺寸拒绝、5组实际进程生命周期passed；新增实际SDL指针保存/取消/重启布局消费检查passed。此为未签名原生候选，原真实登录rc22保持；不是升级/完整数据或物理验收。 证据：docs/validation/sdk025-current-ubuntu-20261019.json。
 
 2026-10-19 [RELEASE072](change-gates/REQ-MIMI-RELEASE-072.md)：Ubuntu rc29原钥签名、实际rc22升级与同会话重启passed；56项回归，完整数据/登录/物理及新包远端交付未完。
+
+2026-10-19 [DELIVERY058](change-gates/REQ-MIMI-DELIVERY-058.md)/[DEBACTIVATE030](change-gates/REQ-MIMI-DEBACTIVATE-030.md)：Ubuntu rc29 20远端附件及嵌套签名载荷复验passed；后续deb文件名修复16回归passed，完整资格未完成。

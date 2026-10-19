@@ -65,3 +65,5 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 2026-10-19 SDK025/DEBACTIVATE030：当前Ubuntu干净源码c84c564完整desktop/Web构建通过（672编译源、28暂存文件逐哈希复核，原SDK d92c1a17）。三分辨率窗口及未编译尺寸拒绝、5组实际进程生命周期passed；新增实际SDL指针保存/取消/重启布局消费检查passed。此为未签名原生候选，原真实登录rc22保持；不是升级/完整数据或物理验收。 证据：docs/validation/sdk025-current-ubuntu-20261019.json。
 
 2026-10-19 RELEASE072/LOGIN052：原Ubuntu rc22→rc29签名升级及同一X11会话应用重启通过；设置、信任、登记与后端不变，旧rc22保留。修复发布工具的源接口/运行目标和Ubuntu SDK来源校验，56项相关回归通过。前序失败保留；新包未远端交付，完整数据、登出登录及A133物理验收未完成。详见docs/validation/release072-ubuntu-rc29-20261019.json（公共仓库），原始output/ubuntu-upgrade-20261019。
+
+2026-10-19 DELIVERY058/DEBACTIVATE030：Ubuntu rc29受控草稿20附件完整下载/验签/哈希与deb内嵌载荷核对passed，旧发布/main不变；实际Ubuntu传输包升级/卸载/再暂存通过。GitHub附件名规范化失败已保留，追加映射/远端SHA清单解决；后续命名修复16回归通过，未重打包rc29。来源c84，评审0b73057三CI通过。见docs/delivery/20261019-ubuntu-rc29.md；完整数据、logout/relogin与A133物理未完。

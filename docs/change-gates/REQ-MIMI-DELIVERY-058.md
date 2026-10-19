@@ -20,3 +20,9 @@ dshanpi/SmartDesktopMimi唯一应用/系统入口；100askTeam/A133-AIDesktop-Ti
 
 ## 同步最终结果
 应用12/系统13附件已全部上传并逐个完整下载；远端asset ID/size/SHA、四原RSA签名及gzip解压raw618/应用c22/SWUcdf和a37/d7版本配对全部passed。系统SWU慢流采用固定asset ID的HTTP206范围读回及慢段再拆分，严格Content-Range/字节上限/允许CDN、最终全包原SHA后接续总复核；两次仅结束自己传输PID并保留partial，不把partial记通过，不触及设备。详见verified-result.json、system-swu-range-verified.json、upload-final.log及handoff记录。当前上传同步这一项passed，真机仍deferred/not_run，整体项目未完成。草稿入口及附件说明已保存docs/delivery/20261015-snapshot.md，未公开稳定版/未替换标签或签名钥。
+
+## 2026-10-19 Ubuntu rc29 同步与远端复验结果
+来源c84c564原应用保持不变；发布工具/测试评审0b73057的三项远端CI全部passed，PR2为叠加在UI075上的draft，未合并main。新v1.0.8-rc.29标签绑定实际构建源；受控draft/prerelease ID416908842。初始18附件全部上传；GitHub将deb名称~改点触发严格清单失败，保留18附件及其ID，仅追加remote-filename-map.json和REMOTE-SHA256SUMS。最终20附件完整下载，原Go验签/目标/归属/SDK/版本/源码门禁以及deb内嵌三件载荷与独立下载文件逐字节SHA一致全部passed。旧所有release快照及main未变。
+串行下载实测约61KiB/s，记录并核对本任务PID后受控停止，保留partial；12连接/2MiB HTTP206读回逐Content-Range/长度检查，拼接整文件SHA及签名通过。未因观察超时重复启动；partial不计成功。应用包a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f不变，deb195f6373bd54306ab6c14a487ee9d210ed4420113bff30e4987a394eeccec122。
+实际原Ubuntu传输包升级/卸载/再暂存passed，已运行rc29进程和设置、可信钥、登记未变。最初“包未安装”前置假设被现存rc22阻止，未执行修改，核对原rc22deb后继续。后续文件名工具修复仅改变外部命名，不变内部Debian~排序，16回归通过；旧rc29未重打包，不将新命名说成第二次产品上传验证。
+公开入口及限制见docs/delivery/20261019-ubuntu-rc29.md，证据docs/validation/delivery058-ubuntu-rc29-20261019.json。完整数据消费者、真实logout/relogin、真实云/语音与A133物理仍未完。下一步读取本记录/命名修复提交CI，继续独立软件缺口，不重建现有包或覆盖旧附件。

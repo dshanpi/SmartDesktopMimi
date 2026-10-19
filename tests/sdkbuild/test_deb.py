@@ -154,6 +154,19 @@ class DebianBundleTests(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(data)) as tar:
             for m in tar:self.assertEqual((m.uid,m.gid),(0,0));self.assertFalse(m.issym() or m.islnk())
         self.assertEqual(first['activation'],'not_run');self.assertFalse(first['uploaded'])
+    def test_portable_asset_filename_keeps_real_dpkg_version_and_signed_bytes(self):
+        for index, version in enumerate(('1.0.8-rc.29', '1.0.8-rc.29+build.4', '1.0.8')):
+            with self.subTest(version=version):
+                self.manifest['version']=version;self.refresh_bundle()
+                record=self.build('portable-'+str(index))
+                package=next((self.root/('portable-'+str(index))).glob('*.deb'))
+                self.assertRegex(package.name, r'^[A-Za-z0-9._-]+$')
+                self.assertEqual(subprocess.check_output(['dpkg-deb','-f',str(package),'Version'],text=True).strip(),deb.deb_version(version))
+                data=subprocess.check_output(['dpkg-deb','--fsys-tarfile',str(package)])
+                with tarfile.open(fileobj=io.BytesIO(data)) as tar:
+                    raw=tar.extractfile('./usr/share/smartdesktopmimi/bundle-a133/application.tar.gz').read()
+                self.assertEqual(hashlib.sha256(raw).hexdigest(),record['application_sha256'])
+
     def test_no_overwrite_existing_output(self):
         self.build()
         with self.assertRaisesRegex(ValueError,'already exists'):self.build()
