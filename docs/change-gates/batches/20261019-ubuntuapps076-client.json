@@ -22,7 +22,9 @@
         "docs/change-gates/batches/20261019-ubuntuapps076-client.json",
         "CURRENT_PROGRESS.md",
         "docs/CHANGE-GATES.md",
-        "docs/validation/ubuntuapps076-build-20261019.json"
+        "docs/validation/ubuntuapps076-build-20261019.json",
+        "tools/update/ui_catalog.py",
+        "tests/update/ui-catalog.json"
       ],
       "checks": [
         {
@@ -43,6 +45,12 @@
           "status": "passed",
           "scope": "source866f7e0 SDK original lock,28 staged hashes; unsigned and not installed",
           "evidence": "docs/validation/ubuntuapps076-build-20261019.json"
+        },
+        {
+          "name": "UI inventory reviewed source and scenarios",
+          "status": "passed",
+          "scope": "unchanged callback bindings,4 configuration/client scenarios; no physical result implied",
+          "evidence": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md"
         }
       ]
     }

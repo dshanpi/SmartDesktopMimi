@@ -537,7 +537,7 @@
       ]
     },
     "apps/lv_port_linux/src/apps/user/user_app.c": {
-      "sha256": "1dc0f19f503e62677c27b54ffe3e65b4fcd88971e5e625cbd0ad191f53b934ad",
+      "sha256": "2f56c2c341785be7f02bdc6b9d8282943a376329bd0d58591c61f0a5951369e3",
       "bindings": [
         "button, action_event, LV_EVENT_CLICKED, action",
         "button, action_delete_event, LV_EVENT_DELETE, action",
@@ -768,7 +768,11 @@
       "permissions",
       "launch-exit",
       "upgrade-data",
-      "uninstall"
+      "uninstall",
+      "platform-catalog-select-reopen",
+      "invalid-platform-config",
+      "disabled-service",
+      "unavailable-service"
     ],
     "hdmi_mcp": [
       "source-preview",

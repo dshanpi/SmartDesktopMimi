@@ -18,7 +18,7 @@ SCENARIOS={
  'video':['empty-library','long-name','play-pause','seek','end-of-media','remove-media'],
  'ai':['wake-nihao-tuya','speech-recognition','speech-output','external-barge-in','reject-speaker-echo','offline-recovery'],
  'ota':['check','download','cancel-download','apply','error','back-to-settings'],
- 'user':['empty-list','install','invalid-signature','permissions','launch-exit','upgrade-data','uninstall'],
+ 'user':['empty-list','install','invalid-signature','permissions','launch-exit','upgrade-data','uninstall','platform-catalog-select-reopen','invalid-platform-config','disabled-service','unavailable-service'],
  'hdmi_mcp':['source-preview','hotplug','task-state','cancel','keyboard-mouse','release-on-disconnect'],
  'pairing':['existing-bound-no-token','refresh','new-code','expiry','offline','no-credential-display','authoritative-bound','unknown-ownership','reject-optional-schema','same-code-poll-no-renewal','bound-requery-after-website-unlink'],
  'iot':['unconfigured','device-list','device-status','confirm-control','provider-error','control-readback'],
