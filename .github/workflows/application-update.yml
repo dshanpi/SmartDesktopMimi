@@ -33,6 +33,8 @@ jobs:
           go vet ./...
           go test -race -count=1 ./...
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -o "$RUNNER_TEMP/mimi-update-a133" ./cmd/mimi-update
+      - name: Ubuntu extension installer transactions
+        run: sudo python3 tests/sdkbuild/test_ubuntu_apps_installer.py -v
       - name: UI coverage inventory
         run: |
           python3 tools/update/ui_catalog.py

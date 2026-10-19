@@ -923,20 +923,22 @@ int main(int argc,char**argv) {
   emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();
   if(ai.free_chat_active){assert(ai_free_chat_view_is_open());for(int frame=0;frame<12;frame++)pump();}
  }
- else if(strcmp(argv[1],"user-catalog")==0){
+ else if(strcmp(argv[1],"user-catalog")==0 || strcmp(argv[1],"user-signed-catalog")==0){
   const char *name=getenv("MIMI_REVIEW_APP_NAME"), *text=getenv("MIMI_REVIEW_APP_TEXT");
   assert(name && text);app_user.init();pump();
   lv_obj_t *label=find_label(lv_scr_act(),name);assert(label);
   lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);pump();
   assert(find_label(lv_scr_act(),text));
+  if(strcmp(argv[1],"user-signed-catalog")) {
   label=find_label(lv_scr_act(),"Capture HDMI Snapshot");assert(label);
   review_last_socket[0]=0;
   lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);pump();
   assert(!strcmp(review_last_socket,mimi_user_app_config_get()->user_apps_socket_path));
   assert(find_label(lv_scr_act(),ui_tr(UI_STR_USER_HARDWARE_FAILED)));
+  }
   lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
   assert(find_label(lv_scr_act(),text));
-  puts("PASS platform-configured real user-app catalog/select/reopen and unavailable service; no execution/storage claim");
+  puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
  else if(strcmp(argv[1],"hdmi")==0 || strcmp(argv[1],"hdmi-idle")==0){
   review_hdmi_idle=!strcmp(argv[1],"hdmi-idle");app_hdmi_mcp.init();

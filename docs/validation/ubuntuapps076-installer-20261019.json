@@ -1,0 +1,67 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "f904620294c801707f4f4d8b97eb4e06520c3c3b",
+  "status": "passed_isolated_platform_installer_tests",
+  "tests": 23,
+  "forced_process_exits": 8,
+  "scope": "Real RSA packages,root-controlled temporary files and CLI copies; schema1 no-permission admission; no production deployment",
+  "checks": [
+    "signed installation and numeric upgrade",
+    "data file content preserved",
+    "wrong signature/tampered content/foreign publisher/old version rejected",
+    "native and unsupported capabilities rejected",
+    "noncanonical/archive link/oversize/executable resource rejected",
+    "untrusted control paths and data links rejected",
+    "first-install and upgrade interrupted at4phases",
+    "recovery interrupted and resumed",
+    "flock exclusion and stale journal temp recovery",
+    "root-controlled deployed CLI success; developer checkout CLI refused"
+  ],
+  "failure_history": "Initial tests used Python3.9 waitstatus_to_exitcode on UbuntuPython3.8; fixed test runner using POSIX WIFEXITED/WEXITSTATUS. Original log retained.",
+  "not_run": [
+    "production platform deployment and login profile integration",
+    "explicit Ubuntu native target/ABI admission",
+    "sandboxed execution and storage broker consumers",
+    "complete desktop update/rollback extensions/media data",
+    "physical power-loss acceptance",
+    "actual logout/relogin",
+    "A133 physical acceptance"
+  ],
+  "evidence_sha256": {
+    "tests-final.log": "b8f4e0a1d2c7cf10d4b3698584bc104a33e8a4abdb65bab98fe966c5b293618e",
+    "tests-final-r2.log": "ca45d41bc98371228929d70a3d1505c7f44c8fe82496cc8c3ba27f9f38f84a7e",
+    "signed-catalog.log": "a6ead6c07f80020476e95f9361cf8d48a80e6e2f97fe6d1e8aeccd6ada3bd0af",
+    "tests-r2.log": "7c3b7afa4a131de5be30fcc0a3322a1167024b3ad89c63f0dfd644b9204367ba",
+    "harness-build.log": "8fa0d9933dbeccda76f729e97d0f11c5a58ec955e2a23d47911f656fa616101a",
+    "signed-catalog-run.log": "858c0ff28faf7d484bd23ccab60eb31a2c8366396fffedce62881946bb4e1ee5",
+    "tests-first.log": "3de9882465c662818a54c877c8cf9787478286cf1a1d5cdf2747313ad1497ed0",
+    "signed-catalog-final-run.log": "9381e21b31d5cd542f6f22e581f328e3277183f92bdac4df951553160b9f14f6"
+  },
+  "signed_catalog_consumer": {
+    "status": "passed",
+    "scope": "Actual signed test package installed by root-controlled CLI; real LVGL client selected/reopened installed page as non-root user",
+    "user_uid": 1000,
+    "installed": {
+      "id": "com.mimi.notes",
+      "publisher_sha256": "610c8bf411c49a11c9208a42e484f87c63ae2cb704fedbfd8db2309ddca3efdc",
+      "runtime": "declarative",
+      "status": "installed",
+      "version": "1.0.0"
+    },
+    "package_sha256": "1c29679f67a3c049eba13ea70beeee36b901ce7ccbddc3da670c49da5e4a1a90",
+    "desktop_fixture_sha256": "9eaaa0a3d5c31c6e9cc9e826d0a5d0a276825ee7b3827ff5710d7e7c44c7d9d9",
+    "screenshot_sha256": "f1372a89c511c1211c543c8f85a65bebc466ac1fd1143abb83922c7f5ffc7304",
+    "production_modified": false,
+    "ephemeral_keys": "removed with isolated root fixture; not product trust",
+    "runtime_storage_acceptance": "not_run",
+    "physical_acceptance": "not_run"
+  },
+  "source_files_sha256": {
+    "services/mimi-ubuntu-apps/installer.py": "85f053f49f0e465820257a824aedccaea1918279e446e66dd3abafef626e86b9",
+    "tools/aitapp/aitapp.py": "9989a893dc4415baf5943b5ff074dffc020fbfc86273820ecac6ee11b3c44d35",
+    "tests/sdkbuild/test_ubuntu_apps_installer.py": "3e4851774d1b0fd1be8b88b0e490469fd212d70fc0ed9709028edcf3132e7c1f",
+    "tests/sdkbuild/ubuntu_apps_catalog_smoke.py": "38bac5e695298ca43b62f6921205c6f4bb186be8510d9db693419f339825b7c7",
+    "tests/architecture/fixtures/native_ui_review.c": "cd142cb30cf1bdcade5511f0984f6dd0141ceea1d893b7456c5b561c179201f6"
+  },
+  "visual_review": "800x480 installed signed page: title, selected app, content and navigation visible"
+}
