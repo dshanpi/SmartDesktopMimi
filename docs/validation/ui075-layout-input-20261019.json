@@ -1,0 +1,36 @@
+{
+  "requirements": [
+    "REQ-MIMI-UI-075",
+    "REQ-MIMI-DEBACTIVATE-030"
+  ],
+  "base_commit": "1201b58206f5c29711458e3f2c6804fa32070ec6",
+  "scope": "Actual C layout reader/writer in isolated native host files; no installed user data touched",
+  "baseline": {
+    "status": "failed",
+    "evidence": "output/ubuntu-data-audit-20261019/before-reproduction.json",
+    "finding": "Duplicate future schema and NUL tail accepted then discarded by save. Baseline regression also blocks on FIFO and accepts nonregular lock."
+  },
+  "fixed_native_tests": {
+    "status": "passed",
+    "tests": 12,
+    "evidence": "output/ubuntu-data-audit-20261019/native-tests-r2.log"
+  },
+  "existing_store_asan_ubsan": {
+    "status": "passed",
+    "tests": 2,
+    "evidence": "output/ubuntu-data-audit-20261019/sanitizer-tests.log"
+  },
+  "new_full_build": "not_run",
+  "new_GUI": "not_run",
+  "new_signed_package": "not_run",
+  "installed_rc29": "unchanged",
+  "extension_media_consumers": "not_run; Ubuntu platform integration absent",
+  "real_logout_login": "not_run; no forced logout",
+  "A133": "deferred/not_run",
+  "evidence_sha256": {
+    "sanitizer-tests.log": "cd5eedfb47363f014506bcf076b8758e8bff92ac36dc9582d154b7a27b4a567d",
+    "baseline-regressions.log": "7feab447fd21dd3d1a53e5db94735104031554aa3d8d3533cef54b3e6a2319f3",
+    "native-tests-r2.log": "88c6899eb3d68e052ab4784037355e622bb4096515d096aa71ded8d35c719167",
+    "native-tests.log": "2cb07ef19b64d50b86bdef1c8ad44c8cfb2f3943fbccee89cdf875bc3f232fda"
+  }
+}

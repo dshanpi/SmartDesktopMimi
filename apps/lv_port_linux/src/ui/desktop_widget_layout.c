@@ -67,9 +67,38 @@ int mimi_widget_layout_path(char * path, unsigned capacity)
     }
     return n < 0 || (unsigned)n >= capacity ? MIMI_LAYOUT_IO : 0;
 }
+/* json-c keeps only the last value of duplicate object keys and accepts a
+ * NUL terminator before the supplied length. Neither may silently discard
+ * persisted data. For this fixed schema the root has exactly three members;
+ * count their separators before json-c collapses duplicates. String escapes
+ * and nested containers must not contribute to that count. JSON syntax and
+ * the exact member names/types are still checked by the strict parser below. */
+static int layout_document_shape(const char * data, size_t size)
+{
+    if(memchr(data, 0, size)) return 0;
+    unsigned depth = 0, members = 0;
+    int quoted = 0, escaped = 0;
+    for(size_t i = 0; i < size; i++) {
+        char c = data[i];
+        if(quoted) {
+            if(escaped) escaped = 0;
+            else if(c == '\\') {
+                if(size - i >= 6 && !memcmp(data + i, "\\u0000", 6)) return 0;
+                escaped = 1;
+            }
+            else if(c == '\"') quoted = 0;
+        } else if(c == '\"') quoted = 1;
+        else if(c == '{' || c == '[') depth++;
+        else if(c == '}' || c == ']') {
+            if(!depth) return 0;
+            depth--;
+        } else if(c == ':' && depth == 1) members++;
+    }
+    return members == 3;
+}
 int mimi_widget_layout_load(const char * path, mimi_widget_layout * out)
 {
-    int fd = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    int fd = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
     if(fd < 0) {
         if(errno == ENOENT) {
             mimi_widget_layout_default(out);
@@ -95,6 +124,7 @@ int mimi_widget_layout_load(const char * path, mimi_widget_layout * out)
         n += (size_t)got;
     }
     close(fd);
+    if(!layout_document_shape(data, n)) return MIMI_LAYOUT_INVALID;
     data[n]                   = 0;
     struct json_tokener * tok = json_tokener_new();
     if(!tok) return MIMI_LAYOUT_IO;
@@ -149,8 +179,10 @@ int mimi_widget_layout_save(const char * path, mimi_widget_layout * layout)
     } else
         strcpy(dir, ".");
     int rc = MIMI_LAYOUT_IO, fd = -1, dfd = -1,
-        lockfd = open(lockpath, O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0600);
+        lockfd = open(lockpath, O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK, 0600);
     if(lockfd < 0) return rc;
+    struct stat lockstat;
+    if(fstat(lockfd, &lockstat) || !S_ISREG(lockstat.st_mode) || lockstat.st_nlink != 1) goto done;
     if(flock(lockfd, LOCK_EX)) goto done;
     mimi_widget_layout previous;
     rc = mimi_widget_layout_load(path, &previous);

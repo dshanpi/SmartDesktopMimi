@@ -227,3 +227,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-19 [RELEASE072](change-gates/REQ-MIMI-RELEASE-072.md)：Ubuntu rc29原钥签名、实际rc22升级与同会话重启passed；56项回归，完整数据/登录/物理及新包远端交付未完。
 
 2026-10-19 [DELIVERY058](change-gates/REQ-MIMI-DELIVERY-058.md)/[DEBACTIVATE030](change-gates/REQ-MIMI-DEBACTIVATE-030.md)：Ubuntu rc29 20远端附件及嵌套签名载荷复验passed；后续deb文件名修复16回归passed，完整资格未完成。
+
+2026-10-19 UI075：布局异常输入丢弃数据已复现并修复，12项真实C检查及原存储2项ASAN/UBSAN通过；完整构建/GUI待续，安装rc29保持。见docs/validation/ui075-layout-input-20261019.json。扩展/媒体Ubuntu消费者未接通，不以文件哈希保留代替功能验收。
