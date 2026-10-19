@@ -1,0 +1,158 @@
+{
+  "requirement": "REQ-MIMI-RELEASE-072",
+  "related": [
+    "REQ-MIMI-SDK-025",
+    "REQ-MIMI-LOGIN-052",
+    "REQ-MIMI-DELIVERY-058"
+  ],
+  "at_utc": "2026-10-19T04:34:50.094685+00:00",
+  "status": "passed_scoped_ubuntu_upgrade_not_product_qualification",
+  "source_base": "7ea88ba09c86f49e72ba631f8a2422cb3065fa1a",
+  "candidate": {
+    "requirement": "REQ-MIMI-RELEASE-072",
+    "status": "passed_local_signed_draft_only",
+    "version": "1.0.8-rc.29",
+    "sequence": 29,
+    "source_commit": "c84c564fbdb878c855ab48cebb1bc6f19da4492e",
+    "package_sha256": "a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f",
+    "package_bytes": 27406428,
+    "source_ipc_contract": "mimi-ipc-v1.2",
+    "runtime_ipc_contract": "mimi-ipc-v1.1",
+    "signature_cases": 8,
+    "release_tests": 53,
+    "contract_tests": 3,
+    "trust_sha256": "6c28e2201f7eaf8b1ba7a1b3c9b0a948fc4b24a968d54591a4ffafb64ac4cb72",
+    "stable": "rejected_missing_acceptance",
+    "uploaded": false,
+    "installed": false,
+    "hardware": "deferred/not_run",
+    "failures_retained": [
+      "runtime-contract-before.log",
+      "release-regression.log",
+      "rc29-local-failure.json",
+      "draft-r2-failure.json",
+      "release-regression-r4.log",
+      "test-launch-setup-failure.log"
+    ]
+  },
+  "activation": {
+    "requirement": "REQ-MIMI-LOGIN-052",
+    "related": [
+      "REQ-MIMI-RELEASE-072",
+      "REQ-MIMI-SDK-025"
+    ],
+    "scope": "Actual original Ubuntu VM X11 application upgrade only; no A133/system/power operation",
+    "checks": [
+      {
+        "name": "previous-health",
+        "exit_code": 0
+      },
+      {
+        "name": "upgrade-install",
+        "exit_code": 0
+      },
+      {
+        "name": "upgrade-health",
+        "exit_code": 0
+      }
+    ],
+    "hardware": "deferred/not_run",
+    "full_media_extensions_data": "not_run",
+    "status": "passed",
+    "previous": "616065f1acfe1f75f0672e9502056de5e2b88dc5b728a81876b0242c8cc3d06e",
+    "candidate": "a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f",
+    "data_files": 1,
+    "backup": "restricted local backup; not distributed",
+    "current": "a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f",
+    "trial": false,
+    "high_water": 29,
+    "settings_bytes_unchanged": true,
+    "protected_platform_unchanged": true,
+    "old_release_retained": true
+  },
+  "restart": {
+    "status": "passed",
+    "scope": "actual selected application restart in same X11 login; not logout/relogin",
+    "checks": [
+      {
+        "name": "restart-stop",
+        "exit_code": 0
+      },
+      {
+        "name": "restart-selected",
+        "exit_code": 0
+      },
+      {
+        "name": "restart-health",
+        "exit_code": 0
+      }
+    ],
+    "old_pid": 112550,
+    "new_pid": 114413,
+    "settings_bytes_unchanged": true
+  },
+  "preflight": {
+    "scope": "Read-only original Ubuntu VM preflight",
+    "identity_matches_old_signed_target": true,
+    "ipc_contract": "mimi-ipc-v1.1",
+    "new_direct_libraries": [
+      "libSDL2-2.0.so.0",
+      "libasound.so.2",
+      "libc.so.6",
+      "libcurl.so.4",
+      "libgcc_s.so.1",
+      "libjson-c.so.4",
+      "libm.so.6",
+      "libpthread.so.0",
+      "libstdc++.so.6"
+    ],
+    "direct_dependencies_unchanged": true,
+    "current": "616065f1acfe1f75f0672e9502056de5e2b88dc5b728a81876b0242c8cc3d06e",
+    "high_water": 22,
+    "trial": false,
+    "trust_sha256": "6c28e2201f7eaf8b1ba7a1b3c9b0a948fc4b24a968d54591a4ffafb64ac4cb72",
+    "state_sha256": "a8a2c538bf8c1dd5fc25be400ea68273bf335097a17571bb753993fc5f036653",
+    "new_desktop_sha256": "e01fec6d03103d43d5845e49948eb3735ab94ef3c3d510eda56ca31de4214e91",
+    "old_desktop_sha256": "b84fd65f87bade14f82984444b8a5f6408f70d4f6e6e6a514d42dedf859dfe3a"
+  },
+  "actual_window": {
+    "desktop_pid": 112550,
+    "desktop_uid": 1000,
+    "desktop_exe": "/var/lib/smartdesktopmimi-acceptance-029/update/releases/a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f/bin/lvglsim",
+    "window_count": 1,
+    "login_session": "2",
+    "display": ":0",
+    "scope": "actual VM X11 window, not physical screen/touch",
+    "result": "captured"
+  },
+  "checks": {
+    "release_regression": {
+      "passed": 53,
+      "actual_rc24_signed_fixture_cases": 6
+    },
+    "source_runtime_contract": {
+      "passed": 3
+    },
+    "actual_device_signature": "passed",
+    "actual_x11_visual": "passed_home_visible_1024x768",
+    "stable_gate": "rejected_missing_acceptance"
+  },
+  "failures_retained": {
+    "setup": "test-launch-setup-failure.log",
+    "original_interface_rejection": "runtime-contract-before.log",
+    "historical_mutable_fixture": "release-regression.log; recovered original SHA from original source archive without changing old plan",
+    "sdk_schema_missing": "rc29-local-failure.json",
+    "source_registry_scope": "draft-r2-failure.json",
+    "overbroad_registry_attempt": "release-regression-r4.log; corrected to Ubuntu-only shared registry exception",
+    "unsupported_preflight_command": "activation-result.json; no install/state change; install executes its own preflight"
+  },
+  "remaining": {
+    "new_sdk_a133_physical": "deferred/not_run",
+    "actual_logout_relogin": "not_run",
+    "full_media_extension_data": "not_run",
+    "cloud_voice_account_acceptance": "not_run",
+    "rc29_remote_draft_readback": "not_run",
+    "product_qualified": false
+  },
+  "next_action": "Sync this reviewed gate fix and read back source; preserve signed rc29 and actual upgrade evidence. Next batch prepare Ubuntu rc29 controlled draft delivery/download verification, then complete actual consumer media/extensions and login lifecycle gaps without hardware operations."
+}

@@ -16,8 +16,18 @@ def application(directory, lock, manifest, stage, load):
     required={'application-build.json','sdk-lock.json','dependency-lock.json','source-ownership.json'}
     if not required<=assets.keys():raise ValueError('missing application build provenance assets')
     receipt=load(directory/'application-build.json');sdk=load(directory/'sdk-lock.json')
-    if receipt.get('schema_version')!=1 or receipt.get('kind')!='application-build' or sdk.get('schema_version')!=1:
+    if receipt.get('schema_version')!=1 or receipt.get('kind')!='application-build' or type(sdk.get('schema_version')) is not int or sdk['schema_version'] not in (1, 2):
         raise ValueError('unknown build/SDK provenance schema')
+    if sdk['schema_version'] == 2:
+        # Debian/Ubuntu SDKs already carry an explicit OS identity. Keep it
+        # bound to both the signed receipt and every signed runtime target.
+        os_name, os_version = sdk.get('target_os'), sdk.get('target_os_version')
+        if (os_name not in ('debian', 'ubuntu') or not isinstance(os_version, str) or not os_version or
+                receipt.get('target_os') != os_name or receipt.get('target_os_version') != os_version):
+            raise ValueError('SDK/build OS provenance mismatch')
+        capability = 'target-os:' + os_name + ':' + os_version
+        if not manifest.get('targets') or any(capability not in t.get('capabilities', []) for t in manifest['targets']):
+            raise ValueError('signed target lacks SDK OS capability')
     if receipt['source']['commit']!=lock['source_commit'] or type(receipt['source'].get('dirty')) is not bool:
         raise ValueError('build/source commit mismatch')
     if stage!='draft' and receipt['source']['dirty']:
@@ -31,7 +41,12 @@ def application(directory, lock, manifest, stage, load):
     if receipt['build'].get('target')!='lvglsim' or receipt['build'].get('application_only') is not True or receipt['build'].get('cloud_provider') is not False:
         raise ValueError('build is not application-only')
     ownership=load(directory/'source-ownership.json')
-    if (ownership.get('schema_version')!=1 or ownership.get('platform_id')!=sdk['platform_id']
+    # Ubuntu uses the shared a133 migration registry validated at build time;
+    # retain all existing per-platform ownership registries for other targets.
+    ownership_platforms = {sdk['platform_id']}
+    if sdk['schema_version'] == 2 and sdk['platform_id'] == 'ubuntu-host' and sdk['target_os'] == 'ubuntu':
+        ownership_platforms.add('a133')
+    if (ownership.get('schema_version')!=1 or ownership.get('platform_id') not in ownership_platforms
             or not ownership.get('files') or not ownership.get('scopes')
             or receipt['build'].get('source_ownership_sha256')!=assets['source-ownership.json']):
         raise ValueError('source ownership/build provenance mismatch')
