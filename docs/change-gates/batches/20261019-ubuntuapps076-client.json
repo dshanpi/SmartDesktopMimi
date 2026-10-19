@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Platform-configured extension application catalog client",
+  "context": "Ubuntu full data acceptance requires actual app consumers; this removes fixed A133 path coupling without claiming platform runtime qualification",
+  "next_steps": "Complete Ubuntu platform-side target admission/install/runtime/storage, wire trusted session profile; test actual signed apps and consumers before claiming acceptance. Retain pending items, not just directory visibility.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Shared desktop client configuration and actual fixture catalog UI",
+      "invariants": "Frozen provider/shared source/identity/trust/version keep existing values; UI never configures build targets",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "apps/lv_port_linux/src/apps/user/user_app_config.c",
+        "apps/lv_port_linux/src/apps/user/user_app_config.h",
+        "scripts/render_ui_review.py",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/test_user_app_config.py",
+        "docs/platform-app-sdk.md",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-client-20261019.json",
+        "docs/change-gates/batches/20261019-ubuntuapps076-client.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "client parser and UI consumer",
+          "status": "passed",
+          "scope": "10 C cases,12 LVGL variants,1 disabled endpoint case; fixture connection only",
+          "evidence": "docs/validation/ubuntuapps076-client-20261019.json"
+        },
+        {
+          "name": "complete Ubuntu extension/runtime/data",
+          "status": "not_run",
+          "scope": "Signed install/native admission/sandbox/storage/upgrade",
+          "reason": "Platform chain still pending",
+          "evidence": "docs/validation/ubuntuapps076-client-20261019.json"
+        }
+      ]
+    }
+  ]
+}

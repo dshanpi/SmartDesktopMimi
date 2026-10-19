@@ -1,6 +1,7 @@
 #include "user_app.h"
 
 #include "../../system/app_manager.h"
+#include "user_app_config.h"
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
 #include "../../ui/ui_i18n.h"
@@ -17,8 +18,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-#define USER_APP_ROOT "/overlay/aitvbox/apps"
-#define USER_APP_SOCKET "/var/run/aitvbox/apps.sock"
 #define USER_APP_MAX 16
 #define USER_APP_JSON_MAX (1024 * 1024)
 
@@ -58,6 +57,8 @@ static int write_all(int fd, const void *buffer, size_t length)
 
 static json_object *app_request(json_object *request)
 {
+    const char *endpoint = mimi_user_app_config_get()->user_apps_socket_path;
+    if(!*endpoint) return NULL;
     int client = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (client < 0) return NULL;
     struct timeval timeout = {.tv_sec = 5};
@@ -65,7 +66,7 @@ static json_object *app_request(json_object *request)
     setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     struct sockaddr_un address = {0};
     address.sun_family = AF_UNIX;
-    snprintf(address.sun_path, sizeof(address.sun_path), "%s", USER_APP_SOCKET);
+    snprintf(address.sun_path, sizeof(address.sun_path), "%s", endpoint);
     const char *text = json_object_to_json_string_ext(
         request, JSON_C_TO_STRING_PLAIN);
     if (connect(client, (struct sockaddr *)&address, sizeof(address)) ||
@@ -147,7 +148,10 @@ static int compare_entries(const void *left, const void *right)
 
 static void scan_apps(void)
 {
-    DIR *root = opendir(USER_APP_ROOT);
+    const char *app_root = mimi_user_app_config_get()->user_apps_root;
+    entry_count = 0;
+    if(!*app_root) return;
+    DIR *root = opendir(app_root);
     struct dirent *item;
     entry_count = 0;
     if (!root) return;
@@ -155,8 +159,9 @@ static void scan_apps(void)
     while ((item = readdir(root)) != NULL && entry_count < USER_APP_MAX) {
         if (item->d_name[0] == '.') continue;
         char manifest_path[384];
-        snprintf(manifest_path, sizeof(manifest_path), "%s/%s/manifest.json",
-                 USER_APP_ROOT, item->d_name);
+        int path_size = snprintf(manifest_path, sizeof(manifest_path), "%s/%s/manifest.json",
+                                 app_root, item->d_name);
+        if(path_size < 0 || (size_t)path_size >= sizeof(manifest_path)) continue;
         if (!regular_file(manifest_path)) continue;
         json_object *manifest = json_object_from_file(manifest_path);
         if (!manifest) continue;
@@ -208,7 +213,7 @@ static void scan_apps(void)
                          json_object_get_string(id));
                 snprintf(target->name, sizeof(target->name), "%s",
                          localized_name_text);
-                size_t root_len = strlen(USER_APP_ROOT);
+                size_t root_len = strlen(app_root);
                 size_t dir_len = strlen(item->d_name);
                 size_t file_len = strlen(entry_text);
                 if (root_len + dir_len + file_len + 3 > sizeof(target->entry)) {
@@ -216,7 +221,7 @@ static void scan_apps(void)
                     continue;
                 }
                 char *out = target->entry;
-                memcpy(out, USER_APP_ROOT, root_len);
+                memcpy(out, app_root, root_len);
                 out += root_len;
                 *out++ = '/';
                 memcpy(out, item->d_name, dir_len);

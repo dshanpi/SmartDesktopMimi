@@ -135,3 +135,16 @@ schema 2 使用共享低权限 UID 与 seccomp，不等同于容器、namespace 
 隔离，因此信任模型仍是“管理员批准发布者”，不是接收来源不明的任意二进制。
 
 完整开发步骤见 [user-app-development-guide.md](user-app-development-guide.md)。
+
+## 平台选择的共享桌面目录（UBUNTUAPPS076）
+
+共享桌面从平台提供的 `LV_PORT_LINUX_CONFIG` 文件读取：
+
+```ini
+user_apps.root=/var/lib/smartdesktopmimi/apps
+user_apps.socket_path=/run/smartdesktopmimi/apps.sock
+```
+
+这是应用侧目录扫描和请求路由，不负责安装或授予权限。未配置字段保持旧A133默认；显式空值禁用该入口，目录可独立于服务配置。错误绝对路径、超长/NUL配置行、显式配置文件无法打开均使扩展入口关闭，不截断或回退到旧平台。普通用户界面不提供此配置。平台须将已验证的应用目录置于桌面版本/临时会话目录之外，并独立维护服务和数据。
+
+当前Ubuntu并未因此获得native-rpc运行环境：schema2仍只接受AArch64，平台appd/签名安装/存储broker尚未接通。主机LVGL样例的读取、选择及重开只是目录消费者验证，不能证明签名安装、执行隔离或真实扩展数据跨升级保持。见[完整接续门禁](change-gates/REQ-MIMI-UBUNTUAPPS-076.md)。

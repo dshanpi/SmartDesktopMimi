@@ -231,3 +231,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-19 UI075：布局异常输入丢弃数据已复现并修复，12项真实C检查及原存储2项ASAN/UBSAN通过；完整构建/GUI待续，安装rc29保持。见docs/validation/ui075-layout-input-20261019.json。扩展/媒体Ubuntu消费者未接通，不以文件哈希保留代替功能验收。
 
 2026-10-19 UI075：30ecfc2完整Ubuntu构建及布局保存/取消/损坏拒绝四组实际SDL检查passed，原rc29与设置/信任/登记健康保持。首次npm PATH构建失败保留；详见docs/validation/ui075-layout-input-build-20261019.json。扩展/媒体平台集成与真实logout/relogin继续未验收，不强制注销。
+
+2026-10-19 UBUNTUAPPS076：[扩展应用消费者](docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md)接入平台目录/socket配置；10原生配置、12实际LVGL变体和禁用端点检查passed。冻结共享代码/源锁不变；签名安装、x86准入、执行/storage及完整数据未完成。见docs/validation/ubuntuapps076-client-20261019.json。
