@@ -1,0 +1,141 @@
+{
+  "requirements": [
+    "REQ-MIMI-SDK-025",
+    "REQ-MIMI-DEBACTIVATE-030",
+    "REQ-MIMI-UI-075"
+  ],
+  "at_utc": "2026-10-19T04:11:46.049322+00:00",
+  "build_source_commit": "c84c564fbdb878c855ab48cebb1bc6f19da4492e",
+  "build_seconds": 93.1944797039032,
+  "sdk_sha256": "d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740",
+  "desktop_sha256": "e01fec6d03103d43d5845e49948eb3735ab94ef3c3d510eda56ca31de4214e91",
+  "compiled_sources": 672,
+  "staged_files_verified": 28,
+  "profiles": [
+    "1024x768",
+    "480x800",
+    "800x480"
+  ],
+  "voice_compiled": true,
+  "voice_real_utterance": "not_run",
+  "status": "passed_unsigned_native_build_and_limited_host_checks",
+  "signed": false,
+  "installed": false,
+  "uploaded_product": false,
+  "existing_installed_application": "rc22 unchanged",
+  "session_checks": [
+    {
+      "name": "ready_progress_duplicate_and_window_close",
+      "status": "passed",
+      "health_first": {
+        "pid": 64377,
+        "monotonic_ms": 2452173,
+        "backend_reply_ms": 2451720,
+        "activity_ready": true,
+        "busy": false
+      },
+      "health_second": {
+        "pid": 64377,
+        "monotonic_ms": 2454189,
+        "backend_reply_ms": 2453717,
+        "activity_ready": true,
+        "busy": false
+      }
+    },
+    {
+      "name": "restart_keeps_settings_and_SIGTERM_cleans_children",
+      "status": "passed",
+      "settings_sha256": "8fd697cfbbd865913026fd0ffe42d3c944c8b7af771ca07479e334f6586412b5"
+    },
+    {
+      "name": "provider_exit_fails_session_and_stops_UI",
+      "status": "passed"
+    },
+    {
+      "name": "stalled_event_loop_rejected_and_terminated",
+      "status": "passed"
+    },
+    {
+      "name": "supervisor_SIGKILL_terminates_children_and_restart_recovers",
+      "status": "passed"
+    }
+  ],
+  "window_checks": [
+    {
+      "resolution": "1024x768",
+      "window": "passed",
+      "close": "passed"
+    },
+    {
+      "resolution": "480x800",
+      "window": "passed",
+      "close": "passed"
+    },
+    {
+      "resolution": "800x480",
+      "window": "passed",
+      "close": "passed"
+    },
+    {
+      "resolution": "640x480",
+      "rejection": "passed"
+    }
+  ],
+  "persistence_checks": [
+    {
+      "name": "pointer_save_consumed_after_native_process_restart",
+      "status": "passed",
+      "revision": 1,
+      "layout_sha256": "4283d51ebcb2c2f884f01f62956abc716f4287d3358831445fefd4695b9791e9"
+    },
+    {
+      "name": "cancelled_removal_never_written_or_reloaded",
+      "status": "passed"
+    }
+  ],
+  "test_source_sha256": "12ef2c02cf77ef1447633c71a94926cdf366fa76e2159732a31c94060861d94a",
+  "window_pairing_coordinate_step": "Legacy-coordinate screenshot exists but not evaluated as pairing acceptance",
+  "evidence": {
+    "build-result-r1.json": "cd375cae702117bf1f1167a5a839ea5381514672a6b51837ca548650cbba39f8",
+    "session-r1/result.json": "b2e4f4a29b982b08b34decd618df88a1a09c4ffcaa3dcdef7a8752abb00af224",
+    "window-r1/result.json": "8fdd3c57a2b985c1a3b1e119308c8690d57a591c306dbcee247bbf407d874a48",
+    "persist-r1/result.json": "8abecd1aa4da117150ceb30747f38579002d8b96efbfedeee302ba717d529876",
+    "persist-r2/result.json": "8abecd1aa4da117150ceb30747f38579002d8b96efbfedeee302ba717d529876"
+  },
+  "data_scope": [
+    {
+      "category": "settings",
+      "consumer": "apps/lv_port_linux/src/system/settings.c",
+      "path": "LV_SETTINGS_FILE, configured outside release/runtime",
+      "status": "native restart bytes retained for dedicated test settings; signed upgrade not_run"
+    },
+    {
+      "category": "widgets",
+      "consumer": "apps/lv_port_linux/src/ui/desktop_widget_layout.c",
+      "path": "LV_SETTINGS_FILE + .widgets.json",
+      "status": "actual pointer save/cancel/restart and rendered reload passed in dedicated test directory"
+    },
+    {
+      "category": "extensions",
+      "consumer": "apps/lv_port_linux/src/apps/user/user_app.c",
+      "path": "/overlay/aitvbox/apps and /var/run/aitvbox/apps.sock",
+      "status": "Ubuntu platform integration/data lifecycle not implemented or verified; cannot claim support from directory preservation"
+    },
+    {
+      "category": "media",
+      "consumer": "video app IPC with platform backend",
+      "status": "Ubuntu Provider capabilities=0; actual media persistence/playback not_run"
+    },
+    {
+      "category": "platform identity, trust and credentials",
+      "status": "untouched; native test uses separate user data and display"
+    }
+  ],
+  "not_run": [
+    "Signed Ubuntu upgrade from installed rc22 and rollback compatibility",
+    "Actual new candidate graphical login/logout/relogin",
+    "Complete settings/media/extensions migration and user data matrix",
+    "Physical input, spoken voice and stable qualification"
+  ],
+  "next_action": "Use this exact unsigned candidate for Ubuntu-specific manifest/runtime compatibility review; choose a fresh version/sequence before signing with existing key. Do not reuse A133 rc28 target or overwrite old tags/assets. Complete actual update/data and platform extension/media gaps separately."
+}
