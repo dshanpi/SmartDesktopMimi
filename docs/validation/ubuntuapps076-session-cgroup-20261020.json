@@ -25,9 +25,26 @@
       "initial non-root py_compile could not replace an existing root-owned pycache; root-owned syntax check then passed"
     ]
   },
-  "change_gates": "pending after retained initial serialization failure",
-  "ci": "pending",
-  "exact_commit_readback": "pending",
+  "change_gates": "passed for f45462fa75923fb21a4bee74f72a081094387d3e; initial invalid JSON failure retained",
+  "ci": {
+    "head": "f45462fa75923fb21a4bee74f72a081094387d3e",
+    "workflows": {
+      "Change traceability coverage": "success",
+      "Application update gates": "success",
+      "Public source validation": "success"
+    },
+    "run_ids": [
+      39382700408,
+      39382700407,
+      39382700506
+    ]
+  },
+  "exact_commit_readback": {
+    "status": "passed",
+    "commit": "f45462fa75923fb21a4bee74f72a081094387d3e",
+    "files_checked": 8,
+    "method": "GitHub Contents API at exact commit SHA; all local and remote SHA256 matched"
+  },
   "product_activation": "not_run",
   "invariants": [
     "Production rc29, trust keys, device enrollment and A133 remain untouched",
@@ -47,6 +64,12 @@
       "status": "failed",
       "reason": "Batch JSON ended with literal backslash-n; corrected in follow-up commit",
       "evidence": "output/ubuntu-broker-076-20261020/traceability-481ef39.log"
+    },
+    {
+      "commit": "f45462fa75923fb21a4bee74f72a081094387d3e",
+      "status": "passed",
+      "reason": "Corrected batch and validation JSON; checker passed against PR base",
+      "evidence": "output/ubuntu-broker-076-20261020/traceability-f45462f.log"
     }
   ]
 }

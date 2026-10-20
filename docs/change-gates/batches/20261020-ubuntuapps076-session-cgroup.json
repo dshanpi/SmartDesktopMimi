@@ -54,10 +54,9 @@
           "evidence": "output/ubuntu-broker-076-20261020/traceability-481ef39.log"
         },
         {
-          "name": "Corrected traceability and source ownership gates",
-          "status": "not_run",
-          "scope": "Rerun after JSON suffix correction",
-          "reason": "Awaiting final checker results",
+          "name": "Corrected traceability, CI and exact-commit readback",
+          "status": "passed",
+          "scope": "Traceability checker passed; Change traceability coverage, Application update gates, Public source validation all succeeded; eight exact-commit files SHA256-read back identically",
           "evidence": "docs/validation/ubuntuapps076-session-cgroup-20261020.json"
         }
       ]
