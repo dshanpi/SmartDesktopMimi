@@ -45,8 +45,22 @@
           "scope": "The endpoint remains source-only; native admission closed; no service/profile, board or production installation",
           "reason": "Full signed native install, user-data upgrade/rollback and live product profile gates remain incomplete; A133 hardware acceptance stays deferred",
           "evidence": "docs/validation/ubuntuapps076-session-cgroup-20261020.json"
+        },
+        {
+          "name": "First traceability run at 481ef39",
+          "status": "failed",
+          "scope": "Checker rejected invalid JSON batch caused by literal backslash-n suffix",
+          "reason": "Serialization failure retained; files were corrected and the gate is being rerun",
+          "evidence": "output/ubuntu-broker-076-20261020/traceability-481ef39.log"
+        },
+        {
+          "name": "Corrected traceability and source ownership gates",
+          "status": "not_run",
+          "scope": "Rerun after JSON suffix correction",
+          "reason": "Awaiting final checker results",
+          "evidence": "docs/validation/ubuntuapps076-session-cgroup-20261020.json"
         }
       ]
     }
   ]
-}\n
+}

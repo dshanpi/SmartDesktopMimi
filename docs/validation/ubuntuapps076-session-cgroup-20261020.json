@@ -25,7 +25,7 @@
       "initial non-root py_compile could not replace an existing root-owned pycache; root-owned syntax check then passed"
     ]
   },
-  "change_gates": "pending",
+  "change_gates": "pending after retained initial serialization failure",
   "ci": "pending",
   "exact_commit_readback": "pending",
   "product_activation": "not_run",
@@ -40,5 +40,13 @@
     "Run traceability/source ownership/change gate checks",
     "Commit and push source-only correction; verify CI and exact-commit readback",
     "Keep native installer admission, production endpoint activation, real sign-in integration and full data upgrade/rollback not_run"
+  ],
+  "traceability_history": [
+    {
+      "commit": "481ef39",
+      "status": "failed",
+      "reason": "Batch JSON ended with literal backslash-n; corrected in follow-up commit",
+      "evidence": "output/ubuntu-broker-076-20261020/traceability-481ef39.log"
+    }
   ]
-}\n
+}
