@@ -101,3 +101,7 @@ Ubuntu共享桌面应消费平台安装的扩展应用，签名安装/发行者�
 ### 2026-10-20 traceability record correction
 
 Commit a290fa6 carried a malformed new JSON batch (literal backslash-n bytes after the JSON object) and its batch field names did not match the traceability schema. The initial committed-tree gate failed; the exact failure is retained at output/ubuntu-broker-076-20261020/traceability-a290fa6.log. This follow-up corrects the new batch format and marks the unprivileged all-skipped run as not_run; the 26-test root run remains separately recorded as passed. No runtime code or product state changed in this correction.
+
+### 2026-10-20 session endpoint remote verification
+
+Follow-up commit 9f2b462 passed the traceability coverage workflow, application update gates and public source validation. Eight changed source/evidence files were independently fetched through the GitHub contents API at the exact commit and their SHA256 values matched the working tree. The initial a290fa6 traceability failure remains preserved above and in the external evidence log. The service is still source-only; real production GDM invocation, profile installation, native admission and complete data upgrade/rollback remain not_run.

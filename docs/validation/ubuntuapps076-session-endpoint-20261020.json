@@ -31,10 +31,10 @@
     "services/mimi-ubuntu-apps/broker.py": "0d462534063e0e07a12507a92d7d9bbd754431385b47f493a51808e353adec4a",
     "tests/sdkbuild/test_ubuntu_broker.py": "e6bae209d5e953db24c7d433a0cb11458e8e3330b78c61362e86a051842c99ac",
     "services/mimi-ubuntu-apps/README.md": "c1e42d774f06e712ce721f3895aacc217c3e439eb8153ca65c8e2e799a3adf3f",
-    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md": "a23c6883579b6566c1e63c3810490f4b922c317eff98a7ddf587920fc91ae50d",
-    "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json": "c940d0af497226da43056885e78e47cc67d1ddbd57cdae0fb1a1abc315010e16",
-    "CURRENT_PROGRESS.md": "c4091a846f10b231d3653ceada1f37070ac7451282e6b54ed553bb9644656190",
-    "docs/CHANGE-GATES.md": "15343f17a2f5cbd0629d38839d4ed9095b44a69e0f3def2165e11221512f6301"
+    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md": "c56dcea11c2fdbb593086200399aba3aa8099f20150dcc65f44b75de15f4a2e8",
+    "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json": "65038d311de37ab64d98f8d1c40468bfdcf0cde28ba671a0eb97e797290c0d1c",
+    "CURRENT_PROGRESS.md": "ccbfc1843c70b36a396f794d7177c34dfac0130f0f26665c928c788f69ce4276",
+    "docs/CHANGE-GATES.md": "242d25fecfd7ba6cba4c38dc2cb41dbb2f4c305040c8880780d71b889d5f8e04"
   },
   "evidence_sha256": {
     "session-first.log": "f74c9903ecf26de16f66f6771bd6b67f1a97cf0b9fd4daed0e29fe8f8bfe42c1",
@@ -46,13 +46,31 @@
   },
   "ci": [
     {
-      "commit": "a290fa68eee6f65721423f3deb3d525a4d92a8db",
-      "status": "in_progress_at_followup",
-      "run_ids": [
-        39372488171,
-        39372488172,
-        39372488173
-      ]
+      "commit": "9f2b462c54602b08d19e4e9508e9b56cd4eb6200",
+      "runs": [
+        {
+          "name": "Application update gates",
+          "run_id": 39373812996,
+          "job_id": 118467332895,
+          "conclusion": "success",
+          "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39373812996"
+        },
+        {
+          "name": "Change traceability coverage",
+          "run_id": 39373813010,
+          "job_id": 118467332940,
+          "conclusion": "success",
+          "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39373813010"
+        },
+        {
+          "name": "Public source validation",
+          "run_id": 39373813016,
+          "job_id": 118467332884,
+          "conclusion": "success",
+          "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39373813016"
+        }
+      ],
+      "status": "passed"
     }
   ],
   "test_runs": [
@@ -69,5 +87,13 @@
       "evidence": "output/ubuntu-broker-076-20261020/session-commit-check.log"
     }
   ],
-  "source_readback": "pending_after_traceability_correction_commit"
+  "source_readback": "passed_github_contents_api_sha256_match",
+  "verified_commit": "9f2b462c54602b08d19e4e9508e9b56cd4eb6200",
+  "readback_count": 8,
+  "traceability_gate": {
+    "commit": "9f2b462c54602b08d19e4e9508e9b56cd4eb6200",
+    "status": "passed",
+    "base_commit": "d0ec6ac39d03a3024a8df9aa65d907a556621349",
+    "scope": "traceability structure and committed-file coverage only; not product acceptance"
+  }
 }

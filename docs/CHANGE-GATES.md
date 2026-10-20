@@ -259,3 +259,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-20 UBUNTUAPPS076 session endpoint: source-level desktop IPC endpoint added; root native install remains closed. 26 tests passed; real GDM desktop invocation and service/profile deployment not_run. See docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md.
 
 - UBUNTUAPPS076 session endpoint: traceability batch serialization failure at a290fa6 preserved; corrected JSON schema and gate rerun in follow-up. See REQ-MIMI-UBUNTUAPPS-076.
+
+- UBUNTUAPPS076 desktop endpoint follow-up 9f2b462: corrected traceability plus three CI gates passed; eight source/record files read back by exact SHA256. Production activation remains not_run.

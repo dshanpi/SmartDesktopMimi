@@ -46,6 +46,12 @@
           "scope": "The checker rejected the newly added JSON batch because a literal backslash-n followed the JSON object",
           "reason": "Initial batch serialization wrote the two characters \\\\ and n; preserved as a failed gate and corrected in the follow-up commit",
           "evidence": "output/ubuntu-broker-076-20261020/traceability-a290fa6.log"
+        },
+        {
+          "name": "Corrected traceability gate and exact-commit source readback",
+          "status": "passed",
+          "scope": "Local gate passed against PR base d0ec6ac; three exact-commit CI workflows passed; eight files SHA256-read back through GitHub contents API",
+          "evidence": "docs/validation/ubuntuapps076-session-endpoint-20261020.json"
         }
       ]
     }
