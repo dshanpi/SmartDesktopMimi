@@ -253,3 +253,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-19 UBUNTUAPPS076：schema3明确Ubuntu native构建/签名/真实宿主ABI预检及签名包二进制受限执行通过；23新检查+24安装回归+6语言回归passed，失败历史保留。原schema2仍AArch64；安装器尚不开放native，认证storage/broker/profile继续。详见docs/validation/ubuntuapps076-native-admission-20261019.json。
 
 2026-10-20 UBUNTUAPPS076内部存储：22项文件系统/进程与签名升级数据检查passed；无RPC/权限开放/生产部署。下一步认证broker与SDK实际读写。见docs/validation/ubuntuapps076-storage-20261020.json。
+
+2026-10-20 UBUNTUAPPS076内部认证链：22项签名SDK/实际进程/存储检查passed；生产安装与session入口未接通，rc29未变。见docs/validation/ubuntuapps076-broker-20261020.json，原失败保留。

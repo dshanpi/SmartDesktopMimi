@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Internal native broker authenticating actual restricted process and public SDK storage",
+  "context": "Connect explicit native admission,runner and internal storage without opening production installer or desktop endpoint",
+  "next_steps": "Controlled deployment dependencies,session-authorized invocation and installer integration; full signed user data matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Internal platform invocation with actual authenticated capability socket",
+      "invariants": "No self-reported app identity; signatures and manifest permissions mandatory; rc29,trust,SDK and A133 unchanged",
+      "paths": [
+        "services/mimi-ubuntu-apps/broker.py",
+        "tests/sdkbuild/test_ubuntu_broker.py",
+        "services/mimi-ubuntu-apps/README.md",
+        ".github/workflows/application-update.yml",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/change-gates/batches/20261020-ubuntuapps076-broker.json",
+        "docs/validation/ubuntuapps076-broker-20261020.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "signed SDK process and kernel peer checks",
+          "status": "passed",
+          "scope": "22 tests including actual SDK persistent text,sameUID/other runner denial,revocation,limits and cleanup",
+          "evidence": "docs/validation/ubuntuapps076-broker-20261020.json"
+        },
+        {
+          "name": "production native integration and user acceptance",
+          "status": "not_run",
+          "scope": "installer/session activation and full real user update/rollback data",
+          "reason": "Trusted platform invocation API only; no production endpoint or deployment in this batch",
+          "evidence": "docs/validation/ubuntuapps076-broker-20261020.json"
+        }
+      ]
+    }
+  ]
+}

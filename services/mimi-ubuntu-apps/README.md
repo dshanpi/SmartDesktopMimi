@@ -148,3 +148,52 @@ permission for those apps. They check restart/UTF-8, corruption and unsafe path
 rejection, quotas, independent apps, signed upgrades, installer recovery, real
 process interruptions and concurrent installer lock exclusion. Native SDK RPC,
 authentication, permission integration and real-user data acceptance remain open.
+
+
+## Internal authenticated native invocation (not production activation)
+
+`broker.py` now connects signed native admission, restricted execution and the
+storage backend. `NativeBroker(installer, runner, runtime_root).invoke(id, action)`
+is a trusted-platform API, **not** a desktop/network invocation endpoint. The
+production installer still rejects native packages. A future desktop endpoint
+must authenticate the actual session before invoking this API; independently
+provision all broker/installer/storage/package-parser modules in a controlled
+root-owned tree before exposing a privileged service.
+
+The broker locks and recovers installation, snapshots code excluding runtime data
+and the publisher marker, checks the complete signed payload, schema-3 target,
+actual host libraries/symbols, publisher pin and signed UI action. Only an empty
+permission set or `storage.app` is presently available. An immutable root-owned
+read-only executable FD is passed to the restricted runner; no package code is
+run during admission. Runtime directories must be on an executable filesystem
+(the development host `/run` is noexec); no mount restrictions are changed.
+Each invocation uses a fresh root-controlled directory and Unix capability socket,
+then removes both on exit. Socket naming is not an authentication mechanism.
+
+For every capability connection the broker checks kernel SO_PEERCRED, UID/GID
+65534, the known live runner parent, process start times and actual executable
+inode, empty supplementary groups/capabilities, no-new-privileges and seccomp.
+The process is checked again after bounded frame reception. Another process with
+the same UID, or another runner using the same executable inode, is refused.
+Requests cannot supply an application ID: the broker supplies the signed/pinned
+identity and checks the manifest permission before calling internal storage.
+A changed installation invalidates an in-flight storage identity; it is never
+silently rebound to the new version.
+
+Frames and native stdout are limited to 4 KiB, each request frame to a total
+200 ms, each action to the runner's 5-second deadline (6-second broker backstop),
+and each invocation to 64 connections / 32 capability requests. Duplicate or
+unknown fields, extra JSON documents, unsupported capabilities and oversized
+responses are rejected. Only the public SDK `{ok:boolean,message:string}` reply
+shape is accepted from native stdout. Error responses do not include paths or
+application payloads. Existing runner filesystem/Unix-socket isolation limits
+still apply; this is not hostile-publisher container isolation.
+
+`sudo python3 tests/sdkbuild/test_ubuntu_broker.py -v` compiles and signs a real
+public-SDK application under temporary root-controlled fixtures, exercises actual
+SDK write/read across invocations and kernel peer authentication, and tests
+revocation after a signed fixture version change, denied permissions, malformed
+frames, floods, deadlines and cleanup. These fixtures deliberately do not bypass
+production installer policy. Complete native installation/profile deployment,
+trusted desktop session authorization and full real-user upgrade/rollback data
+acceptance remain required before product activation.
