@@ -181,6 +181,9 @@ class ProductEditionTests(unittest.TestCase):
                 (factory / 'manifest.json').write_text(json.dumps({'commit': 'a'*40, 'package_sha256': 'b'*64}))
                 for entry in factory_root.rglob('*'):
                     entry.chmod(0o755 if entry.is_dir() else (0o444 if entry == marker else 0o644))
+                embedded_updater = factory_root / 'usr/bin/mimi-update'
+                embedded_updater.parent.mkdir(parents=True)
+                shutil.copy2('/bin/true', embedded_updater)
                 baseline.write(prepared / 'baseline-lock.json', dict(schema_version=1, policy='MIMI-UPDATE-001/1.0.0',
                                factory_commit='a'*40, factory_version='1.0.0-test', factory_package_sha256='b'*64,
                                files=baseline.inventory(factory_root)))

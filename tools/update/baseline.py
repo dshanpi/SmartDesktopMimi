@@ -50,6 +50,15 @@ def verify_product_edition(root, expected=None):
     return edition
 
 
+def verify_updater(directory, updater):
+    """The sealed overlay must not replace the fresh build with an older updater."""
+    embedded=directory/'rootfs/usr/bin/mimi-update'
+    if updater.is_symlink() or not updater.is_file() or embedded.is_symlink() or not embedded.is_file():
+        raise ValueError('updater source and baseline must be regular files')
+    if digest(updater)!=digest(embedded):
+        raise ValueError('factory baseline updater differs from freshly built updater; prepare a new baseline')
+
+
 def verify(directory, edition=None):
     seal=json.loads((directory/'baseline-lock.json').read_text())
     if seal.get('schema_version')!=1 or seal.get('policy')!='MIMI-UPDATE-001/1.0.0':raise ValueError('unknown baseline seal')
@@ -218,5 +227,8 @@ def main():
     try:
         result=prepare(args) if args.operation=='prepare' else verify_rootfs(args.output,args.rootfs,args.image,args.product_edition) if args.operation=='verify-rootfs' else verify(args.output,args.product_edition)
     except (ValueError,KeyError,OSError,subprocess.CalledProcessError) as error:parser.exit(1,'BASELINE BLOCKED: '+str(error)+'\n')
+    if args.operation!='prepare' and args.updater is not None:
+        try:verify_updater(args.output,args.updater.absolute())
+        except (ValueError,OSError) as error:parser.exit(1,'BASELINE BLOCKED: '+str(error)+'\n')
     print('PASS signed factory baseline '+result['factory_version']+'; physical enrollment and acceptance still required')
 if __name__=='__main__':main()

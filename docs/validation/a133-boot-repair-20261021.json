@@ -1,0 +1,58 @@
+{
+  "requirements": [
+    "REQ-MIMI-SYSTEM-070",
+    "REQ-MIMI-SYSTEM-040",
+    "REQ-MIMI-UI-075"
+  ],
+  "updated_at": "2026-10-20T17:11:19.343699+00:00",
+  "source_parent": "fe39210",
+  "stable_release": false,
+  "board": {
+    "target": "A133 MainBoard V1.2",
+    "original_system": "1.0.0-rc.6",
+    "original_raw_image_sha256": "86256b53173cbb678bbcf59c414918f07d20fa98c640da011877be40051019b3",
+    "system_modified_in_place": true,
+    "updater_rebuilt_source": "ccfe883",
+    "updater_sha256": "dbffe6ff35e4cd6432cf7cde0142b00d15fc566fd0a705e2c23131b3671b209c",
+    "application": "1.0.8-rc.28",
+    "application_source": "918d2a7",
+    "application_package_sha256": "6b085d4479a1e17b4766efcbae34e5386eaf1a99a3dfafc136e2af4adab0c4e2",
+    "signed_install": "passed",
+    "health_commit": "passed",
+    "normal_reboot": "passed",
+    "ui_input": "coordinate replay only; WiFi open/refresh, back, IoT page passed",
+    "physical_human_touch": "not_run",
+    "static_recovery_hashes": "6 of 6 matched after reboot",
+    "tuya_runtime_database": "hash changed after startup; semantic data retention not accepted",
+    "historical_firstboot_data_retention": "failed: UDISK/rootfs_data formatted; selective historical recovery performed",
+    "soak": "running; not accepted"
+  },
+  "host_checks": {
+    "runtime_permissions": "12 passed including real ext4 and SquashFS",
+    "affected_suites": "41 passed plus 1 initially skipped; actual dual-profile recipe subsequently passed with current recorded binaries",
+    "original_rc6_readonly_rejection": {
+      "check": "original rc6 read-only rejection",
+      "status": "passed",
+      "candidate_status": "rejected",
+      "rootfs_sha256": "17111e5f112082452bee2dba8bf5d8c43e8c25abf9d23c42f0bd35aed8187775",
+      "unchanged": true,
+      "returncode": 1,
+      "diagnostic": "RUNTIME PERMISSIONS BLOCKED: nonroot runtime access denied or unsafe mode: /lib/ld-linux-aarch64.so.1"
+    },
+    "SDK_source_modes": "7 restored from tracked Git modes, identical bytes; generated caches and next image pending",
+    "initial_failures": [
+      "baseline recipe fixture omitted embedded updater; fixture corrected",
+      "obsolete edition066 provider fixtures rejected; current recorded provider071 programs admitted",
+      "current fixture set lacked old-lock negative input; copied original recorded lock, then passed"
+    ]
+  },
+  "remaining": [
+    "New source-bound signed system candidate with corrected runtime inputs and fresh baseline updater",
+    "Firstboot formatting prevention and full data recovery/retention analysis",
+    "Actual application rollback/failure and transaction power interruption",
+    "System A/B upgrade/rollback/power interruption pairing",
+    "Complete page/function matrix, actual voice and Tuya resource control",
+    "Sustained stability, cold boot and full release/remote verification"
+  ],
+  "evidence": ".delivery/a133-boot-repair-20261021 and Windows work/demo-install-20261020; secrets kept outside public source"
+}

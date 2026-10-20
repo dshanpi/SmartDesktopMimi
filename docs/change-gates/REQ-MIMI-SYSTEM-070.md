@@ -46,3 +46,19 @@ r2已经通过真实opkg文件归属和封存基线检查，但最终rootfs后�
 验收：not_run，schema2缺项/篡改/未知顺序拒绝与旧schema1保持可读；真实A133公共/私有程序包装、r2实物完整字节比较和非法输入拒绝；受影响产品锁/来源/系统测试及公开审计；最后正式新镜像/SWU/运行库回读仍not_run。证据统一output/system-product-20261015，下一步先实现并通过受影响主机检查，再建立独立r3构建目录。
 
 本批主机结果：63项受影响测试0skip通过，含真实A133公共/私有后端及私有Tuya三个程序包装、public与r2 rootfs哈希/长度一致、原程序未变；历史两版schema1实锁仍可读。schema2工具/顺序/解析路径/缺项/布尔伪schema拒绝，两版系统构建元数据重哈希仍不能绕过工具篡改；损坏或另指向工具拒绝；SDK脚本伪成功空操作及strip失败故障注入被拒绝。公开源码审计0发现。实际证据package-transform-tests-r2.log和package-transform-public-audit.json。尚未生成新提交实锁或新完整镜像，这些保持not_run，不能把r2改标通过。
+
+
+## 2026-10-21 A133 实际启动修复与打包门禁（SYSTEM070 / SYSTEM040 / UI075）
+用户最新要求已恢复当前板的 FEL、启动演示及发布前验证权限，替代本记录旧的实机暂缓范围。新 SDK 环境重建未完成。
+
+本批修复前记录位于私有交付目录 a133-boot-repair-20261021/prerecord.json 和 source-fix-prerecord.json；既已发生的启动修复明确补记，不追认成事前记录。原 rc6 FEL 写入与校验成功，但首次启动格式化 UDISK/rootfs_data，数据保留验收 failed，旧记录保留。恢复前先匹配硬件和 private 分区，只恢复历史原登记/凭据/WiFi，未重新绑定或换信任钥。
+
+根因证据：SDK 源恢复脚本在 umask 077 下执行 Git checkout，已跟踪 loader/libc/NSS 变成 0700，libgcc 和账号文件变成 0600。板上修复这些权限后 ubus 和正常启动通过，shadow 仍私有。另外，更新器包先安装当前 build/mimi-update，再复制 sealed baseline；旧 baseline 的更新器可覆盖新构建。现在在构建预检和真实 package recipe 校验两者字节相等，不一致必须重新准备基线，不能重封旧 seal 掩盖差异。
+
+流程：正式 rootfs 完整性验证 → 读取原始 ext/SquashFS 权限与 root 所有者 → 检查非 root 可访问 loader/运行库/账号数据库与 shadow 保密 → 任一失败拒绝 pack。检查全程只读，不自动 chmod 镜像，不替代真实启动。SDK 输入仅恢复七项已确认 Git 文件模式，字节不变；缓存/新镜像未重建。来源修复和实机临时修复分开记录。
+
+实现：tools/update/runtime_permissions.py、scripts/build_firmware.sh、tools/update/baseline.py、packaging/aitvbox-mimi-update/Makefile，以及对应 runtime_permissions/baseline/product_edition 测试。不变量：不跳过签名/兼容/硬件身份校验，不公开私有组件或秘密，不修改旧镜像或标签，HDMI 默认关闭。
+
+验收：12 项实际文件系统权限检查通过；受影响集合 41 项通过，1 项初次跳过，随后以已构建的当前 A133 public/private 程序补跑真实安装 recipe 通过。原 rc6 镜像只读拒绝且哈希未变。首次夹具缺嵌入 updater、过旧 provider 输入、缺旧锁负例的失败日志全部保留，最终修复夹具后通过。
+
+当前板为现场修复的 rc6 系统，签名 rc28 应用真实安装、健康提交、普通重启自动进入新版通过；首页/无线网络/返回/涂鸦智家为真实板坐标回放，不能记人工物理触摸。重启后六项静态恢复状态哈希一致，Tuya 运行数据库变化待语义核查。持续观察尚在运行；回退、事务断电、完整功能/数据、新系统候选和最终发布未验收，不称 stable。详见 docs/validation/a133-boot-repair-20261021.json。下一步先完成新系统候选输入闭合，再进行真实回退/断电与完整功能矩阵，保留可启动演示基线。

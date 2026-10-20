@@ -39,6 +39,21 @@ class BaselineSealTests(unittest.TestCase):
         (self.root/'etc/escape').symlink_to('/etc/passwd')
         with self.assertRaisesRegex(ValueError,'symbolic'):baseline.verify(self.path)
 
+    def test_stale_baseline_cannot_replace_current_updater(self):
+        embedded=self.root/'usr/bin/mimi-update';embedded.parent.mkdir(parents=True)
+        fresh=self.path/'fresh-updater';fresh.write_bytes(b'current-build')
+        embedded.write_bytes(b'previous-build')
+        with self.assertRaisesRegex(ValueError,'differs from freshly built'):
+            baseline.verify_updater(self.path,fresh)
+        embedded.write_bytes(fresh.read_bytes())
+        baseline.verify_updater(self.path,fresh)
+        fresh.unlink()
+        with self.assertRaisesRegex(ValueError,'regular files'):
+            baseline.verify_updater(self.path,fresh)
+        fresh.symlink_to(embedded)
+        with self.assertRaisesRegex(ValueError,'regular files'):
+            baseline.verify_updater(self.path,fresh)
+
     def final_rootfs(self):
         final=self.path/'final';shutil.copytree(self.root,final)
         for source,target in [('aitvbox.init','etc/init.d/aitvbox'),('start-ui.sh','usr/bin/aitvbox-start-ui')]:
@@ -115,6 +130,8 @@ class BaselineSealTests(unittest.TestCase):
         # harness. The real SDK image build remains a separate acceptance step.
         binary=self.root/'usr/lib/smartdesktopmimi/factory/bin/lvglsim'
         binary.parent.mkdir();shutil.copy2('/bin/true',binary)
+        embedded=self.root/'usr/bin/mimi-update';embedded.parent.mkdir(parents=True)
+        shutil.copy2('/bin/true',embedded)
         self.seal['factory_version']='1.0.0-host-fixture'
         self.seal['files']=baseline.inventory(self.root);baseline.write(self.path/'baseline-lock.json',self.seal)
         product=self.path/'product';prepared=product/'build/mimi-baseline'
@@ -131,6 +148,12 @@ class BaselineSealTests(unittest.TestCase):
         self.assertFalse((self.path/'STRIP-WAS-CALLED').exists())
         for relative,expected in self.seal['files'].items():self.assertEqual(baseline.digest(stage/relative),expected['sha256'])
         self.assertEqual(baseline.digest(stage/'usr/bin/mimi-update'),baseline.digest(updater))
+        updater.write_bytes(b'newer-current-build')
+        stale=subprocess.run(['make','-f',str(makefile),'all'],cwd=ROOT/'packaging/aitvbox-mimi-update',stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True)
+        self.assertNotEqual(stale.returncode,0)
+        self.assertIn('baseline updater differs',stale.stdout)
+        self.assertEqual((stage/'usr/bin/mimi-update').read_bytes(),b'newer-current-build')
+
 
 
 class SystemPackageIntegrationTests(unittest.TestCase):

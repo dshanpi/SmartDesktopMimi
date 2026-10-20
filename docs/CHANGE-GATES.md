@@ -264,3 +264,4 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 
 - UBUNTUAPPS076 session endpoint policy correction prerecord: actual launcher uses a session-bound systemd cgroup, not the GDM leader SID. No production action; implementation pending. See REQ-MIMI-UBUNTUAPPS-076.
 \n\n- UBUNTUAPPS076 session-cgroup correction: 31/31 root tests and read-only live session/cgroup audit passed. First live attempt found logind reports empty Display for active X11, so the profile remains the display pin; nonempty values must match. Production UI/endpoint activation, native admission, board install and data upgrade/rollback remain not_run. See docs/validation/ubuntuapps076-session-cgroup-20261020.json.\n
+- 2026-10-21 SYSTEM070 实际启动修复及打包门禁：`docs/change-gates/batches/20261021-a133-boot-repair.json`；签名rc28已在现场修复系统运行，完整发布仍未验收。

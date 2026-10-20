@@ -83,7 +83,8 @@ python3 "${PRODUCT_ROOT}/tools/update/a133_display_gate.py" "${SDK}" --stage inp
 # Fail before SDK mutation if an updater-enabled release lacks its signed input.
 if [[ "${MIMI_APPLICATION_UPDATES:-0}" == 1 || -d "${PRODUCT_ROOT}/build/mimi-baseline" ]]; then
     python3 "${PRODUCT_ROOT}/tools/update/baseline.py" verify \
-        --output "${PRODUCT_ROOT}/build/mimi-baseline" --product-edition "${MIMI_PRODUCT_EDITION}"
+        --output "${PRODUCT_ROOT}/build/mimi-baseline" --product-edition "${MIMI_PRODUCT_EDITION}" \
+        --updater "${PRODUCT_ROOT}/build/mimi-update/mimi-update"
 fi
 
 # Tina's kernel build launches tools/build/buildserver in the background with
@@ -326,6 +327,8 @@ echo "Kernel platform requirements verified: HID + SECCOMP filter"
 ROOTFS_IMAGE="${SDK}/out/a133/b6/openwrt/rootfs.img"
 python3 "${PRODUCT_ROOT}/tools/update/filesystem_image.py" "${ROOTFS_IMAGE}" \
     || die "rootfs filesystem integrity failed; refusing pack"
+python3 "${PRODUCT_ROOT}/tools/update/runtime_permissions.py" "${ROOTFS_IMAGE}" \
+    || die "nonroot boot runtime permissions failed; refusing pack"
 ROOTFS_CHECKED_SHA="$(sha256sum "${ROOTFS_IMAGE}" | awk '{print $1}')"
 
 ./build.sh pack \

@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "summary": "Reject inaccessible boot runtimes and stale baseline updater; record real A133 rc28 installation",
+  "context": "Current user authorized FEL/board release validation; original rc6 physical failures expose source restore and packaging gaps",
+  "next_steps": "Complete source-bound new system and remaining physical release matrix without replacing history",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-070",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-070.md",
+      "scope": "Runtime filesystem admission and fresh-updater equality in system packaging; real board evidence separate",
+      "invariants": "Keep signed compatibility, original binding/trust, source separation, private data and immutable historical releases",
+      "paths": [
+        "tools/update/runtime_permissions.py",
+        "tests/update/test_runtime_permissions.py",
+        "tools/update/baseline.py",
+        "tests/update/test_baseline.py",
+        "tests/update/test_product_edition.py",
+        "scripts/build_firmware.sh",
+        "packaging/aitvbox-mimi-update/Makefile",
+        "docs/change-gates/REQ-MIMI-SYSTEM-070.md",
+        "docs/validation/a133-boot-repair-20261021.json",
+        "docs/change-gates/batches/20261021-a133-boot-repair.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Runtime and affected packaging checks",
+          "status": "passed",
+          "scope": "12 actual filesystem checks; 41 affected checks plus initially skipped actual dual-profile recipe subsequently passed",
+          "evidence": "docs/validation/a133-boot-repair-20261021.json"
+        },
+        {
+          "name": "Historical rc6 boot and data preservation",
+          "status": "failed",
+          "scope": "Original immutable rc6",
+          "reason": "Nonroot boot dependency modes and updater stale overlay; firstboot formatted persistent partitions",
+          "evidence": "docs/validation/a133-boot-repair-20261021.json"
+        },
+        {
+          "name": "Current repaired board signed rc28 activation and reboot",
+          "status": "passed",
+          "scope": "Patched system only; not original rc6 qualification or human touch acceptance",
+          "evidence": "docs/validation/a133-boot-repair-20261021.json"
+        },
+        {
+          "name": "Remaining release qualification",
+          "status": "not_run",
+          "scope": "new system, rollback/power interruption, full data and real service matrix",
+          "reason": "Still in progress; stable release blocked",
+          "evidence": "docs/validation/a133-boot-repair-20261021.json"
+        }
+      ]
+    }
+  ]
+}
