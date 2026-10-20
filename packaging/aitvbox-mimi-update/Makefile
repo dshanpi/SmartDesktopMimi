@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 PKG_NAME:=aitvbox-mimi-update
 PKG_VERSION:=1.0.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 include $(INCLUDE_DIR)/package.mk
 ifeq ($(origin AITVBOX_PRODUCT_BUILD),undefined)
 $(error AITVBOX_PRODUCT_BUILD is required)
@@ -33,6 +33,8 @@ define Package/aitvbox-mimi-update/install
 	$(INSTALL_BIN) ./files/mimi-update.init $(1)/etc/init.d/mimi-update
 	$(INSTALL_BIN) ./files/mimi-desktop.init $(1)/etc/init.d/mimi-desktop
 	$(INSTALL_BIN) ./files/mimi-platform-provider $(1)/usr/libexec/mimi-platform-provider
+	$(INSTALL_DIR) $(1)/lib/preinit
+	$(INSTALL_BIN) ./files/78_mimi_storage_guard $(1)/lib/preinit/78_mimi_storage_guard
 	if [ -d "$(PRODUCT_ROOT)/build/mimi-baseline" ]; then \
 		python3 "$(PRODUCT_ROOT)/tools/update/baseline.py" verify --output "$(PRODUCT_ROOT)/build/mimi-baseline" --updater "$(PRODUCT_ROOT)/build/mimi-update/mimi-update" && \
 		$(CP) "$(PRODUCT_ROOT)/build/mimi-baseline/rootfs/." "$(1)/"; \

@@ -59,6 +59,8 @@ class BaselineSealTests(unittest.TestCase):
         for source,target in [('aitvbox.init','etc/init.d/aitvbox'),('start-ui.sh','usr/bin/aitvbox-start-ui')]:
             dest=final/target;dest.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(ROOT/'packaging/aitvbox-suite/files'/source,dest);dest.chmod(0o755)
+        guard=final/'lib/preinit/78_mimi_storage_guard';guard.parent.mkdir(parents=True)
+        shutil.copyfile(ROOT/'packaging/aitvbox-mimi-update/files/78_mimi_storage_guard',guard);guard.chmod(0o755)
         rc=final/'etc/rc.d';rc.mkdir()
         for name,service in [('S98mimi-update','mimi-update'),('S99aitvbox','aitvbox'),('S99mimi-desktop','mimi-desktop')]:
             (rc/name).symlink_to('../init.d/'+service)
@@ -70,6 +72,13 @@ class BaselineSealTests(unittest.TestCase):
         final=self.final_rootfs();baseline.verify_rootfs(self.path,final)
         (final/'usr/lib/smartdesktopmimi/factory/manifest.json').write_text('{}')
         with self.assertRaisesRegex(ValueError,'differs'):baseline.verify_rootfs(self.path,final)
+
+    def test_storage_guard_is_required_and_source_bound(self):
+        final=self.final_rootfs();guard=final/'lib/preinit/78_mimi_storage_guard'
+        guard.write_text('# disabled guard\n')
+        with self.assertRaisesRegex(ValueError,'stale storage'):baseline.verify_rootfs(self.path,final)
+        guard.unlink()
+        with self.assertRaisesRegex(ValueError,'missing'):baseline.verify_rootfs(self.path,final)
 
     def test_final_rootfs_rejects_unsigned_extra_library(self):
         final=self.final_rootfs()

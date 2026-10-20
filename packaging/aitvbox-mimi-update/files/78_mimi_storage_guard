@@ -1,0 +1,68 @@
+#!/bin/sh
+# SYSTEM040 / SYSTEM070: product A133 eMMC data must survive probe failures.
+# This hook precedes Tina 79_format_partition, which formats unknown volumes.
+# Blank boards require explicit factory initialization outside normal boot.
+
+mimi_storage_is_block() {
+	[ -b "$1" ]
+}
+
+mimi_storage_volume() {
+	local name="$1" expected="$2" target info
+	target="$(readlink "/dev/by-name/$name")" || return 1
+	if [ "$target" != "$expected" ] || ! mimi_storage_is_block "$target"; then
+		echo "Mimi storage recovery required: unexpected $name mapping" >&2
+		return 1
+	fi
+	info="$(block info "$target")" || {
+		echo "Mimi storage recovery required: cannot inspect $name" >&2
+		return 1
+	}
+	# Require the successful probe to describe the actual requested device.
+	case "$info" in
+		"$target: "*) ;;
+		*) return 1 ;;
+	esac
+	case " $info " in
+		*' TYPE="ext4" '*) return 0 ;;
+	esac
+	echo "Mimi storage recovery required: $name is not recognized as ext4" >&2
+	return 1
+}
+
+mimi_storage_preflight() {
+	local clear
+	# A missing variable returns nonzero. In that case the subsequent vendor
+	# hook also has no clear list. A nonempty value is never consumed here.
+	clear="$(fw_printenv -n parts_clean 2>/dev/null)"
+	if [ -n "$clear" ]; then
+		echo "Mimi storage recovery required: pending partition clear request" >&2
+		return 1
+	fi
+	mimi_storage_volume rootfs_data /dev/mmcblk0p7 || return 1
+	mimi_storage_volume UDISK /dev/mmcblk0p9 || return 1
+	# This product has no sec_storage filesystem. The vendor hook would format
+	# an unexpected one; refuse to continue rather than infer its ownership.
+	if [ -e /dev/by-name/sec_storage ] || [ -L /dev/by-name/sec_storage ]; then
+		echo "Mimi storage recovery required: unexpected sec_storage partition" >&2
+		return 1
+	fi
+	return 0
+}
+
+mimi_storage_recovery_shell() {
+	/bin/sh -i </dev/console >/dev/console 2>&1
+}
+
+mimi_storage_guard() {
+	while ! mimi_storage_preflight; do
+		echo "Mimi boot paused to preserve data. No automatic formatting."
+		echo "Check or restore persistent storage using the local recovery console."
+		mimi_storage_recovery_shell
+		# Exiting the shell is not authorization to erase or bypass the guard.
+		sleep 1
+	done
+}
+
+[ "$INITRAMFS" = "1" ] || boot_hook_add preinit_main mimi_storage_guard
+[ "$INITRAMFS" = "1" ] && boot_hook_add initramfs mimi_storage_guard

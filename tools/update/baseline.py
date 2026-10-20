@@ -135,6 +135,9 @@ def verify_rootfs(directory, rootfs, image=None, edition=None):
         path=regular(target)
         if digest(path)!=digest(ROOT/'packaging/aitvbox-suite/files'/source) or path.stat().st_mode&0o777!=0o755:
             raise ValueError('final rootfs has stale desktop launcher: '+target)
+    guard=regular('lib/preinit/78_mimi_storage_guard')
+    if digest(guard)!=digest(ROOT/'packaging/aitvbox-mimi-update/files/78_mimi_storage_guard') or guard.stat().st_mode&0o777!=0o755:
+        raise ValueError('final rootfs has stale storage preservation guard')
     # OpenWrt sorts rc.d lexically: S100 would run before S98 and S99.
     links={'S98mimi-update':'mimi-update','S99aitvbox':'aitvbox','S99mimi-desktop':'mimi-desktop'}
     rc=rootfs/'etc/rc.d'
@@ -154,7 +157,7 @@ def verify_rootfs(directory, rootfs, image=None, edition=None):
         raise ValueError('unit-specific enrollment must not be baked into final rootfs')
     if image is not None:
         verify_image_owners(image,list(seal['files'])+['etc/init.d/aitvbox','usr/bin/aitvbox-start-ui']+
-                            ['etc/rc.d/'+name for name in links])
+                            ['etc/rc.d/'+name for name in links]+['lib/preinit/78_mimi_storage_guard'])
     return seal
 
 def prepare(args):
@@ -196,7 +199,7 @@ def prepare(args):
             marker=config/'product-edition';marker.write_text(edition+'\n');marker.chmod(0o444)
         write(config/'updater.json',updater)
         binary=root/'usr/bin/mimi-update';binary.parent.mkdir(parents=True);shutil.copyfile(args.updater,binary);binary.chmod(0o755)
-        for source,target in [('mimi-update.init','etc/init.d/mimi-update'),('mimi-desktop.init','etc/init.d/mimi-desktop'),('mimi-platform-provider','usr/libexec/mimi-platform-provider')]:
+        for source,target in [('mimi-update.init','etc/init.d/mimi-update'),('mimi-desktop.init','etc/init.d/mimi-desktop'),('mimi-platform-provider','usr/libexec/mimi-platform-provider'),('78_mimi_storage_guard','lib/preinit/78_mimi_storage_guard')]:
             dest=root/target;dest.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(ROOT/'packaging/aitvbox-mimi-update/files'/source,dest);dest.chmod(0o755)
         for directory in [root]+[p for p in root.rglob('*') if p.is_dir()]:directory.chmod(0o755)

@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Fail closed before vendor persistent-data formatting; prepare new rc30/rc7 candidates",
+  "context": "Observed rc6 firstboot data failure; preserve immutable historical evidence",
+  "next_steps": "New source-bound image and physical preservation/rollback/power-cut qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-040",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+      "scope": "Product preinit guard, baseline source binding and candidate version",
+      "invariants": "Original trust/binding retained; no implicit erase; no stable claim",
+      "paths": [
+        "packaging/aitvbox-mimi-update/Makefile",
+        "packaging/aitvbox-mimi-update/files/78_mimi_storage_guard",
+        "tools/update/baseline.py",
+        "tests/update/test_baseline.py",
+        "tests/update/test_storage_guard.py",
+        "VERSION",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "docs/change-gates/batches/20261021-storage-guard.json"
+      ],
+      "checks": [
+        {
+          "name": "Affected storage/baseline/product tests",
+          "status": "passed",
+          "scope": "31 host tests plus current board read-only preflight; not reboot acceptance",
+          "evidence": "docs/change-gates/REQ-MIMI-SYSTEM-040.md"
+        },
+        {
+          "name": "New image physical preservation and full release matrix",
+          "status": "not_run",
+          "scope": "New rc30/rc7 candidates",
+          "reason": "Candidates preparing; no completed new-image physical test",
+          "evidence": "docs/change-gates/REQ-MIMI-SYSTEM-040.md"
+        }
+      ]
+    }
+  ]
+}
