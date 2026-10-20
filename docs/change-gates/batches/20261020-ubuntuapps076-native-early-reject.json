@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "Reject unsupported native profiles before optional parser loading; append final evidence",
+  "context": "Follow-up to611f2b1; original batch immutable; first coverage rejection retained",
+  "next_steps": "Authenticated broker and storage under installer lock,then native install/session profile and user data upgrade matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Schema3 build/sign/preflight; no native activation",
+      "invariants": "Existing legacy target meaning and product trust/identity/rc29/A133 unchanged; installer remains fail-closed",
+      "paths": [
+        "services/mimi-ubuntu-apps/installer.py",
+        "tests/sdkbuild/test_ubuntu_native_admission.py",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-native-admission-20261019.json",
+        "docs/change-gates/batches/20261020-ubuntuapps076-native-early-reject.json"
+      ],
+      "checks": [
+        {
+          "name": "native signed package ABI preflight and extracted runner execution",
+          "status": "passed",
+          "scope": "23nativechecks plus signed-extracted execution,24installer and6localization regressions",
+          "evidence": "docs/validation/ubuntuapps076-native-admission-20261019.json"
+        },
+        {
+          "name": "native app integration and data acceptance",
+          "status": "not_run",
+          "scope": "broker/storage,installer activation,session and real user update/rollback data",
+          "reason": "Required integration remains incomplete",
+          "evidence": "docs/validation/ubuntuapps076-native-admission-20261019.json"
+        }
+      ]
+    }
+  ]
+}
