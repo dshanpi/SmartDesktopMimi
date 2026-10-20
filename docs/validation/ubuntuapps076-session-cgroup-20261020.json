@@ -1,0 +1,32 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "status": "prerecord_before_session_policy_change",
+  "base_commit": "f53b74b23d8e80f79b79109b86535f66b9f3dd2a",
+  "scope": "Replace desktop process SID equality with a root-controlled session-profile, active logind session, and systemd unit/cgroup binding check that matches the existing login bridge.",
+  "invariants": [
+    "Do not alter production rc29, trusted keys, enrollment or A133",
+    "Do not install or enable a service/profile in this batch",
+    "No forced logout/relogin and no app invocation from the existing UI",
+    "Use kernel peer credentials and the exact root-pinned desktop executable",
+    "Only accept a root-owned current session profile whose login_session is active local seat0 X11 and whose unit is bound to that session",
+    "Keep native installer admission closed"
+  ],
+  "change_paths": [
+    "services/mimi-ubuntu-apps/broker.py",
+    "tests/sdkbuild/test_ubuntu_broker.py",
+    "services/mimi-ubuntu-apps/README.md",
+    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+    "docs/validation/ubuntuapps076-session-cgroup-20261020.json",
+    "docs/change-gates/batches/20261020-ubuntuapps076-session-cgroup-prerecord.json",
+    "CURRENT_PROGRESS.md",
+    "docs/CHANGE-GATES.md"
+  ],
+  "observed_failure": "The previous SID-to-session-leader rule rejects the actual desktop process launched by the existing trusted login bridge. Read-only evidence is output/ubuntu-broker-076-20261020/session-cgroup-live-audit.json.",
+  "acceptance": [
+    "Test actual SO_PEERCRED/executable/UID/GID remains",
+    "Unit tests require exact active local session profile and unit BindsTo/After linkage",
+    "Reject stale/foreign session profile, wrong unit identity/cgroup, inactive/remote/non-X11 sessions",
+    "Run root suite and change gates; production endpoint remains unactivated"
+  ],
+  "implementation": "not_started"
+}

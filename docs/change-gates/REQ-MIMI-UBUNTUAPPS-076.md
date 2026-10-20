@@ -105,3 +105,8 @@ Commit a290fa6 carried a malformed new JSON batch (literal backslash-n bytes aft
 ### 2026-10-20 session endpoint remote verification
 
 Follow-up commit 9f2b462 passed the traceability coverage workflow, application update gates and public source validation. Eight changed source/evidence files were independently fetched through the GitHub contents API at the exact commit and their SHA256 values matched the working tree. The initial a290fa6 traceability failure remains preserved above and in the external evidence log. The service is still source-only; real production GDM invocation, profile installation, native admission and complete data upgrade/rollback remain not_run.
+
+
+### 2026-10-20 active-session association correction — prerecord
+
+Read-only inspection found that the actual desktop is launched by the existing login bridge into a systemd service cgroup bound to the active logind session, while its process SID differs from the GDM session leader SID. The endpoint’s just-added SID equality policy would reject real desktop requests. Before changing code, this batch prerecords a replacement policy using the root-owned current session profile, active local seat0 X11 session, exact profile unit BindsTo/After linkage, systemd ControlGroup and the already pinned executable/kernel peer identity. No endpoint invocation, forced login cycle, package install, service activation or product change will occur. The live evidence is output/ubuntu-broker-076-20261020/session-cgroup-live-audit.json; implementation and tests are pending.

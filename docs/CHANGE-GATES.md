@@ -261,3 +261,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 - UBUNTUAPPS076 session endpoint: traceability batch serialization failure at a290fa6 preserved; corrected JSON schema and gate rerun in follow-up. See REQ-MIMI-UBUNTUAPPS-076.
 
 - UBUNTUAPPS076 desktop endpoint follow-up 9f2b462: corrected traceability plus three CI gates passed; eight source/record files read back by exact SHA256. Production activation remains not_run.
+
+- UBUNTUAPPS076 session endpoint policy correction prerecord: actual launcher uses a session-bound systemd cgroup, not the GDM leader SID. No production action; implementation pending. See REQ-MIMI-UBUNTUAPPS-076.
