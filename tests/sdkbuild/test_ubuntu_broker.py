@@ -11,11 +11,14 @@ import os
 from pathlib import Path
 import shutil
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
 import time
+import threading
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('broker_under_test', ROOT / 'services/mimi-ubuntu-apps/broker.py')
@@ -268,6 +271,107 @@ class BrokerTests(unittest.TestCase):
 
     def test_installer_native_policy_remains_closed(self):
         with self.assertRaisesRegex(ValueError, 'not yet admitted'): self.installer.install(self.package)
+
+
+SESSION_CLIENT = r'''
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+int main(int argc,char **argv) {
+    if(argc!=2) return 2;
+    int fd=socket(AF_UNIX,SOCK_STREAM,0); if(fd<0) return 3;
+    struct sockaddr_un a={.sun_family=AF_UNIX};
+    snprintf(a.sun_path,sizeof(a.sun_path),"%s",argv[1]);
+    if(connect(fd,(void*)&a,sizeof(a))) return 4;
+    const char*q="{\"command\":\"invoke\",\"appId\":\"com.mimi.broker\",\"action\":\"fast\"}\n";
+    if(write(fd,q,strlen(q))!=(ssize_t)strlen(q)) return 5;
+    char b[512]; ssize_t n=read(fd,b,sizeof(b)); if(n<=0) return 6;
+    ssize_t out=write(1,b,(size_t)n); close(fd); return out==n ? 0 : 7;
+}
+'''
+
+
+@unittest.skipUnless(os.geteuid() == 0, 'requires root-controlled temporary endpoint')
+class DesktopEndpointTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory(prefix='mimi-session-endpoint-', dir='/var/lib')
+        cls.base = Path(cls.tmp.name); cls.base.chmod(0o755)
+        cls.helper_c = cls.base / 'client.c'; cls.helper_c.write_text(SESSION_CLIENT)
+        cls.helper = cls.base / 'desktop-fixture'
+        subprocess.run(['cc', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
+                        str(cls.helper_c), '-o', str(cls.helper)], check=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def setUp(self):
+        self.runtime = tempfile.TemporaryDirectory(prefix='mimi-session-run-', dir='/var/lib')
+        self.root = Path(self.runtime.name); self.root.chmod(0o755)
+        self.socket_path = self.root / 'apps.sock'
+
+        class FakeBroker:
+            def invoke(inner, app_id, action):
+                if (app_id, action) != ('com.mimi.broker', 'fast'):
+                    raise ValueError('unknown signed action')
+                return {'ok': True, 'message': 'launched'}
+
+        self.endpoint = B.DesktopEndpoint(FakeBroker(), self.socket_path, self.helper, 1000, 1000)
+        self.endpoint.active_session_sids = lambda uid: {os.getsid(0)} if uid == 1000 else set()
+
+    def tearDown(self):
+        self.runtime.cleanup()
+
+    @staticmethod
+    def drop_to_desktop():
+        os.setgroups([]); os.setgid(1000); os.setuid(1000)
+
+    def start_server(self):
+        stop = threading.Event()
+        thread = threading.Thread(target=self.endpoint.serve, args=(stop,), daemon=True)
+        thread.start()
+        deadline = time.monotonic() + 2
+        while not self.socket_path.exists() and time.monotonic() < deadline: time.sleep(0.005)
+        self.assertTrue(self.socket_path.exists())
+        return stop, thread
+
+    def test_root_endpoint_accepts_only_pinned_binary_in_mocked_active_seat(self):
+        stop, thread = self.start_server()
+        try:
+            p = subprocess.run([str(self.helper), str(self.socket_path)], preexec_fn=self.drop_to_desktop,
+                               capture_output=True, text=True, timeout=3)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertEqual(json.loads(p.stdout), {'ok': True, 'message': 'launched'})
+        finally:
+            stop.set(); thread.join(3); self.assertFalse(thread.is_alive())
+        self.assertFalse(self.socket_path.exists())
+
+    def test_active_session_policy_requires_local_active_graphical_seat(self):
+        del self.endpoint.active_session_sids
+        listed = mock.Mock(returncode=0, stdout='2 1000 user seat0\n3 1000 user -\n', stderr='')
+        active = mock.Mock(returncode=0, stdout='User=1000\nActive=yes\nRemote=no\nType=x11\nLeader=20\nSeat=seat0\nState=active\n', stderr='')
+        inactive = mock.Mock(returncode=0, stdout='User=1000\nActive=no\nRemote=no\nType=x11\nLeader=21\nSeat=seat0\nState=online\n', stderr='')
+        with mock.patch.object(B.subprocess, 'run', side_effect=[listed, active, inactive]), \
+             mock.patch.object(B, 'proc_record', side_effect=[{'sid': 19}]):
+            self.assertEqual(self.endpoint.active_session_sids(1000), {19})
+
+    def test_different_same_uid_executable_is_rejected(self):
+        peer = subprocess.Popen(['/usr/bin/sleep', '2'], preexec_fn=self.drop_to_desktop)
+        try:
+            class Peer:
+                def getsockopt(inner, *args): return struct.pack('3i', peer.pid, 1000, 1000)
+            with self.assertRaisesRegex(ValueError, 'executable'):
+                self.endpoint.authenticate(Peer())
+        finally: peer.terminate(); peer.wait(timeout=2)
+
+    def test_preexisting_regular_file_is_never_replaced_by_socket(self):
+        self.socket_path.write_text('preserve')
+        with self.assertRaisesRegex(ValueError, 'untrusted desktop socket'):
+            self.endpoint.serve(threading.Event())
+        self.assertEqual(self.socket_path.read_text(), 'preserve')
 
 
 if __name__ == '__main__': unittest.main()

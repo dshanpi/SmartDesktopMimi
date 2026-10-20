@@ -255,3 +255,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-20 UBUNTUAPPS076内部存储：22项文件系统/进程与签名升级数据检查passed；无RPC/权限开放/生产部署。下一步认证broker与SDK实际读写。见docs/validation/ubuntuapps076-storage-20261020.json。
 
 2026-10-20 UBUNTUAPPS076内部认证链：22项签名SDK/实际进程/存储检查passed；生产安装与session入口未接通，rc29未变。见docs/validation/ubuntuapps076-broker-20261020.json，原失败保留。
+
+2026-10-20 UBUNTUAPPS076 session endpoint: source-level desktop IPC endpoint added; root native install remains closed. 26 tests passed; real GDM desktop invocation and service/profile deployment not_run. See docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md.

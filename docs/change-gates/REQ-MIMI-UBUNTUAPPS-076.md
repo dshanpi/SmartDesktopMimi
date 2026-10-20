@@ -86,3 +86,13 @@ Ubuntu共享桌面应消费平台安装的扩展应用，签名安装/发行者�
 验收：真实签名编译公共SDK程序读写/重开、无权限/错签名/篡改/旧schema/错目标/未声明action拒绝，实际非子进程和同UID伪造连接拒绝，进程身份和exe不符拒绝，超长/重复/多条/恶意数据请求与输出拒绝、超时和清理。保留真实失败；不改SDK冻结源码、不操作A133、不替换生产rc29。下一步才是受控完整部署、安装器与登录profile集成及完整用户数据矩阵。
 
 2026-10-20代理联调结果：22项实际测试passed。真实公共SDK签名程序完成中文写入/重启读回；实际同UID外来进程、同一可执行inode的另一runner均被拒绝；签名fixture版本变化后旧运行存储身份失效。权限/签名/目标/动作/损坏/超额/输出/超时拒绝与清理通过。首次/run noexec导致exec127保留，测试改独立/var/lib目录，不改挂载；raw spoof测试固定长度改真实strlen，最终重跑。单帧超时以总200ms计，慢速分段实际测试通过。现仅内部平台API，生产安装器仍拒绝native，无桌面调用入口/产品部署；详见docs/validation/ubuntuapps076-broker-20261020.json。
+
+### 2026-10-20 本地桌面 IPC 会话端点（代码完成，未接生产）
+
+在 79f0d93 broker 基础上新增 `DesktopEndpoint`，适配 Mimi 桌面现有 `invoke` 请求。实施前受需求 076 约束：root 所有的桌面二进制 inode 必须匹配、内核 Unix peer UID/GID 必须匹配，并检查进程所属 logind 活动本地图形会话；动作再次限定为签名 UI 中存在的动作，平台权限再次由 broker 检查。请求长度/时限有界。socket 放在 root 控制目录，按配置组开放，拒绝替换非 root socket 或普通文件。端点只做源码级接线，没有服务单元、配置、桌面 socket path、产品 binary pin 或生产启动入口；原生安装仍关闭。
+
+真实 root 临时 endpoint 启动了实际 Unix listener，C 测试程序以桌面 UID/GID 发起调用。测试对 peer 凭据、PID、可执行 inode 使用真实内核状态，对 logind active-seat 列表回调使用明确的测试替代；另以 logind 输出 fixture 验证只接受 seat0、active、local、x11/Wayland。它不能证明生产 Mimi 二进制当前运行于真实 GDM 会话，未登出/登录、未调用生产应用。
+
+结果：26 项 broker/native SDK/桌面端点联合 root 测试通过，包含现有真实签名包/公共 SDK native storage write-read、同 UID 其他可执行文件拒绝、其他 runner/身份伪造拒绝、同一安装发生变化后旧数据 pin 拒绝、损坏/超长 IPC 与进程超时，以及端点 socket 资产安全。原始失败保留在 `output/ubuntu-broker-076-20261020/`。三项远端 CI 与独立源文件 readback 尚待本提交完成后复验。
+
+尚缺：以当前安装的 Mimi 桌面二进制及配置走真实活动 GDM session；受控 root profile/服务单元的来源锁/部署与进程生命周期；实际 native schema3 安装准入；完整用户 app 数据跨桌面升级/回退；物理 A133 项目继续依用户要求延期。不得把这批主机进程测试标成产品或真机验收。

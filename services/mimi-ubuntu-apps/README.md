@@ -152,13 +152,24 @@ authentication, permission integration and real-user data acceptance remain open
 
 ## Internal authenticated native invocation (not production activation)
 
-`broker.py` now connects signed native admission, restricted execution and the
-storage backend. `NativeBroker(installer, runner, runtime_root).invoke(id, action)`
-is a trusted-platform API, **not** a desktop/network invocation endpoint. The
-production installer still rejects native packages. A future desktop endpoint
-must authenticate the actual session before invoking this API; independently
-provision all broker/installer/storage/package-parser modules in a controlled
-root-owned tree before exposing a privileged service.
+`broker.py` connects signed native admission, restricted execution and storage.
+`NativeBroker(installer, runner, runtime_root).invoke(id, action)` is an internal
+trusted-platform API. `DesktopEndpoint` adds a root-owned Unix socket handler for
+the existing desktop `invoke` JSON request shape. It accepts only the pinned,
+root-owned desktop executable, checks kernel peer credentials and confirms that
+the peer belongs to an active local graphical logind seat before and after
+reading a bounded request. It permits only a signed UI action and lets the broker
+check the package publisher, target, permission and payload again.
+
+This endpoint is source-level integration only. There is no production service
+unit, root configuration, socket path activation, package profile wiring or
+desktop binary pin provisioned by this change. The native installer still
+rejects schema-3 packages. Before an administrator enables the endpoint, install
+the broker, installer, storage and package parser as one complete root-owned
+tree, pin the actual installed desktop executable and configure the desktop
+socket path to the endpoint. Desktop upgrades must refresh the pin and restart
+the service; a mismatch fails closed. Tests did not force or modify an active
+login.
 
 The broker locks and recovers installation, snapshots code excluding runtime data
 and the publisher marker, checks the complete signed payload, schema-3 target,
@@ -194,6 +205,8 @@ public-SDK application under temporary root-controlled fixtures, exercises actua
 SDK write/read across invocations and kernel peer authentication, and tests
 revocation after a signed fixture version change, denied permissions, malformed
 frames, floods, deadlines and cleanup. These fixtures deliberately do not bypass
-production installer policy. Complete native installation/profile deployment,
-trusted desktop session authorization and full real-user upgrade/rollback data
-acceptance remain required before product activation.
+production installer policy. The session endpoint tests use the real kernel
+credentials and process executable identity with a mocked active-seat result;
+they do not prove the installed Mimi binary/profile is connected to a live GDM
+session. Complete native installation/profile deployment and full real-user
+upgrade/rollback data acceptance remain required before product activation.

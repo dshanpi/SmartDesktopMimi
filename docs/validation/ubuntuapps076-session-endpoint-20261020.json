@@ -1,0 +1,61 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "79f0d9372fef481a61461d22a724e653c43f4074",
+  "status": "passed_source_level_active_session_endpoint_only",
+  "tests": 26,
+  "production_modified": false,
+  "endpoint": {
+    "implemented": true,
+    "service_unit_installed": false,
+    "socket_activated": false,
+    "native_installer_admission": "closed",
+    "desktop_socket_path_configured": false,
+    "desktop_executable_pin_provisioned": false
+  },
+  "session_test_scope": "Actual Unix peer credentials, PID and executable inode with mocked active-seat record; logind filtering unit test",
+  "not_run": [
+    "real installed Mimi UI invocation through the endpoint",
+    "real GDM session lifecycle or logout/relogin acceptance",
+    "production service/profile deployment",
+    "native installer activation",
+    "full real user data across desktop upgrade/rollback",
+    "A133 physical acceptance"
+  ],
+  "failure_history": [
+    "session-first.log: method placement and C fixture compile defects",
+    "session-r2.log: unsupported chmod follow_symlinks and incorrect method fixture",
+    "session-final-r2.log: final 26 tests passed"
+  ],
+  "source_files_sha256": {
+    "services/mimi-ubuntu-apps/broker.py": "0d462534063e0e07a12507a92d7d9bbd754431385b47f493a51808e353adec4a",
+    "tests/sdkbuild/test_ubuntu_broker.py": "e6bae209d5e953db24c7d433a0cb11458e8e3330b78c61362e86a051842c99ac",
+    "services/mimi-ubuntu-apps/README.md": "c1e42d774f06e712ce721f3895aacc217c3e439eb8153ca65c8e2e799a3adf3f",
+    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md": "9dcbba40dfedb1146194bda3d06ad2820a54104f71fe636256c4668a5fafd2f1",
+    "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json": "c401cb6bccddb7cbc57288f844c557a43eb053260d729328eb48b4e26f02c131",
+    "CURRENT_PROGRESS.md": "eea94064811285228861fcbf72fc35e5c577fe84c3ef6aae8935b711db0ec982",
+    "docs/CHANGE-GATES.md": "caa7f6a86028694aa1aa377da1f9d327ee8b07603cc849cc60bea34d834c4964"
+  },
+  "evidence_sha256": {
+    "session-first.log": "f74c9903ecf26de16f66f6771bd6b67f1a97cf0b9fd4daed0e29fe8f8bfe42c1",
+    "session-r2.log": "4745f21c8dcc0ad7107794abccdb95a70f58af8b8f011a6a146770e922d17591",
+    "session-final-r2.log": "2376162d758cdaeb6a1d32f14b6b6f9a351ae4f893c470ade7dd221617177403",
+    "session-commit-check-root.log": "1a4e0689525b8cc886d0db64d405ef5fcd3d9034aacb30a71f2c3441bbacd047",
+    "session-commit-check.log": "ef31884ee21a0ef31c2defde0df41c7c841b94636f8a04c0ff6723e9886065aa"
+  },
+  "ci": [],
+  "test_runs": [
+    {
+      "command": "sudo -n python3 tests/sdkbuild/test_ubuntu_broker.py -v",
+      "result": "26_passed",
+      "duration_seconds": 11.388,
+      "evidence": "output/ubuntu-broker-076-20261020/session-commit-check-root.log"
+    },
+    {
+      "command": "python3 tests/sdkbuild/test_ubuntu_broker.py -v",
+      "result": "26_skipped_requires_root",
+      "counted_as_pass": false,
+      "evidence": "output/ubuntu-broker-076-20261020/session-commit-check.log"
+    }
+  ],
+  "source_readback": "pending_after_commit"
+}\n

@@ -64,7 +64,7 @@ def proc_record(pid):
             fail('process exited')
         status = dict(line.split(':', 1) for line in read('status').splitlines() if ':' in line)
         exe = os.stat('exe', dir_fd=fd)
-        return {'parent': int(fields[1]), 'start': int(fields[19]),
+        return {'parent': int(fields[1]), 'sid': int(fields[3]), 'start': int(fields[19]),
                 'exe': (exe.st_dev, exe.st_ino), 'status': status}
     finally:
         os.close(fd)
@@ -211,6 +211,26 @@ class NativeBroker:
             fail('one capability frame required')
         return decode(raw[:-1])
 
+    @staticmethod
+    def desktop_request(client, deadline):
+        frame_deadline = min(deadline, time.monotonic() + 0.2)
+        raw = bytearray()
+        while b'\n' not in raw:
+            remaining = frame_deadline - time.monotonic()
+            if remaining <= 0:
+                fail('desktop request deadline exceeded')
+            client.settimeout(remaining)
+            part = client.recv(LIMIT + 1 - len(raw))
+            if not part:
+                fail('incomplete desktop request')
+            raw.extend(part)
+            if len(raw) > LIMIT:
+                fail('desktop request too large')
+        if raw.count(b'\n') != 1 or raw[-1:] != b'\n':
+            fail('one desktop request required')
+        return decode(raw[:-1])
+
+
     def invoke(self, app_id, action):
         # This API is called only by trusted platform code. A future desktop
         # endpoint needs its own session authentication before reaching here.
@@ -300,3 +320,146 @@ class NativeBroker:
                         process.kill()
                         process.wait(timeout=2)
                     process.stdout.close()
+
+class DesktopEndpoint:
+    """Root Unix socket that accepts only the pinned desktop in an active seat.
+
+    The socket and root configuration are not installed by this change. An
+    operator must provision a root-owned, non-writable desktop executable pin
+    before enabling it in a future platform profile.
+    """
+    def __init__(self, broker, socket_path, desktop_binary, uid, gid):
+        if os.getuid() != 0 or os.geteuid() != 0:
+            fail('root desktop endpoint required')
+        self.broker = broker
+        self.path = Path(socket_path)
+        parent = I.secure(self.path.parent, directory=True)
+        if not isinstance(uid, int) or isinstance(uid, bool) or uid <= 0 or not isinstance(gid, int) or isinstance(gid, bool) or gid <= 0:
+            fail('invalid desktop account')
+        if len(os.fsencode(self.path)) >= 108:
+            fail('desktop socket path too long')
+        self.uid, self.gid = uid, gid
+        self.binary = I.secure(desktop_binary)
+        s = self.binary.stat()
+        if s.st_uid != 0 or s.st_mode & 0o022 or not stat.S_ISREG(s.st_mode) or not s.st_mode & 0o111:
+            fail('desktop executable is not root controlled')
+        self.desktop_inode = (s.st_dev, s.st_ino)
+        if not parent.is_dir():
+            fail('invalid socket parent')
+
+    @staticmethod
+    def active_session_sids(uid):
+        """Return kernel session IDs for active, local graphical logind seats."""
+        listed = subprocess.run(['/usr/bin/loginctl', 'list-sessions', '--no-legend', '--no-pager'],
+                                capture_output=True, text=True, timeout=2, check=True)
+        result = set()
+        ids = []
+        for line in listed.stdout.splitlines():
+            fields = line.split()
+            if len(fields) < 3 or not fields[0].isdigit() or not fields[1].isdigit():
+                fail('invalid logind session list')
+            # Only query logind records for this account on the local seat;
+            # an unprivileged user cannot make remote/SSH sessions cause a
+            # serial storm of root loginctl subprocesses.
+            if fields[1] == str(uid) and len(fields) >= 4 and fields[3] == 'seat0':
+                ids.append(fields[0])
+            if len(ids) > 128:
+                fail('too many logind sessions')
+        for session_id in ids:
+            shown = subprocess.run(['/usr/bin/loginctl', 'show-session', session_id,
+                                    '--no-pager', '-p', 'User', '-p', 'Active', '-p',
+                                    'Remote', '-p', 'Type', '-p', 'Leader', '-p',
+                                    'Seat', '-p', 'State'], capture_output=True, text=True,
+                                   timeout=2, check=True)
+            fields = {}
+            for line in shown.stdout.splitlines():
+                if '=' not in line:
+                    fail('invalid logind session record')
+                key, value = line.split('=', 1)
+                if key in fields:
+                    fail('duplicate logind session field')
+                fields[key] = value
+            if fields.get('User') != str(uid) or fields.get('Active') != 'yes' or \
+                    fields.get('Remote') != 'no' or fields.get('Type') not in ('x11', 'wayland') or \
+                    fields.get('Seat') != 'seat0' or fields.get('State') != 'active' or \
+                    not fields.get('Leader', '').isdigit():
+                continue
+            try:
+                result.add(proc_record(int(fields['Leader']))['sid'])
+            except (OSError, ValueError, KeyError, IndexError):
+                continue
+        return result
+
+    def authenticate(self, client, expected=None):
+        pid, uid, gid = struct.unpack('3i', client.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+        if (uid, gid) != (self.uid, self.gid):
+            fail('desktop peer account mismatch')
+        record = proc_record(pid)
+        if record['exe'] != self.desktop_inode or record['status']['Uid'].split() != [str(uid)] * 4 or \
+                record['status']['Gid'].split() != [str(gid)] * 4:
+            fail('desktop peer executable or identity mismatch')
+        pin = (pid, record['start'], record['sid'], record['exe'])
+        if expected is not None and pin != expected:
+            fail('desktop peer changed during request')
+        if record['sid'] not in self.active_session_sids(uid):
+            fail('desktop peer is not in an active local graphical session')
+        return pin
+
+    def serve_client(self, client):
+        pin = self.authenticate(client)
+        request = NativeBroker.desktop_request(client, time.monotonic() + 2)
+        self.authenticate(client, pin)
+        if set(request) != {'command', 'appId', 'action'} or request.get('command') != 'invoke' or \
+                not isinstance(request.get('appId'), str) or not isinstance(request.get('action'), str):
+            fail('invalid desktop invocation request')
+        reply = self.broker.invoke(request['appId'], request['action'])
+        raw = S.encoded(reply) + b'\n'
+        if len(raw) > LIMIT:
+            fail('desktop reply exceeds limit')
+        client.sendall(raw)
+
+    def serve(self, stop=None):
+        I.secure(self.path.parent, directory=True)
+        try:
+            current = self.path.lstat()
+        except FileNotFoundError:
+            current = None
+        if current is not None:
+            if not stat.S_ISSOCK(current.st_mode) or current.st_uid != 0 or current.st_nlink != 1:
+                fail('refusing to replace untrusted desktop socket')
+            self.path.unlink()
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM | socket.SOCK_CLOEXEC)
+        bound = None
+        try:
+            listener.bind(str(self.path))
+            bound = os.lstat(self.path)
+            if not stat.S_ISSOCK(bound.st_mode) or bound.st_uid != 0:
+                fail('desktop socket ownership mismatch')
+            os.chown(self.path, 0, self.gid, follow_symlinks=False)
+            # The parent is root controlled and the bound inode was just
+            # verified, so pathname chmod cannot be redirected by the caller.
+            os.chmod(self.path, 0o660)
+            listener.listen(8)
+            listener.settimeout(0.2)
+            while stop is None or not stop.is_set():
+                try:
+                    client, _ = listener.accept()
+                except socket.timeout:
+                    continue
+                with client:
+                    client.settimeout(2)
+                    try:
+                        self.serve_client(client)
+                    except (ValueError, OSError, KeyError, RecursionError, UnicodeError,
+                            subprocess.SubprocessError):
+                        with contextlib.suppress(OSError):
+                            client.sendall(b'{"ok":false,"message":"Application launch failed"}\n')
+        finally:
+            listener.close()
+            try:
+                current = os.lstat(self.path)
+                if bound is not None and stat.S_ISSOCK(current.st_mode) and \
+                        (current.st_dev, current.st_ino) == (bound.st_dev, bound.st_ino):
+                    self.path.unlink()
+            except FileNotFoundError:
+                pass
