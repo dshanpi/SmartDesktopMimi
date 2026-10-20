@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Internal Ubuntu application data transactions sharing the installer lock",
+  "context": "Next platform prerequisite after explicit native target preflight; no exposed runtime capability",
+  "next_steps": "Authenticate real native processes and permissions, connect public SDK RPC, then install/session/data acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Root-only internal persistent storage; not authorization",
+      "invariants": "No native installer admission or production change; signed application identity pinned; all other data and trust preserved",
+      "paths": [
+        "services/mimi-ubuntu-apps/storage.py",
+        "tests/sdkbuild/test_ubuntu_storage.py",
+        "services/mimi-ubuntu-apps/README.md",
+        ".github/workflows/application-update.yml",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/change-gates/batches/20261020-ubuntuapps076-storage.json",
+        "docs/validation/ubuntuapps076-storage-20261020.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "actual filesystem and process transaction tests",
+          "status": "passed",
+          "scope": "22 tests including3process interruptions,concurrent installer exclusion,signed upgrades",
+          "evidence": "docs/validation/ubuntuapps076-storage-20261020.json"
+        },
+        {
+          "name": "authenticated capability integration",
+          "status": "not_run",
+          "scope": "native SDK RPC,permission checks,session activation and complete user data acceptance",
+          "reason": "Backend intentionally has no exposed endpoint; broker remains to implement",
+          "evidence": "docs/validation/ubuntuapps076-storage-20261020.json"
+        }
+      ]
+    }
+  ]
+}

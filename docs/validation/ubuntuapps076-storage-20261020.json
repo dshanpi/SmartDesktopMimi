@@ -1,0 +1,31 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "7847d7d3051444aaa133631c059322b321c2ab66",
+  "status": "passed_internal_storage_only",
+  "tests": 22,
+  "process_interruption_phases": [
+    "prepared",
+    "replaced",
+    "committed"
+  ],
+  "scope": "Real temporary signed installs, root filesystem transactions and concurrent processes; backend only, not capability authorization",
+  "not_run": [
+    "native SDK RPC with authenticated process",
+    "storage permission and broker integration",
+    "production session activation",
+    "complete user data across desktop upgrade/rollback",
+    "physical power loss",
+    "A133 physical acceptance"
+  ],
+  "source_files_sha256": {
+    "services/mimi-ubuntu-apps/storage.py": "1ff443cd030637cd1d5c922f0593fd017769d7ad8245a7a63d797a8f4e541b40",
+    "tests/sdkbuild/test_ubuntu_storage.py": "fbceef0480e36c8323e091ccb88f5f0e3907205e49832c0a931228b10570b6c7",
+    "services/mimi-ubuntu-apps/README.md": "0e5b4aa5ddbe89f0b5a71d88316cef115b556130ff8febe41c0a04d67f9213ad",
+    ".github/workflows/application-update.yml": "98eae03c1f672c80823166bd569e993a844767fd5b5de480c9352d3960d1986f"
+  },
+  "evidence_sha256": {
+    "storage-first.log": "acd1a4731ce7eb1561a96ce9aa7a304153e40bb20ac37adda12fa29fb5eb39ca",
+    "storage-final.log": "a983e08293a30ba96f5c3ebfa6e2374dab401ff4f00b8d04ee4fadb23ce21e00"
+  },
+  "installed_rc29_modified": false
+}

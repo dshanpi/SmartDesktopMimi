@@ -114,3 +114,37 @@ in `tools/aitapp/README.md`. It preserves schema-2 AArch64 meaning and checks re
 host symbol/library dependencies. This installer still refuses native packages:
 authenticated execution/storage broker and trusted session integration remain
 required before activation. A successful preflight does not change that policy.
+
+
+## Internal storage backend (not an exposed capability)
+
+`storage.py` is a platform-internal prerequisite with no CLI or socket listener.
+It does not authenticate callers or grant permissions. The future broker must
+verify a signed installed application, actual native process identity and
+`storage.app` permission before passing its trusted `(app_id, publisher_sha256,
+installed_digest)` tuple. Never use an identity supplied in an application RPC.
+Native installation and production session activation remain closed.
+
+`Storage(installer).operate(identity, arguments)` takes the same transaction lock
+as installation, recovers pending installs, and pins the previously admitted
+installation. Upgrading invalidates an old tuple; a new admitted tuple can read
+the preserved data. Operations are `read` (key) and `write` (key, value), with the
+public SDK result shape. Keys are JSON keys, never paths. There are at most 128
+keys, 64 KiB serialized state and 3500 bytes per JSON-encoded text value, within
+the SDK transport envelope. UTF-8 is preserved; embedded NUL, duplicate fields,
+unknown schemas, corrupt state and excessive values are rejected without
+replacing the existing state. The complete app data quota also applies while
+holding temporary replacement bytes.
+
+State is a root-only `data/storage-v1.json` beside other application data. Writes
+use exclusive private temporary files, fsync, atomic replacement and directory
+fsync. Only validated temporary names owned by this backend are cleaned. Process
+interruption produces complete old or new state; this does not establish physical
+power-loss durability on arbitrary filesystems. Other data is retained.
+
+Run `sudo python3 tests/sdkbuild/test_ubuntu_storage.py -v`. The tests use actual
+signed schema-1 installs as internal storage fixtures, without enabling a storage
+permission for those apps. They check restart/UTF-8, corruption and unsafe path
+rejection, quotas, independent apps, signed upgrades, installer recovery, real
+process interruptions and concurrent installer lock exclusion. Native SDK RPC,
+authentication, permission integration and real-user data acceptance remain open.

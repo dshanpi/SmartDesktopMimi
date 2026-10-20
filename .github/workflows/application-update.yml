@@ -39,6 +39,8 @@ jobs:
         run: sudo python3 tests/sdkbuild/test_ubuntu_native_runner.py -v
       - name: Ubuntu signed native target and ABI preflight
         run: sudo python3 tests/sdkbuild/test_ubuntu_native_admission.py -v
+      - name: Ubuntu internal storage transactions
+        run: sudo python3 tests/sdkbuild/test_ubuntu_storage.py -v
       - name: UI coverage inventory
         run: |
           python3 tools/update/ui_catalog.py
