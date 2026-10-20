@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Accept private owner-execute GDM authorization mode without group or other access",
+  "context": "First actual deployment rejected 0700 authority; safely rolled back. Only authorization-reader owner-execute allowance changes; runtime copy stays0600.",
+  "next_steps": "Build fixed native updater; backup and deploy platform components only; verify actual window health without forcing logout. Physical A133 remains deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Python bridge and Go independent session recheck",
+      "invariants": "Exact UID/local X11/scope/executable/process identity; no guessed display or caller environment; original trust/transaction/authorization guards preserved",
+      "paths": [
+        "services/mimi-ubuntu-provider/login.py",
+        "tests/sdkbuild/test_ubuntu_login.py",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/change-gates/batches/20261019-login052-gdm-private-mode.json"
+      ],
+      "checks": [
+        {
+          "name": "Original deployment",
+          "scope": "Real GDM0700 authorization",
+          "status": "failed",
+          "reason": "Strict0600 source reader rejected0700; all original deployment files restored",
+          "evidence": "output/ubuntu-login-resume-20261019/deployment-result.json"
+        },
+        {
+          "name": "Permission regression",
+          "scope": "Source read accepts0600/0700 and rejects broader/special bits; original login boundaries",
+          "status": "passed",
+          "evidence": "output/ubuntu-login-resume-20261019/python-mode-r2.log"
+        }
+      ]
+    }
+  ]
+}

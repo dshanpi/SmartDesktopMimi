@@ -27,6 +27,7 @@
 #include "src/system/backlight_control.h"
 #include "src/system/volume_control.h"
 #include "src/system/app_registry.h"
+#include "src/apps/user/user_app_config.h"
 #include "src/middleware/middleware.h"
 #include "src/apps/setting/setting_app.h"
 #include "src/apps/wifi/wifi_app.c"
@@ -61,8 +62,10 @@ static bool review_hdmi_idle;
 static int hdmi_control_connections, hdmi_mutations;
 extern lv_obj_t *hdmi_switch_obj;
 static int review_control_peer = -1;
+static char review_last_socket[108];
 int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
  (void)length;
+ if(address->sa_family == AF_UNIX)snprintf(review_last_socket,sizeof(review_last_socket),"%s",((const struct sockaddr_un *)address)->sun_path);
  if(address->sa_family == AF_UNIX && !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock"))hdmi_control_connections++;
  if (review_hdmi_idle && address->sa_family == AF_UNIX &&
      !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock")) {
@@ -920,7 +923,23 @@ int main(int argc,char**argv) {
   emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();
   if(ai.free_chat_active){assert(ai_free_chat_view_is_open());for(int frame=0;frame<12;frame++)pump();}
  }
- else if(strcmp(argv[1],"user")==0){app_user.init();}
+ else if(strcmp(argv[1],"user-catalog")==0 || strcmp(argv[1],"user-signed-catalog")==0){
+  const char *name=getenv("MIMI_REVIEW_APP_NAME"), *text=getenv("MIMI_REVIEW_APP_TEXT");
+  assert(name && text);app_user.init();pump();
+  lv_obj_t *label=find_label(lv_scr_act(),name);assert(label);
+  lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);pump();
+  assert(find_label(lv_scr_act(),text));
+  if(strcmp(argv[1],"user-signed-catalog")) {
+  label=find_label(lv_scr_act(),"Capture HDMI Snapshot");assert(label);
+  review_last_socket[0]=0;
+  lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);pump();
+  assert(!strcmp(review_last_socket,mimi_user_app_config_get()->user_apps_socket_path));
+  assert(find_label(lv_scr_act(),ui_tr(UI_STR_USER_HARDWARE_FAILED)));
+  }
+  lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
+  assert(find_label(lv_scr_act(),text));
+  puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
+ } else if(strcmp(argv[1],"user")==0){app_user.init();}
  else if(strcmp(argv[1],"hdmi")==0 || strcmp(argv[1],"hdmi-idle")==0){
   review_hdmi_idle=!strcmp(argv[1],"hdmi-idle");app_hdmi_mcp.init();
   if(!desktop_hdmi_supported()) {

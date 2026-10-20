@@ -1,0 +1,50 @@
+{
+  "requirement": "REQ-MIMI-LOGIN-052",
+  "at_utc": "2026-10-19T03:54:51.048877+00:00",
+  "source_commit": "1ac166c902b6eb5cbb4b2745b73ed39e4a52aad9",
+  "native_updater_sha256": "2cfa56b7cebb442e05cde307ddac8d9bb17eada9a9e326172360070a380c361b",
+  "login_bridge_sha256": "74fd1b831ef20ad58f03cf12bcddd36e57e55f453b9d3f59d56e486565486c29",
+  "application": "existing signed Ubuntu 1.0.8-rc.22; not rebuilt",
+  "application_package_sha256": "616065f1acfe1f75f0672e9502056de5e2b88dc5b728a81876b0242c8cc3d06e",
+  "desktop_sha256": "b84fd65f87bade14f82984444b8a5f6408f70d4f6e6e6a514d42dedf859dfe3a",
+  "authorization": "User explicitly confirmed replacement Ubuntu developer VM and local enrollment update only; prior registration backed up under root-only storage",
+  "registration": "passed current host enrollment check with original installed updater; trust unchanged; no A133 or cloud binding changed",
+  "actual_x11_launch": "passed local GDM user session; all three processes UID1000; no Xvfb or greeter substitution",
+  "health": "passed_actual_event_loop_backend_reply_provider_ping_and_contract",
+  "runtime_modes": {
+    ".": "0o755",
+    "session": "0o700",
+    "session/session.json": "0o600"
+  },
+  "regression": {
+    "python_unique_tests": 24,
+    "go_top_level_tests": 16,
+    "go_race": "passed",
+    "scope": "Affected Ubuntu display/login/session and StartSelected; counts do not certify full product"
+  },
+  "failures_preserved": [
+    "First deployment rejected private GDM Xauthority mode0700; rolled back",
+    "Second deployment rejected changed VMware enrollment; rolled back; service umask traversal defect separately fixed",
+    "Initial traceability batch omitted itself; appended correction"
+  ],
+  "not_run": [
+    "logout and relogin",
+    "upgrade followed by real graphical login",
+    "complete user data matrix",
+    "long-term stability",
+    "visual and physical interaction acceptance"
+  ],
+  "A133": "deferred/not_run by user instruction",
+  "evidence": {
+    "deployment-result.json": "06fac149ad27103d5a8a5d39c227b06f4aa8152e47e85da9af501ec00ec3564c",
+    "deployment-result-r2.json": "f3bc732397fbe7a2693a7f267cd23c8d0dd25cbd52a1c5da9058b2a08af0c2da",
+    "deployment-result-r3.json": "a42812732d356fcdeb27576ff6ce54648743a21f39add4c92fb52488d700bfe7",
+    "authorized-enrollment-result.json": "a3e43de737a4a77a77747a50062ead9a71a7ec83c4f51c785b59e32b3e69a611",
+    "actual-session-readback.json": "34e6fe606302b6a906b1f3fb9167d09f056a22f6284908fd81f3fd6810b97b17",
+    "python-final.log": "f771c0be181717d9e5136006c2a11e4b51690b7dcb2f72bc1df6beb1910f2eb0",
+    "python-runtime-r3.log": "e1cddb6bc4036f3686746e25a4b921a95caefed09f844051f5b75919a49f031f",
+    "python-session.log": "4ab7e76278fc5209013d324a72c8320652fe46e322e99a953edf9087d7c823b2",
+    "go-final.jsonl": "120dfd3c8d801d030249ad374c9d7ffc9bd0d948a1a6aaa25a14edcee2403cb2"
+  },
+  "release_qualified": false
+}

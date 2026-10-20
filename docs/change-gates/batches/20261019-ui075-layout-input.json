@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Preserve ambiguous layout inputs instead of silently rewriting them",
+  "context": "Actual data consumer audit after Ubuntu rc29 delivery",
+  "next_steps": "Complete isolated full build/GUI then bind clean source and evidence; signed installed rc29 stays unchanged",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Layout input data preservation",
+      "invariants": "Schema1 normal writes/cancel/conflict remain; no installed data, trust, provider or hardware change",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_widget_layout.c",
+        "tests/architecture/test_widget_input.py",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/validation/ui075-layout-input-20261019.json",
+        "docs/change-gates/batches/20261019-ui075-layout-input.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "native malformed input preservation",
+          "scope": "Real compiled C reader/writer",
+          "status": "passed",
+          "evidence": "docs/validation/ui075-layout-input-20261019.json"
+        },
+        {
+          "name": "full desktop and installed upgrade",
+          "scope": "New build/GUI/signature/real logout/hardware",
+          "status": "not_run",
+          "reason": "Separate next verification stage",
+          "evidence": "docs/validation/ui075-layout-input-20261019.json"
+        }
+      ]
+    }
+  ]
+}

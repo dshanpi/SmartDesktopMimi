@@ -1,0 +1,75 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "status": "source_fix_passed_live_read_only_audit_passed_product_activation_not_run",
+  "base_commit": "6e8767af prerecord",
+  "implementation": "DesktopEndpoint now authenticates via the root-owned private session profile, active local seat0 X11 logind session, exact systemd unit identity and session BindsTo/After relationship, and exact desktop service cgroup. Kernel SO_PEERCRED, root-pinned executable inode, real UID/GID, and revalidation around request read remain required.",
+  "live_read_only_audit": {
+    "status": "passed",
+    "profile_session": "2",
+    "logind": "active local seat0 X11, User=1000, Remote=no, State=active; Display reported empty",
+    "display_policy": "empty logind Display accepted only because the root-controlled profile pins :0; a reported nonempty Display must match",
+    "service": "active User/GID 1000 mimi-ubuntu-login-host.service, ControlGroup=/system.slice/mimi-ubuntu-login-host.service, BindsTo and After include session-2.scope",
+    "desktop_process": "PID 114413 was in the exact service cgroup; no IPC request was sent"
+  },
+  "tests": {
+    "status": "passed",
+    "command": "sudo -n python3 tests/sdkbuild/test_ubuntu_broker.py",
+    "result": "31 tests passed on final run r8; root py_compile passed",
+    "coverage": "real socket peer credentials and executable identity, exact cgroup membership, profile mode/identity, active local X11 and bound unit, mismatch rejection, signed SDK invocation/storage fixture, deadlines, permissions and cleanup",
+    "failure_history": [
+      "r3: one test failed because the mocked unit ControlGroup incorrectly used the test runner's cgroup",
+      "r4: same fixture assumption remained and failed",
+      "r5: passed before adapting accepted X11 Display fixture to the live blank value",
+      "r6: one unrelated socket integration test intermittently observed BrokenPipeError",
+      "r7: full suite passed 30/30; r8 adds explicit rejection for a nonempty foreign display and passed 31/31",
+      "initial non-root py_compile could not replace an existing root-owned pycache; root-owned syntax check then passed"
+    ]
+  },
+  "change_gates": "passed for f45462fa75923fb21a4bee74f72a081094387d3e; initial invalid JSON failure retained",
+  "ci": {
+    "head": "f45462fa75923fb21a4bee74f72a081094387d3e",
+    "workflows": {
+      "Change traceability coverage": "success",
+      "Application update gates": "success",
+      "Public source validation": "success"
+    },
+    "run_ids": [
+      39382700408,
+      39382700407,
+      39382700506
+    ]
+  },
+  "exact_commit_readback": {
+    "status": "passed",
+    "commit": "f45462fa75923fb21a4bee74f72a081094387d3e",
+    "files_checked": 8,
+    "method": "GitHub Contents API at exact commit SHA; all local and remote SHA256 matched"
+  },
+  "product_activation": "not_run",
+  "invariants": [
+    "Production rc29, trust keys, device enrollment and A133 remain untouched",
+    "No service/profile/socket installed, enabled or activated by this batch",
+    "No forced logout/relogin and no UI invocation",
+    "Native installer admission remains closed",
+    "The development board remains on its existing installed UI"
+  ],
+  "next": [
+    "Run traceability/source ownership/change gate checks",
+    "Commit and push source-only correction; verify CI and exact-commit readback",
+    "Keep native installer admission, production endpoint activation, real sign-in integration and full data upgrade/rollback not_run"
+  ],
+  "traceability_history": [
+    {
+      "commit": "481ef39",
+      "status": "failed",
+      "reason": "Batch JSON ended with literal backslash-n; corrected in follow-up commit",
+      "evidence": "output/ubuntu-broker-076-20261020/traceability-481ef39.log"
+    },
+    {
+      "commit": "f45462fa75923fb21a4bee74f72a081094387d3e",
+      "status": "passed",
+      "reason": "Corrected batch and validation JSON; checker passed against PR base",
+      "evidence": "output/ubuntu-broker-076-20261020/traceability-f45462f.log"
+    }
+  ]
+}

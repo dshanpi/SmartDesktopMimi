@@ -202,3 +202,12 @@ flowchart TD
 上述组件库说明和开合箭头修正已进入新的干净候选，构建来源 `918d2a7cc2a71418c99ee7c5646a90e5210ec4cd`。完整桌面/Web、三项源码CI、原可信钥签名及14项正反准入通过。新草稿https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-c271505a9e46e03a2fcf 的全部17附件已重新下载、验签并核对SHA/版本来源，rc27及所有旧附件/标签未变。包SHA256 `6b085d4479a1e17b4766efcbae34e5386eaf1a99a3dfafc136e2af4adab0c4e2`。
 
 原“最后修正尚未打包”为本次之前状态；现已打包，但仍未上机/未稳定发布/不参与自动更新。实体屏、物理触摸和最终用户视觉验收not_run；原生字体/图标/阴影不声明逐像素一致。1024×768 IPC1.2与指定系统范围保持，800×480仅主机证据。详见`docs/validation/ui075-rc28-delivery.json`；记录提交不重编。
+
+
+## 2026-10-19 数据消费者检查（实施前）
+承接LOGIN052/DEBACTIVATE030，基准1201b58206f5c29711458e3f2c6804fa32070ec6。Ubuntu扩展应用仍固定A133路径，Provider未提供媒体能力；本轮不把占位文件或仅哈希不变记作完整数据验收。先检查现有布局存储的损坏/未来格式拒绝：重复字段、嵌入NUL、非常规文件应拒绝且原文件/内存不变，不容许编辑保存丢弃未识别内容。若复现缺陷，只修复实际读取边界并回归真实C读写实现，保留失败证据。常规schema1兼容、取消/冲突/原子保存、原rc29签名与安装、Provider/登记/信任均不改；不强制注销，不操作A133。新代码的完整桌面构建/GUI/签名交付另记，不能移用rc29通过结论。原始证据output/ubuntu-data-audit-20261019。
+
+实际复现：旧实现接受重复未来schema和NUL后隐藏数据，保存后原始内容丢失；单独原始文件/日志保留。修复固定三字段计数与NUL边界、非常规输入/锁拒绝；12项实际C回归passed，原存储2项ASAN/UBSAN通过。完整桌面与GUI待后续，未改正在运行rc29。详见docs/validation/ui075-layout-input-20261019.json。
+
+### 2026-10-19 完整构建及实际GUI补验
+干净源码30ecfc2、原固定SDK完整Ubuntu desktop/Web构建80.43秒通过，28暂存文件逐哈希复核；desktop d890ec30c20edd641e9bf702bf143ccaaceb9523ee6fa71423fb62f18d412a4d。实际SDL/原Provider隔离会话：指针保存重启读回、取消不落盘、重复schema和NUL尾部保存拒绝四组passed；可见“Save failed; draft retained”，异常字节原样保留。首次构建npm不在PATH退出及BUILD-INCOMPLETE保留，修正环境后新目录重试。新测试选项--corrupt-inputs仅操作专用测试目录。没有替换已安装rc29、可信钥、登记或Provider；不是物理/真实登录/完整扩展媒体验收。证据docs/validation/ui075-layout-input-build-20261019.json。下一步签名候选及独立Ubuntu平台功能按原门禁继续，旧草稿/标签不改。

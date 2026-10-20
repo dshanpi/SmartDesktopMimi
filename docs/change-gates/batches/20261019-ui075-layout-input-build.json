@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "Actual Ubuntu layout persistence and ambiguous-data GUI rejection",
+  "context": "Verification of source30ecfc2; immutable earlier failed/not_run stages retained",
+  "next_steps": "Keep installed rc29; new signed candidate/Ubuntu platform consumer integration remain separate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UI-075",
+      "record": "docs/change-gates/REQ-MIMI-UI-075.md",
+      "scope": "Native desktop build and actual synthetic pointer consumer verification",
+      "invariants": "No installed user data, providers, keys, identity or A133 operations",
+      "paths": [
+        "tests/sdkbuild/ubuntu_persistence_smoke.py",
+        "docs/validation/ui075-layout-input-build-20261019.json",
+        "docs/change-gates/REQ-MIMI-UI-075.md",
+        "docs/change-gates/batches/20261019-ui075-layout-input-build.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "full build and GUI",
+          "scope": "Actual Ubuntu compiler/SDL/Provider in isolated Xvfb",
+          "status": "passed",
+          "evidence": "docs/validation/ui075-layout-input-build-20261019.json"
+        },
+        {
+          "name": "complete hardware/login/media/extension acceptance",
+          "scope": "Independent requirements",
+          "status": "not_run",
+          "reason": "No qualified consumers or real user relogin/new SDK",
+          "evidence": "docs/validation/ui075-layout-input-build-20261019.json"
+        }
+      ]
+    }
+  ]
+}

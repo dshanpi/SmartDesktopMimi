@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Prerecord correction to authenticate the desktop through the existing root session profile and its session-bound systemd service cgroup",
+  "context": "A read-only audit found that the running Mimi process does not share the GDM leader SID; the login bridge instead binds its systemd service to the active logind session scope.",
+  "next_steps": "Implement profile/session/unit/cgroup authentication and tests; keep endpoint uninstalled and native admission closed.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Replace the SID equality assumption with verification of root session profile, current active local X11 logind session, systemd unit binding and exact process cgroup.",
+      "invariants": "No production installation/activation, no forced logout/relogin, no app invocation, rc29 and trust unchanged, A133 deferred, native installer closed.",
+      "paths": [
+        "services/mimi-ubuntu-apps/broker.py",
+        "tests/sdkbuild/test_ubuntu_broker.py",
+        "services/mimi-ubuntu-apps/README.md",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-session-cgroup-20261020.json",
+        "docs/change-gates/batches/20261020-ubuntuapps076-session-cgroup-prerecord.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Read-only actual session/process association audit",
+          "status": "failed",
+          "scope": "Previous endpoint policy requires UI SID to equal GDM leader SID; actual desktop is launched in a separate systemd service cgroup bound to that session",
+          "reason": "The old rule would reject the real desktop and must be replaced before any profile activation",
+          "evidence": "output/ubuntu-broker-076-20261020/session-cgroup-live-audit.json"
+        },
+        {
+          "name": "Replacement policy implementation and tests",
+          "status": "not_run",
+          "scope": "Source and fixture tests for root profile, active logind session, systemd unit/cgroup linkage",
+          "reason": "Prerecord is committed before implementation",
+          "evidence": "docs/validation/ubuntuapps076-session-cgroup-20261020.json"
+        }
+      ]
+    }
+  ]
+}

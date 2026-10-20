@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Resolve blank GDM logind display from validated GNOME session process",
+  "context": "Original server restored with real X11 login; old bridge failed to select it. Product artifacts and device trust unchanged.",
+  "next_steps": "Build fixed native updater; backup and deploy platform components only; verify actual window health without forcing logout. Physical A133 remains deferred.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-LOGIN-052",
+      "record": "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+      "scope": "Python bridge and Go independent session recheck",
+      "invariants": "Exact UID/local X11/scope/executable/process identity; no guessed display or caller environment; original trust/transaction/authorization guards preserved",
+      "paths": [
+        "services/mimi-ubuntu-provider/login.py",
+        "services/mimi-update/update/ubuntu_session.go",
+        "services/mimi-update/update/ubuntu_display.go",
+        "services/mimi-update/update/ubuntu_display_test.go",
+        "tests/sdkbuild/test_ubuntu_display.py",
+        "docs/validation/login052-empty-display.json",
+        "docs/change-gates/REQ-MIMI-LOGIN-052.md",
+        "docs/CHANGE-GATES.md",
+        "CURRENT_PROGRESS.md"
+      ],
+      "checks": [
+        {
+          "name": "Host boundaries and real session discovery",
+          "scope": "23 Python and 16 Go top-level tests with race, plus actual logind/process projection",
+          "status": "passed",
+          "evidence": "docs/validation/login052-empty-display.json"
+        },
+        {
+          "name": "Deployment and actual window lifecycle",
+          "scope": "Installed Ubuntu platform and user-visible session",
+          "status": "not_run",
+          "reason": "Pending new pinned native binary and deployment verification",
+          "evidence": "docs/validation/login052-empty-display.json"
+        }
+      ]
+    }
+  ]
+}

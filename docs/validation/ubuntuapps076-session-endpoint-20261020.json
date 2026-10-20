@@ -1,0 +1,99 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "79f0d9372fef481a61461d22a724e653c43f4074",
+  "status": "passed_source_level_active_session_endpoint_only",
+  "tests": 26,
+  "production_modified": false,
+  "endpoint": {
+    "implemented": true,
+    "service_unit_installed": false,
+    "socket_activated": false,
+    "native_installer_admission": "closed",
+    "desktop_socket_path_configured": false,
+    "desktop_executable_pin_provisioned": false
+  },
+  "session_test_scope": "Actual Unix peer credentials, PID and executable inode with mocked active-seat record; logind filtering unit test",
+  "not_run": [
+    "real installed Mimi UI invocation through the endpoint",
+    "real GDM session lifecycle or logout/relogin acceptance",
+    "production service/profile deployment",
+    "native installer activation",
+    "full real user data across desktop upgrade/rollback",
+    "A133 physical acceptance"
+  ],
+  "failure_history": [
+    "session-first.log: method placement and C fixture compile defects",
+    "session-r2.log: unsupported chmod follow_symlinks and incorrect method fixture",
+    "session-final-r2.log: final 26 tests passed",
+    "Initial traceability check at a290fa68eee6f65721423f3deb3d525a4d92a8db failed because the newly added batch ended with literal backslash-n bytes; recorded in output/ubuntu-broker-076-20261020/traceability-a290fa6.log and corrected in the follow-up commit."
+  ],
+  "source_files_sha256": {
+    "services/mimi-ubuntu-apps/broker.py": "0d462534063e0e07a12507a92d7d9bbd754431385b47f493a51808e353adec4a",
+    "tests/sdkbuild/test_ubuntu_broker.py": "e6bae209d5e953db24c7d433a0cb11458e8e3330b78c61362e86a051842c99ac",
+    "services/mimi-ubuntu-apps/README.md": "c1e42d774f06e712ce721f3895aacc217c3e439eb8153ca65c8e2e799a3adf3f",
+    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md": "c56dcea11c2fdbb593086200399aba3aa8099f20150dcc65f44b75de15f4a2e8",
+    "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json": "65038d311de37ab64d98f8d1c40468bfdcf0cde28ba671a0eb97e797290c0d1c",
+    "CURRENT_PROGRESS.md": "ccbfc1843c70b36a396f794d7177c34dfac0130f0f26665c928c788f69ce4276",
+    "docs/CHANGE-GATES.md": "242d25fecfd7ba6cba4c38dc2cb41dbb2f4c305040c8880780d71b889d5f8e04"
+  },
+  "evidence_sha256": {
+    "session-first.log": "f74c9903ecf26de16f66f6771bd6b67f1a97cf0b9fd4daed0e29fe8f8bfe42c1",
+    "session-r2.log": "4745f21c8dcc0ad7107794abccdb95a70f58af8b8f011a6a146770e922d17591",
+    "session-final-r2.log": "2376162d758cdaeb6a1d32f14b6b6f9a351ae4f893c470ade7dd221617177403",
+    "session-commit-check-root.log": "1a4e0689525b8cc886d0db64d405ef5fcd3d9034aacb30a71f2c3441bbacd047",
+    "session-commit-check.log": "ef31884ee21a0ef31c2defde0df41c7c841b94636f8a04c0ff6723e9886065aa",
+    "traceability-a290fa6.log": "f15c7b1ec234eda60c850d8fd41165b5174751550205eaad6f8c2060cb92ee2b"
+  },
+  "ci": [
+    {
+      "commit": "9f2b462c54602b08d19e4e9508e9b56cd4eb6200",
+      "runs": [
+        {
+          "name": "Application update gates",
+          "run_id": 39373812996,
+          "job_id": 118467332895,
+          "conclusion": "success",
+          "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39373812996"
+        },
+        {
+          "name": "Change traceability coverage",
+          "run_id": 39373813010,
+          "job_id": 118467332940,
+          "conclusion": "success",
+          "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39373813010"
+        },
+        {
+          "name": "Public source validation",
+          "run_id": 39373813016,
+          "job_id": 118467332884,
+          "conclusion": "success",
+          "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39373813016"
+        }
+      ],
+      "status": "passed"
+    }
+  ],
+  "test_runs": [
+    {
+      "command": "sudo -n python3 tests/sdkbuild/test_ubuntu_broker.py -v",
+      "result": "26_passed",
+      "duration_seconds": 11.388,
+      "evidence": "output/ubuntu-broker-076-20261020/session-commit-check-root.log"
+    },
+    {
+      "command": "python3 tests/sdkbuild/test_ubuntu_broker.py -v",
+      "result": "26_skipped_requires_root",
+      "counted_as_pass": false,
+      "evidence": "output/ubuntu-broker-076-20261020/session-commit-check.log"
+    }
+  ],
+  "source_readback": "passed_github_contents_api_sha256_match",
+  "verified_commit": "9f2b462c54602b08d19e4e9508e9b56cd4eb6200",
+  "readback_count": 8,
+  "traceability_gate": {
+    "commit": "9f2b462c54602b08d19e4e9508e9b56cd4eb6200",
+    "status": "passed",
+    "base_commit": "d0ec6ac39d03a3024a8df9aa65d907a556621349",
+    "scope": "traceability structure and committed-file coverage only; not product acceptance"
+  }
+}

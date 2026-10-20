@@ -57,3 +57,52 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 本页为事后证据摘要；此前校验器版本误选、接续脚本变量遗漏、私钥输入框占位误报及顺序下载慢均保留原日志。修复的是本轮发布主机流程，签名产物本体未改，也没有因此重新编译。详细公开证据见 `docs/validation/pair071-delivery-snapshot.json`。
 
 开发主机接续入口 /home/ubuntu/AI-DeskTopBox/output/next-phase-20261013/progress.json。未启动新构建或硬件任务，下一步等待实际新环境/资源后完成保留的物理矩阵。
+
+2026-10-19 LOGIN052：已复现并修复GDM真实X11会话Display为空导致等待。严格从固定GNOME程序/同UID/精确scope/稳定进程身份导出唯一编号，Go启动前独立复核。23 Python及16 Go顶层race测试、当前真实会话发现/错误显示拒绝passed；尚未部署/窗口验收。证据docs/validation/login052-empty-display.json，A133与旧草稿不变。
+
+2026-10-19 LOGIN052：用户确认恢复虚拟机替代原开发机并仅授权Ubuntu本地登记更新；旧登记已单独受限备份，原可信钥不变。修复真实GDM空Display、owner-only 0700 Xauthority与服务UMask目录遍历问题。第三次部署及后续真实X11健康读回passed，supervisor/桌面/Provider均UID1000，原签名rc22载荷保持。前两次部署失败及回退保留；24项Python与16项Go race受影响检查通过。退出/再次登录、完整用户数据、升级后登录与长期稳定仍not_run；A133安装/升级/回退/断电继续deferred。 证据：docs/validation/login052-actual-x11-resume.json。
+
+2026-10-19 SDK025/DEBACTIVATE030：当前Ubuntu干净源码c84c564完整desktop/Web构建通过（672编译源、28暂存文件逐哈希复核，原SDK d92c1a17）。三分辨率窗口及未编译尺寸拒绝、5组实际进程生命周期passed；新增实际SDL指针保存/取消/重启布局消费检查passed。此为未签名原生候选，原真实登录rc22保持；不是升级/完整数据或物理验收。 证据：docs/validation/sdk025-current-ubuntu-20261019.json。
+
+2026-10-19 RELEASE072/LOGIN052：原Ubuntu rc22→rc29签名升级及同一X11会话应用重启通过；设置、信任、登记与后端不变，旧rc22保留。修复发布工具的源接口/运行目标和Ubuntu SDK来源校验，56项相关回归通过。前序失败保留；新包未远端交付，完整数据、登出登录及A133物理验收未完成。详见docs/validation/release072-ubuntu-rc29-20261019.json（公共仓库），原始output/ubuntu-upgrade-20261019。
+
+2026-10-19 DELIVERY058/DEBACTIVATE030：Ubuntu rc29受控草稿20附件完整下载/验签/哈希与deb内嵌载荷核对passed，旧发布/main不变；实际Ubuntu传输包升级/卸载/再暂存通过。GitHub附件名规范化失败已保留，追加映射/远端SHA清单解决；后续命名修复16回归通过，未重打包rc29。来源c84，评审0b73057三CI通过。见docs/delivery/20261019-ubuntu-rc29.md；完整数据、logout/relogin与A133物理未完。
+
+2026-10-19 UI075：布局异常输入丢弃数据已复现并修复，12项真实C检查及原存储2项ASAN/UBSAN通过；完整构建/GUI待续，安装rc29保持。见docs/validation/ui075-layout-input-20261019.json。扩展/媒体Ubuntu消费者未接通，不以文件哈希保留代替功能验收。
+
+2026-10-19 UI075：30ecfc2完整Ubuntu构建及布局保存/取消/损坏拒绝四组实际SDL检查passed，原rc29与设置/信任/登记健康保持。首次npm PATH构建失败保留；详见docs/validation/ui075-layout-input-build-20261019.json。扩展/媒体平台集成与真实logout/relogin继续未验收，不强制注销。
+
+2026-10-19 UBUNTUAPPS076：[扩展应用消费者](docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md)接入平台目录/socket配置；10原生配置、12实际LVGL变体和禁用端点检查passed。冻结共享代码/源锁不变；签名安装、x86准入、执行/storage及完整数据未完成。见docs/validation/ubuntuapps076-client-20261019.json。
+
+
+### 完整构建追加结果
+干净源码866f7e0fbcc87a45fbec31d263a987be42cbf704使用原Ubuntu SDK锁完成desktop/Web构建，89.24秒退出0；28个暂存文件逐项SHA256通过，编译数据库确认新增客户端读取器实际编入。桌面SHA256 e988a25c20e1e819c270097b4a7c009757e5434e8c3380c58f887d8a63bf33fb。此为未签名、未安装测试候选，未替代rc29；前一阶段not_run记录保留为历史。未来签名必须换新版本重新形成干净源码构建证据。Ubuntu真实扩展安装/运行/storage与媒体完整数据、真实重登录、A133物理验收仍未完成。详见docs/validation/ubuntuapps076-build-20261019.json。
+
+
+### 2026-10-19 UBUNTUAPPS076平台安装事务
+新增独立Ubuntu平台安装器，复用aitapp格式/验签，真实签名声明式安装及升级数据保留、初装/升级4阶段退出恢复与恢复再中断共22项主机检查通过。独立root临时目录，8次真实进程退出；测试用临时发布者钥不进入产品信任。Python3.8测试接口失败已保留。支持无权限schema1前置安装，原生架构准入、sandbox/storage、实际用户数据、平台登录接通与媒体仍未完成。未部署至生产、未修改rc29/冻结SDK/绑定，不重建未变的桌面。见docs/validation/ubuntuapps076-installer-20261019.json。
+
+追加最终结果：拒绝布尔schema后23项通过；在/run独立root目录经受控CLI实际安装已签名测试包，再由UID1000的真实LVGL读取、选择、重开页面通过（800x480截图已看）。临时测试钥和安装目录清理，无生产变动。仅增量重编译UI测试夹具，未重建未变桌面产品。完整原生运行/storage/实际数据目标继续保留。
+
+空data目录准入修复后最终24项安装/恢复回归及受控签名安装→UID1000实际LVGL链路重验通过；原23项和首次复现失败保留。完整原生runtime/storage和生产集成未完。
+
+
+2026-10-19 UBUNTUAPPS076：独立Ubuntu执行原语32项实际进程测试及父退出链复验passed；execveat绝对路径绕过已复现修复，全部失败日志保留。仅平台前置，签名native准入/storage/broker/profile未完成，安装器继续拒绝native；生产rc29/原信任/身份/A133不变。详见docs/validation/ubuntuapps076-native-runner-20261019.json。
+
+
+2026-10-19 UBUNTUAPPS076：schema3明确Ubuntu native构建/签名/真实宿主ABI预检及签名包二进制受限执行通过；23新检查+24安装回归+6语言回归passed，失败历史保留。原schema2仍AArch64；安装器尚不开放native，认证storage/broker/profile继续。详见docs/validation/ubuntuapps076-native-admission-20261019.json。
+
+2026-10-20 UBUNTUAPPS076：native提前拒绝修复后的23+24项回归通过，611f2b1三CI通过；当前修复另行远端核对。完整broker/storage/profile未接通，rc29未修改。详见docs/validation/ubuntuapps076-native-admission-20261019.json。
+
+2026-10-20 UBUNTUAPPS076内部存储：22项文件系统/进程与签名升级数据检查passed；无RPC/权限开放/生产部署。下一步认证broker与SDK实际读写。见docs/validation/ubuntuapps076-storage-20261020.json。
+
+2026-10-20 UBUNTUAPPS076内部认证链：22项签名SDK/实际进程/存储检查passed；生产安装与session入口未接通，rc29未变。见docs/validation/ubuntuapps076-broker-20261020.json，原失败保留。
+
+2026-10-20 UBUNTUAPPS076 desktop endpoint: 26 broker/native SDK/session endpoint root tests passed. Active-seat list was a fixture; production Mimi/GDM invocation and service activation not_run. Native installer and rc29 unchanged. See docs/validation/ubuntuapps076-session-endpoint-20261020.json.
+
+> 2026-10-20 UBUNTUAPPS076 session endpoint traceability follow-up: initial a290fa6 gate failed due malformed newly-added batch JSON (literal backslash-n and wrong schema shape). Failure retained in output/ubuntu-broker-076-20261020/traceability-a290fa6.log; batch corrected, root test run 26/26 passed; unprivileged invocation correctly skipped and not counted. Runtime code and production rc29 unchanged. Follow-up CI/readback pending.
+
+> 2026-10-20 UBUNTUAPPS076 desktop endpoint follow-up 9f2b462: traceability, application-update and public-source CI all passed; eight exact-commit files independently read back from GitHub with SHA256 match. Initial a290fa6 traceability failure remains retained. Endpoint remains source-only and production GDM/session/profile, native admission and full data upgrade/rollback remain not_run; rc29 and A133 unchanged. Evidence: docs/validation/ubuntuapps076-session-endpoint-20261020.json.
+
+> 2026-10-20 UBUNTUAPPS076 session policy review: read-only audit showed actual Mimi desktop SID differs from the GDM leader SID; login bridge root session profile and systemd BindsTo/cgroup bind the desktop to session 2. Current endpoint rule would reject it. Prerecorded a cgroup/session-profile validation fix. No IPC call, install, service change, forced logout or rc29 change. Evidence output/ubuntu-broker-076-20261020/session-cgroup-live-audit.json; next code/test work pending.
+\n\n2026-10-20 UBUNTUAPPS076：修复desktop endpoint的错误SID相等假设，改为root受控登录profile + active local seat0 X11 + systemd session BindsTo/After + exact cgroup，并保留SO_PEERCRED和二进制inode pin。31/31 root回归通过；只读实机进程审计确认PID 114413在登录服务精确cgroup内。logind的Display属性实际为空，profile固定为:0；规则允许空值，非空必须匹配。r3/r4夹具错误、r6一次瞬时BrokenPipe及修复过程日志保留；最终r8全过。未安装或激活端点/服务、未调用UI IPC、未改rc29或板子；真实native安装、升级/回退数据门禁与A133仍deferred/not_run。见docs/validation/ubuntuapps076-session-cgroup-20261020.json。\n

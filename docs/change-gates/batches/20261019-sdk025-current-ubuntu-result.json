@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "summary": "Current native Ubuntu build and actual consumer persistence evidence",
+  "context": "Installed rc22 predates UI075; latest source must be validated for Ubuntu independently of A133.",
+  "next_steps": "Use this exact unsigned candidate for Ubuntu-specific manifest/runtime compatibility review; choose a fresh version/sequence before signing with existing key. Do not reuse A133 rc28 target or overwrite old tags/assets. Complete actual update/data and platform extension/media gaps separately.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-025",
+      "record": "docs/change-gates/REQ-MIMI-SDK-025.md",
+      "scope": "Pinned native build plus actual isolated SDL persistence/session checks; not signed update or full data",
+      "invariants": "Keep original signed rc22/trust/enrollment/user data; no A133 operations; source receipt bound to build commit and test-only additions do not require rebuild",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-025.md",
+        "docs/validation/sdk025-current-ubuntu-20261019.json",
+        "docs/change-gates/batches/20261019-sdk025-current-ubuntu-result.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "tests/sdkbuild/ubuntu_persistence_smoke.py"
+      ],
+      "checks": [
+        {
+          "name": "Native build and actual host checks",
+          "scope": "672 compiled sources/28 files; three resolutions, lifecycle and real consumer layout save/cancel/restart",
+          "status": "passed",
+          "evidence": "docs/validation/sdk025-current-ubuntu-20261019.json"
+        },
+        {
+          "name": "Full data and new signed activation",
+          "scope": "Ubuntu media/extensions/migration and real upgrade/logout cycle",
+          "status": "not_run",
+          "reason": "Distinct consumers and platform integration required; unsigned candidate only",
+          "evidence": "docs/validation/sdk025-current-ubuntu-20261019.json"
+        }
+      ]
+    }
+  ]
+}

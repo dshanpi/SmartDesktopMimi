@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Prepare current Ubuntu candidate for actual data and UI continuation",
+  "context": "Installed Ubuntu rc22 predates current UI widgets/settings; no current Ubuntu product build or complete data migration proof. Prior data check covered only one settings file. User extension storage still uses board path and Ubuntu Provider advertises no such capability.",
+  "next_steps": "Build with unchanged pinned SDK into a new directory; inspect exact results and only then plan signing or activation.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SDK-025",
+      "record": "docs/change-gates/REQ-MIMI-SDK-025.md",
+      "scope": "Pinned existing Ubuntu SDK full current-source desktop/Web candidate, no signing/deployment or release version claim. Record actual candidate files and follow with isolated persistence/compatibility checks; actual update and full data remain distinct.",
+      "invariants": "Existing rc22 remains active; No registration/trust/data changes; A133 remains deferred; Never qualify missing media/extensions with placeholder sentinels; No concurrent builder found; new output directory only",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SDK-025.md",
+        "docs/change-gates/batches/20261019-sdk025-current-ubuntu-plan.json"
+      ],
+      "checks": [
+        {
+          "name": "Current Ubuntu candidate",
+          "scope": "Actual current source with fixed SDK, three profiles and voice compiled",
+          "status": "not_run",
+          "reason": "Pre-implementation record",
+          "evidence": "output/ubuntu-current-app-20261019/intent.json"
+        }
+      ]
+    }
+  ]
+}

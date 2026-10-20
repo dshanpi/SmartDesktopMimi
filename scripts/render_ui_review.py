@@ -59,7 +59,8 @@ def main():
              '-DCMAKE_BUILD_TYPE=Release'], log)
         run(['cmake', '--build', build / 'lvgl', '-j4'], log)
         sources = [ROOT / 'tests/architecture/fixtures/native_ui_review.c',
-                   APP / 'src/apps/setting/setting_app.c', APP / 'src/system/app_registry.c']
+                   APP / 'src/apps/setting/setting_app.c', APP / 'src/system/app_registry.c',
+                   APP / 'src/apps/user/user_app_config.c']
         sources.extend(APP / f'src/apps/{name}/{name}_app.c'
                        for name in ['bt', 'video', 'ota', 'user', 'hdmi_mcp', 'ai', 'pairing', 'iot', 'voice'])
         sources.append(APP / 'src/apps/ai/ai_free_chat_view.c')

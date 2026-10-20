@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu native execution prerequisite with first-exec mediation and real refusal tests",
+  "context": "Native ABI/runtime/storage incomplete; root platform primitive only, independent of private A133 appd",
+  "next_steps": "Complete explicit native target admission and authenticated storage broker with installer lock before production profile activation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Independent unactivated Ubuntu execution primitive",
+      "invariants": "No native installation fallback, frozen source lock or production trust/identity/rc29/A133 change",
+      "paths": [
+        "services/mimi-ubuntu-apps/native_runner.c",
+        "services/mimi-ubuntu-apps/README.md",
+        "tests/sdkbuild/fixtures/ubuntu_native_probe.c",
+        "tests/sdkbuild/test_ubuntu_native_runner.py",
+        ".github/workflows/application-update.yml",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-native-runner-20261019.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/20261019-ubuntuapps076-native-runner.json"
+      ],
+      "checks": [
+        {
+          "name": "actual native execution and restrictions",
+          "status": "passed",
+          "scope": "32 root-isolated process tests plus final parent chain; no production or hardware qualification",
+          "evidence": "docs/validation/ubuntuapps076-native-runner-20261019.json"
+        },
+        {
+          "name": "complete native extension integration",
+          "status": "not_run",
+          "scope": "Native admission,permissions/storage broker,production session and full update/rollback data",
+          "reason": "Required integration is not yet implemented",
+          "evidence": "docs/validation/ubuntuapps076-native-runner-20261019.json"
+        }
+      ]
+    }
+  ]
+}

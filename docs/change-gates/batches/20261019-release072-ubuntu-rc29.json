@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu source/runtime release scopes and actual rc29 activation",
+  "context": "Ubuntu uses schema2 SDK and common source ownership; independent build provenance must not override strictly signed runtime targets",
+  "next_steps": "Sync this reviewed gate fix and read back source; preserve signed rc29 and actual upgrade evidence. Next batch prepare Ubuntu rc29 controlled draft delivery/download verification, then complete actual consumer media/extensions and login lifecycle gaps without hardware operations.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-RELEASE-072",
+      "record": "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+      "scope": "Gate/tools/tests and original Ubuntu application upgrade only",
+      "invariants": "Existing trust, enrollment, source provenance, strict signed targets, old artifacts retained; A133 deferred",
+      "paths": [
+        "tools/update/release_gate.py",
+        "tools/update/build_provenance.py",
+        "tests/update/test_application_runtime_contract.py",
+        "tests/update/test_release_ubuntu_provenance.py",
+        "docs/change-gates/REQ-MIMI-RELEASE-072.md",
+        "docs/validation/release072-ubuntu-rc29-20261019.json",
+        "docs/change-gates/batches/20261019-release072-ubuntu-rc29.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "release and actual Ubuntu activation",
+          "scope": "56 related regressions, original signed candidate admission and actual X11 activation/restart",
+          "status": "passed",
+          "evidence": "docs/validation/release072-ubuntu-rc29-20261019.json"
+        },
+        {
+          "name": "full qualification and remote candidate delivery",
+          "scope": "media/extensions/logout/hardware/remote draft",
+          "status": "not_run",
+          "reason": "Distinct actual consumers and external acceptance remain",
+          "evidence": "docs/validation/release072-ubuntu-rc29-20261019.json"
+        }
+      ]
+    }
+  ]
+}

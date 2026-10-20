@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Ubuntu independent signed extension installation and recovery transactions",
+  "context": "Ubuntu lacks Tina jsonfilter/SDK policy integration; add independently provisioned platform installer without native compatibility fallback",
+  "next_steps": "Explicit native target admission/runtime/storage broker with transaction lock, then trusted session profile and actual signed consumer/update data matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Independent Ubuntu installer; existing schema1 no-permission packages only; full extension goal retained",
+      "invariants": "No live trust identity rc29 platform service or A133 changes; native mismatch refused; source locks unchanged",
+      "paths": [
+        "services/mimi-ubuntu-apps/installer.py",
+        "services/mimi-ubuntu-apps/README.md",
+        "tests/sdkbuild/test_ubuntu_apps_installer.py",
+        ".github/workflows/application-update.yml",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-installer-20261019.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/batches/20261019-ubuntuapps076-installer.json",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/sdkbuild/ubuntu_apps_catalog_smoke.py"
+      ],
+      "checks": [
+        {
+          "name": "root-isolated real signed install and transaction interruption",
+          "status": "passed",
+          "scope": "24tests,8process exits; root-installed signed test package consumed by actualLVGL UID1000; not physical cuts/production/native execution",
+          "evidence": "docs/validation/ubuntuapps076-installer-20261019.json"
+        },
+        {
+          "name": "full runtime and user data acceptance",
+          "status": "not_run",
+          "reason": "Native runtime/storage/media and production profile incomplete",
+          "evidence": "docs/validation/ubuntuapps076-installer-20261019.json",
+          "scope": "Native ABI admission,restricted runtime/storage,production login integration and complete data acceptance"
+        }
+      ]
+    }
+  ]
+}

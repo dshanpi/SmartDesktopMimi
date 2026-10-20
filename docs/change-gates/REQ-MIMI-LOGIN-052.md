@@ -62,3 +62,21 @@ A133 MCP可读scope，无活动hardware任务，device4保存ADBbinding仍空；
 最终桥接源码8258178（更新器仍642/d53；二进制不重编）已部署。额外日志中的暂态failed保留，不推定为永久根因。改为固定UID且seat0列表行才读取详情，SSH不查询；15Python回归passed，部署后5次/10秒真实等待与无UI/新日志无failed读回passed，仅短时范围，不当作长期稳定或图形登录。root服务继续enabled/active；签名rc22 deb保留安装。实际登录/退出/完整数据和外部ADB输入仍pending。证据deployment-result-r4.json、python-boundaries-r5.log。
 
 2026-10-15 用户答复：暂时无法进入虚拟机控制台。真实ubuntu Xorg图形登录/窗口/退出再登录验收blocked；不以greeter/Xvfb通过代替，不反复要求当前无法提供的操作。其他独立工作继续。
+
+## 2026-10-19 原服务器恢复：真实X11空Display缺陷（实施前）
+当前UID1000/seat0/user/x11已登录，logind Display为空，旧筛选实际返回None；同session scope的固定GNOME会话程序提供:0。不猜显示编号，不改GDM登录配置。实施计划和不变量见开发证据output/ubuntu-login-resume-20261019/intent.json：Python桥接与Go启动前复核均按UID、固定可信GNOME可执行路径、精确session cgroup、XDG会话身份、有限环境读取和前后进程身份导出唯一编号；空缺/冲突/变化拒绝。原验签、设备身份、Xauthority读取、事务锁、非root启动和退出绑定保持。先主机正反例和实际只读发现，再单独部署读回；真实窗口/退出/数据仍not_run。系统服务逗号属性查询实测有效，排除该怀疑，不做无依据改动。
+
+2026-10-19 LOGIN052：已复现并修复GDM真实X11会话Display为空导致等待。严格从固定GNOME程序/同UID/精确scope/稳定进程身份导出唯一编号，Go启动前独立复核。23 Python及16 Go顶层race测试、当前真实会话发现/错误显示拒绝passed；尚未部署/窗口验收。证据docs/validation/login052-empty-display.json，A133与旧草稿不变。
+
+首次追溯检查拒绝：5827cfb批次清单未覆盖新批次JSON自身，原失败保留。新增覆盖记录修正元数据覆盖，不改运行时代码、不重复已通过回归。
+
+部署r1失败已自动回退且三原文件SHA一致：GDM实际Xauthority为0700，原read_authority仅允许0600。无授权正文输出，真实窗口未启动。追加实施：仅该GDM授权读取接受0600/0700两种所有者私有模式，组/其他位、特殊位、链接、owner、大小和并发变化守卫不变；复制到受控运行目录仍固定0600。不chmod用户授权源。增加0700正例和组/其他/特殊权限负例；重新运行受影响登录检查后独立r2部署。
+
+部署r2读到私有授权但启动被原设备登记门禁拒绝，已回退三文件。旧/新更新器只读select均拒绝；实际对比仅VM enrollment_id与DMI machine证据改变，其他硬件/OS/运行库描述相同。不得自动替换登记或可信钥，等待用户确认恢复实例身份；此处不是代码允许放宽的兼容问题。另发现服务UMask0077将mkdir0755实际变成0700，阻止非root桌面访问自己的运行目录；下一步对已验证root归属且路径固定的服务父目录显式设0755，子目录/授权文件仍700/600，增加真实umask回归后保留未部署源码。
+
+## 2026-10-19 授权本地登记与第三次部署实际通过
+2026-10-19 LOGIN052：用户确认恢复虚拟机替代原开发机并仅授权Ubuntu本地登记更新；旧登记已单独受限备份，原可信钥不变。修复真实GDM空Display、owner-only 0700 Xauthority与服务UMask目录遍历问题。第三次部署及后续真实X11健康读回passed，supervisor/桌面/Provider均UID1000，原签名rc22载荷保持。前两次部署失败及回退保留；24项Python与16项Go race受影响检查通过。退出/再次登录、完整用户数据、升级后登录与长期稳定仍not_run；A133安装/升级/回退/断电继续deferred。
+
+实施前授权与范围见output/ubuntu-login-resume-20261019/authorized-enrollment-intent.json；仅替换设备登记中enrollment_id及机器证据对应项，其他描述逐项相同，未替换信任/应用/用户设置。旧登记留在开发机root-only备份，不进入公共源码。第三次部署源码1ac166c902b6eb5cbb4b2745b73ed39e4a52aad9，平台原文件备份可回退；部署后再次校验登记/信任哈希未变。真实健康覆盖桌面事件循环、后端回复、Provider ping及平台契约，不是仅PID存活。签名rc22包SHA及源码/二进制/日志绑定见docs/validation/login052-actual-x11-resume.json。
+
+下一步按用户实际操作验证退出/再登录和完整数据；不强制注销用户会话。Ubuntu新应用候选及A133新环境验收另立批次，本批不重编旧产品、不覆盖旧附件或标签。源码可按DELIVERY058受控同步，非稳定发布。

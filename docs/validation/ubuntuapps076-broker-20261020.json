@@ -1,0 +1,39 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "base_commit": "8cf55737826c7e4d7bbc05b9d82ae983ae5107f1",
+  "status": "passed_internal_authenticated_sdk_chain",
+  "tests": 22,
+  "fixture": {
+    "fixture_sha256": {
+      "signed_package": "bcc410bc46ddce8707a8c1bf338315fd5e3dd40035430d38f75b6ff2e30e47b3",
+      "native": "c68ee6e678eabe40f9ab8d65b04fbb6fcb2ce4480a3fdf656ec64ea2c00bb434",
+      "runner": "645dbcb69c3ec0eb48205ec6de84828db792e9eba5bae8bb7dffd238dedf6653",
+      "public_sdk": "00e5be0ce44e4e76e51dc3d545678f7920166241cf3f89608750274e56072f47"
+    }
+  },
+  "failure_history": [
+    "first runtime fixture placed on /run noexec; initial exec rejected. Moved fixture to separate /var/lib executable filesystem; mount policy unchanged",
+    "initial raw spoof test used literal frame length; corrected to actual string length before final run"
+  ],
+  "scope": "Real signatures, kernel peer authentication, root-controlled snapshots, restricted native execution and public SDK storage; no exposed desktop invoke endpoint",
+  "not_run": [
+    "production native installer admission",
+    "controlled complete broker deployment and trusted session authorization",
+    "full real user data across desktop update/rollback",
+    "real logout/relogin",
+    "A133 physical acceptance"
+  ],
+  "source_files_sha256": {
+    "services/mimi-ubuntu-apps/broker.py": "0a6ce07e7798b6dee45fea8f30134c699f9dd15567bce4ebbbb47120460ca269",
+    "tests/sdkbuild/test_ubuntu_broker.py": "601b6b4cb5e8e47ac58970eb7309499d26fd33b19e2ae56f2884786b5130bd51",
+    "services/mimi-ubuntu-apps/README.md": "e0093bb87b03a04aa406ac064c562083fe263d80c4110bbf84daa47f7e5a0340",
+    ".github/workflows/application-update.yml": "90ae71b6ff4844e049012e619b775eb830b50a3ba3cc4eb589c0899c9ff62ebd"
+  },
+  "evidence_sha256": {
+    "broker-execfs.log": "5f8c93b264a88c06d099643a08054522fd5cfbf2cae57579ca3fd30f9e663958",
+    "broker-first.log": "1863d65a6ae8860bf3cf613433e86caa02e202bb41307fb7979879012ccb12cc",
+    "broker-final.log": "6ec46cdb67d3ffc43bb761122d138a55361d1e76f63e24bc73d9c1ef83afde15",
+    "run-mount-options.log": "f70804d25129e57ac73f6f776e7d1e305c274bef1b1d56950bbdbb5d4d03bae7"
+  },
+  "production_modified": false
+}

@@ -1,0 +1,25 @@
+{
+  "requirement": "REQ-MIMI-UBUNTUAPPS-076",
+  "status": "passed_clean_complete_ubuntu_build",
+  "build_source": {
+    "commit": "866f7e0fbcc87a45fbec31d263a987be42cbf704",
+    "dirty": false
+  },
+  "elapsed_seconds": 89.23705516900009,
+  "sdk_lock_sha256": "d92c1a17ea83af45f3ca6f04678b6d893237d74873f8e76430dec251519d1740",
+  "staged_files_verified": 28,
+  "desktop_sha256": "e988a25c20e1e819c270097b4a7c009757e5434e8c3380c58f887d8a63bf33fb",
+  "new_reader_compiled": true,
+  "candidate_receipt_sha256": "2d9fdf00c66db8684e300363d480f028b4e68c96b83c41b10cdd54cb1939c407",
+  "build_log_sha256": "20818ec193bbd3f6ee58a9ea61f158ed3fc920f61526ebfdac566b51bc02310f",
+  "signed": false,
+  "installed": false,
+  "uploaded_product": false,
+  "version_guard": "Inherited rc29 VERSION only in unsigned test candidate; do not publish as alternative rc29. Future signing requires fresh version and clean receipt.",
+  "not_run": [
+    "Ubuntu signed extension install/native admission/runtime/storage",
+    "complete media/extensions update and rollback data matrix",
+    "real logout/relogin",
+    "A133 physical acceptance"
+  ]
+}

@@ -31,3 +31,22 @@
 ## 2026-10-15T14:14:51.573980+00:00 PAIR071新59附件完整远端复验
 
 app26/public5/private6三本地完整draft、系统34项正负例及两个源码附件passed；新59附件全部实际下载、验签/SHA/版本/源码关联passed，系统gzip/raw和下载SWU签名复验passed。source ccfe/e658/ccfe，SDK fa0d799，私有f80。原81附件/固定标签只读核对不变。前序wrong-checker/脚本变量/占位误报失败未删除；仅纠正发布主机脚本。一次受控GET接续后采用最多12并行范围，完整哈希及门禁不变。详见docs/delivery/PAIR071-SNAPSHOTS-20261015.md和docs/validation/pair071-delivery-snapshot.json。所有物理验收仍deferred/not_run；后台补丁由用户合并，未部署；不推广稳定，不将新文档提交认作二进制来源。
+
+## 2026-10-19 Ubuntu源接口与运行目标分离（修复前）
+候选c84c564编译源契约mimi-ipc-v1.2，实际Ubuntu Provider和已登记目标mimi-ipc-v1.1；完整原生候选在该Provider的5组生命周期及UI持久化已通过。发布器却在验签前强制目标IPC等于构建IPC，与MIMI-UPDATE-001第5节“构建追溯与安装兼容分别记录”冲突。
+本批仅移除application分支的这项混淆检查，源码契约/receipt/锁哈希校验及原Go签名、全目标组合匹配、每个声明目标证据覆盖全部保留；系统分支不变，不给未知接口自动别名。新增来源不变、旧运行契约明示、未声明接口拒绝回归，再用原密钥给既有未改Ubuntu候选签新rc29/sequence29，只本地验签/草稿，按原设备真实描述声明唯一Ubuntu目标。错误版本必须由原签名准入拒绝；不重登记、不假称后端升级，不上传旧标签/附件。若实际兼容或数据预检失败，停止安装保留原rc22。事前证据output/ubuntu-upgrade-20261019/intent.json。
+
+### 2026-10-19 Ubuntu SDK schema-2 接入（修复前追加）
+真实 rc29 原钥签名及错误目标拒绝后，draft 被 unknown build/SDK provenance schema 拦截。现有 Ubuntu SDK 生成器与 deb 工具已使用 schema 2；发布检查仍仅接受 schema 1。本批限定支持 Debian/Ubuntu schema 2，要求 receipt 与 SDK 的 OS/版本完全相同且每个签名目标具备对应 target-os 能力；保留所有 SDK/产物/归属哈希绑定及 schema 1 兼容。未知格式、OS 不匹配、缺少签名 OS 能力必须拒绝。保留首轮失败，复用已签名包，不改 receipt/SDK/设备登记、不重签或重建。
+
+### 2026-10-19 共享源码归属记录与运行目标（修复前追加）
+schema-2 修复后第二次 draft 因 source ownership/build provenance mismatch 拒绝。生成器 source_ownership.verify 固定接受 a133 来源归属登记，Ubuntu 与 A133 共用该清单并逐编译源检查；其 platform_id 表示迁移来源，不能重标为 Ubuntu。发布层改为复用当前固定 a133 归属注册语义，继续绑定原签名 receipt 内的精确归属 SHA，不放宽 SDK/receipt/manifest 的平台与架构一致性。增加未知归属注册及错目标拒绝测试。首轮已签名包保持，第二次失败保留，尚未安装。
+
+### 2026-10-19 Ubuntu rc29 本地签名、实际升级与重启结果
+- 沿用原钥生成 Ubuntu 1.0.8-rc.29 / sequence 29，构建源 c84c564，包 a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f；原 rc22/rc28 不覆盖。此次工具/测试/记录变更未触发重建，未重标候选来源。
+- 发布检查区分 source IPC1.2 与已签名 runtime IPC1.1；接入已存在 schema-2 Debian/Ubuntu SDK，绑定 OS/版本与签名能力。共享 a133 来源归属仅对 schema-2 Ubuntu 明确兼容，其他平台仍保留原逐平台规则；平台/架构、签名、归属/SDK/receipt 哈希绑定不变。
+- 53 release 回归（含6个实际 rc24 签名测试）和3个接口区分测试 passed。原钥8项正负验签、实际登记设备验签、真实草稿准备 passed；stable因缺验收拒绝。
+- 原 Ubuntu VM 实际 rc22→rc29 激活、X11健康及同一登录内选定应用 stop/start/健康 passed；UI075 首页截图可见，desktop UID1000。settings.json 唯一现有数据文件逐字节不变，保护的平台/信任/登记文件未变，rc22保留。此项不是登出/重新登录或物理触摸验收。
+- 失败历史保留：旧测试引用可变合同（按原归档哈希恢复独立输入）、SDK schema拒绝、归属误判、初稿过宽限定导致4回归失败（已收窄修复）、不支持的独立preflight命令（未执行安装且旧状态未变；实际安装自带preflight）。未删除失败或重签候选。
+- 用户数据/旧登记备份只在受限本地目录，不随源码或证据公开；不改A133、信任钥和云绑定。媒体/扩展实际消费者、logout/relogin、真实语音/账号/涂鸦、新SDK物理矩阵未完；rc29尚未远端交付。
+- 证据：docs/validation/release072-ubuntu-rc29-20261019.json，原始 output/ubuntu-upgrade-20261019/。下一步按DELIVERY058独立草稿同步/下载复验，再补Ubuntu消费者与登录生命周期；不宣布稳定或整体完成。

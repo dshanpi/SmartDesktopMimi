@@ -1,0 +1,67 @@
+{
+  "requirements": [
+    "REQ-MIMI-UBUNTUAPPS-076"
+  ],
+  "base_commit": "e569ba05d0aac2a5af1da6c271c043932a5ae89a",
+  "status": "passed_client_configuration_and_fixture_consumer_only",
+  "scope": "Real compiled application-side config parser and LVGL user app, dedicated declarative fixture files; middleware/service connection intercepted; no signed install/execution/storage claim",
+  "checks": {
+    "config_native_cases": 10,
+    "LVGL_render_variants": 12,
+    "resolutions": [
+      "1024x768",
+      "480x800",
+      "800x480"
+    ],
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "disabled_service_client_check": 1,
+    "catalog_select_reopen": "passed",
+    "unavailable_service_failure": "passed",
+    "visual_review_480x800": "passed text and controls visible",
+    "source_ownership": "passed original73491272 lock unchanged",
+    "contract": "passed mimi-ipc-v1.2 unchanged"
+  },
+  "source_changes": [
+    "apps/lv_port_linux/src/apps/user/user_app.c",
+    "apps/lv_port_linux/src/apps/user/user_app_config.c",
+    "apps/lv_port_linux/src/apps/user/user_app_config.h"
+  ],
+  "unchanged": [
+    "shared-frozen system/config files",
+    "source ownership hashes",
+    "installed rc29",
+    "trust/enrollment/provider",
+    "A133 and SDK"
+  ],
+  "failures_preserved": [
+    "initial shared-frozen modification refused; moved new code to application client",
+    "initial NUL/long line configuration prefix accepted; fixed bounded physical line parsing"
+  ],
+  "not_run": [
+    "complete clean desktop build for this source",
+    "Ubuntu signed extension installation",
+    "explicit native x86_64 ABI admission",
+    "sandboxed runtime and real storage broker",
+    "extensions/media complete data upgrade/rollback matrix",
+    "real user logout/relogin",
+    "A133 physical acceptance"
+  ],
+  "next_steps": "Complete Ubuntu platform-side target admission/install/runtime/storage, wire trusted session profile; test actual signed apps and consumers before claiming acceptance. Retain pending items, not just directory visibility.",
+  "evidence_sha256": {
+    "config-tests-final.log": "c912a1654f878ee88dcea1c343e0c85f1bbe6646e794ae268b9d8cd541553580",
+    "config-malformed-before.log": "7dce396765204823e748c3878c749d5b92fea6566747de16e4bf17965301b6e1",
+    "source-ownership.log": "5182edf7bc4da93d977b6f22d6ec4159c49f13d6e1aa73dd29ff7c37d1a046a5",
+    "source-ownership-final.log": "bbe7507a0c197c383609be14cfc898168c2cd186957d589266eb2270a47c4d31",
+    "contracts.log": "fa594bc3a86034a278217c1d238556f665ce5c925b8a4477ef8bddc0cb408a3c",
+    "render-owned.log": "fbd6f6e654d70c49ef65c1ff038f01b33e15338e01476e55f1ab5d2f9d844bf8",
+    "disabled-final.log": "4cf384f5d16ebb87315e038d2de06ceaf6c6a97c72383759bc0dffba9a0df39f",
+    "catalog-owned/480x800/user-catalog-zh-light.png": "8485933a7c4e14f737252859b358c7a2e55693d9d9b16f3993a1cbf147b59f66"
+  }
+}

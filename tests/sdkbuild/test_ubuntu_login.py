@@ -57,6 +57,13 @@ class LoginTests(unittest.TestCase):
             p.write_bytes(b'test-cookie-fixture')
             p.chmod(0o600)
             self.assertEqual(login.read_authority(p, os.getuid()), b'test-cookie-fixture')
+            p.chmod(0o700)
+            self.assertEqual(login.read_authority(p, os.getuid()), b'test-cookie-fixture')
+            for mode in (0o640, 0o644, 0o710, 0o701, 0o711, 0o1600, 0o4600):
+                p.chmod(mode)
+                with self.subTest(mode=oct(mode)), self.assertRaises(ValueError):
+                    login.read_authority(p, os.getuid())
+            p.chmod(0o600)
             link = Path(d) / 'alias'
             link.symlink_to(p)
             with self.assertRaises(OSError):
@@ -75,6 +82,24 @@ class LoginTests(unittest.TestCase):
             with patch.object(login.os, 'read', return_value=b'truncated'):
                 with self.assertRaises(ValueError):
                     login.read_authority(p, os.getuid())
+
+    def test_private_service_umask_keeps_user_runtime_reachable(self):
+        with tempfile.TemporaryDirectory(dir=Path.home()) as d:
+            b = login.Bridge.__new__(login.Bridge)
+            b.uid = os.getuid()
+            b.base = Path(d) / 'runtime'
+            b.session_file = b.base / 'session.json'
+            b.auth = b.base / 'display.auth'
+            b.profile = {'gid': os.getgid()}
+            old = os.umask(0o077)
+            try:
+                with patch.object(login, 'read_authority', return_value=b'fixture'), patch.object(login, 'trusted'), patch.object(login, 'atomic') as atomic, patch.object(b, 'transaction', side_effect=lambda:os.open('/dev/null',os.O_RDONLY)):
+                    b.prepare(session())
+                    self.assertEqual(b.base.stat().st_mode & 0o777, 0o755)
+                    self.assertEqual((b.base/'session').stat().st_mode & 0o777, 0o700)
+                    self.assertEqual(atomic.call_args_list[0][0][2], os.getuid())
+            finally:
+                os.umask(old)
 
     def test_no_login_never_launches(self):
         b = login.Bridge.__new__(login.Bridge)

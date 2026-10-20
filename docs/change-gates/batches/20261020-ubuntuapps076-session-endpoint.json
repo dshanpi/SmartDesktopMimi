@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "summary": "Source-level desktop invoke endpoint restricted to the pinned Mimi executable in an active local graphical session",
+  "context": "REQ-MIMI-UBUNTUAPPS-076 broker and storage prerequisites are implemented internally; this batch adds only the desktop IPC entry point and leaves product profile activation closed.",
+  "next_steps": "Verify source readback and CI for the committed branch, then separately implement a controlled opt-in platform profile and validate an installed Mimi build without opening native installation until full data/rollback acceptance.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Root-controlled UNIX desktop endpoint; authenticate kernel peer credentials, exact desktop executable inode and active local graphical session before forwarding a signed UI action to the internal broker.",
+      "invariants": "Production rc29, trust keys, device enrollment and A133 state remain untouched; native installer remains fail-closed; request identity is never accepted from client-supplied fields; no service/profile/socket configuration or production activation.",
+      "paths": [
+        "services/mimi-ubuntu-apps/broker.py",
+        "tests/sdkbuild/test_ubuntu_broker.py",
+        "services/mimi-ubuntu-apps/README.md",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-session-endpoint-20261020.json",
+        "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "root-only broker, SDK, storage and desktop endpoint regression suite",
+          "status": "passed",
+          "scope": "26 real-process tests; signed SDK native write/read, actual SO_PEERCRED and executable identity, session policy fixture, limits and cleanup",
+          "evidence": "output/ubuntu-broker-076-20261020/session-commit-check-root.log"
+        },
+        {
+          "name": "unprivileged fixture invocation",
+          "status": "not_run",
+          "scope": "All 26 root-only tests skipped under the unprivileged account; this run is not counted as validation",
+          "reason": "The fixtures require root-controlled temporary installs and socket ownership",
+          "evidence": "output/ubuntu-broker-076-20261020/session-commit-check.log"
+        },
+        {
+          "name": "production GDM desktop invocation and endpoint activation",
+          "status": "not_run",
+          "scope": "Installed Mimi binary, real GDM lifecycle, service/profile deployment and native installer activation",
+          "reason": "This source-only change does not configure or activate a service; no forced login or production deployment was performed",
+          "evidence": "docs/validation/ubuntuapps076-session-endpoint-20261020.json"
+        },
+        {
+          "name": "traceability gate for initial commit a290fa6",
+          "status": "failed",
+          "scope": "The checker rejected the newly added JSON batch because a literal backslash-n followed the JSON object",
+          "reason": "Initial batch serialization wrote the two characters \\\\ and n; preserved as a failed gate and corrected in the follow-up commit",
+          "evidence": "output/ubuntu-broker-076-20261020/traceability-a290fa6.log"
+        },
+        {
+          "name": "Corrected traceability gate and exact-commit source readback",
+          "status": "passed",
+          "scope": "Local gate passed against PR base d0ec6ac; three exact-commit CI workflows passed; eight files SHA256-read back through GitHub contents API",
+          "evidence": "docs/validation/ubuntuapps076-session-endpoint-20261020.json"
+        }
+      ]
+    }
+  ]
+}
