@@ -22,7 +22,8 @@
         "docs/validation/ubuntuapps076-native-admission-20261019.json",
         "docs/change-gates/batches/20261019-ubuntuapps076-native-admission.json",
         "CURRENT_PROGRESS.md",
-        "docs/CHANGE-GATES.md"
+        "docs/CHANGE-GATES.md",
+        "services/mimi-ubuntu-apps/installer.py"
       ],
       "checks": [
         {

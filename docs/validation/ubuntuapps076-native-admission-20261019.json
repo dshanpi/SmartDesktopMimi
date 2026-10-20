@@ -27,7 +27,8 @@
   "scope": "Real compiler/public App SDK/ephemeral RSA publisher/Ubuntu dynamic dependencies and restricted process; not production install",
   "failure_history": [
     "untrusted-path test referenced nonexistent path",
-    "boolean schema now rejected earlier by parser; old installer test exception mismatch"
+    "boolean schema now rejected earlier by parser; old installer test exception mismatch",
+    "installer imported optional native module before unsupported-profile rejection; reproduced and fixed by early schema2/3 rejection"
   ],
   "not_run": [
     "authenticated capability/storage broker",
@@ -42,9 +43,10 @@
     "tools/aitapp/README.md": "fa7f8fd8e53aa11f36de71c2df47c4bdb02eda508849021242872c23ce30aa05",
     "platform/app-sdk/manifest.schema.json": "03b9dafc2a412c7732d7648dfc1bb6a1680cbb48d52fd786a280d61c35adcc20",
     "services/mimi-ubuntu-apps/README.md": "5c9ea66f51d505a55073076a9abceb3e3b0423c4a3e66930cfe868340c6f61a9",
-    "tests/sdkbuild/test_ubuntu_native_admission.py": "8d3a3c31e6dc8e5a2147da78ee6129d87efe30f102368d650dcfc40e58c33057",
+    "tests/sdkbuild/test_ubuntu_native_admission.py": "18182f94ca2683cff362cf1960b4f091489d5b778ac92bf0bffcb17ab88a7f00",
     "tests/sdkbuild/test_ubuntu_apps_installer.py": "332597adec97955e9d1e727320aeee81a1116ae48b06b6d994080ee8769dbaf2",
-    ".github/workflows/application-update.yml": "24ca87d9ef0a5cfd8db132a727daa3349efa483be15589626be3cf3800eba729"
+    ".github/workflows/application-update.yml": "24ca87d9ef0a5cfd8db132a727daa3349efa483be15589626be3cf3800eba729",
+    "services/mimi-ubuntu-apps/installer.py": "1a2ae5d4293adc5089b701618edde3e58b2eae19bbcdf80460bb3b2f888ceb79"
   },
   "evidence_sha256": {
     "native-final.log": "efd53b5db308d7256c5b26fef92e2e40d16a3fe9f87b760ca00600ec4523b9cf",
@@ -56,6 +58,37 @@
     "elf-first.log": "87b98020a3fde100b648cdf336aab9f78faa686220c895aa259dd70acfe2d390",
     "ui-inventory.log": "a6092561389f98beb15d7cb299ebb4ad3014dc167f22dd184f4dd97098450cfa",
     "ownership.log": "bbe7507a0c197c383609be14cfc898168c2cd186957d589266eb2270a47c4d31",
-    "signed-exec-final.log": "58a54b6588cec639acf8fbc22bb4834a665e78c512101ebae581c3eb0d80d850"
-  }
+    "signed-exec-final.log": "58a54b6588cec639acf8fbc22bb4834a665e78c512101ebae581c3eb0d80d850",
+    "native-parser-before.log": "80d3f0ced12aec6d89b7f6024e0b03f15d47ee5e4bd01ca5f33daa2ecd79f07d",
+    "native-final-r2.log": "113adabadc0b067d0a1407b10029a95c2e6208993236640e229b07cd44bf9474",
+    "installer-final-r2.log": "54cac6cf43cbddad07623cf7371e366be232f04f7c3fc59005082e562d460dcb",
+    "ci-611-completed.json": "9333f6a8deaa05735726a264a8828bf16cb10dcc3972606d3db8348286bd0ede"
+  },
+  "final_fix": "23 native and24 installer cases passed after early rejection; optional native module is not loaded",
+  "prior_remote_ci": [
+    {
+      "id": 39211006818,
+      "name": "Public source validation",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "611f2b130a8e0895e190daa53420bbee575c07d0",
+      "html_url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39211006818"
+    },
+    {
+      "id": 39211006751,
+      "name": "Application update gates",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "611f2b130a8e0895e190daa53420bbee575c07d0",
+      "html_url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39211006751"
+    },
+    {
+      "id": 39211006786,
+      "name": "Change traceability coverage",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "611f2b130a8e0895e190daa53420bbee575c07d0",
+      "html_url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/39211006786"
+    }
+  ]
 }

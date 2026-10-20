@@ -185,6 +185,11 @@ class Installer:
         return hashlib.sha256(secure(path / 'SHA256SUMS').read_bytes() + secure(path / MARKER).read_bytes()).hexdigest()
 
     def verify_stage(self, stage):
+        # Do not import optional native parsers before rejecting a profile that
+        # this independently deployed installer does not support.
+        raw = self.package.read_json(stage / 'manifest.json', 'manifest.json')
+        if isinstance(raw, dict) and type(raw.get('schema')) is int and raw['schema'] in (2, 3):
+            reject('Ubuntu native target and runtime not yet admitted')
         m = self.package.load_manifest(stage)
         if type(m['schema']) is not int or m['schema'] != 1:
             reject('Ubuntu native target and runtime not yet admitted')

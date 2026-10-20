@@ -91,3 +91,5 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 
 
 2026-10-19 UBUNTUAPPS076：schema3明确Ubuntu native构建/签名/真实宿主ABI预检及签名包二进制受限执行通过；23新检查+24安装回归+6语言回归passed，失败历史保留。原schema2仍AArch64；安装器尚不开放native，认证storage/broker/profile继续。详见docs/validation/ubuntuapps076-native-admission-20261019.json。
+
+2026-10-20 UBUNTUAPPS076：native提前拒绝修复后的23+24项回归通过，611f2b1三CI通过；当前修复另行远端核对。完整broker/storage/profile未接通，rc29未修改。详见docs/validation/ubuntuapps076-native-admission-20261019.json。

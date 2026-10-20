@@ -198,7 +198,9 @@ class NativeAdmissionTests(unittest.TestCase):
     def test_installer_still_refuses_native_until_broker_integrated(self):
         spec=importlib.util.spec_from_file_location('native_installer_test',ROOT/'services/mimi-ubuntu-apps/installer.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
         apps=self.r/'apps';apps.mkdir();cfg=self.r/'config.json';cfg.write_text(json.dumps({'schema':1,'apps_root':str(apps),'trusted_keys':[str(self.base/'one.pem')]}))
-        with self.assertRaisesRegex(ValueError,'not yet admitted'):m.Installer(cfg).install(self.package)
+        installer=m.Installer(cfg)
+        with mock.patch.object(installer.package,'ubuntu_module',side_effect=AssertionError('unsupported native parser must not be loaded')):
+            with self.assertRaisesRegex(ValueError,'not yet admitted'):installer.install(self.package)
         self.assertFalse((apps/'com.mimi.native-test').exists())
 
 

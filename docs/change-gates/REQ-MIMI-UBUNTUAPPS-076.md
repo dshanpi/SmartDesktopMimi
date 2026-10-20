@@ -65,3 +65,7 @@ Ubuntu共享桌面应消费平台安装的扩展应用，签名安装/发行者�
 新增schema3明确Ubuntu/x86_64/glibc/API1/native-v1目标；原schema2继续只接受AArch64。init --native-ubuntu、compile-ubuntu、签名build及verify-ubuntu真实执行通过。ELF检查读取程序/动态表、依赖及符号版本/强未定义符号，与受控宿主loader/cache/递归库匹配；不运行候选或ldd，拒绝额外搜索路径/可执行栈等。构建receipt绑定实际源码SDK和宿主库SHA。完整ABI范围仅为文档列明的首个profile，未声明静态ELF/其他库和平台支持。
 23项新测试passed，追加实际从签名包解出二进制并核对其SHA后经受限runner执行passed；24项安装事务回归和6项语言资源回归passed。schema1签名/验证及schema2拒绝真实x86_64保留。首次测试夹具把不存在路径当不可信路径造成FileNotFoundError；布尔schema提前被共享parser拒绝导致旧测试异常类别不符，两项失败留证后修正为真实可写父目录/更早的明确拒绝。未更改签名或安装准入来绕过测试。
 安装器仍拒绝所有native和未提供权限，不宣称已完成应用安装/数据服务/更新回退验收。未重建共享桌面、未部署生产、未改rc29/身份/可信钥或A133。下一步认证broker与storage.app共享安装锁，真实签名程序通过SDK写读数据后再接通平台profile。证据docs/validation/ubuntuapps076-native-admission-20261019.json；原始output/ubuntu-native-admission-076-20261019。
+
+复核发现：Ubuntu安装器在拒绝schema3之前会调用新的可选解析模块，给尚未开放的格式增加了不必要的特权依赖；隔离测试已复现。修复前追加：在公共格式解析前明确拒绝schema2/3，保留非法schema的原拒绝。后续真正开放native时必须验证整个部署依赖的受控所有权，不可只校验入口脚本。新增失败native-parser-before.log保留。
+
+2026-10-20接续结果：提前拒绝修复后23项native及24项installer回归通过，可选native模块未被加载。611f2b1三项远端CI全部success，该CI属于修复前提交；修复后提交另行核对。原失败保留，生产/SDK/信任不变。
