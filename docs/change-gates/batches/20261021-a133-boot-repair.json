@@ -49,6 +49,19 @@
           "scope": "new system, rollback/power interruption, full data and real service matrix",
           "reason": "Still in progress; stable release blocked",
           "evidence": "docs/validation/a133-boot-repair-20261021.json"
+        },
+        {
+          "name": "Source traceability and public candidate audit",
+          "status": "passed",
+          "scope": "Committed diff coverage and already-exported public candidate inspection; no stable qualification",
+          "evidence": "docs/validation/a133-boot-repair-20261021.json"
+        },
+        {
+          "name": "Initial source-audit and soak launch invocation",
+          "status": "failed",
+          "scope": "Tool invocation failures retained",
+          "reason": "Source audit required candidate mode on exported checkout; device lacks nohup; corrected invocation and POSIX HUP trap launch verified",
+          "evidence": "docs/validation/a133-boot-repair-20261021.json"
         }
       ]
     }

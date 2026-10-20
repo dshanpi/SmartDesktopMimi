@@ -25,7 +25,7 @@
     "static_recovery_hashes": "6 of 6 matched after reboot",
     "tuya_runtime_database": "hash changed after startup; semantic data retention not accepted",
     "historical_firstboot_data_retention": "failed: UDISK/rootfs_data formatted; selective historical recovery performed",
-    "soak": "running; not accepted"
+    "soak": "r1 failed: nohup absent; r2 confirmed running at uptime1395 seconds, PID3910, soak-r2.log; not yet accepted"
   },
   "host_checks": {
     "runtime_permissions": "12 passed including real ext4 and SquashFS",
@@ -44,7 +44,9 @@
       "baseline recipe fixture omitted embedded updater; fixture corrected",
       "obsolete edition066 provider fixtures rejected; current recorded provider071 programs admitted",
       "current fixture set lacked old-lock negative input; copied original recorded lock, then passed"
-    ]
+    ],
+    "traceability": "passed",
+    "public_candidate_audit": "passed, zero findings; initial whole-source mode invocation mismatched already-exported public checkout and is retained"
   },
   "remaining": [
     "New source-bound signed system candidate with corrected runtime inputs and fresh baseline updater",
@@ -54,5 +56,6 @@
     "Complete page/function matrix, actual voice and Tuya resource control",
     "Sustained stability, cold boot and full release/remote verification"
   ],
-  "evidence": ".delivery/a133-boot-repair-20261021 and Windows work/demo-install-20261020; secrets kept outside public source"
+  "evidence": ".delivery/a133-boot-repair-20261021 and Windows work/demo-install-20261020; secrets kept outside public source",
+  "source_fix_commit": "127e37f96118eb90ed710b9d2b80c1c20cbbb3ab"
 }
