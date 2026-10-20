@@ -109,3 +109,5 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 2026-10-21 SYSTEM070/SYSTEM040/UI075：A133 已由现场修复 rc6 启动签名 rc28，真实健康提交、普通重启及首页/网络/IoT坐标回放通过。首次数据格式化失败保留；六项静态恢复状态一致，Tuya DB变化未验收。新增原始镜像非root权限门禁与基线updater防旧覆盖；41项集合+补跑双产品recipe通过。新系统构建、回退断电/完整功能/稳定性仍未完成。见 docs/validation/a133-boot-repair-20261021.json。
 
 2026-10-21 SYSTEM040：启动前持久分区保护及源绑定基线已实现，31主机检查与板端只读预检passed；保护启动、真实回退断电未验收。准备rc30应用/rc7系统新候选，不覆盖rc28/rc6。见docs/change-gates/REQ-MIMI-SYSTEM-040.md。
+
+2026-10-21 HDMI074/SYSTEM070：标准SDK overlay重放后暴露旧采集来源锁，固定到已提交的HDMI074锁；6负向检查和实际A133编译一致passed。rc7-r1来源未闭合，r2低空间、r3旧锁拒绝均保留；继续新构建。详见HDMI074追加记录。

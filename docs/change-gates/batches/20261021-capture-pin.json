@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Connect system build to already-committed HDMI074 capture lock",
+  "context": "Full SDK source audit exposed stale restored source and obsolete application entry pin",
+  "next_steps": "Complete new full system and physical qualification; keep all previous candidates/failures",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-HDMI-074",
+      "record": "docs/change-gates/REQ-MIMI-HDMI-074.md",
+      "scope": "Explicit fixed capture source reference only",
+      "invariants": "No gate bypass, hardware source duplication, continuous HDMI or stable claim",
+      "paths": [
+        "scripts/build_a133_capture.py",
+        "tests/sdk_source.py",
+        "docs/change-gates/REQ-MIMI-HDMI-074.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261021-capture-pin.json"
+      ],
+      "checks": [
+        {
+          "name": "Capture source rejection and real A133 build",
+          "status": "passed",
+          "scope": "6 host cases; 142 compile and 28 linker inputs, exact reference output",
+          "evidence": "docs/change-gates/REQ-MIMI-HDMI-074.md"
+        },
+        {
+          "name": "Whole image and physical latency",
+          "status": "not_run",
+          "scope": "New source composition",
+          "reason": "New build and physical validation pending",
+          "evidence": "docs/change-gates/REQ-MIMI-HDMI-074.md"
+        }
+      ]
+    }
+  ]
+}
