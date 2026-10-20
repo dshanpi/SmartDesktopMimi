@@ -24,25 +24,37 @@
   "failure_history": [
     "session-first.log: method placement and C fixture compile defects",
     "session-r2.log: unsupported chmod follow_symlinks and incorrect method fixture",
-    "session-final-r2.log: final 26 tests passed"
+    "session-final-r2.log: final 26 tests passed",
+    "Initial traceability check at a290fa68eee6f65721423f3deb3d525a4d92a8db failed because the newly added batch ended with literal backslash-n bytes; recorded in output/ubuntu-broker-076-20261020/traceability-a290fa6.log and corrected in the follow-up commit."
   ],
   "source_files_sha256": {
     "services/mimi-ubuntu-apps/broker.py": "0d462534063e0e07a12507a92d7d9bbd754431385b47f493a51808e353adec4a",
     "tests/sdkbuild/test_ubuntu_broker.py": "e6bae209d5e953db24c7d433a0cb11458e8e3330b78c61362e86a051842c99ac",
     "services/mimi-ubuntu-apps/README.md": "c1e42d774f06e712ce721f3895aacc217c3e439eb8153ca65c8e2e799a3adf3f",
-    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md": "9dcbba40dfedb1146194bda3d06ad2820a54104f71fe636256c4668a5fafd2f1",
-    "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json": "c401cb6bccddb7cbc57288f844c557a43eb053260d729328eb48b4e26f02c131",
-    "CURRENT_PROGRESS.md": "eea94064811285228861fcbf72fc35e5c577fe84c3ef6aae8935b711db0ec982",
-    "docs/CHANGE-GATES.md": "caa7f6a86028694aa1aa377da1f9d327ee8b07603cc849cc60bea34d834c4964"
+    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md": "a23c6883579b6566c1e63c3810490f4b922c317eff98a7ddf587920fc91ae50d",
+    "docs/change-gates/batches/20261020-ubuntuapps076-session-endpoint.json": "c940d0af497226da43056885e78e47cc67d1ddbd57cdae0fb1a1abc315010e16",
+    "CURRENT_PROGRESS.md": "c4091a846f10b231d3653ceada1f37070ac7451282e6b54ed553bb9644656190",
+    "docs/CHANGE-GATES.md": "15343f17a2f5cbd0629d38839d4ed9095b44a69e0f3def2165e11221512f6301"
   },
   "evidence_sha256": {
     "session-first.log": "f74c9903ecf26de16f66f6771bd6b67f1a97cf0b9fd4daed0e29fe8f8bfe42c1",
     "session-r2.log": "4745f21c8dcc0ad7107794abccdb95a70f58af8b8f011a6a146770e922d17591",
     "session-final-r2.log": "2376162d758cdaeb6a1d32f14b6b6f9a351ae4f893c470ade7dd221617177403",
     "session-commit-check-root.log": "1a4e0689525b8cc886d0db64d405ef5fcd3d9034aacb30a71f2c3441bbacd047",
-    "session-commit-check.log": "ef31884ee21a0ef31c2defde0df41c7c841b94636f8a04c0ff6723e9886065aa"
+    "session-commit-check.log": "ef31884ee21a0ef31c2defde0df41c7c841b94636f8a04c0ff6723e9886065aa",
+    "traceability-a290fa6.log": "f15c7b1ec234eda60c850d8fd41165b5174751550205eaad6f8c2060cb92ee2b"
   },
-  "ci": [],
+  "ci": [
+    {
+      "commit": "a290fa68eee6f65721423f3deb3d525a4d92a8db",
+      "status": "in_progress_at_followup",
+      "run_ids": [
+        39372488171,
+        39372488172,
+        39372488173
+      ]
+    }
+  ],
   "test_runs": [
     {
       "command": "sudo -n python3 tests/sdkbuild/test_ubuntu_broker.py -v",
@@ -57,5 +69,5 @@
       "evidence": "output/ubuntu-broker-076-20261020/session-commit-check.log"
     }
   ],
-  "source_readback": "pending_after_commit"
-}\n
+  "source_readback": "pending_after_traceability_correction_commit"
+}

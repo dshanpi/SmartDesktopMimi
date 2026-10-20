@@ -96,3 +96,8 @@ Ubuntu共享桌面应消费平台安装的扩展应用，签名安装/发行者�
 结果：26 项 broker/native SDK/桌面端点联合 root 测试通过，包含现有真实签名包/公共 SDK native storage write-read、同 UID 其他可执行文件拒绝、其他 runner/身份伪造拒绝、同一安装发生变化后旧数据 pin 拒绝、损坏/超长 IPC 与进程超时，以及端点 socket 资产安全。原始失败保留在 `output/ubuntu-broker-076-20261020/`。三项远端 CI 与独立源文件 readback 尚待本提交完成后复验。
 
 尚缺：以当前安装的 Mimi 桌面二进制及配置走真实活动 GDM session；受控 root profile/服务单元的来源锁/部署与进程生命周期；实际 native schema3 安装准入；完整用户 app 数据跨桌面升级/回退；物理 A133 项目继续依用户要求延期。不得把这批主机进程测试标成产品或真机验收。
+
+
+### 2026-10-20 traceability record correction
+
+Commit a290fa6 carried a malformed new JSON batch (literal backslash-n bytes after the JSON object) and its batch field names did not match the traceability schema. The initial committed-tree gate failed; the exact failure is retained at output/ubuntu-broker-076-20261020/traceability-a290fa6.log. This follow-up corrects the new batch format and marks the unprivileged all-skipped run as not_run; the 26-test root run remains separately recorded as passed. No runtime code or product state changed in this correction.

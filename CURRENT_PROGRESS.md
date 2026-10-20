@@ -99,3 +99,5 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 2026-10-20 UBUNTUAPPS076内部认证链：22项签名SDK/实际进程/存储检查passed；生产安装与session入口未接通，rc29未变。见docs/validation/ubuntuapps076-broker-20261020.json，原失败保留。
 
 2026-10-20 UBUNTUAPPS076 desktop endpoint: 26 broker/native SDK/session endpoint root tests passed. Active-seat list was a fixture; production Mimi/GDM invocation and service activation not_run. Native installer and rc29 unchanged. See docs/validation/ubuntuapps076-session-endpoint-20261020.json.
+
+> 2026-10-20 UBUNTUAPPS076 session endpoint traceability follow-up: initial a290fa6 gate failed due malformed newly-added batch JSON (literal backslash-n and wrong schema shape). Failure retained in output/ubuntu-broker-076-20261020/traceability-a290fa6.log; batch corrected, root test run 26/26 passed; unprivileged invocation correctly skipped and not counted. Runtime code and production rc29 unchanged. Follow-up CI/readback pending.
