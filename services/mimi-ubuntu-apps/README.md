@@ -157,9 +157,14 @@ authentication, permission integration and real-user data acceptance remain open
 trusted-platform API. `DesktopEndpoint` adds a root-owned Unix socket handler for
 the existing desktop `invoke` JSON request shape. It accepts only the pinned,
 root-owned desktop executable, checks kernel peer credentials and confirms that
-the peer belongs to an active local graphical logind seat before and after
-reading a bounded request. It permits only a signed UI action and lets the broker
-check the package publisher, target, permission and payload again.
+the peer belongs to the exact service cgroup whose systemd unit is bound to the
+active local graphical logind session before and after reading a bounded request.
+The root-only session profile pins the user, unit, display and session identity;
+the endpoint verifies the active local seat0 X11 session and exact unit
+BindsTo/After relationship. Logind may report an empty X11 Display property;
+an empty value is accepted, while a nonempty value must match the pinned display.
+It permits only a signed UI action and lets the broker check the package
+publisher, target, permission and payload again.
 
 This endpoint is source-level integration only. There is no production service
 unit, root configuration, socket path activation, package profile wiring or
@@ -205,8 +210,10 @@ public-SDK application under temporary root-controlled fixtures, exercises actua
 SDK write/read across invocations and kernel peer authentication, and tests
 revocation after a signed fixture version change, denied permissions, malformed
 frames, floods, deadlines and cleanup. These fixtures deliberately do not bypass
-production installer policy. The session endpoint tests use the real kernel
-credentials and process executable identity with a mocked active-seat result;
-they do not prove the installed Mimi binary/profile is connected to a live GDM
-session. Complete native installation/profile deployment and full real-user
-upgrade/rollback data acceptance remain required before product activation.
+production installer policy. The endpoint tests use real kernel credentials and process executable identity
+with mocked session/unit properties. A separate read-only live audit verified
+the current root-owned session profile, active X11 seat, exact service cgroup,
+and the real desktop process membership. This audit did not invoke the endpoint,
+install files, alter services, or prove the product binary/profile wiring.
+Complete native installation/profile deployment and full real-user upgrade /
+rollback data acceptance remain required before product activation.

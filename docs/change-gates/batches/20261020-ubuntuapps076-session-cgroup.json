@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "summary": "Correct the desktop endpoint session association to match the existing session-bound login bridge",
+  "context": "A read-only audit showed that Mimi's desktop process has a separate SID from the GDM leader, but runs in the exact systemd cgroup bound to the active logind session. The root-only session profile pins session 2 and display :0; logind reports a blank Display field for this active X11 session.",
+  "next_steps": "Verify traceability, source ownership, and CI; exact-commit readback. Keep native admission and production service/profile activation closed until the remaining user-data, upgrade and rollback gates are met.",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-UBUNTUAPPS-076",
+      "record": "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+      "scope": "Replace the invalid GDM-leader SID equality rule with root-controlled current session profile, active local X11 seat, session-bound systemd unit, and exact process cgroup validation while retaining kernel peer credentials and executable inode pinning.",
+      "invariants": "Production rc29, trusted keys, device enrollment, A133 and installed UI remain unchanged; no service/profile activation, forced logout, or UI IPC call; native installer remains fail-closed.",
+      "paths": [
+        "services/mimi-ubuntu-apps/broker.py",
+        "tests/sdkbuild/test_ubuntu_broker.py",
+        "services/mimi-ubuntu-apps/README.md",
+        "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
+        "docs/validation/ubuntuapps076-session-cgroup-20261020.json",
+        "docs/change-gates/batches/20261020-ubuntuapps076-session-cgroup.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Root broker/session regression suite and syntax check",
+          "status": "passed",
+          "scope": "31 root tests passed; includes actual peer credentials/executable identity, exact cgroup membership, session binding, blank-display acceptance and foreign-display rejection",
+          "evidence": "output/ubuntu-broker-076-20261020/session-cgroup-fix-r8.log"
+        },
+        {
+          "name": "Live current logind/profile/systemd/cgroup observation",
+          "status": "passed",
+          "scope": "Read-only session 2 profile, active local seat0 X11 session, service binding and PID 114413 exact cgroup membership; no endpoint invocation",
+          "evidence": "docs/validation/ubuntuapps076-session-cgroup-20261020.json"
+        },
+        {
+          "name": "Earlier implementation runs",
+          "status": "failed",
+          "scope": "r3/r4 exposed a test fixture using the test runner cgroup; r6 had a transient unrelated BrokenPipeError after fixture correction; final r7 passed",
+          "reason": "Failures are retained to show fixture assumptions and a nonreproducible socket race; final complete suite was rerun successfully",
+          "evidence": "output/ubuntu-broker-076-20261020/session-cgroup-fix-r3.log; output/ubuntu-broker-076-20261020/session-cgroup-fix-r4.log; output/ubuntu-broker-076-20261020/session-cgroup-fix-r5.log; output/ubuntu-broker-076-20261020/session-cgroup-fix-r6.log; output/ubuntu-broker-076-20261020/session-cgroup-fix-r7.log"
+        },
+        {
+          "name": "Product endpoint activation, real UI invocation, full install/data upgrade and rollback",
+          "status": "not_run",
+          "scope": "The endpoint remains source-only; native admission closed; no service/profile, board or production installation",
+          "reason": "Full signed native install, user-data upgrade/rollback and live product profile gates remain incomplete; A133 hardware acceptance stays deferred",
+          "evidence": "docs/validation/ubuntuapps076-session-cgroup-20261020.json"
+        }
+      ]
+    }
+  ]
+}\n

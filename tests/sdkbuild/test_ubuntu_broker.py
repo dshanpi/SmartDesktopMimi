@@ -312,6 +312,22 @@ class DesktopEndpointTests(unittest.TestCase):
         self.runtime = tempfile.TemporaryDirectory(prefix='mimi-session-run-', dir='/var/lib')
         self.root = Path(self.runtime.name); self.root.chmod(0o755)
         self.socket_path = self.root / 'apps.sock'
+        self.profile_path = self.root / 'session.json'
+        self.profile = {
+            'schema_version': 1, 'uid': 1000, 'gid': 1000,
+            'unit': 'mimi-ubuntu-login-host.service', 'script': '/usr/lib/mimi/run.py',
+            'script_sha256': 'a' * 64, 'provider': '/usr/lib/mimi/provider',
+            'provider_sha256': 'b' * 64, 'runtime': '/run/mimi/session',
+            'settings': '/var/lib/mimi/settings.json', 'screen': '1920x1080',
+            'display': ':0', 'xauthority': '/run/mimi/display.auth',
+            'login_session': '2'
+        }
+        self.profile_path.write_text(json.dumps(self.profile)); self.profile_path.chmod(0o600)
+        self.test_cgroup = next(
+            parts[2] for line in B.proc_record(os.getpid())['cgroups'].splitlines()
+            if len(parts := line.split(':', 2)) == 3 and
+            (parts[0] == '0' or parts[1] == 'name=systemd')
+        )
 
         class FakeBroker:
             def invoke(inner, app_id, action):
@@ -319,8 +335,13 @@ class DesktopEndpointTests(unittest.TestCase):
                     raise ValueError('unknown signed action')
                 return {'ok': True, 'message': 'launched'}
 
-        self.endpoint = B.DesktopEndpoint(FakeBroker(), self.socket_path, self.helper, 1000, 1000)
-        self.endpoint.active_session_sids = lambda uid: {os.getsid(0)} if uid == 1000 else set()
+        self.endpoint = B.DesktopEndpoint(FakeBroker(), self.socket_path, self.helper,
+                                          self.profile_path, 1000, 1000)
+        # The test process and its real C client share a kernel cgroup. Session
+        # discovery itself is exercised independently against explicit records.
+        self.endpoint.session_context = lambda: {
+            'profile': self.profile, 'control_group': self.test_cgroup
+        }
 
     def tearDown(self):
         self.runtime.cleanup()
@@ -338,7 +359,7 @@ class DesktopEndpointTests(unittest.TestCase):
         self.assertTrue(self.socket_path.exists())
         return stop, thread
 
-    def test_root_endpoint_accepts_only_pinned_binary_in_mocked_active_seat(self):
+    def test_root_endpoint_accepts_pinned_binary_in_service_cgroup(self):
         stop, thread = self.start_server()
         try:
             p = subprocess.run([str(self.helper), str(self.socket_path)], preexec_fn=self.drop_to_desktop,
@@ -349,14 +370,67 @@ class DesktopEndpointTests(unittest.TestCase):
             stop.set(); thread.join(3); self.assertFalse(thread.is_alive())
         self.assertFalse(self.socket_path.exists())
 
-    def test_active_session_policy_requires_local_active_graphical_seat(self):
-        del self.endpoint.active_session_sids
-        listed = mock.Mock(returncode=0, stdout='2 1000 user seat0\n3 1000 user -\n', stderr='')
-        active = mock.Mock(returncode=0, stdout='User=1000\nActive=yes\nRemote=no\nType=x11\nLeader=20\nSeat=seat0\nState=active\n', stderr='')
-        inactive = mock.Mock(returncode=0, stdout='User=1000\nActive=no\nRemote=no\nType=x11\nLeader=21\nSeat=seat0\nState=online\n', stderr='')
-        with mock.patch.object(B.subprocess, 'run', side_effect=[listed, active, inactive]), \
-             mock.patch.object(B, 'proc_record', side_effect=[{'sid': 19}]):
-            self.assertEqual(self.endpoint.active_session_sids(1000), {19})
+    def test_session_context_requires_active_local_session_and_bound_unit(self):
+        del self.endpoint.session_context
+        session = mock.Mock(returncode=0, stdout=(
+            'User=1000\nActive=yes\nRemote=no\nType=x11\nSeat=seat0\nState=active\n'
+            'Scope=session-2.scope\nDisplay=\nService=gdm-password\nClass=user\n'), stderr='')
+        unit = mock.Mock(returncode=0, stdout=(
+            'ActiveState=active\nUser=1000\nGroup=1000\nControlGroup=/system.slice/mimi-ubuntu-login-host.service'
+            '\nBindsTo=system.slice session-2.scope\nAfter=basic.target session-2.scope\n'), stderr='')
+        with mock.patch.object(B.subprocess, 'run', side_effect=[session, unit]) as run:
+            result = self.endpoint.session_context()
+        self.assertEqual(result['profile']['login_session'], '2')
+        self.assertEqual(result['control_group'], '/system.slice/mimi-ubuntu-login-host.service')
+        self.assertEqual(run.call_count, 2)
+
+    def test_session_context_rejects_service_bound_to_another_session(self):
+        del self.endpoint.session_context
+        session = mock.Mock(returncode=0, stdout=(
+            'User=1000\nActive=yes\nRemote=no\nType=x11\nSeat=seat0\nState=active\n'
+            'Scope=session-2.scope\nDisplay=:0\nService=gdm-password\nClass=user\n'), stderr='')
+        unit = mock.Mock(returncode=0, stdout=(
+            'ActiveState=active\nUser=1000\nGroup=1000\nControlGroup=/system.slice/mimi-ubuntu-login-host.service'
+            '\nBindsTo=session-3.scope\nAfter=session-2.scope\n'), stderr='')
+        with mock.patch.object(B.subprocess, 'run', side_effect=[session, unit]):
+            with self.assertRaisesRegex(ValueError, 'bound to the active login session'):
+                self.endpoint.session_context()
+
+    def test_inactive_or_remote_session_is_rejected(self):
+        del self.endpoint.session_context
+        session = mock.Mock(returncode=0, stdout=(
+            'User=1000\nActive=yes\nRemote=yes\nType=x11\nSeat=seat0\nState=active\n'
+            'Scope=session-2.scope\nDisplay=:0\nService=gdm-password\nClass=user\n'), stderr='')
+        with mock.patch.object(B.subprocess, 'run', return_value=session):
+            with self.assertRaisesRegex(ValueError, 'active enrolled local X11 session'):
+                self.endpoint.session_context()
+
+    def test_nonempty_foreign_display_is_rejected(self):
+        del self.endpoint.session_context
+        session = mock.Mock(returncode=0, stdout=(
+            'User=1000\\nActive=yes\\nRemote=no\\nType=x11\\nSeat=seat0\\nState=active\\n'
+            'Scope=session-2.scope\\nDisplay=:1\\nService=gdm-password\\nClass=user\\n'), stderr='')
+        with mock.patch.object(B.subprocess, 'run', return_value=session):
+            with self.assertRaisesRegex(ValueError, 'active enrolled local X11 session'):
+                self.endpoint.session_context()
+
+    def test_session_profile_requires_root_private_mode_and_fixed_identity(self):
+        self.profile_path.chmod(0o644)
+        with self.assertRaisesRegex(ValueError, 'unsafe login session profile mode'):
+            self.endpoint.read_session_profile()
+        self.profile_path.chmod(0o600)
+        self.profile['uid'] = 1001
+        self.profile_path.write_text(json.dumps(self.profile)); self.profile_path.chmod(0o600)
+        with self.assertRaisesRegex(ValueError, 'profile identity mismatch'):
+            self.endpoint.read_session_profile()
+
+    def test_cgroup_membership_is_exact_not_prefix(self):
+        good = {'cgroups': '0::/system.slice/mimi-ubuntu-login-host.service\n'}
+        child = {'cgroups': '0::/system.slice/mimi-ubuntu-login-host.service/child\n'}
+        other = {'cgroups': '0::/system.slice/other.service\n'}
+        self.assertTrue(self.endpoint.cgroup_contains(good, '/system.slice/mimi-ubuntu-login-host.service'))
+        self.assertFalse(self.endpoint.cgroup_contains(child, '/system.slice/mimi-ubuntu-login-host.service'))
+        self.assertFalse(self.endpoint.cgroup_contains(other, '/system.slice/mimi-ubuntu-login-host.service'))
 
     def test_different_same_uid_executable_is_rejected(self):
         peer = subprocess.Popen(['/usr/bin/sleep', '2'], preexec_fn=self.drop_to_desktop)

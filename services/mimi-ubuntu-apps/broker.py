@@ -9,6 +9,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import selectors
 import shutil
@@ -65,7 +66,7 @@ def proc_record(pid):
         status = dict(line.split(':', 1) for line in read('status').splitlines() if ':' in line)
         exe = os.stat('exe', dir_fd=fd)
         return {'parent': int(fields[1]), 'sid': int(fields[3]), 'start': int(fields[19]),
-                'exe': (exe.st_dev, exe.st_ino), 'status': status}
+                'exe': (exe.st_dev, exe.st_ino), 'status': status, 'cgroups': read('cgroup')}
     finally:
         os.close(fd)
 
@@ -322,13 +323,20 @@ class NativeBroker:
                     process.stdout.close()
 
 class DesktopEndpoint:
-    """Root Unix socket that accepts only the pinned desktop in an active seat.
+    """Root UNIX endpoint bound to the active login-bridge session profile.
 
-    The socket and root configuration are not installed by this change. An
-    operator must provision a root-owned, non-writable desktop executable pin
-    before enabling it in a future platform profile.
+    The existing login bridge starts the desktop in a systemd service bound to
+    the logind session scope. Its process SID therefore need not equal the
+    GDM session leader SID; authentication checks the root profile, active
+    session, unit binding, cgroup and pinned executable instead.
     """
-    def __init__(self, broker, socket_path, desktop_binary, uid, gid):
+    PROFILE_FIELDS = {
+        'schema_version', 'uid', 'gid', 'unit', 'script', 'script_sha256',
+        'provider', 'provider_sha256', 'runtime', 'settings', 'screen',
+        'display', 'xauthority', 'login_session'
+    }
+
+    def __init__(self, broker, socket_path, desktop_binary, session_profile, uid, gid):
         if os.getuid() != 0 or os.geteuid() != 0:
             fail('root desktop endpoint required')
         self.broker = broker
@@ -339,6 +347,10 @@ class DesktopEndpoint:
         if len(os.fsencode(self.path)) >= 108:
             fail('desktop socket path too long')
         self.uid, self.gid = uid, gid
+        self.session_profile = Path(session_profile)
+        if not self.session_profile.is_absolute() or len(str(self.session_profile).encode()) > 4096:
+            fail('invalid session profile path')
+        I.secure(self.session_profile.parent, directory=True)
         self.binary = I.secure(desktop_binary)
         s = self.binary.stat()
         if s.st_uid != 0 or s.st_mode & 0o022 or not stat.S_ISREG(s.st_mode) or not s.st_mode & 0o111:
@@ -347,62 +359,94 @@ class DesktopEndpoint:
         if not parent.is_dir():
             fail('invalid socket parent')
 
+    def read_session_profile(self):
+        path = I.secure(self.session_profile)
+        s = path.stat()
+        if stat.S_IMODE(s.st_mode) != 0o600:
+            fail('unsafe login session profile mode')
+        profile = I.load_json(path)
+        if not isinstance(profile, dict) or set(profile) != self.PROFILE_FIELDS or \
+                type(profile.get('schema_version')) is not int or profile['schema_version'] != 1 or \
+                type(profile.get('uid')) is not int or profile['uid'] != self.uid or \
+                type(profile.get('gid')) is not int or profile['gid'] != self.gid:
+            fail('login session profile identity mismatch')
+        if not isinstance(profile.get('unit'), str) or not re.fullmatch(r'mimi-ubuntu-[a-z0-9-]{1,32}\.service', profile['unit']) or \
+                not isinstance(profile.get('login_session'), str) or not re.fullmatch(r'[0-9]{1,32}', profile['login_session']) or \
+                not isinstance(profile.get('display'), str) or not re.fullmatch(r':[0-9]{1,5}(?:\.[0-9])?', profile['display']):
+            fail('invalid login session profile')
+        return profile
+
     @staticmethod
-    def active_session_sids(uid):
-        """Return kernel session IDs for active, local graphical logind seats."""
-        listed = subprocess.run(['/usr/bin/loginctl', 'list-sessions', '--no-legend', '--no-pager'],
-                                capture_output=True, text=True, timeout=2, check=True)
-        result = set()
-        ids = []
-        for line in listed.stdout.splitlines():
-            fields = line.split()
-            if len(fields) < 3 or not fields[0].isdigit() or not fields[1].isdigit():
-                fail('invalid logind session list')
-            # Only query logind records for this account on the local seat;
-            # an unprivileged user cannot make remote/SSH sessions cause a
-            # serial storm of root loginctl subprocesses.
-            if fields[1] == str(uid) and len(fields) >= 4 and fields[3] == 'seat0':
-                ids.append(fields[0])
-            if len(ids) > 128:
-                fail('too many logind sessions')
-        for session_id in ids:
-            shown = subprocess.run(['/usr/bin/loginctl', 'show-session', session_id,
-                                    '--no-pager', '-p', 'User', '-p', 'Active', '-p',
-                                    'Remote', '-p', 'Type', '-p', 'Leader', '-p',
-                                    'Seat', '-p', 'State'], capture_output=True, text=True,
-                                   timeout=2, check=True)
-            fields = {}
-            for line in shown.stdout.splitlines():
-                if '=' not in line:
-                    fail('invalid logind session record')
-                key, value = line.split('=', 1)
-                if key in fields:
-                    fail('duplicate logind session field')
-                fields[key] = value
-            if fields.get('User') != str(uid) or fields.get('Active') != 'yes' or \
-                    fields.get('Remote') != 'no' or fields.get('Type') not in ('x11', 'wayland') or \
-                    fields.get('Seat') != 'seat0' or fields.get('State') != 'active' or \
-                    not fields.get('Leader', '').isdigit():
-                continue
-            try:
-                result.add(proc_record(int(fields['Leader']))['sid'])
-            except (OSError, ValueError, KeyError, IndexError):
-                continue
-        return result
+    def properties(raw, description):
+        fields = {}
+        for line in raw.splitlines():
+            if '=' not in line:
+                fail('invalid ' + description)
+            key, value = line.split('=', 1)
+            if key in fields:
+                fail('duplicate ' + description + ' property')
+            fields[key] = value
+        return fields
+
+    @staticmethod
+    def cgroup_contains(record, expected):
+        for line in record.get('cgroups', '').splitlines():
+            parts = line.split(':', 2)
+            if len(parts) == 3 and parts[2] == expected and (parts[0] == '0' or parts[1] == 'name=systemd'):
+                return True
+        return False
+
+    def session_context(self):
+        profile = self.read_session_profile()
+        session_id = profile['login_session']
+        session = subprocess.run(
+            ['/usr/bin/loginctl', 'show-session', session_id, '--no-pager',
+             '-p', 'User', '-p', 'Active', '-p', 'Remote', '-p', 'Type',
+             '-p', 'Seat', '-p', 'State', '-p', 'Scope', '-p', 'Display',
+             '-p', 'Service', '-p', 'Class'],
+            capture_output=True, text=True, timeout=2, check=True)
+        fields = self.properties(session.stdout, 'logind session')
+        if fields != {
+                'User': str(self.uid), 'Active': 'yes', 'Remote': 'no',
+                'Type': 'x11', 'Seat': 'seat0', 'State': 'active',
+                'Scope': 'session-' + session_id + '.scope',
+                'Display': fields.get('Display'), 'Service': fields.get('Service'),
+                'Class': 'user'} or fields.get('Display') not in ('', profile['display']) or \
+                fields.get('Service') not in ('gdm-password', 'gdm-autologin'):
+            fail('desktop session is not the active enrolled local X11 session')
+
+        unit = subprocess.run(
+            ['/usr/bin/systemctl', 'show', profile['unit'], '--no-pager',
+             '-p', 'ActiveState', '-p', 'User', '-p', 'Group',
+             '-p', 'ControlGroup', '-p', 'BindsTo', '-p', 'After'],
+            capture_output=True, text=True, timeout=2, check=True)
+        state = self.properties(unit.stdout, 'desktop service')
+        control_group = '/system.slice/' + profile['unit']
+        scope = 'session-' + session_id + '.scope'
+        if set(state) != {'ActiveState', 'User', 'Group', 'ControlGroup', 'BindsTo', 'After'} or \
+                state['ActiveState'] != 'active' or state['User'] != str(self.uid) or \
+                state['Group'] != str(self.gid) or state['ControlGroup'] != control_group or \
+                scope not in state['BindsTo'].split() or scope not in state['After'].split():
+            fail('desktop service is not bound to the active login session')
+        return {'profile': profile, 'control_group': control_group}
 
     def authenticate(self, client, expected=None):
         pid, uid, gid = struct.unpack('3i', client.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
         if (uid, gid) != (self.uid, self.gid):
             fail('desktop peer account mismatch')
         record = proc_record(pid)
-        if record['exe'] != self.desktop_inode or record['status']['Uid'].split() != [str(uid)] * 4 or \
-                record['status']['Gid'].split() != [str(gid)] * 4:
+        status = record['status']
+        if record['exe'] != self.desktop_inode or status['Uid'].split() != [str(uid)] * 4 or \
+                status['Gid'].split() != [str(gid)] * 4:
             fail('desktop peer executable or identity mismatch')
-        pin = (pid, record['start'], record['sid'], record['exe'])
+        context = self.session_context()
+        profile = context['profile']
+        if not self.cgroup_contains(record, context['control_group']):
+            fail('desktop peer is outside the bound application service')
+        pin = (pid, record['start'], record['sid'], record['exe'],
+               profile['login_session'], profile['unit'], context['control_group'])
         if expected is not None and pin != expected:
-            fail('desktop peer changed during request')
-        if record['sid'] not in self.active_session_sids(uid):
-            fail('desktop peer is not in an active local graphical session')
+            fail('desktop peer or login session changed during request')
         return pin
 
     def serve_client(self, client):
@@ -436,8 +480,6 @@ class DesktopEndpoint:
             if not stat.S_ISSOCK(bound.st_mode) or bound.st_uid != 0:
                 fail('desktop socket ownership mismatch')
             os.chown(self.path, 0, self.gid, follow_symlinks=False)
-            # The parent is root controlled and the bound inode was just
-            # verified, so pathname chmod cannot be redirected by the caller.
             os.chmod(self.path, 0o660)
             listener.listen(8)
             listener.settimeout(0.2)

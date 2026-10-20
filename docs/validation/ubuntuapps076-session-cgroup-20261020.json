@@ -1,32 +1,44 @@
 {
   "requirement": "REQ-MIMI-UBUNTUAPPS-076",
-  "status": "prerecord_before_session_policy_change",
-  "base_commit": "f53b74b23d8e80f79b79109b86535f66b9f3dd2a",
-  "scope": "Replace desktop process SID equality with a root-controlled session-profile, active logind session, and systemd unit/cgroup binding check that matches the existing login bridge.",
+  "status": "source_fix_passed_live_read_only_audit_passed_product_activation_not_run",
+  "base_commit": "6e8767af prerecord",
+  "implementation": "DesktopEndpoint now authenticates via the root-owned private session profile, active local seat0 X11 logind session, exact systemd unit identity and session BindsTo/After relationship, and exact desktop service cgroup. Kernel SO_PEERCRED, root-pinned executable inode, real UID/GID, and revalidation around request read remain required.",
+  "live_read_only_audit": {
+    "status": "passed",
+    "profile_session": "2",
+    "logind": "active local seat0 X11, User=1000, Remote=no, State=active; Display reported empty",
+    "display_policy": "empty logind Display accepted only because the root-controlled profile pins :0; a reported nonempty Display must match",
+    "service": "active User/GID 1000 mimi-ubuntu-login-host.service, ControlGroup=/system.slice/mimi-ubuntu-login-host.service, BindsTo and After include session-2.scope",
+    "desktop_process": "PID 114413 was in the exact service cgroup; no IPC request was sent"
+  },
+  "tests": {
+    "status": "passed",
+    "command": "sudo -n python3 tests/sdkbuild/test_ubuntu_broker.py",
+    "result": "31 tests passed on final run r8; root py_compile passed",
+    "coverage": "real socket peer credentials and executable identity, exact cgroup membership, profile mode/identity, active local X11 and bound unit, mismatch rejection, signed SDK invocation/storage fixture, deadlines, permissions and cleanup",
+    "failure_history": [
+      "r3: one test failed because the mocked unit ControlGroup incorrectly used the test runner's cgroup",
+      "r4: same fixture assumption remained and failed",
+      "r5: passed before adapting accepted X11 Display fixture to the live blank value",
+      "r6: one unrelated socket integration test intermittently observed BrokenPipeError",
+      "r7: full suite passed 30/30; r8 adds explicit rejection for a nonempty foreign display and passed 31/31",
+      "initial non-root py_compile could not replace an existing root-owned pycache; root-owned syntax check then passed"
+    ]
+  },
+  "change_gates": "pending",
+  "ci": "pending",
+  "exact_commit_readback": "pending",
+  "product_activation": "not_run",
   "invariants": [
-    "Do not alter production rc29, trusted keys, enrollment or A133",
-    "Do not install or enable a service/profile in this batch",
-    "No forced logout/relogin and no app invocation from the existing UI",
-    "Use kernel peer credentials and the exact root-pinned desktop executable",
-    "Only accept a root-owned current session profile whose login_session is active local seat0 X11 and whose unit is bound to that session",
-    "Keep native installer admission closed"
+    "Production rc29, trust keys, device enrollment and A133 remain untouched",
+    "No service/profile/socket installed, enabled or activated by this batch",
+    "No forced logout/relogin and no UI invocation",
+    "Native installer admission remains closed",
+    "The development board remains on its existing installed UI"
   ],
-  "change_paths": [
-    "services/mimi-ubuntu-apps/broker.py",
-    "tests/sdkbuild/test_ubuntu_broker.py",
-    "services/mimi-ubuntu-apps/README.md",
-    "docs/change-gates/REQ-MIMI-UBUNTUAPPS-076.md",
-    "docs/validation/ubuntuapps076-session-cgroup-20261020.json",
-    "docs/change-gates/batches/20261020-ubuntuapps076-session-cgroup-prerecord.json",
-    "CURRENT_PROGRESS.md",
-    "docs/CHANGE-GATES.md"
-  ],
-  "observed_failure": "The previous SID-to-session-leader rule rejects the actual desktop process launched by the existing trusted login bridge. Read-only evidence is output/ubuntu-broker-076-20261020/session-cgroup-live-audit.json.",
-  "acceptance": [
-    "Test actual SO_PEERCRED/executable/UID/GID remains",
-    "Unit tests require exact active local session profile and unit BindsTo/After linkage",
-    "Reject stale/foreign session profile, wrong unit identity/cgroup, inactive/remote/non-X11 sessions",
-    "Run root suite and change gates; production endpoint remains unactivated"
-  ],
-  "implementation": "not_started"
-}
+  "next": [
+    "Run traceability/source ownership/change gate checks",
+    "Commit and push source-only correction; verify CI and exact-commit readback",
+    "Keep native installer admission, production endpoint activation, real sign-in integration and full data upgrade/rollback not_run"
+  ]
+}\n
