@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "summary": "Establish vendor partition aliases before persistent-data guard probes",
+  "context": "rc7 guard executes before vendor formatter creates by-name aliases; keep separate data-retention failure unresolved",
+  "next_steps": "Source-built image/boot qualification after remaining source audit closes; preserve live demo",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-040",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+      "scope": "Preinit mapping order and source-order failure/recovery regression",
+      "invariants": "Fail closed without automatic formatting; original identity/trust/images and live demo unchanged",
+      "paths": [
+        "packaging/aitvbox-mimi-update/files/78_mimi_storage_guard",
+        "tests/update/test_storage_guard.py",
+        "docs/change-gates/REQ-MIMI-SYSTEM-040.md",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/batches/20261021-storage-mapping-order.json"
+      ],
+      "checks": [
+        {
+          "name": "Original regression reproduction",
+          "status": "failed",
+          "scope": "Original guard with absent mappings and late-sourced mapper; expected proof of defect",
+          "reason": "Old implementation did not establish mappings before probe; failure history retained",
+          "evidence": "docs/change-gates/REQ-MIMI-SYSTEM-040.md"
+        },
+        {
+          "name": "Fixed guard and affected host tests",
+          "status": "passed",
+          "scope": "8 storage methods and20 baseline/product tests; separate real-program recipe skip not counted",
+          "evidence": "docs/change-gates/REQ-MIMI-SYSTEM-040.md"
+        },
+        {
+          "name": "New source-built image and physical boot",
+          "status": "not_run",
+          "scope": "New guarded system candidate",
+          "reason": "No rebuild or device mutation this batch; current board has separate live fix",
+          "evidence": "docs/change-gates/REQ-MIMI-SYSTEM-040.md"
+        },
+        {
+          "name": "Real-program package recipe",
+          "status": "not_run",
+          "scope": "Unchanged package recipe optional fixture check",
+          "reason": "Actual program fixture environment not provided; skip retained",
+          "evidence": "docs/change-gates/REQ-MIMI-SYSTEM-040.md"
+        }
+      ]
+    }
+  ]
+}

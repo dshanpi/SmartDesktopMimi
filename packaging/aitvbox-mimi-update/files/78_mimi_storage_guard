@@ -32,6 +32,10 @@ mimi_storage_volume() {
 
 mimi_storage_preflight() {
 	local clear
+	# Tina sources script79 before running hooks, but its formatter has not
+	# yet created /dev/by-name. Create the RAM aliases before probing data.
+	# A missing/failing mapper must stop here, never fall through to format.
+	link_by_name || return 1
 	# A missing variable returns nonzero. In that case the subsequent vendor
 	# hook also has no clear list. A nonempty value is never consumed here.
 	clear="$(fw_printenv -n parts_clean 2>/dev/null)"

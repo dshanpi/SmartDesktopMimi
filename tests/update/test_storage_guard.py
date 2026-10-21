@@ -9,8 +9,10 @@ GUARD = ROOT / 'packaging/aitvbox-mimi-update/files/78_mimi_storage_guard'
 HARNESS = r'''
 INITRAMFS=0
 HOOK=
+MAPPINGS_READY=0
 boot_hook_add() { HOOK="$2"; }
 readlink() {
+    [ "$MAPPINGS_READY" = 1 ] || return 1
     case "$1" in
         /dev/by-name/rootfs_data)
             [ "$SCENARIO" = missing ] && return 1
@@ -39,10 +41,20 @@ block() {
 }
 '''
 
+# Tina sources all numbered scripts before invoking the registered hooks.
+# The mapper is defined by script79 after script78 has already been sourced.
+LATE_MAPPER = r'''
+link_by_name() {
+    [ "$SCENARIO" = mapper_failed ] && return 1
+    MAPPINGS_READY=1
+    return 0
+}
+'''
+
 
 class StorageGuardTests(unittest.TestCase):
     def call(self, scenario, body):
-        script = (HARNESS + '\n. "$1"\n' +
+        script = (HARNESS + '\n. "$1"\n' + LATE_MAPPER +
                   'mimi_storage_is_block() { [ "$SCENARIO" != nonblock ]; }\n' + body)
         return subprocess.run(['/bin/sh', '-c', script, 'test', str(GUARD)],
                               env=dict(os.environ, SCENARIO=scenario), text=True,
@@ -52,6 +64,43 @@ class StorageGuardTests(unittest.TestCase):
         p = self.call('valid', '"$HOOK"; echo NEXT_VENDOR_HOOK')
         self.assertEqual(p.returncode, 0, p.stderr)
         self.assertEqual(p.stdout.strip(), 'NEXT_VENDOR_HOOK')
+
+    def test_later_sourced_mapper_runs_before_read_only_probes(self):
+        p = self.call('valid', '''
+            [ "$MAPPINGS_READY" = 0 ] || exit 80
+            mimi_storage_preflight || exit 81
+            echo MAPPINGS=$MAPPINGS_READY
+        ''')
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(p.stdout.strip(), 'MAPPINGS=1')
+
+    def test_mapping_failure_stops_probes_and_vendor_formatter(self):
+        for remove_mapper in (False, True):
+            with self.subTest(remove_mapper=remove_mapper):
+                body = 'unset -f link_by_name\n' if remove_mapper else ''
+                p = self.call('mapper_failed', body + '''
+                    fw_printenv() { echo BAD_PROBE; }
+                    readlink() { echo BAD_PROBE; }
+                    block() { echo BAD_PROBE; }
+                    mimi_storage_recovery_shell() { echo RECOVERY; exit 74; }
+                    "$HOOK"
+                    echo NEXT_VENDOR_HOOK
+                ''')
+                self.assertEqual(p.returncode, 74, p.stdout + p.stderr)
+                self.assertIn('RECOVERY', p.stdout)
+                self.assertNotIn('NEXT_VENDOR_HOOK', p.stdout)
+                self.assertNotIn('BAD_PROBE', p.stdout + p.stderr)
+
+    def test_mapping_can_be_repaired_and_rechecked_from_recovery(self):
+        p = self.call('mapper_failed', '''
+            mimi_storage_recovery_shell() { echo RECOVERY; SCENARIO=valid; }
+            sleep() { :; }
+            "$HOOK"
+            echo NEXT_VENDOR_HOOK
+        ''')
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(p.stdout.count('\nRECOVERY\n'), 1)
+        self.assertTrue(p.stdout.rstrip().endswith('NEXT_VENDOR_HOOK'))
 
     def test_all_failure_paths_stop_before_vendor_formatter(self):
         for scenario in ('missing', 'wrong', 'nonblock', 'pending',

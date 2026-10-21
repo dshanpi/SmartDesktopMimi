@@ -16,3 +16,18 @@
 实现：packaging/aitvbox-mimi-update/files/78_mimi_storage_guard、对应 Makefile、tools/update/baseline.py。基线锁与最终镜像读回绑定 hook 字节及0755模式。测试：31项主机存储保护/基线/系统及双产品包 recipe 通过；运行板上只读 preflight 通过，未将此当保护启动验收。hook SHA256 43486d9f9a0ae4faf0d98fc29cc3919c4e54e44dd003e0a5bc15893610ba4fcd。
 候选计划：应用1.0.8-rc.30（升级序号30）和私有系统1.0.0-rc.7；旧签名包/标签不覆盖。应用使用已锁定 SDK，系统重建受影响 toolchain/base-files 缓存，保留原字节及 Git mode 来源。最终镜像保护启动、空白板受控初始化、真实回退/断电、完整数据与功能验收仍 not_run；正式发布不通过。
 证据：.delivery/a133-boot-repair-20261021/storage-guard-tests.log、实际板端只读预检；后续必须绑定实际新源码/包哈希，不能沿用旧产物结果。
+
+
+## 2026-10-21 SYSTEM040/SYSTEM070: preinit partition mapping order
+
+Scope: source repair following rc7 r4 first-boot protection stop. The vendor script79 defines link_by_name during script sourcing, but previously only invoked it in its formatter hook, after guard78. The guard therefore saw missing aliases even with initialized data volumes. This fixes alias ordering only; it does not explain the separate FEL filesystem-signature loss.
+
+Prerecord and original guard/test backups were saved before this source change in private delivery evidence storage-mapping-source-r1/prerecord.json. Source base b50dec07a1b56f0cd2f413f89ef2d93a9911330d. No board writes, restarts, builds, signatures, image edits, trust or binding changes in this batch. Public records contain no device credentials.
+
+Flow: source numbered hooks -> invoke guard -> invoke existing vendor mapper -> inspect clear request and exact p7/p9 block mappings/ext4 -> continue to vendor formatter only on success. Mapper missing/failure returns to the existing recovery loop before any probes; recovery exit retries mapping and validation. Alias creation is RAM-only. Existing non-ext4, wrong device, missing volume, pending clear and failed/foreign probe rejection remain enforced. No implicit initialization is added.
+
+Implementation: packaging/aitvbox-mimi-update/files/78_mimi_storage_guard calls link_by_name before data preflight. tests/update/test_storage_guard.py starts with absent mappings and defines the mapper after sourcing guard78, modeling the vendor source/hook order. It also checks mapper failure, absent mapper, repair/retry and all previous negative probes. This replaces the old fixture assumption that by-name aliases already existed.
+
+Verification: original guard with new fixtures failed (two assertion failures and two bounded subprocess timeouts), preserved before-fix-tests.log; fixed guard passed all eight test methods including ten existing probe-failure scenarios. Baseline/product suite ran21, passed20 and skipped one real-program recipe because MIMI_EDITION_PROGRAM_FIXTURES was not provided; affected-tests.log retained without relabeling the skip. No packaging recipe changed in this batch. Host results do not qualify a new image.
+
+The earlier live-repaired rc7 board boot/reboot is historical device evidence, not acceptance of this new source-built candidate. Original rc7 artifact stays immutable. New clean source-built image/physical boot not_run; FEL data retention failed/unresolved, source audit review_required, A/B/rollback/abrupt-power-loss/full-data/voice/Tuya/stability not accepted. Preserve current usable demo while closing these gates.
