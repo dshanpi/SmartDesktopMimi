@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Save current development checkpoint",
+  "context": "Explicit user authorization before continued repairs",
+  "next_steps": "Driver integration and remaining physical release gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "Checkpoint documentation only",
+      "invariants": "No stable release, no hardware changes, preserve prior failure evidence",
+      "paths": [
+        "docs/checkpoints/20261022-takeover.md",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+        "docs/change-gates/batches/20261022-takeover-checkpoint.json"
+      ],
+      "checks": [
+        {
+          "name": "Documentation scope inspection",
+          "status": "passed",
+          "scope": "Current source revisions and known limits",
+          "evidence": "docs/checkpoints/20261022-takeover.md"
+        },
+        {
+          "name": "Hardware release qualification",
+          "status": "not_run",
+          "scope": "All outstanding physical release gates",
+          "reason": "Known kernel fault and remaining acceptance matrix",
+          "evidence": "docs/checkpoints/20261022-takeover.md"
+        }
+      ]
+    }
+  ]
+}

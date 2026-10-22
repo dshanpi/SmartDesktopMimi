@@ -26,3 +26,7 @@ dshanpi/SmartDesktopMimi唯一应用/系统入口；100askTeam/A133-AIDesktop-Ti
 串行下载实测约61KiB/s，记录并核对本任务PID后受控停止，保留partial；12连接/2MiB HTTP206读回逐Content-Range/长度检查，拼接整文件SHA及签名通过。未因观察超时重复启动；partial不计成功。应用包a3a0159180c79445b2b8bcc76599ff1e089292e57cfeedd58a1fb07912423d1f不变，deb195f6373bd54306ab6c14a487ee9d210ed4420113bff30e4987a394eeccec122。
 实际原Ubuntu传输包升级/卸载/再暂存passed，已运行rc29进程和设置、可信钥、登记未变。最初“包未安装”前置假设被现存rc22阻止，未执行修改，核对原rc22deb后继续。后续文件名工具修复仅改变外部命名，不变内部Debian~排序，16回归通过；旧rc29未重打包，不将新命名说成第二次产品上传验证。
 公开入口及限制见docs/delivery/20261019-ubuntu-rc29.md，证据docs/validation/delivery058-ubuntu-rc29-20261019.json。完整数据消费者、真实logout/relogin、真实云/语音与A133物理仍未完。下一步读取本记录/命名修复提交CI，继续独立软件缺口，不重建现有包或覆盖旧附件。
+
+
+## 2026-10-22 authorized development checkpoint
+User requested remote preservation before continued work. See docs/checkpoints/20261022-takeover.md. Documentation-only checkpoint; original failures and all hardware release gates remain open. No product behavior changes in this commit.
