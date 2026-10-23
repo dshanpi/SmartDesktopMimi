@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "summary": "Route UI heartbeat through owned serialized transport",
+  "context": "Raw timer send bypassed transport lifetime and frame serialization",
+  "next_steps": "High-fd helpers and provider integration; affected candidate relink",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "heartbeat timer and middleware API",
+      "invariants": "unchanged heartbeat wire format; no reconnect/replay; preserve healthy busy stream",
+      "paths": [
+        "apps/lv_port_linux/src/main.c",
+        "apps/lv_port_linux/src/middleware/middleware.c",
+        "apps/lv_port_linux/src/middleware/middleware.h",
+        "docs/update/source-ownership.json",
+        "tests/architecture/fixtures/ipc_middleware_ui.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-heartbeat-owner-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Old heartbeat",
+          "status": "failed",
+          "scope": "actual middleware/socket controlled partial send",
+          "reason": "interleaves heartbeat into business frame",
+          "evidence": ".delivery/quality-review-20261023/ipc-heartbeat-owner/result.json"
+        },
+        {
+          "name": "Owned heartbeat",
+          "status": "passed",
+          "scope": "six host sanitizer methods",
+          "reason": "busy skip, idle wire exact, disconnected no reconnect",
+          "evidence": ".delivery/quality-review-20261023/ipc-heartbeat-owner/result.json"
+        },
+        {
+          "name": "A133 TUs",
+          "status": "passed",
+          "scope": "main and middleware Werror",
+          "reason": "private outputs recorded flags",
+          "evidence": ".delivery/quality-review-20261023/ipc-heartbeat-owner/result.json"
+        },
+        {
+          "name": "Full delivery",
+          "status": "not_run",
+          "scope": "relink/provider/physical",
+          "reason": "previous binary not updated",
+          "evidence": ".delivery/quality-review-20261023/ipc-heartbeat-owner/result.json"
+        }
+      ]
+    }
+  ]
+}

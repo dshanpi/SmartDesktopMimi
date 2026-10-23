@@ -313,6 +313,18 @@ int mw_publish(mw_topic_t topic,const void *data,uint32_t len,mw_direction_t dir
     mimi_connection_release(c);return ret;
 }
 
+int mw_send_heartbeat(void)
+{
+    mimi_connection *c = ui_acquire(false);
+    if (!c) { errno = ENOTCONN; return -1; }
+    int result = mimi_connection_send(c, 0, NULL, 0, IPC_FLAG_HEARTBEAT, 1);
+    int error = errno;
+    if (result < 0 && mimi_connection_stopped(c)) ui_detach(c);
+    mimi_connection_release(c);
+    if (result < 0) errno = error;
+    return result;
+}
+
 static int subscribe_into_table(mw_subscribe_cb_t table[TOPIC_MAX][MW_MAX_SUBSCRIBERS], uint8_t counts[TOPIC_MAX], mw_topic_t topic, mw_subscribe_cb_t cb)
 {
     uint8_t count;

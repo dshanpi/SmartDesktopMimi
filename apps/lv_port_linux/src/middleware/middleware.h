@@ -219,6 +219,12 @@ void mw_get_status(mw_status_t * status);
  * @brief 获取 UI 进程的 IPC socket 文件描述符
  * @return socket fd，失败返回 -1
  */
+/* Diagnostic snapshot only: never use this borrowed descriptor for IO. */
 int mw_get_socket_fd(void);
+
+/* Best effort UI heartbeat: no reconnect; at most 1ms IO/lock budget.
+ * A busy connection may skip a heartbeat; caller must not immediately retry.
+ */
+int mw_send_heartbeat(void);
 
 #endif /* MIDDLEWARE_H */

@@ -35,16 +35,23 @@ static void receiver_callback(const mw_msg_t *msg){
 int main(void){
  int fd[2];mimi_connection *old=install(fd);pthread_t a,b;
  assert(!pthread_create(&a,NULL,writer,(void *)(intptr_t)1));pthread_mutex_lock(&gate);while(!partial)pthread_cond_wait(&wake,&gate);pthread_mutex_unlock(&gate);
+ assert(mw_send_heartbeat()<0 && errno==ETIMEDOUT);
+ assert(mw_state.ui_connection==old && !mimi_connection_stopped(old));
  assert(!pthread_create(&b,NULL,writer,(void *)(intptr_t)2));while(!atomic_load(&second_started))usleep(1000);usleep(10000);
  char peek[200];assert(recv(fd[1],peek,sizeof(peek),MSG_PEEK|MSG_DONTWAIT)==20);
  pthread_mutex_lock(&gate);release_first=1;pthread_cond_broadcast(&wake);pthread_mutex_unlock(&gate);pthread_join(a,NULL);pthread_join(b,NULL);
  for(int i=0;i<2;i++){ipc_msg_t msg;assert(ipc_server_recv(fd[1],&msg,sizeof(msg),false)>0);assert(msg.header.payload_len==64);for(int j=0;j<64;j++)assert(msg.payload[j]==(i?'B':'A'));}
  puts("PASS actual candidate mw_publish serialized partial frames");
+ assert(!mw_send_heartbeat());ipc_msg_t heartbeat;
+ assert(ipc_server_recv(fd[1],&heartbeat,sizeof(heartbeat),false)==sizeof(ipc_header_t));
+ assert(heartbeat.header.topic==0 && heartbeat.header.payload_len==0 && heartbeat.header.flags==IPC_FLAG_HEARTBEAT);
+ puts("PASS busy heartbeat skipped without interleaving; idle heartbeat exact");
  assert(!mimi_connection_retain(old));ui_detach(old);int freshfd[2];mimi_connection *fresh=install(freshfd);
  ui_detach(old);assert(mw_state.ui_connection==fresh && mw_state.ipc_socket==freshfd[0]);mimi_connection_release(old);close(fd[1]);
  assert(!mw_publish(TOPIC_WIFI_COMMAND,"x",1,MW_DIR_UI_TO_BACKEND));puts("PASS old identity cannot detach replacement");
  role=3;assert(mw_publish(TOPIC_WIFI_COMMAND,"x",1,MW_DIR_UI_TO_BACKEND)<0);assert(!mw_state.ui_connection && connect_calls==0);role=0;close(freshfd[1]);
  puts("PASS failed send detaches without implicit reconnect or replay");
+ assert(mw_send_heartbeat()<0 && errno==ENOTCONN && connect_calls==0);
  int reconnect[2];assert(!socketpair(AF_UNIX,SOCK_STREAM,0,reconnect));connect_fd=reconnect[0];stop_on_connect=1;
  assert(mw_publish(TOPIC_WIFI_COMMAND,"x",1,MW_DIR_UI_TO_BACKEND)<0);assert(connect_calls==1 && !mw_state.initialized && !mw_state.ui_connection);
  assert(recv(reconnect[1],peek,sizeof(peek),0)==0);close(reconnect[1]);puts("PASS in-flight reconnect discarded after deinit epoch change");

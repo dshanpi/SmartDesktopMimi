@@ -99,11 +99,7 @@ static void number_flow_timer_callback(lv_timer_t * timer)
 static void heartbeat_timer_callback(lv_timer_t * timer)
 {
     (void)timer;
-    extern int mw_get_socket_fd(void);
-    int fd = mw_get_socket_fd();
-    if (fd >= 0) {
-        ipc_client_heartbeat(fd);
-    }
+    (void)mw_send_heartbeat();
 }
 
 static void write_boot_progress(int progress)

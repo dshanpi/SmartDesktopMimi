@@ -127,11 +127,11 @@
     },
     "apps/lv_port_linux/src/middleware/middleware.c": {
       "owner": "shared-frozen",
-      "sha256": "d85a8868d4b29ac1d8a6af53ee3334171df33eb76f285bc962dd686f8a9d926e"
+      "sha256": "82e9e35f19a2366e3ce0eb75853afab71aa9cec5fb348cd4f72f7371a34341fc"
     },
     "apps/lv_port_linux/src/middleware/middleware.h": {
       "owner": "shared-frozen",
-      "sha256": "46c5711d67b52604d522689ad313f6c51272fdcc5fc37e803fb0ba216266098a"
+      "sha256": "e810b8f2f105dc857a28c707eb07f704abc07c4adcf1e90d5907d81a9f4bd64b"
     },
     "apps/lv_port_linux/src/platform/platform_capabilities.h": {
       "owner": "platform"
