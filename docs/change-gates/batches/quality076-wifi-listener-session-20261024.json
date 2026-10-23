@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Verify WiFi recovery over real listener disconnect and reconnect",
+  "context": "Earlier joined runtime injected connected slot",
+  "next_steps": "Widget/session and versioned overlay integration; physical qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "host actual listener lifecycle",
+      "invariants": "no mutation replay, preserve operation correlation, close owned resources",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-listener-session-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Real listener sessions",
+          "status": "passed",
+          "scope": "three sanitizer modes plus reconnect",
+          "reason": "actual accept/dispatch, same operation recovered",
+          "evidence": ".delivery/quality-review-20261023/wifi-listener-session/result.json"
+        },
+        {
+          "name": "Cleanup",
+          "status": "passed",
+          "scope": "fdcount/path/restart",
+          "reason": "private host endpoints only",
+          "evidence": ".delivery/quality-review-20261023/wifi-listener-session/result.json"
+        },
+        {
+          "name": "Full target interaction",
+          "status": "not_run",
+          "scope": "separateprocess/LVGL/radio/device",
+          "reason": "gatedHAL andpurecontroller",
+          "evidence": ".delivery/quality-review-20261023/wifi-listener-session/result.json"
+        }
+      ]
+    }
+  ]
+}
