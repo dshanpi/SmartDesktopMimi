@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate isolated connection ownership and serialized bounded transmission",
+  "context": "Actual middleware concurrent frame corruption reproduced in previousbatch",
+  "next_steps": "Integrate reference-owned UI/backend slots and conditional detach with reconnect/receive tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Isolated candidate using original frame schema and actualreceiver",
+      "invariants": "No global IOlock; no fdcloseuntilfinalref; no appendafterpartialfailure; totaldeadline",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-connection-owner-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Candidate concurrency/lifetime/deadline",
+          "status": "passed",
+          "scope": "controlled socketpair schedules ASAN/UBSAN",
+          "evidence": ".delivery/quality-review-20261023/ipc-connection-owner/result.json"
+        },
+        {
+          "name": "Actual middleware and target",
+          "status": "not_run",
+          "scope": "UI/backend integration/reconnect/receive/A133",
+          "reason": "candidateisolated, originalproductstillunchanged",
+          "evidence": ".delivery/quality-review-20261023/ipc-connection-owner/result.json"
+        }
+      ]
+    }
+  ]
+}
