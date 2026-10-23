@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Reproduce premature WiFi completion and preference save",
+  "context": "Runtime enabled field is published before HAL completion",
+  "next_steps": "Versioned operation state/correlation and error propagation with UI recovery",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected production functions with HAL gates plus separate actual LVGL consumer",
+      "invariants": "No physical/endtoend claim; SDK and published baseline unchanged",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-toggle-backend-repro-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Held HAL snapshots",
+          "status": "failed",
+          "scope": "Enable anddisable targetstate beforeoperationreturn",
+          "reason": "No in-progress/completed distinction",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-backend-repro/result.json"
+        },
+        {
+          "name": "UI intermediate snapshot",
+          "status": "failed",
+          "scope": "Premature confirmation andpreference save",
+          "reason": "UI treats enabled match as completed",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-backend-repro/ui.log"
+        },
+        {
+          "name": "Protocol fix and physical",
+          "status": "not_run",
+          "scope": "Coordinated candidate",
+          "reason": "Reproduction stage only",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-backend-repro/result.json"
+        }
+      ]
+    }
+  ]
+}

@@ -1482,6 +1482,17 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-toggle-premature")) {
+  settings.wifi_enabled=false;app_wifi.init();
+  wifi_runtime_status_t runtime={.enabled=false};emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  int before=saves;
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);
+  /* Exact runtime values observed while the selected worker HAL init is held. */
+  runtime.enabled=true;runtime.last_error_code=0;
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  fprintf(stderr,"Held-HAL snapshot consumed: pending=%d enabled_pref=%d save_delta=%d\n",wlan_toggle_pending,settings.wifi_enabled,saves-before);
+  assert(wlan_toggle_pending && saves==before && !settings.wifi_enabled && "intermediate enabled snapshot must not confirm operation or save preference");
+ }
  else if(!strcmp(argv[1],"wifi-toggle-silence")) {
   settings.wifi_enabled=false;app_wifi.init();
   wifi_runtime_status_t runtime={.enabled=false};
