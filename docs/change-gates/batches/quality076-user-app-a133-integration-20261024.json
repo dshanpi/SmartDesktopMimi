@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Integrate user app fixes into standalone A133 desktop and install fixtures",
+  "context": "Previous candidate predates user app fixes",
+  "next_steps": "Remaining feature review and controlled physical/source qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "A133 desktop and actual host install",
+      "invariants": "Backup old candidates; same provider; no device/release changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-app-a133-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Build",
+          "status": "passed",
+          "scope": "incremental exactdelta A133",
+          "reason": "oneTU/fulltarget and receipts",
+          "evidence": ".delivery/quality-review-20261023/user-app-a133-integration/result.json"
+        },
+        {
+          "name": "Install",
+          "status": "passed",
+          "scope": "bothprofiles actual fixture",
+          "reason": "sixmethods no skips",
+          "evidence": ".delivery/quality-review-20261023/user-app-a133-integration/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "board/fullfirmware",
+          "reason": "standalonehost only",
+          "evidence": ".delivery/quality-review-20261023/user-app-a133-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
