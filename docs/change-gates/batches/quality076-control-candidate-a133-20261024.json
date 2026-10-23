@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate control candidate business protocol and A133 compilation",
+  "context": "Socket deadline fix must preserve task/configuration semantics",
+  "next_steps": "Promote source and durable tests with coherent SDK locks and artifacts",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Host business scenario and isolated A133 program",
+      "invariants": "Published baseline and selected SDK source unchanged",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-candidate-a133-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Business and A133 candidate",
+          "status": "passed",
+          "scope": "Selected host scenario and crosscompile only",
+          "evidence": ".delivery/quality-review-20261023/control-stop-client/regression-a133-result.json"
+        },
+        {
+          "name": "Board and complete delivery",
+          "status": "not_run",
+          "scope": "Actual runtime and firmware",
+          "reason": "Isolated candidate has not been integrated or deployed",
+          "evidence": ".delivery/quality-review-20261023/control-stop-client/regression-a133-result.json"
+        }
+      ]
+    }
+  ]
+}
