@@ -152,13 +152,33 @@ func atomicJSON(dir, name string, v any) error {
 }
 
 func systemJournal(dir string) (SystemJournal, error) {
-	s := SystemJournal{Schema: 1, Phase: "idle"}
-	err := ReadJSON(filepath.Join(dir, "state.json"), &s)
+	var s SystemJournal
+	raw, err := os.ReadFile(filepath.Join(dir, "state.json"))
 	if os.IsNotExist(err) {
-		return s, nil
+		return SystemJournal{Schema: 1, Phase: "idle"}, nil
 	}
 	if err != nil {
 		return s, err
+	}
+	if err = StrictJSON(raw, &s); err != nil {
+		return s, err
+	}
+	var fields map[string]json.RawMessage
+	if err = json.Unmarshal(raw, &fields); err != nil {
+		return s, err
+	}
+	// Only an absent journal is idle by default. Omitted transaction fields
+	// must not bypass application/system exclusion or reset replay protection.
+	for _, name := range []string{"schema_version", "high_water", "phase", "version", "package_sha256"} {
+		value, exists := fields[name]
+		if !exists || bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+			return s, fmt.Errorf("invalid system journal: missing or null %s", name)
+		}
+	}
+	for _, name := range []string{"boot_id", "product_edition"} {
+		if value, exists := fields[name]; exists && bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
+			return s, fmt.Errorf("invalid system journal: null %s", name)
+		}
 	}
 	if s.Schema != 1 {
 		return s, fmt.Errorf("unsupported system journal")
