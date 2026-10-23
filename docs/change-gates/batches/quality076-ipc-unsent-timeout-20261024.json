@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "summary": "Preserve healthy IPC connections on unsent deadlines",
+  "context": "Original candidate detached even zero-byte contention timeout",
+  "next_steps": "Bound receive/connect and integrate qualified transport",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Candidate timeout semantics in UI/backend",
+      "invariants": "Partialframespoisonstream; zero-byte deadline doesnot; noimplicitreplay",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-unsent-timeout-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original unsent timeout disconnect",
+          "status": "failed",
+          "scope": "heldmutex actualcandidate mw_publish",
+          "reason": "0bytes timeout stopshealthyconnection",
+          "evidence": ".delivery/quality-review-20261023/ipc-unsent-timeout/result.json"
+        },
+        {
+          "name": "Bothroles deterministic deadline behavior",
+          "status": "passed",
+          "scope": "ASAN/UBSAN heldlock/controlclock/actualsocket",
+          "evidence": ".delivery/quality-review-20261023/ipc-unsent-timeout/result.json"
+        },
+        {
+          "name": "Older backend always-success assertion",
+          "status": "failed",
+          "scope": "instrumented originalregression",
+          "reason": "secondwriter ETIMEDOUT underboundeddeadline; retained",
+          "evidence": ".delivery/quality-review-20261023/ipc-unsent-timeout/result.json"
+        },
+        {
+          "name": "UI and revised backend regressions",
+          "status": "passed",
+          "scope": "selectedidentity/callback/frame/heartbeat cases",
+          "evidence": ".delivery/quality-review-20261023/ipc-unsent-timeout/result.json"
+        },
+        {
+          "name": "Fullproduct acceptance",
+          "status": "not_run",
+          "scope": "remainingreceive/connect/A133",
+          "reason": "isolatedcandidate",
+          "evidence": ".delivery/quality-review-20261023/ipc-unsent-timeout/result.json"
+        }
+      ]
+    }
+  ]
+}
