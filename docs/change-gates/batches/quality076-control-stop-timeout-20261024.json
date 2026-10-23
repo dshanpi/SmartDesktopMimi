@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Verify whole stop UI on silent transport",
+  "context": "Client-only timeout test did not prove UI feedback",
+  "next_steps": "Status poll responsiveness and full candidate qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Real LVGL and stop worker deadline",
+      "invariants": "No physical/HID acceptance from simulated peer",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-stop-timeout-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Silent stop UI",
+          "status": "passed",
+          "scope": "4renders real6s deadlines/liveUI/onecommand/retry",
+          "evidence": ".delivery/quality-review-20261023/control-stop-timeout/result.json"
+        },
+        {
+          "name": "A133 physical",
+          "status": "not_run",
+          "scope": "Current UI candidate",
+          "reason": "Host socketpair fixture only",
+          "evidence": ".delivery/quality-review-20261023/control-stop-timeout/result.json"
+        }
+      ]
+    }
+  ]
+}
