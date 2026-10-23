@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Join actual WiFi widgets and owned UI transport",
+  "context": "Earlier widget tests directly dispatched synthetic replies",
+  "next_steps": "Actual provider service join and durable test",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "real widget/worker/middleware/socket against scripted peer",
+      "invariants": "privateendpoint only; no product/device mutation; errors preserved",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-widget-transport-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Runtime",
+          "status": "passed",
+          "scope": "success/failure/close-reopen",
+          "reason": "actualUI transport andsingleSAVE",
+          "evidence": ".delivery/quality-review-20261023/wifi-widget-transport/result.json"
+        },
+        {
+          "name": "Providerphysical",
+          "status": "not_run",
+          "scope": "fullservice/HAL/device",
+          "reason": "scriptedpeer andsettingsadapter",
+          "evidence": ".delivery/quality-review-20261023/wifi-widget-transport/result.json"
+        }
+      ]
+    }
+  ]
+}
