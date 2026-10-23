@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate correlated WiFi wire replies through private service entry",
+  "context": "Admission acknowledgement must remain distinct from completion; bind epoch atomically",
+  "next_steps": "Actual topics/router/UI and full build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Explicit byte codec and actual extracted private service with gated HAL",
+      "invariants": "Old ABI unchanged; reply correlation and no completion from ACK",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-wire-service-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Wire codec and service integration",
+          "status": "passed",
+          "scope": "Golden/144malformed replies plus success/failure end-to-end in-process byte paths",
+          "evidence": ".delivery/quality-review-20261023/wifi-wire-service-integration/result.json"
+        },
+        {
+          "name": "Actual product integration",
+          "status": "not_run",
+          "scope": "Middleware/socket/router/UI/A133/physical",
+          "reason": "Private in-process candidate only",
+          "evidence": ".delivery/quality-review-20261023/wifi-wire-service-integration/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
