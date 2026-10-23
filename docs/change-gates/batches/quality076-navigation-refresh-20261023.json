@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Preserve explicit navigation over background refresh",
+  "context": "Refresh cancels queued user OPEN/BACK action",
+  "next_steps": "Remaining app lifecycle and hardware gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Async application navigation priority",
+      "invariants": "Standalone refresh works, last explicit navigation retained",
+      "paths": [
+        "apps/lv_port_linux/src/system/app_manager.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-navigation-refresh-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Original reproduction",
+          "status": "passed",
+          "scope": "Native negative retained",
+          "evidence": ".delivery/quality-review-20261023/navigation-refresh-priority/original.log"
+        },
+        {
+          "name": "Actual manager combinations",
+          "status": "passed",
+          "scope": "Eight language/theme/size combinations",
+          "evidence": ".delivery/quality-review-20261023/navigation-refresh-priority/result.json"
+        },
+        {
+          "name": "A133 object",
+          "status": "passed",
+          "scope": "One current translation unit, no full link",
+          "evidence": ".delivery/quality-review-20261023/navigation-refresh-priority/object-result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "No hardware or deployment",
+          "reason": "Host behavior and object compile only",
+          "evidence": ".delivery/quality-review-20261023/navigation-refresh-priority/result.json"
+        }
+      ]
+    }
+  ]
+}

@@ -168,6 +168,9 @@ void app_manager_back_home(void)
 void app_manager_refresh_current(void)
 {
     if (current_app_id == APP_ID_NONE) return;
+    /* A new screen will use the current theme/locale. Background refresh must
+     * not replace an explicit navigation action waiting for async dispatch. */
+    if (pending_action.type != APP_MANAGER_ACTION_NONE) return;
     app_manager_schedule_action(APP_MANAGER_ACTION_REFRESH, current_app_id);
 }
 

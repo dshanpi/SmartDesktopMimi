@@ -874,6 +874,24 @@ int main(int argc,char**argv) {
  app_manager_back_home();pump();pump();
  assert(find_label(lv_screen_active(),ui_tr(UI_STR_HOME_TALK_MIMI)));
  puts("PASS preview return after Home rebuild uses live replacement");
+ app_manager_open(APP_ID_SETTING);pump();pump();
+ app_manager_open(APP_ID_PAIRING);
+ app_manager_refresh_current();pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code"));
+ app_manager_back_home();pump();pump();
+ app_manager_open(APP_ID_SETTING);pump();pump();
+ app_manager_back_home();app_manager_refresh_current();pump();pump();
+ assert(find_label(lv_scr_act(),ui_tr(UI_STR_HOME_TALK_MIMI)));
+ app_manager_open(APP_ID_SETTING);pump();pump();
+ lv_obj_t *before_standalone_refresh=lv_scr_act();
+ app_manager_refresh_current();app_manager_refresh_current();pump();pump();
+ assert(lv_scr_act()!=before_standalone_refresh);
+ assert(find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_MANAGE)));
+ app_manager_refresh_current();app_manager_open(APP_ID_PAIRING);pump();pump();
+ assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code"));
+ app_manager_refresh_current();app_manager_back_home();pump();pump();
+ assert(find_label(lv_scr_act(),ui_tr(UI_STR_HOME_TALK_MIMI)));
+ puts("PASS pending navigation survives background refresh");
  save(argv[4]);puts("PASS real app manager: locked HDMI entry/return, app navigation, rebuilt Home lifetime");return 0;
 #endif
  /* Keep the retired component tests explicit; production does not enable it. */
