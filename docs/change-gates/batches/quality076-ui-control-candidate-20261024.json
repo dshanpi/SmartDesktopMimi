@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Build current complete A133 desktop candidate",
+  "context": "Previous full binary predates control UI fixes",
+  "next_steps": "Current package collection/install verification and remaining acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Standalone clean Git archive desktop build",
+      "invariants": "Published rc8/rc31 and prior binaries preserved; no full provenance claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-control-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Complete desktop build and ownership",
+          "status": "passed",
+          "scope": "675units, settingsreceipt, selectedconfigcomparison",
+          "evidence": ".delivery/quality-review-20261023/ui-control-candidate/result.json"
+        },
+        {
+          "name": "New collection and device",
+          "status": "not_run",
+          "scope": "Package/install/actualboard",
+          "reason": "Fresh standalone linked binary only",
+          "evidence": ".delivery/quality-review-20261023/ui-control-candidate/result.json"
+        }
+      ]
+    }
+  ]
+}
