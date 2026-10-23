@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Preserve vendor service semantics with explicit strict-start opt-in",
+  "context": "Global startup propagation changes intentional no-instance return1 cases",
+  "next_steps": "Promote standardoverlay candidate and optin only app/control, validate current source pins",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "13callback inventory and8isolated strict/legacy cases",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-rc-common-compatibility-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Isolated startup propagation",
+          "status": "passed",
+          "scope": "r2 strict error propagation plus legacy trace preservation; previousglobalcandidate notpromoted",
+          "evidence": ".delivery/quality-review-20261023/rc-common-start-compatibility/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/rc-common-start-compatibility/result.json"
+        }
+      ]
+    }
+  ]
+}
