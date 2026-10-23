@@ -1265,6 +1265,10 @@ int main(int argc,char**argv) {
   lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
+ } else if(!strcmp(argv[1],"user-page-invalid")) {
+  app_user.init();pump();
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"应用页面格式无效，请重新安装应用。":"Invalid app page. Please reinstall the app."));
+  puts("PASS invalid app page rejected without rendering actions");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
  else if(!strcmp(argv[1],"hdmi-status-stale")) {
   review_hdmi_idle=true;review_status_running=true;review_status_hold=true;

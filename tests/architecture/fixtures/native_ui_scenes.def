@@ -96,3 +96,5 @@ UI_SCENE("wifi-empty-recovery")
 UI_SCENE("wifi-row-security")
 
 UI_SCENE("wifi-row-allocation")
+
+UI_SCENE("user-page-invalid")

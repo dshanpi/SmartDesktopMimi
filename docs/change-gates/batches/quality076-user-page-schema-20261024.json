@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Reject malformed user app pages before rendering",
+  "context": "Null node type crashes actual LVGL page opening",
+  "next_steps": "User app response/deadline/async audit and A133 integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Installedpage parsing/UX bounds",
+      "invariants": "no executionpermission changes; malformedpage shows error; validpage remains",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-page-schema-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "actualpageopen",
+          "reason": "SIGSEGV nulltype",
+          "evidence": ".delivery/quality-review-20261023/user-page-schema/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "fourrenders plus15schema/catalogcases",
+          "reason": "expliciterror andvalidselection/reopen",
+          "evidence": ".delivery/quality-review-20261023/user-page-schema/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133/signedinstallation",
+          "reason": "hostfixture only",
+          "evidence": ".delivery/quality-review-20261023/user-page-schema/result.json"
+        }
+      ]
+    }
+  ]
+}

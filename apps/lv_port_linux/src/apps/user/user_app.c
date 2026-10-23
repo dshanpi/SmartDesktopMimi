@@ -308,6 +308,55 @@ static void action_delete_event(lv_event_t *event)
     lv_free(lv_event_get_user_data(event));
 }
 
+static bool page_string(json_object *value)
+{
+    return json_object_is_type(value, json_type_string) &&
+           (size_t)json_object_get_string_len(value) == strlen(json_object_get_string(value));
+}
+
+static bool page_node_valid(json_object *node, unsigned depth, size_t *count)
+{
+    json_object *type = NULL, *value = NULL;
+    if (depth > 8 || ++(*count) > 128 || !json_object_is_type(node, json_type_object) ||
+        !json_object_object_get_ex(node, "type", &type) || !page_string(type)) return false;
+    const char *name = json_object_get_string(type);
+    if (!strcmp(name, "text"))
+        return json_object_object_get_ex(node, "text", &value) && page_string(value);
+    if (!strcmp(name, "action")) {
+        json_object *command = NULL;
+        if (!json_object_object_get_ex(node, "label", &value) || !page_string(value) ||
+            !json_object_object_get_ex(node, "command", &command) || !page_string(command) ||
+            json_object_get_string_len(command) > 64) return false;
+        if (!strcmp(json_object_get_string(command), "app.invoke")) {
+            json_object *arguments = NULL;
+            if (!json_object_object_get_ex(node, "arguments", &arguments) ||
+                !json_object_is_type(arguments, json_type_object) ||
+                !json_object_object_get_ex(arguments, "name", &value) || !page_string(value) ||
+                json_object_get_string_len(value) > 64) return false;
+        }
+        return true;
+    }
+    if (!strcmp(name, "column")) {
+        if (!json_object_object_get_ex(node, "children", &value) ||
+            !json_object_is_type(value, json_type_array)) return false;
+        size_t children = json_object_array_length(value);
+        if (children > 64) return false;
+        for (size_t i = 0; i < children; ++i)
+            if (!page_node_valid(json_object_array_get_idx(value, i), depth + 1, count)) return false;
+        return true;
+    }
+    return false;
+}
+
+static bool page_valid(json_object *page)
+{
+    json_object *title = NULL, *layout = NULL;
+    size_t count = 0;
+    if (!json_object_is_type(page, json_type_object)) return false;
+    if (json_object_object_get_ex(page, "title", &title) && !page_string(title)) return false;
+    return json_object_object_get_ex(page, "layout", &layout) && page_node_valid(layout, 1, &count);
+}
+
 static void render_node(lv_obj_t *parent, json_object *node, unsigned depth,
                         size_t *node_count, const char *app_id)
 {
@@ -392,7 +441,17 @@ static void open_entry(lv_event_t *event)
     json_object *page = json_object_from_file(entries[index].entry);
     clear_content();
     current_permissions = entries[index].permissions;
-    if (!page) return;
+    if (!page_valid(page)) {
+        status_label = lv_label_create(page_content);
+        lv_label_set_text(status_label, ui_i18n_is_zh() ?
+            "应用页面格式无效，请重新安装应用。" : "Invalid app page. Please reinstall the app.");
+        lv_obj_set_width(status_label, lv_pct(100));
+        lv_label_set_long_mode(status_label, LV_LABEL_LONG_WRAP);
+        lv_obj_set_style_text_font(status_label, UI_TEXT_BODY_LG, 0);
+        lv_obj_set_style_text_color(status_label, UI_TEXT_PRIMARY, 0);
+        if (page) json_object_put(page);
+        return;
+    }
     json_object *title = NULL, *layout = NULL;
     if (json_object_object_get_ex(page, "title", &title)) {
         lv_obj_t *heading = lv_label_create(page_content);
