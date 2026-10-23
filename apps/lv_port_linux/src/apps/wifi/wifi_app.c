@@ -7,6 +7,11 @@
 #include "../../system/app_manager.h"
 #include "../../system/settings.h"
 #include "../../middleware/middleware.h"
+#include "../../system/wifi_control_client.h"
+#include <pthread.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -50,6 +55,18 @@ static bool wlan_toggle_pending = false;
 static bool wlan_toggle_target_enabled = false;
 static bool runtime_status_received = false;
 static bool startup_scan_requested = false;
+
+static wifi_control_client wifi_control;
+static lv_timer_t *wifi_control_timer;
+static uint32_t wifi_query_at;
+static struct {
+    pthread_mutex_t lock;
+    bool active, done;
+    uint8_t bytes[WIFI_WIRE_COMMAND_SIZE];
+    uint64_t sequence;
+    uint32_t action;
+    int result;
+} wifi_sender = {.lock = PTHREAD_MUTEX_INITIALIZER};
 
 static lv_obj_t *wifi_save_error_box;
 static void wifi_show_save_failure(void);
@@ -303,11 +320,154 @@ static void wifi_status_handler(const mw_msg_t * msg) {
     }
 }
 
+static bool wifi_sender_busy(void)
+{
+    pthread_mutex_lock(&wifi_sender.lock);
+    bool busy = wifi_sender.active;
+    pthread_mutex_unlock(&wifi_sender.lock);
+    return busy;
+}
+static void *wifi_send_worker(void *unused)
+{
+    (void)unused;
+    uint8_t bytes[WIFI_WIRE_COMMAND_SIZE];
+    pthread_mutex_lock(&wifi_sender.lock);
+    memcpy(bytes, wifi_sender.bytes, sizeof(bytes));
+    pthread_mutex_unlock(&wifi_sender.lock);
+    int result = mw_publish(TOPIC_WIFI_CONTROL_V2, bytes, sizeof(bytes), MW_DIR_UI_TO_BACKEND);
+    pthread_mutex_lock(&wifi_sender.lock);
+    wifi_sender.result = result;
+    wifi_sender.done = true;
+    pthread_mutex_unlock(&wifi_sender.lock);
+    return NULL;
+}
+static int wifi_control_send(const wifi_wire_command *command)
+{
+    uint8_t bytes[WIFI_WIRE_COMMAND_SIZE];
+    if (wifi_wire_encode(command, bytes, sizeof(bytes))) return -1;
+    pthread_mutex_lock(&wifi_sender.lock);
+    if (wifi_sender.active) { pthread_mutex_unlock(&wifi_sender.lock); return -1; }
+    memcpy(wifi_sender.bytes, bytes, sizeof(bytes));
+    wifi_sender.sequence = command->sequence;
+    wifi_sender.action = command->action;
+    wifi_sender.active = true;
+    wifi_sender.done = false;
+    pthread_mutex_unlock(&wifi_sender.lock);
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, wifi_send_worker, NULL)) {
+        pthread_mutex_lock(&wifi_sender.lock);
+        wifi_sender.active = false;
+        pthread_mutex_unlock(&wifi_sender.lock);
+        return -1;
+    }
+    pthread_detach(thread);
+    return 0;
+}
+static void wifi_control_render(void)
+{
+    if (!wifi_app_active) return;
+    wlan_toggle_pending = wifi_control.pending != 0;
+    if (sw_wlan) {
+        bool checked = wifi_control.pending ? wifi_control.target :
+                       wifi_control.known ? wifi_control.enabled : is_wifi_enabled;
+        ignore_switch_event = true;
+        if (checked) lv_obj_add_state(sw_wlan, LV_STATE_CHECKED);
+        else lv_obj_clear_state(sw_wlan, LV_STATE_CHECKED);
+        ignore_switch_event = false;
+        if (wifi_client_can_set(&wifi_control, lv_tick_get()) && !wifi_sender_busy())
+            lv_obj_clear_state(sw_wlan, LV_STATE_DISABLED);
+        else lv_obj_add_state(sw_wlan, LV_STATE_DISABLED);
+    }
+    const char *text = "";
+    bool zh = ui_i18n_is_zh();
+    switch (wifi_control.view) {
+    case WIFI_CLIENT_CHECKING: text = zh ? "正在查询状态" : "Checking status"; break;
+    case WIFI_CLIENT_PENDING: text = zh ? "正在切换" : "Switching"; break;
+    case WIFI_CLIENT_UNCONFIRMED: text = zh ? "结果未确认，正在查询" : "Unconfirmed; checking"; break;
+    case WIFI_CLIENT_REJECTED: text = zh ? "请求未接受，请重试" : "Not accepted; retry"; break;
+    case WIFI_CLIENT_FAILED: text = zh ? "切换失败，请重试" : "Switch failed; retry"; break;
+    case WIFI_CLIENT_CHANGED: text = zh ? "状态已变化，请重新确认" : "State changed; check again"; break;
+    case WIFI_CLIENT_UNAVAILABLE: text = zh ? "暂时无法确认状态" : "Status unavailable"; break;
+    case WIFI_CLIENT_READY: break;
+    }
+    if (wlan_pending_label) lv_label_set_text(wlan_pending_label, text);
+}
+static void wifi_control_reply(const mw_msg_t *msg)
+{
+    if (!wifi_app_active || !msg || msg->topic != TOPIC_WIFI_CONTROL_REPLY_V2) return;
+    wifi_response response;
+    if (wifi_wire_response_decode(msg->data, msg->data_len, &response)) return;
+    int event = wifi_client_receive(&wifi_control, &response, lv_tick_get());
+    if (wifi_control.known) {
+        is_wifi_enabled = wifi_control.enabled != 0;
+        if (scan_info_cont) {
+            if (is_wifi_enabled) lv_obj_clear_flag(scan_info_cont, LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(scan_info_cont, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (!is_wifi_enabled) { if (wifi_list) lv_obj_clean(wifi_list); wifi_spinner_delete(); }
+    }
+    if (event == WIFI_CLIENT_SAVE) {
+        sys_settings_t *settings = sys_settings_get();
+        if (settings->wifi_enabled != wifi_control.target) {
+            settings->wifi_enabled = wifi_control.target;
+            wifi_settings_dirty = true;
+        }
+        if (wifi_settings_dirty) wifi_save_preference();
+    }
+    wifi_control_render();
+}
+static void wifi_control_poll(lv_timer_t *timer)
+{
+    (void)timer;
+    pthread_mutex_lock(&wifi_sender.lock);
+    bool done = wifi_sender.done;
+    int result = wifi_sender.result;
+    uint64_t sequence = wifi_sender.sequence;
+    uint32_t action = wifi_sender.action;
+    if (done) { wifi_sender.done = false; wifi_sender.active = false; }
+    pthread_mutex_unlock(&wifi_sender.lock);
+    if (!wifi_app_active) return;
+    if (done && result < 0 &&
+        ((action == WIFI_WIRE_SET && wifi_control.pending && sequence == wifi_control.operation_sequence) ||
+         (action == WIFI_WIRE_QUERY && sequence == wifi_control.query_sequence))) {
+        wifi_control.known = 0;
+        wifi_control.view = wifi_control.pending ? WIFI_CLIENT_UNCONFIRMED : WIFI_CLIENT_UNAVAILABLE;
+    }
+    uint32_t now = lv_tick_get();
+    wifi_client_tick(&wifi_control, now);
+    if (!wifi_sender_busy() && (uint32_t)(now-wifi_query_at) >= 1000) {
+        wifi_wire_command command;
+        if (!wifi_client_query(&wifi_control, &command)) {
+            if (wifi_control_send(&command)) wifi_control.view = WIFI_CLIENT_UNAVAILABLE;
+        }
+        wifi_query_at = now;
+    }
+    wifi_control_render();
+}
+static void wifi_control_start(void)
+{
+    if (!wifi_wire_nonzero(wifi_control.client)) {
+        uint8_t nonce[16];size_t used = 0;
+        for (unsigned attempt = 0; attempt < 32 && used < sizeof(nonce); ++attempt) {
+            long count = syscall(SYS_getrandom, nonce+used, sizeof(nonce)-used, 1u);
+            if (count < 0 && errno == EINTR) continue;
+            if (count <= 0 || (size_t)count > sizeof(nonce)-used) break;
+            used += (size_t)count;
+        }
+        if (used == sizeof(nonce) && wifi_wire_nonzero(nonce)) memcpy(wifi_control.client, nonce, sizeof(nonce));
+    }
+    uint32_t now = lv_tick_get();
+    wifi_client_open(&wifi_control, now);
+    wifi_query_at = now-1000;
+    wifi_control_timer = lv_timer_create(wifi_control_poll, 50, NULL);
+    if (!wifi_control_timer) { wifi_control.view = WIFI_CLIENT_UNAVAILABLE; wifi_control_render(); return; }
+    wifi_control_poll(NULL);
+}
+
 static void wifi_runtime_handler(const mw_msg_t * msg)
 {
     if (!msg || msg->topic != TOPIC_WIFI_RUNTIME || msg->data_len != sizeof(wifi_runtime_status_t)) return;
     const wifi_runtime_status_t *runtime = (const wifi_runtime_status_t *)msg->data;
-    sys_settings_t *settings = sys_settings_get();
     bool first_runtime_status = !runtime_status_received;
 
     runtime_status_received = true;
@@ -340,33 +500,7 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
         wifi_spinner_delete();
     }
 
-    if (wlan_toggle_pending && runtime->last_error_code != 0) {
-        wlan_toggle_pending = false;
-        if (sw_wlan) {
-            lv_obj_clear_state(sw_wlan, LV_STATE_DISABLED);
-        }
-        if (wlan_pending_label) {
-            lv_label_set_text(wlan_pending_label, ui_tr(UI_STR_FAILED));
-        }
-        printf("[WiFi] Runtime error: %d\n", runtime->last_error_code);
-    } else if (wlan_toggle_pending && runtime->enabled == wlan_toggle_target_enabled) {
-        wlan_toggle_pending = false;
-        if (settings->wifi_enabled != runtime->enabled) {
-            settings->wifi_enabled = runtime->enabled;
-            wifi_settings_dirty = true;
-        }
-        if (wifi_settings_dirty) wifi_save_preference();
-        if (sw_wlan) {
-            lv_obj_clear_state(sw_wlan, LV_STATE_DISABLED);
-        }
-        if (wlan_pending_label) {
-            lv_label_set_text(wlan_pending_label, "");
-        }
-    } else if (!wlan_toggle_pending && runtime->last_error_code == 0) {
-        if (wlan_pending_label) {
-            lv_label_set_text(wlan_pending_label, "");
-        }
-    }
+    wifi_control_render();
 
     /* The persisted preference can lag behind a driver that recovered after
      * boot. Once the page has the backend's authoritative state, restore the
@@ -681,40 +815,17 @@ static void scan_click_cb(lv_event_t * e) {
 }
 
 static void wlan_switch_event_cb(lv_event_t * e) {
-    if (ignore_switch_event) return;
-    if (wlan_toggle_pending) return;
-    lv_obj_t * sw = lv_event_get_target(e);
-    wifi_cmd_t cmd = {0};
-    is_wifi_enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
-    wlan_toggle_target_enabled = is_wifi_enabled;
-    wlan_toggle_pending = true;
-
-    if (sw_wlan) {
-        lv_obj_add_state(sw_wlan, LV_STATE_DISABLED);
+    if (ignore_switch_event || wifi_sender_busy()) return;
+    wifi_control_client before = wifi_control;
+    wifi_wire_command command;
+    bool target = lv_obj_has_state(lv_event_get_target(e), LV_STATE_CHECKED);
+    if (wifi_client_set(&wifi_control, target, lv_tick_get(), &command)) { wifi_control_render(); return; }
+    if (wifi_control_send(&command)) {
+        wifi_control = before; /* no worker was started, so no command was sent */
+        wifi_control.view = WIFI_CLIENT_UNAVAILABLE;
     }
-    if (wlan_pending_label) {
-        lv_label_set_text(wlan_pending_label, ui_tr(UI_STR_CONNECTING));
-    }
-    
-    if (is_wifi_enabled) {
-        cmd.action = CMD_ENABLE;
-        mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
-        // Enable WiFi: backend will auto-scan after enabled
-        if (scan_info_cont) lv_obj_clear_flag(scan_info_cont, LV_OBJ_FLAG_HIDDEN);
-        if (wifi_list) lv_obj_clean(wifi_list);
-        wifi_spinner_delete();
-        wifi_spinner_show();
-        is_scanning = true;
-    } else {
-        cmd.action = CMD_DISABLE;
-        mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
-        // Disable WiFi: Clear list and hide controls
-        if (wifi_list) lv_obj_clean(wifi_list);
-        wifi_spinner_delete();
-        is_scanning = false;
-        if (scan_info_cont) lv_obj_add_flag(scan_info_cont, LV_OBJ_FLAG_HIDDEN);
-        // Optionally send disable command to backend
-    }
+    wlan_toggle_target_enabled = target;
+    wifi_control_render();
 }
 
 static void back_event_handler(lv_event_t * e) {
@@ -945,12 +1056,9 @@ void wifi_app_init(void) {
     // Register IPC Listener after UI widgets are ready
     mw_subscribe(TOPIC_WIFI_STATUS, wifi_status_handler);
     mw_subscribe(TOPIC_WIFI_RUNTIME, wifi_runtime_handler);
+    mw_subscribe(TOPIC_WIFI_CONTROL_REPLY_V2, wifi_control_reply);
 
-    /* Do not trust only the persisted toggle: Wi-Fi may have recovered after
-     * a deferred driver probe while this app was closed. */
-    wifi_cmd_t runtime_cmd = { .action = CMD_GET_RUNTIME };
-    mw_publish(TOPIC_WIFI_COMMAND, &runtime_cmd, sizeof(runtime_cmd),
-               MW_DIR_UI_TO_BACKEND);
+    wifi_control_start();
 
     if (wifi_settings_dirty) wifi_show_save_failure();
 
@@ -963,6 +1071,9 @@ void wifi_app_init(void) {
 void wifi_app_close(void) {
     printf("WiFi App Closed\n");
     wifi_app_active = false;
+    if (wifi_control_timer) { lv_timer_delete(wifi_control_timer); wifi_control_timer = NULL; }
+    wifi_control.query_sequence = 0;
+    wifi_control.known = 0;
     if (wifi_save_error_box) {
         lv_obj_delete(wifi_save_error_box);
         wifi_save_error_box = NULL;
@@ -980,6 +1091,7 @@ void wifi_app_close(void) {
     }
     mw_unsubscribe(TOPIC_WIFI_STATUS, wifi_status_handler);
     mw_unsubscribe(TOPIC_WIFI_RUNTIME, wifi_runtime_handler);
+    mw_unsubscribe(TOPIC_WIFI_CONTROL_REPLY_V2, wifi_control_reply);
     wifi_screen = NULL;
     wifi_list = NULL;
     scan_info_cont = NULL;

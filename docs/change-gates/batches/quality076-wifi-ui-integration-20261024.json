@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Wire correlated WiFi state into real LVGL page",
+  "context": "Replace premature V1 completion and indefinite Connecting with explicit correlated operation state",
+  "next_steps": "Adjacent scan/connect and error flows, A133 and provider integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual LVGL page, detached sender and host message adapters",
+      "invariants": "No GUI worker access, no ACK preference save, no blind repeated SET, pending persists acrossreopen",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-ui-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Operation and save scenes",
+          "status": "passed",
+          "scope": "12 realLVGL renders, virtual30s timeout and checked saves",
+          "evidence": ".delivery/quality-review-20261023/wifi-ui-integration/run.log"
+        },
+        {
+          "name": "Responsiveness and lifecycle",
+          "status": "passed",
+          "scope": "12 realLVGL renders with held sender/actualpage reopen/timerfailure",
+          "evidence": ".delivery/quality-review-20261023/wifi-ui-integration/lifecycle.log"
+        },
+        {
+          "name": "Full qualification",
+          "status": "not_run",
+          "scope": "Adjacent legacyflows/A133/realUI-providerIPC/physical",
+          "reason": "Unfinishedcandidate with listed followups",
+          "evidence": ".delivery/quality-review-20261023/wifi-ui-integration/result.json"
+        }
+      ]
+    }
+  ]
+}

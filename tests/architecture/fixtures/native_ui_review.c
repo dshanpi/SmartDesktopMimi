@@ -191,18 +191,29 @@ int sys_volume_set_percent(int p) {volume=p;return 0;}
 static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
 int mw_subscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(!callbacks[t][i]){callbacks[t][i]=c;return 0;}return -1;}
 int mw_unsubscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(callbacks[t][i]==c)callbacks[t][i]=NULL;return 0;}
-static bool fail_assistant_timer;
+static bool fail_assistant_timer, fail_wifi_timer;
+static atomic_bool review_wifi_send_hold,review_wifi_send_entered;
+static atomic_int review_wifi_queries;
 lv_timer_t *__real_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data);
 lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data)
 {
+ if(fail_wifi_timer && period==50){fail_wifi_timer=false;return NULL;}
  if(fail_assistant_timer && period==6000){fail_assistant_timer=false;return NULL;}
  return __real_lv_timer_create(cb,period,data);
 }
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
-static int wifi_toggles, bt_toggles;
+static atomic_int wifi_toggles;
+static int bt_toggles;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
+ if(t==TOPIC_WIFI_CONTROL_V2){
+  atomic_store(&review_wifi_send_entered,true);
+  while(atomic_load(&review_wifi_send_hold))usleep(1000);
+  wifi_wire_command command;if(!wifi_wire_decode(d,n,&command)){
+   if(command.action==WIFI_WIRE_SET)wifi_toggles++;else review_wifi_queries++;
+  }
+ }
  if(t==TOPIC_BT_COMMAND && n==sizeof(bt_cmd_t) && (((const bt_cmd_t*)d)->action==BT_CMD_ENABLE || ((const bt_cmd_t*)d)->action==BT_CMD_DISABLE))bt_toggles++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && (((const wifi_cmd_t*)d)->action==CMD_ENABLE || ((const wifi_cmd_t*)d)->action==CMD_DISABLE))wifi_toggles++;
  if(t==TOPIC_HDMI_COMMAND && n==sizeof(hdmi_cmd_t) && ((const hdmi_cmd_t*)d)->action!=HDMI_CMD_GET_STATUS)hdmi_mutations++;
@@ -278,6 +289,20 @@ static void test_sliders(lv_obj_t *root, int *index) {
  for(uint32_t i=0;i<lv_obj_get_child_count(root);i++)test_sliders(lv_obj_get_child(root,i),index);
 }
 static void pump(void) {lv_tick_inc(40);lv_timer_handler();}
+static void review_wifi_flush(void) {
+ for(unsigned i=0;i<2000 && wifi_sender_busy();i++){usleep(1000);wifi_control_poll(NULL);}
+ assert(!wifi_sender_busy());
+}
+static void review_wifi_snapshot(bool enabled,bool complete) {
+ review_wifi_flush();
+ if(!wifi_control.query_sequence){wifi_query_at=lv_tick_get()-1000;wifi_control_poll(NULL);review_wifi_flush();}
+ wifi_response r={.kind=WIFI_REPLY_SNAPSHOT,.server={2},.sequence=wifi_control.query_sequence,.ready=1,.enabled=enabled};
+ memcpy(r.client,wifi_control.client,16);
+ if(complete){r.revision=1;r.phase=2;r.target=wifi_control.target;r.operation_sequence=wifi_control.operation_sequence;r.generation=1;memcpy(r.owner,wifi_control.client,16);}
+ uint8_t bytes[WIFI_REPLY_SIZE];assert(!wifi_wire_response_encode(&r,bytes,sizeof(bytes)));
+ emit(TOPIC_WIFI_CONTROL_REPLY_V2,bytes,sizeof(bytes));wifi_control_render();
+}
+
 static void test_settings(const char *image) {
  settings_save_error=-EIO;int fault_index=0;test_sliders(lv_scr_act(),&fault_index);pump();
  const char *retry_text=ui_i18n_is_zh()?"重试保存":"Retry save";
@@ -1482,11 +1507,41 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-toggle-responsive")) {
+  settings.wifi_enabled=false;atomic_store(&review_wifi_send_hold,true);
+  struct timespec begin,end;clock_gettime(CLOCK_MONOTONIC,&begin);app_wifi.init();clock_gettime(CLOCK_MONOTONIC,&end);
+  double elapsed=(end.tv_sec-begin.tv_sec)*1000.0+(end.tv_nsec-begin.tv_nsec)/1000000.0;assert(elapsed<100);
+  for(unsigned i=0;i<1000&&!atomic_load(&review_wifi_send_entered);i++)usleep(1000);
+  assert(atomic_load(&review_wifi_send_entered));uint64_t old_query=wifi_control.query_sequence;
+  for(unsigned i=0;i<10;i++){clock_gettime(CLOCK_MONOTONIC,&begin);pump();clock_gettime(CLOCK_MONOTONIC,&end);
+   elapsed=(end.tv_sec-begin.tv_sec)*1000.0+(end.tv_nsec-begin.tv_nsec)/1000000.0;assert(elapsed<100);}
+  wifi_app_close();app_wifi.init();assert(!wifi_control.known);
+  atomic_store(&review_wifi_send_hold,false);review_wifi_flush();
+  wifi_response old={.kind=WIFI_REPLY_SNAPSHOT,.server={2},.sequence=old_query,.ready=1,.enabled=1};memcpy(old.client,wifi_control.client,16);
+  uint8_t bytes[128];assert(!wifi_wire_response_encode(&old,bytes,128));emit(TOPIC_WIFI_CONTROL_REPLY_V2,bytes,128);
+  assert(!wifi_control.known);review_wifi_snapshot(false,false);assert(wifi_client_can_set(&wifi_control,lv_tick_get()));
+  puts("PASS WiFi held sender: responsive init and10 GUI ticks, close/reopen, old-page response rejected, fresh state accepted");
+ }
+ else if(!strcmp(argv[1],"wifi-toggle-reopen")) {
+  settings.wifi_enabled=false;app_wifi.init();review_wifi_snapshot(false,false);int before=saves;
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);review_wifi_flush();
+  assert(wifi_control.pending);uint64_t operation=wifi_control.operation_sequence;
+  wifi_app_close();app_wifi.init();review_wifi_flush();assert(wifi_control.pending && wifi_control.operation_sequence==operation && saves==before);
+  review_wifi_snapshot(true,true);assert(!wifi_control.pending && settings.wifi_enabled && saves==before+1);
+  review_wifi_snapshot(true,true);assert(saves==before+1);
+  puts("PASS WiFi pending survives actual page reopen; matching completion saves exactly once");
+ }
+ else if(!strcmp(argv[1],"wifi-toggle-timer-failure")) {
+  settings.wifi_enabled=false;fail_wifi_timer=true;int before=review_wifi_queries;
+  app_wifi.init();assert(!wifi_control_timer && !wifi_sender_busy() && review_wifi_queries==before);
+  assert(lv_obj_has_state(sw_wlan,LV_STATE_DISABLED) && wifi_control.view==WIFI_CLIENT_UNAVAILABLE);
+  puts("PASS WiFi timer allocation failure: unavailable, no unobserved send or false completion");
+ }
  else if(!strcmp(argv[1],"wifi-toggle-premature")) {
   settings.wifi_enabled=false;app_wifi.init();
-  wifi_runtime_status_t runtime={.enabled=false};emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  wifi_runtime_status_t runtime={.enabled=false};emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();review_wifi_snapshot(false,false);
   int before=saves;
-  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);review_wifi_flush();
   /* Exact runtime values observed while the selected worker HAL init is held. */
   runtime.enabled=true;runtime.last_error_code=0;
   emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
@@ -1496,9 +1551,9 @@ int main(int argc,char**argv) {
  else if(!strcmp(argv[1],"wifi-toggle-silence")) {
   settings.wifi_enabled=false;app_wifi.init();
   wifi_runtime_status_t runtime={.enabled=false};
-  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();review_wifi_snapshot(false,false);
   int before_saves=saves,before_toggles=wifi_toggles;
-  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);review_wifi_flush();
   assert(wlan_toggle_pending && lv_obj_has_state(sw_wlan,LV_STATE_DISABLED));
   lv_tick_inc(30000);pump();
   assert(wifi_toggles==before_toggles+1 && saves==before_saves && !settings.wifi_enabled);
@@ -1508,9 +1563,9 @@ int main(int argc,char**argv) {
  else if(!strcmp(argv[1],"wifi-save")){
   settings.wifi_enabled=false;app_wifi.init();settings_save_error=-EIO;
   wifi_runtime_status_t runtime={.enabled=false};
-  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
-  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);
-  runtime.enabled=true;emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();review_wifi_snapshot(false,false);
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);review_wifi_flush();
+  runtime.enabled=true;emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();assert(!wifi_settings_dirty);review_wifi_snapshot(true,true);
   assert(wifi_settings_dirty);
   const char *retry_text=ui_i18n_is_zh()?"重试保存":"Retry save";
   lv_obj_t *retry=find_label(lv_layer_top(),retry_text);assert(retry);
