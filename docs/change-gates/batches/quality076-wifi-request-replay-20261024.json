@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Validate bounded WiFi replay admission candidate",
+  "context": "Prevent delayed or duplicate commands executing again while preserving accepted work on rejection",
+  "next_steps": "Integrate with actual service locking, legacy requests, response protocol and UI",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Isolated state machine with admission adapter and byte codec",
+      "invariants": "Published ABI and rc8/rc31 unchanged; admission acknowledgement is not hardware completion",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-request-replay-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Replay and concurrency model",
+          "status": "passed",
+          "scope": "ASAN/UBSAN, distinct and identical concurrent commands",
+          "evidence": ".delivery/quality-review-20261023/wifi-request-replay-candidate/result-r2.json"
+        },
+        {
+          "name": "Revision codec",
+          "status": "passed",
+          "scope": "Golden vector and76 malformed rejects",
+          "evidence": ".delivery/quality-review-20261023/wifi-request-replay-candidate/codec-result.json"
+        },
+        {
+          "name": "Product integration",
+          "status": "not_run",
+          "scope": "Actual service/router/UI/A133/physical",
+          "reason": "Private model with adapter only",
+          "evidence": ".delivery/quality-review-20261023/wifi-request-replay-candidate/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
