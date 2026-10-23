@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Current service binaries and three-package installation proof",
+  "context": "Complete real program fixture after missing stale services evidence",
+  "next_steps": "Joined UI/provider runtime and remaining quality matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Host production recipe installation with real programs",
+      "invariants": "no gate bypass, old artifacts/failures preserved, no device change",
+      "paths": [
+        "tests/update/test_product_edition.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-edition9-services-install-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Services",
+          "status": "passed",
+          "scope": "five A133 binaries",
+          "reason": "official entry exact references",
+          "evidence": ".delivery/quality-review-20261023/edition9-services-install/result.json"
+        },
+        {
+          "name": "Install",
+          "status": "passed",
+          "scope": "public/private three production recipes",
+          "reason": "bytes/modes and file ownership; six methods no skips",
+          "evidence": ".delivery/quality-review-20261023/edition9-services-install/result.json"
+        },
+        {
+          "name": "Physical release",
+          "status": "not_run",
+          "scope": "fullpackage/device",
+          "reason": "synthetic ancillary inputs; host only",
+          "evidence": ".delivery/quality-review-20261023/edition9-services-install/result.json"
+        }
+      ]
+    }
+  ]
+}

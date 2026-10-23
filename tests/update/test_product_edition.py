@@ -156,7 +156,8 @@ class ProductEditionTests(unittest.TestCase):
                 shutil.copytree(fixtures / ('edition066-build-proof-' + edition) / 'build', product / 'build')
                 (product / 'scripts').symlink_to(ROOT / 'scripts', target_is_directory=True)
                 (product / 'platform/runtime').mkdir(parents=True)
-                shutil.copy2(ROOT / 'platform/runtime/aitvbox-appctl', product / 'platform/runtime/aitvbox-appctl')
+                for tool in ('aitvbox-appctl', 'aitvbox-agentctl', 'aitvbox-adminctl'):
+                    shutil.copy2(ROOT / 'platform/runtime' / tool, product / 'platform/runtime' / tool)
                 for relative in ('build/hdmi_preview/hdmi_preview', 'build/aitvbox-version',
                                  'build/aitvbox-tuya-pid', 'vendor/tuyaopen-a133-b6-libs/MNN/libMNN.so',
                                  'vendor/tuyaopen-a133-b6-libs/MNN/libMNN_Express.so',
@@ -264,6 +265,28 @@ class ProductEditionTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 payload = lambda tree: {p.relative_to(tree).as_posix() for p in tree.rglob('*') if p.is_file() or p.is_symlink()}
                 self.assertEqual(payload(sealed_suite) & payload(updater_stage), set(), 'opkg package file ownership collision')
+                platform_stage = root / 'platform-package'
+                platform_recipe = root / 'platform.mk'
+                platform_recipe.write_text('TOPDIR:=' + str(top) + '\nAITVBOX_PRODUCT_BUILD:=' + str(product) +
+                                           '\ninclude ' + str(ROOT / 'packaging/aitvbox-platform/Makefile') +
+                                           '\nall:\n\t$(call Package/aitvbox-platform/install,' + str(platform_stage) + ')\n')
+                result = subprocess.run(['make', '--no-print-directory', '-f', str(platform_recipe), 'all'],
+                                        cwd=ROOT / 'packaging/aitvbox-platform', capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                services = json.loads((product / 'build/platform/services-build-result.json').read_text())
+                for name in services['artifacts']:
+                    installed = platform_stage / 'usr/bin' / name
+                    self.assertFalse(installed.is_symlink(), name)
+                    self.assertEqual(installed.read_bytes(), (product / 'build/platform' / name).read_bytes(), name)
+                    self.assertTrue(installed.stat().st_mode & 0o111, name)
+                for name in ('aitvbox-appctl', 'aitvbox-agentctl', 'aitvbox-adminctl'):
+                    installed = platform_stage / 'usr/bin' / name
+                    self.assertFalse(installed.is_symlink(), name)
+                    self.assertEqual(installed.read_bytes(), (ROOT / 'platform/runtime' / name).read_bytes(), name)
+                    self.assertTrue(installed.stat().st_mode & 0o111, name)
+                self.assertEqual(payload(platform_stage) & payload(sealed_suite), set(), 'platform/suite file collision')
+                self.assertEqual(payload(platform_stage) & payload(updater_stage), set(), 'platform/updater file collision')
+
                 self.assertFalse((sealed_suite / 'etc/smartdesktopmimi/product-edition').exists())
                 final_marker = updater_stage / 'etc/smartdesktopmimi/product-edition'
                 self.assertEqual(final_marker.read_bytes(), marker.read_bytes())
