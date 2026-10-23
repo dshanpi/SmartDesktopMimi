@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Reconcile driver source and fresh remaining object bytes",
+  "context": "Incremental module used34cachedobjects",
+  "next_steps": "Reviewed standardoverlay promotion/durable tests and physical/source gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "106sourcefiles and34freshobjectbytecomparisons",
+      "invariants": "ReadonlySDK; originalwrapperfailurequalified; no physicalclaim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-driver-input-audit-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Source/objects",
+          "status": "passed",
+          "scope": "selecteddriver members/primaryobjects",
+          "reason": "106sources exact and34freshobjects identical",
+          "evidence": ".delivery/quality-review-20261023/sdio-driver-input-audit/result.json"
+        },
+        {
+          "name": "Fullsource/device",
+          "status": "not_run",
+          "scope": "externalinputclosure/runtime",
+          "reason": "inheritedkernel/compilerlimits, no activation",
+          "evidence": ".delivery/quality-review-20261023/sdio-driver-input-audit/result.json"
+        }
+      ]
+    }
+  ]
+}
