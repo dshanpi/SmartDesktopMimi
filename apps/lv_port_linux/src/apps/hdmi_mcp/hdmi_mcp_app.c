@@ -127,6 +127,24 @@ static pthread_mutex_t stop_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool stop_active, stop_done, stop_success;
 static lv_obj_t *stop_box, *stop_message, *stop_confirm;
 static lv_timer_t *stop_timer;
+/* UI-thread state survives page teardown until a confirmed retry succeeds. */
+static bool stop_failed;
+
+static const char *stop_failure_text(void)
+{
+    return ui_i18n_is_zh() ? "未能确认停止或释放输入，请重试。"
+        : "Could not confirm stop or input release. Please retry.";
+}
+
+static void show_stop_failure(void)
+{
+    if (!stop_failed) return;
+    if (state_label) {
+        lv_label_set_text(state_label, ui_i18n_is_zh() ? "停止未确认" : "Stop unconfirmed");
+        lv_obj_set_style_text_color(state_label, UI_COLOR_ERROR, 0);
+    }
+    if (stop_button) lv_obj_clear_state(stop_button, LV_STATE_DISABLED);
+}
 
 static bool stop_in_progress(void)
 {
@@ -167,13 +185,13 @@ static void stop_completed(lv_timer_t *timer)
     if (!done) return;
     stop_timer = NULL;
     lv_timer_delete(timer);
+    stop_failed = !success;
+    show_stop_failure();
     if (!stop_box) return;
     if (success) {
         lv_obj_delete_async(stop_box);
     } else {
-        lv_label_set_text(stop_message, ui_i18n_is_zh()
-            ? "未能确认停止或释放输入，请重试。"
-            : "Could not confirm stop or input release. Please retry.");
+        lv_label_set_text(stop_message, stop_failure_text());
         lv_obj_clear_state(stop_confirm, LV_STATE_DISABLED);
     }
 }
@@ -326,6 +344,7 @@ static void apply_status(json_object *status)
         app_manager_open(APP_ID_HDMI_MCP);
     }
     previous_running = running;
+    show_stop_failure();
 }
 
 static void monitor_cb(lv_timer_t *timer)
@@ -338,6 +357,7 @@ static void monitor_cb(lv_timer_t *timer)
         json_object_put(status);
     } else if (state_label) {
         lv_label_set_text(state_label, ui_tr(UI_STR_MCP_OFFLINE));
+        show_stop_failure();
     }
 }
 
@@ -371,6 +391,8 @@ static void stop_confirmed(lv_event_t *event)
         pthread_mutex_lock(&stop_mutex);
         stop_active = false;
         pthread_mutex_unlock(&stop_mutex);
+        stop_failed = true;
+        show_stop_failure();
         lv_obj_clear_state(stop_confirm, LV_STATE_DISABLED);
         lv_label_set_text(stop_message, ui_i18n_is_zh() ? "无法发送停止请求，请重试。" : "Could not send stop request. Please retry.");
         return;
@@ -406,6 +428,8 @@ static void stop_event(lv_event_t *event)
         lv_obj_add_state(confirm, LV_STATE_DISABLED);
         lv_label_set_text(stop_message, ui_i18n_is_zh() ? "正在请求停止…" : "Requesting stop...");
     }
+    if (stop_failed && !stop_in_progress())
+        lv_label_set_text(stop_message, stop_failure_text());
     lv_obj_t *cancel = lv_msgbox_add_footer_button(box, ui_i18n_is_zh() ? "关闭" : "Close");
     lv_obj_set_height(confirm, 44);
     lv_obj_set_height(cancel, 44);

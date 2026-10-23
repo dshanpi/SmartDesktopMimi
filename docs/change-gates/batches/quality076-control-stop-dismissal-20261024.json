@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Preserve failed stop across page teardown",
+  "context": "Idle backend does not prove HID release succeeded",
+  "next_steps": "Visual review, whole UI timeout and A133 candidate verification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "UI failure persistence and retry",
+      "invariants": "No worker widget access; host tests are not physical acceptance",
+      "paths": [
+        "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-stop-dismissal-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original closed-page failure",
+          "status": "failed",
+          "scope": "Actual LVGL retry-disabled assertion",
+          "reason": "Completion discarded when dialog absent",
+          "evidence": ".delivery/quality-review-20261023/control-stop-dismissal/original.log"
+        },
+        {
+          "name": "Dismissal and retry regression",
+          "status": "passed",
+          "scope": "8 actual LVGL renders plus11transportcases",
+          "evidence": ".delivery/quality-review-20261023/control-stop-dismissal/result.json"
+        },
+        {
+          "name": "A133 and physical",
+          "status": "not_run",
+          "scope": "New UI candidate",
+          "reason": "Host verification only",
+          "evidence": ".delivery/quality-review-20261023/control-stop-dismissal/result.json"
+        }
+      ]
+    }
+  ]
+}

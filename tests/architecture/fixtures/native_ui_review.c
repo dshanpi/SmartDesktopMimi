@@ -1121,6 +1121,25 @@ int main(int argc,char**argv) {
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
+ else if(!strcmp(argv[1],"hdmi-stop-dismissed")) {
+  review_hdmi_idle=true;app_hdmi_mcp.init();pump();
+  lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
+  lv_obj_clear_state(lv_obj_get_parent(stop),LV_STATE_DISABLED);
+  lv_obj_send_event(lv_obj_get_parent(stop),LV_EVENT_CLICKED,NULL);pump();
+  review_hdmi_stop_failure=true;review_hdmi_delay_us=250000;
+  lv_obj_t *confirm=find_label(lv_layer_top(),ui_tr(UI_STR_STOP));assert(confirm);
+  lv_obj_send_event(lv_obj_get_parent(confirm),LV_EVENT_CLICKED,NULL);
+  lv_obj_t *old=lv_scr_act();app_hdmi_mcp.close();
+  for(int i=0;i<600;i++){usleep(1000);pump();}
+  review_hdmi_stop_failure=false;review_hdmi_delay_us=0;
+  app_hdmi_mcp.init();lv_obj_delete(old);pump();
+  stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
+  assert(!lv_obj_has_state(lv_obj_get_parent(stop),LV_STATE_DISABLED) && "failed stop must remain retryable after page reopen and idle status");
+  lv_obj_send_event(lv_obj_get_parent(stop),LV_EVENT_CLICKED,NULL);pump();
+  const char *failure=ui_i18n_is_zh()?"未能确认停止或释放输入，请重试。":"Could not confirm stop or input release. Please retry.";
+  assert(find_label(lv_layer_top(),failure));
+  puts("PASS closed-page stop failure survives idle status and remains visible/retryable");
+ }
  else if(!strcmp(argv[1],"hdmi-stop-failure") || !strcmp(argv[1],"hdmi-stop-retry") || !strcmp(argv[1],"hdmi-stop-reopen")) {
   review_hdmi_idle=true;app_hdmi_mcp.init();pump();
   lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
