@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Verify session release faults preserve retry ownership",
+  "context": "Close must not discard failedrelease orclearnewowner onretry",
+  "next_steps": "Current KVM build/sourcebinding, automaticUSB recovery andfullphysicalmatrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual backend tempendpointfaults andA133entry audit",
+      "invariants": "No real HID; explicitretry notautomaticproof; inactivelegacyjiggler notsilentlyqualified",
+      "paths": [
+        "apps/ipkvm/upstream/session_input_fault_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-release-faults-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Ownership releasefaults",
+          "status": "passed",
+          "scope": "3methods/4scenarios with-race andtemporaryendpoints",
+          "evidence": ".delivery/quality-review-20261023/kvm-release-faults/faults.log"
+        },
+        {
+          "name": "Jiggler A133 scope",
+          "status": "passed",
+          "scope": "Staticselectedentry/allowlist excludeslegacyjiggler",
+          "evidence": ".delivery/quality-review-20261023/kvm-release-faults/jiggler-scope.json"
+        },
+        {
+          "name": "Physical automaticrecovery",
+          "status": "not_run",
+          "scope": "No realUSBreconnect orEAGAINhardwareproof",
+          "reason": "Hostexplicitretryonly",
+          "evidence": ".delivery/quality-review-20261023/kvm-release-faults/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
