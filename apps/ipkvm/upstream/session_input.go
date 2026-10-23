@@ -7,10 +7,14 @@ import (
 	"sync"
 )
 
+type keyboardInputToken struct{ marker byte }
+
 var sessionInput = struct {
 	sync.Mutex
-	keyboard *Session
-	mouse    *Session
+	keyboard           *Session
+	keyboardToken      *keyboardInputToken
+	keyboardGeneration uint64
+	mouse              *Session
 }{}
 
 // All session input writes and close/release share this lock. A report already
@@ -24,6 +28,11 @@ func (s *Session) withHID(mouse bool, operation func() error) error {
 	if mouse {
 		sessionInput.mouse = s
 	} else {
+		// Manual keyboard input supersedes any older macro, including its
+		// deferred key-release report. Mouse movement does not interrupt it.
+		sessionInput.keyboardGeneration++
+		keyboardMacros.cancel()
+		sessionInput.keyboardToken = nil
 		sessionInput.keyboard = s
 	}
 	return operation()
@@ -67,11 +76,14 @@ func (s *Session) executeKeyboardMacro(steps []hidrpc.KeyboardMacroStep) error {
 		s.inputContext, s.inputCancel = context.WithCancel(context.Background())
 	}
 	ctx := s.inputContext
+	generation := sessionInput.keyboardGeneration
+	token := &keyboardInputToken{}
+	started := false
 	sessionInput.Unlock()
 	return keyboardMacros.executeOwned(ctx, s, steps, func(mod uint8, keys []uint8) error {
 		sessionInput.Lock()
 		defer sessionInput.Unlock()
-		if s.inputClosed {
+		if s.inputClosed || generation != sessionInput.keyboardGeneration {
 			return context.Canceled
 		}
 		clear := mod == 0
@@ -80,10 +92,12 @@ func (s *Session) executeKeyboardMacro(steps []hidrpc.KeyboardMacroStep) error {
 				clear = false
 			}
 		}
-		if clear && sessionInput.keyboard != s {
+		if clear && started && (sessionInput.keyboard != s || sessionInput.keyboardToken != token) {
 			return nil
 		}
 		sessionInput.keyboard = s
+		sessionInput.keyboardToken = token
+		started = true
 		return rpcKeyboardReport(mod, keys)
 	})
 }

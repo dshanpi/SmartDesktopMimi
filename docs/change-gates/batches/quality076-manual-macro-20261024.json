@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Prioritize manual keyboard input over macros without stale cleanup",
+  "context": "Actual report test reproduced missedcancel and manualkeys cleared",
+  "next_steps": "Release/writefaults, jiggler input coordination, failedoffer cleanup and physical KVM",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Manualkeyboard generation andmacrocleanup token",
+      "invariants": "Mouse movement doesnotcancel keyboardmacro; explicit initialclear works; no USBdevice",
+      "paths": [
+        "apps/ipkvm/upstream/session_input.go",
+        "apps/ipkvm/upstream/session_input_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-manual-macro-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original priority/cleanup failure",
+          "status": "failed",
+          "scope": "Macrokeepsrunning andclearsnewmanualkeys",
+          "reason": "No manualgeneration or macro-specific cleanup ownership",
+          "evidence": ".delivery/quality-review-20261023/kvm-manual-macro/original.log"
+        },
+        {
+          "name": "Actual package regression",
+          "status": "passed",
+          "scope": "Entire rootpackage-race-count1 includingnewmanual/initialclear/mouseindependence tests",
+          "evidence": ".delivery/quality-review-20261023/kvm-manual-macro/package.log"
+        },
+        {
+          "name": "Physical inputs",
+          "status": "not_run",
+          "scope": "No actualUSB orbrowserinteraction",
+          "reason": "Temporary reports only",
+          "evidence": ".delivery/quality-review-20261023/kvm-manual-macro/prerecord.json"
+        }
+      ]
+    }
+  ]
+}

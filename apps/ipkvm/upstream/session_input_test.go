@@ -129,3 +129,77 @@ func TestSessionReplacementRevokesPreviousInput(t *testing.T) {
 	checkInputBytes(t, k, []byte{1, 0, 5, 0, 0, 0, 0, 0})
 	b.stopHIDQueues()
 }
+
+func TestManualKeyboardInterruptsMacroWithoutClearingManualKeys(t *testing.T) {
+	k, _ := configureTestHID(t)
+	s := &Session{}
+	done := make(chan error, 1)
+	go func() { done <- s.executeKeyboardMacro(macroStep(4)) }()
+	deadline := time.Now().Add(time.Second)
+	for {
+		b, _ := os.ReadFile(k)
+		if len(b) == 8 && b[2] == 4 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("macro never wrote")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if e := s.keyboardReport(2, []byte{5}); e != nil {
+		t.Fatal(e)
+	}
+	select {
+	case e := <-done:
+		if !errors.Is(e, context.Canceled) {
+			t.Errorf("macro result=%v", e)
+		}
+	case <-time.After(200 * time.Millisecond):
+		t.Error("manual input did not interrupt macro")
+		keyboardMacros.cancelOwned(s)
+		<-done
+	}
+	checkInputBytes(t, k, []byte{2, 0, 5, 0, 0, 0, 0, 0})
+	s.closeHIDInput()
+}
+
+func TestSessionMacroInitialClearAndMouseIndependence(t *testing.T) {
+	k, _ := configureTestHID(t)
+	s := &Session{}
+	if e := s.keyboardReport(2, []byte{5}); e != nil {
+		t.Fatal(e)
+	}
+	steps := macroStep(0)
+	steps[0].Delay = 0
+	if e := s.executeKeyboardMacro(steps); e != nil {
+		t.Fatal(e)
+	}
+	checkInputBytes(t, k, make([]byte, 8))
+	done := make(chan error, 1)
+	go func() { done <- s.executeKeyboardMacro(macroStep(4)) }()
+	deadline := time.Now().Add(time.Second)
+	for {
+		b, _ := os.ReadFile(k)
+		if len(b) == 8 && b[2] == 4 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("macro never wrote")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if e := s.withHID(true, func() error { return rpcRelMouseReport(1, 0, 0) }); e != nil {
+		t.Fatal(e)
+	}
+	select {
+	case e := <-done:
+		t.Fatalf("mouse canceled keyboard macro: %v", e)
+	case <-time.After(20 * time.Millisecond):
+	}
+	keyboardMacros.cancelOwned(s)
+	if e := awaitMacro(t, done); !errors.Is(e, context.Canceled) {
+		t.Fatal(e)
+	}
+	checkInputBytes(t, k, make([]byte, 8))
+	s.closeHIDInput()
+}
