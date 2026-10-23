@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Link current-layout RX capacity module",
+  "context": "31 affected objects and4 unaffected verified inputs",
+  "next_steps": "Durable tests and standardoverlay promotion; physical/source gates remain",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Full module link from35 recorded objects",
+      "invariants": "No original SDK modification/device activation or release claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-capacity-module-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Module link and inputs",
+          "status": "passed",
+          "scope": "Aggregate/modpost/metadata/module/ELF",
+          "reason": "All current-layout consumers rebuilt and actuallinkinputpaths verified",
+          "evidence": ".delivery/quality-review-20261023/sdio-rx-capacity-joined/module-result.json"
+        }
+      ]
+    }
+  ]
+}
