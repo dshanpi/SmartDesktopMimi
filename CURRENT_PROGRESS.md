@@ -118,3 +118,8 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 ## 2026-10-23 rc31 / rc8 candidate preparation (SYSTEM070)
 
 Prepare a new local application 1.0.8-rc.31 and system 1.0.0-rc.8 candidate for the integrated boot and capture/driver fixes. Existing signed rc30 admits only rc6/rc7 and remains unchanged. Fresh source build, a new signed compatibility manifest, sealed baseline and normal system/bootchain checks are required. Original trust, hardware identity, data schema and public/private boundaries are preserved. No application behavior change in this version increment. All new build, physical boot, HDMI stability and upgrade/rollback acceptance remain not_run; no stable release or old-result reassignment. Private batch evidence: a133-boot-repair-20261021/system-rc8-r1.
+
+
+## 2026-10-23 capture lock integration for rc8
+
+Full candidate r1 stopped before compilation because the public capture entry retained the old source-lock pin. Advance scripts/build_a133_capture.py and tests/sdk_source.py to canonical SDK lock3332510afec829d2fd5643afb8a2af0293e3893155c4d3a275d09c2309d29670, corresponding to the already bounded-runtime-tested no-signal candidate. Add the identical capture check to build_release.sh preflight, before creating output or cleaning application builds. No SDK source copied into public code and no signature/hash/alias checks weakened. Six capture boundary tests passed without skips, actual SDK check and shell syntax passed. r1 failure and its signed application/source remain preserved; revised local rc31/r2 must bind this new commit. Full image and physical acceptance remain not_run. Private evidence: system-rc8-r1/capture-pin-prerecord.json and capture-pin-tests.log.

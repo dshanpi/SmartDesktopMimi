@@ -10,3 +10,8 @@
 SDK审计的132个GPU生成链接已逐个证明重定位后仍指向原快照/固定Git提交同字节源码，生成配置仅两个SDK绝对路径变化；原失败审计保留，后续分类记录单列。完整新候选及物理验证继续，factory应用rc30仍为9196735已签名包，本次系统构建入口提交与factory源码分别追溯。
 
 首次 e8865a1 自动追溯检查因新详细记录缺完整需求编号而拒绝；补充本标题后重验，不将该记录错误记为产品运行失败。
+
+
+## 2026-10-23 capture lock integration for rc8
+
+Full candidate r1 stopped before compilation because the public capture entry retained the old source-lock pin. Advance scripts/build_a133_capture.py and tests/sdk_source.py to canonical SDK lock3332510afec829d2fd5643afb8a2af0293e3893155c4d3a275d09c2309d29670, corresponding to the already bounded-runtime-tested no-signal candidate. Add the identical capture check to build_release.sh preflight, before creating output or cleaning application builds. No SDK source copied into public code and no signature/hash/alias checks weakened. Six capture boundary tests passed without skips, actual SDK check and shell syntax passed. r1 failure and its signed application/source remain preserved; revised local rc31/r2 must bind this new commit. Full image and physical acceptance remain not_run. Private evidence: system-rc8-r1/capture-pin-prerecord.json and capture-pin-tests.log.

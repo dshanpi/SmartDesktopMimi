@@ -165,6 +165,7 @@ elif [[ -n "${AITVBOX_100ASK_SDK_ROOT:-}" || -n "${MIMI_PRIVATE_PRODUCT_ROOT:-}"
     die "Public product source lock forbids private inputs"
 fi
 python3 "${SELF_DIR}/lock_product_sources.py" "${PRODUCT_LOCK_ARGS[@]}" --check-sources
+python3 "${SELF_DIR}/build_a133_capture.py" --sdk "${SDK}" --check
 
 if [[ "${WITH_OTA}" -eq 1 ]]; then
     : "${MIMI_SWU_SIGNING_KEY:?Set external SWUpdate signing key}"
