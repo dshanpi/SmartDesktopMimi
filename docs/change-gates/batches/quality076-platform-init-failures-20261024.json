@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Fail service startup on setup errors and retain stop diagnostics",
+  "context": "Init scripts ignored mkdir/chmod and agent stop errors",
+  "next_steps": "Actual procd runtime ordering, controlled hardware and full system",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Apps/control init failure paths",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "packaging/aitvbox-platform/files/aitvbox-apps.init",
+        "packaging/aitvbox-platform/files/aitvbox-control.init",
+        "tests/platform/test_platform_init.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-platform-init-failures-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Init failure flow",
+          "status": "passed",
+          "scope": "13hostsubcases inclagentctl; external-command adapters, exact installedinit bytes",
+          "evidence": ".delivery/quality-review-20261023/platform-init-failures/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/platform-init-failures/result.json"
+        }
+      ]
+    }
+  ]
+}

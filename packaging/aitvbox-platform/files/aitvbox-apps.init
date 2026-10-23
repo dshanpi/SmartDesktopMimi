@@ -5,8 +5,8 @@ START=83
 STOP=17
 
 start_service() {
-	mkdir -p /var/run/aitvbox
-	chmod 0751 /var/run/aitvbox
+	mkdir -p /var/run/aitvbox || return 1
+	chmod 0751 /var/run/aitvbox || return 1
 	procd_open_instance
 	procd_set_param command /usr/bin/aitvbox-appd
 	procd_set_param respawn 3600 5 5

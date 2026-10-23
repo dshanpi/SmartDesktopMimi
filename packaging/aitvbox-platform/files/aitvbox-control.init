@@ -5,11 +5,11 @@ STOP=16
 USE_PROCD=1
 
 start_service() {
-	mkdir -p /var/run/aitvbox /overlay/aitvbox/secrets
+	mkdir -p /var/run/aitvbox /overlay/aitvbox/secrets || return 1
 	# Native APPs run as UID 65534 and need traversal to apps.sock. Runtime
 	# files and privileged sockets retain their own 0600/0660 permissions.
-	chmod 0751 /var/run/aitvbox
-	chmod 0700 /overlay/aitvbox/secrets
+	chmod 0751 /var/run/aitvbox || return 1
+	chmod 0700 /overlay/aitvbox/secrets || return 1
 
 	procd_open_instance
 	procd_set_param command /usr/bin/aitvbox-controld
@@ -20,6 +20,9 @@ start_service() {
 }
 
 stop_service() {
-	/usr/bin/aitvbox-agentctl stop >/dev/null 2>&1 || true
+	if ! /usr/bin/aitvbox-agentctl stop >/dev/null 2>&1; then
+		logger -t aitvbox-control "agent stop request or HID release failed; continuing service cleanup" ||
+			printf '%s\n' "agent stop request or HID release failed; continuing service cleanup" >&2
+	fi
 	rm -f /var/run/aitvbox/control.sock
 }
