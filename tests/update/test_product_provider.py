@@ -44,7 +44,7 @@ class ProductProviderTests(unittest.TestCase):
                       inputs={'sdk/include.h': p.sha(dependency)},
                       compiler_target=p.COMPILER, compiler_sha256=p.sha(compiler),
                       source_commit='fixture', translation_units=[], link_flags=[],
-                      edition_source_version=7, edition_source_requirement='REQ-MIMI-QUALITY-076',
+                      edition_source_version=8, edition_source_requirement='REQ-MIMI-QUALITY-076',
                       reference_state='audited_new_source_reference', reference_backend_sha256='a' * 64,
                       prior_backend_sha256='b' * 64, original_backend_sha256='b' * 64)
         for name in p.SETTINGS_INPUTS:
