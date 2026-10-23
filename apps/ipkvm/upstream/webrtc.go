@@ -278,7 +278,17 @@ type SessionConfig struct {
 	Logger     *zerolog.Logger
 }
 
-func (s *Session) ExchangeOffer(offerStr string) (string, error) {
+func (s *Session) ExchangeOffer(offerStr string) (answerSD string, resultErr error) {
+	// Both HTTP and WebSocket callers discard a failed negotiation. Tear down
+	// the partially constructed session here, including pre-ICE failures.
+	defer func() {
+		if resultErr != nil {
+			s.stopHIDQueues()
+			s.stopVideoWriter()
+			_ = s.peerConnection.Close()
+		}
+	}()
+
 	b, err := base64.StdEncoding.DecodeString(offerStr)
 	if err != nil {
 		return "", err

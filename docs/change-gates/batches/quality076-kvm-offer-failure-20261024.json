@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "summary": "Clean up rejected WebRTC negotiation sessions",
+  "context": "Both HTTP andWS callers abandon ExchangeOffer errors; realpeers remainedopen",
+  "next_steps": "Inputfault/jiggler scopes, successfulnetwork negotiation anddevice matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Common failedoffer cleanup",
+      "invariants": "Nilerror path unchanged; no peer traffic/deviceactivation",
+      "paths": [
+        "apps/ipkvm/upstream/webrtc.go",
+        "apps/ipkvm/upstream/offer_failure_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-kvm-offer-failure-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original abandoned peers",
+          "status": "failed",
+          "scope": "3 malformedoffers leavepeeropen",
+          "reason": "No failurecleanup",
+          "evidence": ".delivery/quality-review-20261023/kvm-offer-failure/original.log"
+        },
+        {
+          "name": "Failedoffer cleanup",
+          "status": "passed",
+          "scope": "3 actualPion failures closepeer, stopworkers andinput",
+          "evidence": ".delivery/quality-review-20261023/kvm-offer-failure/fixed.log"
+        },
+        {
+          "name": "Root package regressions",
+          "status": "passed",
+          "scope": "Whole rootpackage withrace detector",
+          "evidence": ".delivery/quality-review-20261023/kvm-offer-failure/package.log"
+        },
+        {
+          "name": "Fresh successful negotiation/physical",
+          "status": "not_run",
+          "scope": "No ICEgathering/realmedia",
+          "reason": "Failure-onlyhostscope",
+          "evidence": ".delivery/quality-review-20261023/kvm-offer-failure/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
