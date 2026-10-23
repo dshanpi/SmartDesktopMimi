@@ -46,6 +46,16 @@ class PlatformPackageTests(unittest.TestCase):
                 self.assertEqual(installed.read_bytes(), original.read_bytes(), name)
                 self.assertEqual(installed.stat().st_mode & 0o777, 0o755, name)
             shutil.rmtree(stage)
+            stale = os.environ.get('MIMI_STALE_CONTROL_PROGRAM')
+            if stale:
+                control = product / 'build/platform/aitvbox-controld'
+                current = control.read_bytes()
+                control.write_bytes(Path(stale).read_bytes())
+                result = install()
+                self.assertNotEqual(result.returncode, 0, 'stale control program accepted')
+                self.assertIn('missing or changed provider input: ' + str(control), result.stderr)
+                self.assertFalse(stage.exists(), 'stale program gate wrote rootfs')
+                control.write_bytes(current)
             with (product / 'build/platform/aitvbox-appd').open('ab') as f:
                 f.write(b'corrupt fixture')
             result = install()
