@@ -33,3 +33,6 @@ User requested remote preservation before continued work. See docs/checkpoints/2
 
 ## 2026-10-23 current-code push and gated snapshot
 User renewed upload authorization. See docs/delivery/20261023-rc31-rc8.md. Public candidate audit and10 new public history blobs passed known-secret screening; private refs unchanged. Stable remains blocked by recorded actual acceptance gaps. Upload/readback pending at this prerecord.
+
+## 2026-10-23 actual delivery result
+Both controlled drafts uploaded and all19 assets fully downloaded, signatures and compressed/raw image hashes passed. Remote inventory unchanged. Source pushed4519de2/private dbcb5f1/SDK31a5653. Stable blocked; see docs/delivery/20261023-rc31-rc8-result.md. No board operations.

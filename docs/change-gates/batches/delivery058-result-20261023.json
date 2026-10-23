@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Record completed19-asset remote readback and blocked stable admission",
+  "context": "User authorized push then gated release",
+  "next_steps": "Retain drafts; remaining real acceptance gates stay open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "Remote draft delivery result",
+      "invariants": "No stable claim or rewritten artifact/source tags",
+      "paths": [
+        "docs/delivery/20261023-rc31-rc8-result.md",
+        "docs/change-gates/batches/delivery058-result-20261023.json",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md"
+      ],
+      "checks": [
+        {
+          "name": "All19 remote assets/signatures/full image",
+          "status": "passed",
+          "scope": "actual downloaded bytes and unchanged inventory",
+          "evidence": ".delivery/release-20261023/result.json"
+        },
+        {
+          "name": "Stable admission",
+          "status": "blocked",
+          "scope": "application and system",
+          "reason": "No qualified release lock; hardware/data/source acceptance incomplete",
+          "evidence": ".delivery/release-20261023/stable-gates.json"
+        }
+      ]
+    }
+  ]
+}
