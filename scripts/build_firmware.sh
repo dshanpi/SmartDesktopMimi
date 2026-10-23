@@ -507,6 +507,15 @@ if [[ -n "${MIMI_PLATFORM_PRODUCT_LOCK:-}" ]]; then
         --image "${ROOTFS_IMAGE}" --output "${PRODUCT_ROOT}/build/product-rootfs-check.json"
 fi
 
+# Compare selected lifecycle scripts from the final packed filesystem.
+if [[ -z "${ROOTFS_EXTRACT}" ]]; then
+    ROOTFS_EXTRACT="$(mktemp -d /tmp/aitvbox-startup-readback.XXXXXX)"
+    unsquashfs -no-progress -d "${ROOTFS_EXTRACT}" "${ROOTFS_IMAGE}" >/dev/null
+fi
+python3 "${PRODUCT_ROOT}/scripts/check_startup_scripts.py" \
+    --rootfs "${ROOTFS_EXTRACT}" --product "${PRODUCT_ROOT}" \
+    > "${PRODUCT_ROOT}/build/startup-scripts-rootfs-check.json"
+
 if [[ -n "${ROOTFS_EXTRACT}" ]]; then
     rm -rf -- "${ROOTFS_EXTRACT}"
     ROOTFS_EXTRACT=""

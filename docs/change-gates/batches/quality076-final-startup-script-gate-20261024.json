@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Reject stale final rootfs lifecycle scripts",
+  "context": "Source changes must survive package caching and final image composition",
+  "next_steps": "Complete final image and runtime acceptance when prerequisites permit",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected final extracted rootfs scripts",
+      "invariants": "Preserve published baseline and original failures; host checks are not board acceptance",
+      "paths": [
+        "scripts/check_startup_scripts.py",
+        "scripts/build_firmware.sh",
+        "tests/update/test_startup_scripts.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-final-startup-script-gate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Eight rootfs boundary cases and shell syntax",
+          "status": "passed",
+          "scope": "Host fixtures only",
+          "evidence": ".delivery/quality-review-20261023/final-startup-script-gate/result.json"
+        },
+        {
+          "name": "Full image and runtime",
+          "status": "not_run",
+          "scope": "Actual final system and physical startup",
+          "reason": "Full build space and runtime prerequisites remain open",
+          "evidence": ".delivery/quality-review-20261023/final-startup-script-gate/result.json"
+        }
+      ]
+    }
+  ]
+}
