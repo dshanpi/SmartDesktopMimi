@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Integrate single-owner control socket lifecycle",
+  "context": "Old daemon exit could remove replacement endpoint",
+  "next_steps": "Remaining runtime and functional acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected SDK source/artifact and package tests",
+      "invariants": "Published baseline and board unchanged; no false physical acceptance",
+      "paths": [
+        "scripts/build_a133_services.py",
+        "tests/sdk_source.py",
+        "docs/update/source-ownership.json",
+        "docs/update/services-program-reference.json",
+        "tests/platform/test_control_ownership.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-owner-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Build/durable/package checks",
+          "status": "passed",
+          "scope": "Selected host integration only",
+          "evidence": ".delivery/quality-review-20261023/control-owner-integration/result.json"
+        },
+        {
+          "name": "Physical/fullimage",
+          "status": "not_run",
+          "scope": "Actual system runtime",
+          "reason": "Not deployed or full firmware built",
+          "evidence": ".delivery/quality-review-20261023/control-owner-integration/result.json"
+        }
+      ]
+    }
+  ]
+}

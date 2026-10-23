@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 PREFIX = 'openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-services'
-LOCK_SHA256 = '420645f9e23cb1c15523b0ba557fd4a09f131fffc05af58e423a5d8cc73f0c05'
+LOCK_SHA256 = '443a4cf09fd411010cff529a89995dd0878ee43ba5b4b2fe69e06ace2f9c92f2'
 
 
 def sha(path):

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "source_lock_sha256": "420645f9e23cb1c15523b0ba557fd4a09f131fffc05af58e423a5d8cc73f0c05",
+  "source_lock_sha256": "443a4cf09fd411010cff529a89995dd0878ee43ba5b4b2fe69e06ace2f9c92f2",
   "artifacts": {
     "aitvbox-agentd": {
       "bytes": 77808,
@@ -15,8 +15,8 @@
       "sha256": "23a58690538a9ff941d20110a317c9d1d44c0d547ef3054ee720cdf8b8942d6c"
     },
     "aitvbox-controld": {
-      "sha256": "fa0aa46a2e8955c1121fdde7b66f95e2be93ec58b2f5861a3937af9d4ce13e98",
-      "bytes": 75352
+      "sha256": "c0c6726cb80e1eb641e98fc08a290749dc7015dcbaffc4b563063fc51e223ac8",
+      "bytes": 75520
     },
     "aitvbox-mcpd": {
       "bytes": 73480,
