@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Bound complete user app socket requests and suppress SIGPIPE",
+  "context": "Peer close signal and indefinitely extendable per-read timeout",
+  "next_steps": "Async UI request lifecycle, framing and A133 integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "User app socket transport",
+      "invariants": "No replay, same permissions and response interpretation",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/test_user_app_transport.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-request-deadline-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "extracted production transport",
+          "reason": "SIGPIPE/slow drip",
+          "evidence": ".delivery/quality-review-20261023/user-request-deadline/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "sanitizer transport and actual widget regression",
+          "reason": "deadline and close recovered",
+          "evidence": ".delivery/quality-review-20261023/user-request-deadline/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133",
+          "reason": "host scope only",
+          "evidence": ".delivery/quality-review-20261023/user-request-deadline/result.json"
+        }
+      ]
+    }
+  ]
+}

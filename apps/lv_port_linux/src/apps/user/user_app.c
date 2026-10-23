@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <poll.h>
+#include <time.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -42,12 +44,33 @@ static user_app_entry_t entries[USER_APP_MAX];
 static size_t entry_count;
 static uint32_t current_permissions;
 
-static int write_all(int fd, const void *buffer, size_t length)
+static int64_t app_now_ms(void)
+{
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now)) return -1;
+    return (int64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
+
+static int app_wait(int fd, short events, int64_t deadline)
+{
+    for (;;) {
+        int64_t now = app_now_ms();
+        if (now < 0 || now >= deadline) return -1;
+        struct pollfd descriptor = {.fd = fd, .events = events};
+        int ready = poll(&descriptor, 1, (int)(deadline - now));
+        if (ready < 0 && errno == EINTR) continue;
+        if (ready <= 0 || (descriptor.revents & (POLLERR | POLLNVAL))) return -1;
+        return 0;
+    }
+}
+
+static int app_write_all(int fd, const void *buffer, size_t length, int64_t deadline)
 {
     const unsigned char *cursor = buffer;
     while (length > 0) {
-        ssize_t count = write(fd, cursor, length);
-        if (count < 0 && errno == EINTR) continue;
+        if (app_wait(fd, POLLOUT, deadline)) return -1;
+        ssize_t count = send(fd, cursor, length, MSG_DONTWAIT | MSG_NOSIGNAL);
+        if (count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
         if (count <= 0) return -1;
         cursor += count;
         length -= (size_t)count;
@@ -59,27 +82,37 @@ static json_object *app_request(json_object *request)
 {
     const char *endpoint = mimi_user_app_config_get()->user_apps_socket_path;
     if(!*endpoint) return NULL;
-    int client = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    int64_t now = app_now_ms();
+    if (now < 0) return NULL;
+    int64_t deadline = now + 5000;
+    int client = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (client < 0) return NULL;
-    struct timeval timeout = {.tv_sec = 5};
-    setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    setsockopt(client, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     struct sockaddr_un address = {0};
     address.sun_family = AF_UNIX;
     snprintf(address.sun_path, sizeof(address.sun_path), "%s", endpoint);
     const char *text = json_object_to_json_string_ext(
         request, JSON_C_TO_STRING_PLAIN);
-    if (connect(client, (struct sockaddr *)&address, sizeof(address)) ||
-        write_all(client, text, strlen(text)) || write_all(client, "\n", 1)) {
-        close(client);
-        return NULL;
+    if (connect(client, (struct sockaddr *)&address, sizeof(address))) {
+        if (errno != EINPROGRESS || app_wait(client, POLLOUT, deadline)) {
+            close(client); return NULL;
+        }
+        int error = 0;
+        socklen_t size = sizeof(error);
+        if (getsockopt(client, SOL_SOCKET, SO_ERROR, &error, &size) || error) {
+            close(client); return NULL;
+        }
+    }
+    if (app_write_all(client, text, strlen(text), deadline) ||
+        app_write_all(client, "\n", 1, deadline)) {
+        close(client); return NULL;
     }
     char response[4097];
     size_t used = 0;
     while (used < sizeof(response) - 1) {
-        ssize_t count = read(client, response + used,
-                             sizeof(response) - 1 - used);
-        if (count < 0 && errno == EINTR) continue;
+        if (app_wait(client, POLLIN, deadline)) break;
+        ssize_t count = recv(client, response + used,
+                             sizeof(response) - 1 - used, MSG_DONTWAIT);
+        if (count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
         if (count <= 0) break;
         used += (size_t)count;
         if (memchr(response, '\n', used)) break;
