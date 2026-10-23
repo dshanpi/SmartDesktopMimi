@@ -547,14 +547,15 @@ static void open_entry(lv_event_t *event)
     if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
     size_t index = (size_t)(uintptr_t)lv_event_get_user_data(event);
     if (index >= entry_count) return;
-    if (!regular_file(entries[index].entry)) return;
-    json_object *page = json_object_from_file(entries[index].entry);
+    bool available = regular_file(entries[index].entry);
+    json_object *page = available ? json_object_from_file(entries[index].entry) : NULL;
     clear_content();
     current_permissions = entries[index].permissions;
     if (!page_valid(page)) {
         status_label = lv_label_create(page_content);
-        lv_label_set_text(status_label, ui_i18n_is_zh() ?
-            "应用页面格式无效，请重新安装应用。" : "Invalid app page. Please reinstall the app.");
+        lv_label_set_text(status_label, !available ?
+            (ui_i18n_is_zh() ? "应用页面不可用，请重新安装应用。" : "App page unavailable. Please reinstall the app.") :
+            (ui_i18n_is_zh() ? "应用页面格式无效，请重新安装应用。" : "Invalid app page. Please reinstall the app."));
         lv_obj_set_width(status_label, lv_pct(100));
         lv_label_set_long_mode(status_label, LV_LABEL_LONG_WRAP);
         lv_obj_set_style_text_font(status_label, UI_TEXT_BODY_LG, 0);

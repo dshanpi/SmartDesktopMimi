@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Clear stale actions when selected page disappears",
+  "context": "Early return retains previous interactive content",
+  "next_steps": "Catalog/race audit and candidate integration; full quality gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Unavailable application page UX",
+      "invariants": "Private fixture only; original malformed page handling retained; no replay",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-page-missing-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "actual LVGL",
+          "reason": "stale action retained",
+          "evidence": ".delivery/quality-review-20261023/user-page-missing/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "fourrenders",
+          "reason": "clear/error/recovery",
+          "evidence": ".delivery/quality-review-20261023/user-page-missing/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/user-page-missing/result.json"
+        }
+      ]
+    }
+  ]
+}

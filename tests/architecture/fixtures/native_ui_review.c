@@ -1344,6 +1344,21 @@ int main(int argc,char**argv) {
    assert(find_label(lv_scr_act(),expected));
   }
   puts("PASS actual invoke/platform callbacks: strict boolean results across14 cases; private socket replies");
+ } else if(!strcmp(argv[1],"user-page-missing")) {
+  const char *root=mimi_user_app_config_get()->user_apps_root;
+  assert(strstr(root,"/user-page-missing/apps"));
+  char path[512],backup[544];snprintf(path,sizeof(path),"%s/demo/ui/main.json",root);
+  snprintf(backup,sizeof(backup),"%s.held",path);
+  app_user.init();pump();assert(find_label(lv_scr_act(),"Invoke test"));
+  lv_obj_t *entry=find_label(lv_scr_act(),"Result demo");assert(entry);
+  assert(rename(path,backup)==0);
+  lv_obj_send_event(lv_obj_get_parent(entry),LV_EVENT_CLICKED,NULL);pump();
+  assert(rename(backup,path)==0);
+  assert(!find_label(lv_scr_act(),"Invoke test"));
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"应用页面不可用，请重新安装应用。":"App page unavailable. Please reinstall the app."));
+  lv_obj_send_event(lv_obj_get_parent(entry),LV_EVENT_CLICKED,NULL);pump();
+  assert(find_label(lv_scr_act(),"Invoke test"));
+  puts("PASS missing page clears stale actions and later reopen recovers");
  } else if(!strcmp(argv[1],"user-page-invalid")) {
   app_user.init();pump();
   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"应用页面格式无效，请重新安装应用。":"Invalid app page. Please reinstall the app."));
