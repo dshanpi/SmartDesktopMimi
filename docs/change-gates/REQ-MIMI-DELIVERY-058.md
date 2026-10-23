@@ -30,3 +30,6 @@ dshanpi/SmartDesktopMimi唯一应用/系统入口；100askTeam/A133-AIDesktop-Ti
 
 ## 2026-10-22 authorized development checkpoint
 User requested remote preservation before continued work. See docs/checkpoints/20261022-takeover.md. Documentation-only checkpoint; original failures and all hardware release gates remain open. No product behavior changes in this commit.
+
+## 2026-10-23 current-code push and gated snapshot
+User renewed upload authorization. See docs/delivery/20261023-rc31-rc8.md. Public candidate audit and10 new public history blobs passed known-secret screening; private refs unchanged. Stable remains blocked by recorded actual acceptance gaps. Upload/readback pending at this prerecord.

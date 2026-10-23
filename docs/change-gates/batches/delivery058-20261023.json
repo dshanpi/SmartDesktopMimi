@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Organize rc31/rc8 controlled delivery without changing product bytes",
+  "context": "User authorized source push then gated release",
+  "next_steps": "Push and verify remote drafts; stable withheld",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DELIVERY-058",
+      "record": "docs/change-gates/REQ-MIMI-DELIVERY-058.md",
+      "scope": "Code organization and controlled snapshots",
+      "invariants": "Preserve trust, original binaries, failures and private boundaries",
+      "paths": [
+        "docs/delivery/20261023-rc31-rc8.md",
+        "docs/change-gates/batches/delivery058-20261023.json",
+        "docs/change-gates/REQ-MIMI-DELIVERY-058.md"
+      ],
+      "checks": [
+        {
+          "name": "Public tree and new history sensitive audit",
+          "status": "passed",
+          "scope": "candidate and10 new blobs",
+          "evidence": ".delivery/release-20261023/public-audit.json"
+        },
+        {
+          "name": "Full physical release qualification",
+          "status": "not_run",
+          "scope": "remaining hardware/data/source requirements",
+          "reason": "See explicit incomplete matrix",
+          "evidence": "docs/delivery/20261023-rc31-rc8.md"
+        }
+      ]
+    }
+  ]
+}
