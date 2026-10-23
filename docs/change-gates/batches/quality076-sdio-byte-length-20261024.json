@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Isolate byte-length error reset and compile complete SDIO candidate",
+  "context": "Stale or failed length could reach packet read",
+  "next_steps": "Joined helper/IRQ runtime and module qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Exacthelper hostcases and originalflags A133 TU compile",
+      "invariants": "Allsuccessful256conversions retained; readonlySDK; failclosedbusdown",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-byte-length-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "error255 andbusdown",
+          "reason": "invalid/stalelength",
+          "evidence": ".delivery/quality-review-20261023/sdio-byte-length/original-results.json"
+        },
+        {
+          "name": "Candidate",
+          "status": "passed",
+          "scope": "260hostcases plus fullSDIOTU",
+          "reason": "correct error outputs and compilerstderr0",
+          "evidence": ".delivery/quality-review-20261023/sdio-byte-length/result.json"
+        },
+        {
+          "name": "Device/module",
+          "status": "not_run",
+          "scope": "fullmodule/board",
+          "reason": "isolatedTUonly",
+          "evidence": ".delivery/quality-review-20261023/sdio-byte-length/result.json"
+        }
+      ]
+    }
+  ]
+}
