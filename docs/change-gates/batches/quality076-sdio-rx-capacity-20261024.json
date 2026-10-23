@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Record reproduced SDIO RX capacity defect",
+  "context": "A133 recorded build enables fixed preallocated RX buffers",
+  "next_steps": "Allocation-bound capacity guard and target qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Exact IRQ and receive functions under host IO adapters",
+      "invariants": "No physical/rootcause claim; no source mutation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-rx-capacity-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "RX capacity enforcement",
+          "status": "failed",
+          "scope": "144 of768 synthetic IRQ statuses exceed32768; actual receive passes oversize to IO adapter",
+          "reason": "Missing guard in preallocated receive path",
+          "evidence": ".delivery/quality-review-20261023/sdio-rx-capacity/result.json"
+        }
+      ]
+    }
+  ]
+}
