@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Keep assistant timeout feedback readable and exercise real pointer interactions",
+  "context": "QUALITY076 interaction review; English clipped feedback failure retained",
+  "next_steps": "Review pending close duplicate EXIT and timer allocation failures; physical checks later",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Feedback wrapping and host pointer/lifecycle regression",
+      "invariants": "No backend or firmware changes; published releases retained",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-assistant-interaction-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Pointer and timeout regression",
+          "status": "passed",
+          "scope": "8 language/theme/size cases and4 timeout visual captures",
+          "evidence": ".delivery/quality-review-20261023/assistant-interaction/result.json"
+        },
+        {
+          "name": "Physical touch and voice",
+          "status": "not_run",
+          "scope": "Actual hardware behavior",
+          "reason": "Host fixture only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

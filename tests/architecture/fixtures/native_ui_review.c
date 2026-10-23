@@ -121,7 +121,7 @@ int sys_volume_set_percent(int p) {volume=p;return 0;}
 static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
 int mw_subscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(!callbacks[t][i]){callbacks[t][i]=c;return 0;}return -1;}
 int mw_unsubscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(callbacks[t][i]==c)callbacks[t][i]=NULL;return 0;}
-static int connect_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
+static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
@@ -129,6 +129,7 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
  if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
+ if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_ENTER_FREE_CHAT)ai_enter_count++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_CONNECT) {
    connect_count++;last_connect=*(const wifi_cmd_t*)d;
  }
@@ -1118,6 +1119,38 @@ int main(int argc,char**argv) {
   lv_area_t n;lv_obj_get_coords(note,&n);assert(n.x1>=0 && n.x2<review_width && n.y1>=UI_APP_HEADER_H && n.y2<review_height);
   lv_obj_scroll_to_y(panels[1],0,LV_ANIM_OFF);pump();
   puts("PASS assistant panel bounds and scroll access to final guidance");
+ }
+
+ if(!strcmp(argv[1],"ai-interaction")){
+  lv_obj_t *note=find_label(lv_scr_act(),ui_tr(UI_STR_AI_EXIT_HINT));assert(note);
+  lv_obj_t *panel=lv_obj_get_parent(note);lv_area_t a;lv_obj_get_coords(panel,&a);
+  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);
+  lv_indev_set_read_cb(pointer,touch_read);touch_state=LV_INDEV_STATE_RELEASED;
+  if(review_height<620){
+   touch_x=a.x1+30;touch_y=a.y2-30;touch_state=LV_INDEV_STATE_PRESSED;lv_indev_read(pointer);pump();
+   int start=touch_y;
+   for(int i=1;i<=10;i++){touch_y=start-i*20;lv_tick_inc(20);lv_indev_read(pointer);lv_timer_handler();}
+   touch_state=LV_INDEV_STATE_RELEASED;lv_indev_read(pointer);lv_tick_inc(350);pump();
+   assert(lv_obj_get_scroll_y(panel)>0 && ai_enter_count==0);
+  }
+  lv_obj_scroll_to_y(panel,0,LV_ANIM_OFF);pump();
+  ai_status_t state={.state=AI_STATE_NETWORK_UNAVAILABLE,.control_center_running=true,.tuya_bound=true};
+  emit(TOPIC_AI_STATUS,&state,sizeof(state));pump();
+  lv_obj_t *label=find_label(panel,ui_tr(UI_STR_AI_CONNECT_WIFI));assert(label);
+  ui075_tap(lv_obj_get_parent(label),pointer);assert(ai_enter_count==0);
+  state.state=AI_STATE_IDLE;emit(TOPIC_AI_STATUS,&state,sizeof(state));pump();
+  /* The button caption is OPEN, while the section title uses FREE_CHAT. */
+  lv_obj_t *button=lv_obj_get_child(panel,2);assert(lv_obj_check_type(button,&lv_button_class));
+  ui075_tap(button,pointer);assert(ai_enter_count==1 && ai_free_chat_view_is_open());
+  lv_tick_inc(6100);pump();assert(!ai_free_chat_view_is_open() && ai_exit_count==1);
+  assert(find_label(panel,ui_tr(UI_STR_AI_OPEN_FAILED)));
+  char timeout_image[1024];snprintf(timeout_image,sizeof(timeout_image),"%s.timeout.ppm",argv[4]);save(timeout_image);
+  ui075_tap(button,pointer);assert(ai_enter_count==2 && ai_free_chat_view_is_open());
+  lv_obj_t *old=lv_scr_act();app_ai.close();assert(!ai_free_chat_view_is_open());
+  int exits=ai_exit_count;app_ai.init();lv_obj_delete(old);lv_tick_inc(6100);pump();
+  assert(ai_exit_count==exits && ai_enter_count==2);
+  lv_indev_delete(pointer);
+  puts("PASS assistant pointer scroll/offline tap/enter timeout/retry/pending close and reopen without stale timer");
  }
  save(argv[4]);inspect(lv_scr_act());
  if(!strcmp(argv[1],"ai-free-chat")){

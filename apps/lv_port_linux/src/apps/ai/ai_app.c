@@ -977,8 +977,9 @@ void ai_app_init(void)
 
     free_chat_feedback_label = lv_label_create(right_panel);
     lv_label_set_text(free_chat_feedback_label, ui_tr(UI_STR_AI_LOADING_STATUS));
-    lv_obj_set_size(free_chat_feedback_label, lv_pct(100), 24);
-    lv_label_set_long_mode(free_chat_feedback_label, LV_LABEL_LONG_DOT);
+    lv_obj_set_size(free_chat_feedback_label, lv_pct(100), LV_SIZE_CONTENT);
+    lv_obj_set_style_min_height(free_chat_feedback_label, 24, 0);
+    lv_label_set_long_mode(free_chat_feedback_label, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(free_chat_feedback_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(free_chat_feedback_label, UI_TEXT_SECONDARY, 0);
     lv_obj_set_style_text_align(free_chat_feedback_label, LV_TEXT_ALIGN_CENTER, 0);
