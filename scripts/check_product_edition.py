@@ -10,8 +10,8 @@ import tuya_pairing_sources as tuya
 import ui_settings_receipt as ui_writer
 
 REFERENCE = {
-    'public': 'ca41de0b311b9d5d2d34aa81e9dfc6ea4f45445d9b70e2c446a9721e0c83730f',
-    'private': '626fc7e8926b1bfc20ccb30e3a91e172dc16f196d9110423f86e1281f98e5cfb',
+    'public': '184404f3febe2b4c472f2fa246411497a1f54c7ad9995dc64d2f38d509937bd9',
+    'private': 'cd40cada2c0a3522c75b6e58cbca06b2bfac347d887c8d57760619eea8a78620',
 }
 PRIVATE_RUNTIME = '4ae0aa1d2bb328bfdb52e77bef6b6b741cadc48abe0d3f00cfaaa7c7c7c22518'
 

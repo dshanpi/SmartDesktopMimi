@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Pair current UI with validated v8 backend references",
+  "context": "Loader source changed both shared input hashes; old program references rejected correct new binaries",
+  "next_steps": "Remaining business/UI/physical and source gates; complete image only with adequate storage",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual UI build, ownership and program pair validation",
+      "invariants": "Strict source/ref checks; old failures retained; no physical acceptance claim",
+      "paths": [
+        "docs/update/source-ownership.json",
+        "scripts/check_product_edition.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-v8-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "UI build and writer",
+          "status": "passed",
+          "scope": "675 A133 units and exact shared settings inputs",
+          "evidence": ".delivery/quality-review-20261023/ui-v8-integration/result.json"
+        },
+        {
+          "name": "Both actual collections and install",
+          "status": "passed",
+          "scope": "6tests; other assets/factory seal synthetic",
+          "evidence": ".delivery/quality-review-20261023/ui-v8-integration/install-tests-r2.log"
+        },
+        {
+          "name": "Whole image/device",
+          "status": "not_run",
+          "scope": "No full system or hardware test",
+          "reason": "Remaining image storage/provenance and physical gates",
+          "evidence": ".delivery/quality-review-20261023/ui-v8-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
