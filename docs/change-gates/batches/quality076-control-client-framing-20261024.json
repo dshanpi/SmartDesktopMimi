@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Reject malformed control replies and verify actual client total deadline",
+  "context": "Malformed stop replies must not be treated as successful completion",
+  "next_steps": "Closed-page failure persistence, whole UI timeout and A133 validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Production client transport strict JSON framing",
+      "invariants": "No published artifact changes; host proof is not board acceptance",
+      "paths": [
+        "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+        "tests/platform/test_control_client.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-client-framing-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original malformed responses",
+          "status": "failed",
+          "scope": "Two cases accepted malformed JSON",
+          "reason": "Permissive parser accepted comments and trailing comma",
+          "evidence": ".delivery/quality-review-20261023/control-client-framing/original.log"
+        },
+        {
+          "name": "Strict framing and real deadlines",
+          "status": "passed",
+          "scope": "11 actual Unix socket scenarios",
+          "evidence": ".delivery/quality-review-20261023/control-client-framing/fixed.log"
+        },
+        {
+          "name": "Full UI and physical acceptance",
+          "status": "not_run",
+          "scope": "Whole UI timeout presentation and A133",
+          "reason": "Host extracted production functions only",
+          "evidence": ".delivery/quality-review-20261023/control-client-framing/result.json"
+        }
+      ]
+    }
+  ]
+}

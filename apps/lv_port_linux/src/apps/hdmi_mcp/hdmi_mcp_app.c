@@ -104,6 +104,7 @@ static json_object *control_request_timeout(const char *request, int timeout_ms)
         json_tokener *parser = json_tokener_new();
         if (parser) {
             size_t length = (size_t)(newline - response);
+            json_tokener_set_flags(parser, JSON_TOKENER_STRICT);
             result = json_tokener_parse_ex(parser, response, (int)length + 1);
             if (json_tokener_get_error(parser) != json_tokener_success ||
                 (size_t)parser->char_offset < length || !json_object_is_type(result, json_type_object)) {
