@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/file.h>
 #include <sys/stat.h>
+#include <stddef.h>
 
 #define SETTINGS_FILENAME ".lv_port_linux_settings.bin"
 #define SETTINGS_VERSION 8
@@ -18,17 +19,24 @@
 #define LEGACY_SILVER_SLATE_THEME_COLOR 0xB86F5CU
 #define LEGACY_SUNNY_CLOUD_THEME_COLOR 0xF27D62U
 
-static void get_settings_path(char *buffer, size_t size) {
+static bool get_settings_path(char *buffer, size_t size) {
+    int length;
     const char *override = getenv("LV_SETTINGS_FILE");
     const char *home = getenv("HOME");
 
     if (override && override[0]) {
-        snprintf(buffer, size, "%s", override);
+        length = snprintf(buffer, size, "%s", override);
     } else if (home && home[0]) {
-        snprintf(buffer, size, "%s/%s", home, SETTINGS_FILENAME);
+        length = snprintf(buffer, size, "%s/%s", home, SETTINGS_FILENAME);
     } else {
-        snprintf(buffer, size, "/tmp/%s", SETTINGS_FILENAME);
+        length = snprintf(buffer, size, "/tmp/%s", SETTINGS_FILENAME);
     }
+    if (length < 0 || (size_t)length >= size) {
+        if (size) buffer[0] = '\0';
+        errno = ENAMETOOLONG;
+        return false;
+    }
+    return true;
 }
 
 static sys_settings_t current_settings = {
@@ -52,6 +60,8 @@ static sys_settings_t current_settings = {
 };
 static sys_settings_t persisted_settings_snapshot;
 static bool persisted_settings_snapshot_valid;
+static bool settings_load_failed;
+static int last_save_result;
 
 typedef struct {
     uint32_t theme_color;
@@ -140,6 +150,66 @@ typedef struct {
     bool led_enabled;
     int32_t led_brightness;
 } settings_v7_t;
+
+/* Validate serialized bool representations before any typed field access.
+ * Old records have no magic/checksum; only their documented sizes/versions
+ * and boolean bytes can be validated here. Preserve unsupported records. */
+static bool settings_payload_valid(const unsigned char *raw, size_t size)
+{
+    uint32_t version = 0;
+#define VALID_BOOL(type, field) (raw[offsetof(type, field)] <= 1U)
+    if (size == sizeof(legacy_sys_settings_t)) return true;
+    if (size == sizeof(settings_v1_t))
+        return VALID_BOOL(settings_v1_t, wifi_enabled);
+    if (size < sizeof(version)) return false;
+    memcpy(&version, raw, sizeof(version));
+    if (size == sizeof(sys_settings_t) && version == SETTINGS_VERSION)
+        return VALID_BOOL(sys_settings_t, wifi_enabled) &&
+               VALID_BOOL(sys_settings_t, bluetooth_enabled) &&
+               VALID_BOOL(sys_settings_t, hdmi_enabled) &&
+               VALID_BOOL(sys_settings_t, theme_follow_time) &&
+               VALID_BOOL(sys_settings_t, tuya_ai_enabled) &&
+               VALID_BOOL(sys_settings_t, led_enabled);
+    if (size == sizeof(settings_v7_t) && version == 7U)
+        return VALID_BOOL(settings_v7_t, wifi_enabled) &&
+               VALID_BOOL(settings_v7_t, bluetooth_enabled) &&
+               VALID_BOOL(settings_v7_t, hdmi_enabled) &&
+               VALID_BOOL(settings_v7_t, theme_follow_time) &&
+               VALID_BOOL(settings_v7_t, tuya_ai_enabled) &&
+               VALID_BOOL(settings_v7_t, led_enabled);
+    if (size == sizeof(settings_v6_t) && version == 6U)
+        return VALID_BOOL(settings_v6_t, wifi_enabled) &&
+               VALID_BOOL(settings_v6_t, bluetooth_enabled) &&
+               VALID_BOOL(settings_v6_t, hdmi_enabled) &&
+               VALID_BOOL(settings_v6_t, theme_follow_time);
+    if (size == sizeof(settings_v5_t) && version == 5U)
+        return VALID_BOOL(settings_v5_t, wifi_enabled) &&
+               VALID_BOOL(settings_v5_t, bluetooth_enabled) &&
+               VALID_BOOL(settings_v5_t, hdmi_enabled) &&
+               VALID_BOOL(settings_v5_t, theme_follow_time);
+    if (size == sizeof(settings_v4_t) && version == 4U)
+        return VALID_BOOL(settings_v4_t, wifi_enabled) &&
+               VALID_BOOL(settings_v4_t, bluetooth_enabled) &&
+               VALID_BOOL(settings_v4_t, hdmi_enabled);
+    if (size == sizeof(settings_v3_t) && version == 3U)
+        return VALID_BOOL(settings_v3_t, wifi_enabled) &&
+               VALID_BOOL(settings_v3_t, bluetooth_enabled) &&
+               VALID_BOOL(settings_v3_t, hdmi_enabled);
+    if (size == sizeof(settings_v2_t) && version == 2U)
+        return VALID_BOOL(settings_v2_t, wifi_enabled) &&
+               VALID_BOOL(settings_v2_t, bluetooth_enabled);
+    return false;
+#undef VALID_BOOL
+}
+
+/* Decode the same validated snapshot, never reread mutable bytes as bools. */
+static size_t copy_settings_payload(void *target, size_t size,
+                                    const unsigned char *raw, size_t raw_size)
+{
+    if (size != raw_size) return 0;
+    memcpy(target, raw, size);
+    return 1;
+}
 
 static uint32_t preset_from_legacy_color(uint32_t color)
 {
@@ -239,18 +309,31 @@ static void normalize_settings(void) {
 void sys_settings_init(void) {
     char path[256];
     bool need_save = false;
-    get_settings_path(path, sizeof(path));
+    if (!get_settings_path(path, sizeof(path))) {
+        settings_load_failed = true;
+        last_save_result = -1;
+        printf("Settings path too long; no file accessed.\n");
+        return;
+    }
 
     FILE *f = fopen(path, "rb");
     if (f) {
         long file_size = 0;
-        fseek(f, 0, SEEK_END);
-        file_size = ftell(f);
-        fseek(f, 0, SEEK_SET);
+        unsigned char raw[sizeof(sys_settings_t)];
+        if (fseek(f, 0, SEEK_END) != 0 || (file_size = ftell(f)) < 0 ||
+            file_size > (long)sizeof(raw) || fseek(f, 0, SEEK_SET) != 0 ||
+            fread(raw, 1, (size_t)file_size, f) != (size_t)file_size ||
+            !settings_payload_valid(raw, (size_t)file_size)) {
+            fclose(f);
+            settings_load_failed = true;
+            last_save_result = -1;
+            printf("Settings unreadable or unsupported; preserving original file.\n");
+            return;
+        }
 
         if (file_size == (long)sizeof(sys_settings_t)) {
             sys_settings_t loaded = {0};
-            if (fread(&loaded, sizeof(loaded), 1, f) != 1) {
+            if (copy_settings_payload(&loaded, sizeof(loaded), raw, (size_t)file_size) != 1) {
                 printf("Settings file read failed, using defaults.\n");
             } else if (loaded.version == SETTINGS_VERSION) {
                 current_settings = loaded;
@@ -260,7 +343,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(settings_v7_t)) {
             settings_v7_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1 &&
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1 &&
                 legacy.version == 7U) {
                 current_settings.theme_color = legacy.theme_color;
                 current_settings.brightness = legacy.brightness;
@@ -285,7 +368,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(settings_v6_t)) {
             settings_v6_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1 &&
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1 &&
                 legacy.version == 6U) {
                 current_settings.theme_color = legacy.theme_color;
                 current_settings.brightness = legacy.brightness;
@@ -309,7 +392,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(settings_v5_t)) {
             settings_v5_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1 &&
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1 &&
                 legacy.version == 5U) {
                 current_settings.theme_color = legacy.theme_color;
                 current_settings.brightness = legacy.brightness;
@@ -329,7 +412,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(settings_v4_t)) {
             settings_v4_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1 &&
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1 &&
                 legacy.version == 4U) {
                 current_settings.theme_color = legacy.theme_color;
                 current_settings.brightness = legacy.brightness;
@@ -347,7 +430,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(settings_v3_t)) {
             settings_v3_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1) {
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1) {
                 if (legacy.version == 3U) {
                     current_settings.theme_color = legacy.theme_color;
                     current_settings.brightness = legacy.brightness;
@@ -379,7 +462,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(settings_v1_t)) {
             settings_v1_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1) {
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1) {
                 current_settings.theme_color = legacy.theme_color;
                 current_settings.brightness = legacy.brightness;
                 current_settings.volume = legacy.volume;
@@ -394,7 +477,7 @@ void sys_settings_init(void) {
             }
         } else if (file_size == (long)sizeof(legacy_sys_settings_t)) {
             legacy_sys_settings_t legacy = {0};
-            if (fread(&legacy, sizeof(legacy), 1, f) == 1) {
+            if (copy_settings_payload(&legacy, sizeof(legacy), raw, (size_t)file_size) == 1) {
                 current_settings.theme_color = legacy.theme_color;
                 current_settings.brightness = legacy.brightness;
                 current_settings.volume = legacy.volume;
@@ -418,12 +501,18 @@ void sys_settings_init(void) {
             need_save = true;
         }
         printf("Settings loaded from %s\n", path);
-        persisted_settings_snapshot = current_settings;
+        persisted_settings_snapshot = before_normalize;
         persisted_settings_snapshot_valid = true;
         if (need_save) {
             sys_settings_save();
         }
     } else {
+        if (errno != ENOENT) {
+            settings_load_failed = true;
+            last_save_result = -1;
+            printf("Settings open failed; preserving original file.\n");
+            return;
+        }
         printf("No settings file found at %s, using defaults.\n", path);
         persisted_settings_snapshot = current_settings;
         persisted_settings_snapshot_valid = true;
@@ -475,7 +564,8 @@ static int save_settings_record(void) {
     ssize_t count;
     bool replaced = false, temp_created = false;
 
-    get_settings_path(path, sizeof(path));
+    if (settings_load_failed) return -1;
+    if (!get_settings_path(path, sizeof(path))) return -1;
     snprintf(lock_path, sizeof(lock_path), "%s.lock", path);
     snprintf(temp_path, sizeof(temp_path), "%s.tmp.XXXXXX", path);
     snprintf(directory, sizeof(directory), "%s", path);
@@ -496,7 +586,11 @@ static int save_settings_record(void) {
     if (old_fd >= 0) {
         do { count = pread(old_fd, &disk, sizeof(disk), 0); }
         while (count < 0 && errno == EINTR);
-        if (count < 0) goto done;
+        struct stat old_stat;
+        if (count < 0 || fstat(old_fd, &old_stat) != 0 ||
+            old_stat.st_size != count ||
+            !settings_payload_valid((const unsigned char *)&disk, (size_t)count))
+            goto done;
         if (persisted_settings_snapshot_valid && count == (ssize_t)sizeof(disk) &&
             disk.version == SETTINGS_VERSION) {
             merge_local_settings_changes(&disk, &desired, &persisted_settings_snapshot);
@@ -538,7 +632,6 @@ done:
     return result;
 }
 
-static int last_save_result;
 int sys_settings_last_save_result(void) { return last_save_result; }
 int sys_settings_save_checked(void) {
     last_save_result = save_settings_record();

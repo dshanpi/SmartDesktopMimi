@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Preserve invalid settings files and valid normalized values",
+  "context": "Future version overwrite, invalid bool access, normalization lost in merge and truncated path alias reproduced",
+  "next_steps": "Versioned provider v8 and coordinated UI build, then device data validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Shared settings loader and regression",
+      "invariants": "No unsupported file overwrite; preserve legacy supported values; atomic sidecar protocol unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/system/settings.c",
+        "apps/lv_port_linux/src/system/settings.h",
+        "tests/architecture/test_settings_load.py",
+        "tests/architecture/fixtures/settings_load_migration.c",
+        "tests/architecture/fixtures/settings_load_fault.c",
+        "tests/architecture/fixtures/settings_load_path.c",
+        "tests/architecture/fixtures/settings_load_original_faults.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-settings-loader-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Durable loader and atomic tests",
+          "status": "passed",
+          "scope": "26 loader cases and existing faults/process-exit/concurrency fixture",
+          "evidence": ".delivery/quality-review-20261023/settings-load-validation/durable.log"
+        },
+        {
+          "name": "Old collections rejected",
+          "status": "passed",
+          "scope": "Actual previous public/private collection cannot be paired with current settings sources",
+          "evidence": ".delivery/quality-review-20261023/settings-load-validation/old-collection-rejection-r2.json"
+        },
+        {
+          "name": "Provider and device integration",
+          "status": "not_run",
+          "scope": "Selected SDK stillv7; no deployment",
+          "reason": "Independent versioned reference builds and paired UI still required",
+          "evidence": ".delivery/quality-review-20261023/settings-load-validation/old-provider-check.stdout"
+        }
+      ]
+    }
+  ]
+}

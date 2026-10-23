@@ -42,6 +42,9 @@ typedef struct {
 
 /**
  * @brief Initialize settings module and load from file
+ * Unsupported/unreadable files are preserved. This process then refuses saves;
+ * repair the file and restart before persistence can resume. Runtime defaults
+ * do not imply that storage is healthy. Inspect last_save_result after init.
  */
 void sys_settings_init(void);
 
@@ -60,7 +63,7 @@ void sys_settings_save(void);
  * All concurrent writers must use this sidecar-lock protocol; upgrade the
  * UI and backend together, without a legacy inode-lock writer running. */
 int sys_settings_save_checked(void);
-/* Last attempted save in this process; zero before the first attempt. */
+/* Last persistence result, including init path/load failure; zero initially. */
 int sys_settings_last_save_result(void);
 
 #endif /* SETTINGS_H */
