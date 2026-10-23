@@ -146,7 +146,7 @@ static void *review_control_serve(void *opaque) {
 static char review_last_socket[108];
 /* Dedicated updater lifecycle page: actual client/worker, private socketpair. */
 static bool review_update_enabled;
-static atomic_bool update_hold, update_entered;
+static atomic_bool update_hold, update_entered, update_refuse, update_unavailable;
 static atomic_int update_active, update_checks;
 static void *review_update_serve(void *arg) {
  int fd=(int)(intptr_t)arg;char input[2048];size_t used=0;
@@ -160,7 +160,12 @@ static void *review_update_serve(void *arg) {
   while(atomic_load(&update_hold))usleep(1000);
  }
  const char body[]="{\"busy\":false,\"downloaded\":false,\"candidate\":null,\"phase\":\"idle\",\"current_version\":\"fixture-version\",\"channel\":\"stable\",\"error\":\"\"}";
- char reply[1024];int len=snprintf(reply,sizeof(reply),"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\n\r\n%s",strlen(body),body);
+ const char *payload=body; int code=200;
+ if(atomic_load(&update_refuse) && used && !strncmp(input,"POST /check ",12)) {
+  atomic_store(&update_unavailable,true);code=409;
+  payload="Request refused.\nRecovery required.\nNo files changed.\nIdentity missing.\nKeep current app.\nDo not reinstall.\nCheck saved log.\nContact support.\nRetry when ready.\nEND-DIAGNOSTIC";
+ } else if(atomic_load(&update_unavailable)) {code=503;payload="Unavailable";}
+ char reply[1024];int len=snprintf(reply,sizeof(reply),"HTTP/1.1 %d Status\r\nContent-Length: %zu\r\n\r\n%s",code,strlen(payload),payload);
  assert(send(fd,reply,(size_t)len,MSG_NOSIGNAL)==len);
  shutdown(fd,SHUT_WR);close(fd);atomic_fetch_sub(&update_active,1);return NULL;
 }
@@ -1172,8 +1177,9 @@ int main(int argc,char**argv) {
    puts("PASS control center: unsupported HDMI disabled; forced event sends nothing");
   }
  }
- else if(strcmp(argv[1],"desktop-update")==0 || !strcmp(argv[1],"desktop-update-lifecycle")){
+ else if(strcmp(argv[1],"desktop-update")==0 || !strcmp(argv[1],"desktop-update-lifecycle") || !strcmp(argv[1],"desktop-update-feedback")){
   if(!strcmp(argv[1],"desktop-update-lifecycle")){review_update_enabled=true;atomic_store(&update_hold,true);}
+  if(!strcmp(argv[1],"desktop-update-feedback"))review_update_enabled=true;
   app_setting.init();
   lv_obj_t *entry=find_label(lv_screen_active(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update");
   assert(entry);
@@ -2088,6 +2094,27 @@ int main(int argc,char**argv) {
   int before=saves;lv_obj_send_event(lv_obj_get_parent(cancel),LV_EVENT_CLICKED,NULL);
   assert(!find_label(lv_layer_top(),ui_tr(UI_STR_BT_RENAME)) && saves==before);
   puts("PASS Bluetooth rename: dialog above keyboard, readable keys, 48px actions, cancel without saving");
+ }
+ if(!strcmp(argv[1],"desktop-update-feedback")) {
+  lv_obj_t *check=NULL,*label=NULL;
+  const char *check_text=ui_i18n_is_zh()?"检查更新":"Check";
+  const char *unavailable=ui_i18n_is_zh()?"暂时无法读取":"Update status is temporarily unavailable";
+  for(int i=0;i<200;i++){usleep(10000);lv_tick_inc(1501);pump();check=find_label(lv_layer_top(),check_text);if(check&&!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED))break;}
+  assert(check&&!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));
+  atomic_store(&update_refuse,true);lv_obj_send_event(lv_obj_get_parent(check),LV_EVENT_CLICKED,NULL);
+  for(int i=0;i<200;i++){usleep(10000);lv_tick_inc(1501);pump();label=find_label_prefix(lv_layer_top(),unavailable);if(label&&strstr(lv_label_get_text(label),"END-DIAGNOSTIC"))break;}
+  assert(label&&strstr(lv_label_get_text(label),"END-DIAGNOSTIC"));assert(atomic_load(&update_checks)==1);
+  assert(lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));
+  lv_obj_t *area=lv_obj_get_parent(label);lv_obj_update_layout(lv_layer_top());assert(lv_obj_get_scroll_bottom(area)>0);
+  lv_obj_scroll_to_y(area,lv_obj_get_scroll_y(area)+lv_obj_get_scroll_bottom(area),LV_ANIM_OFF);lv_obj_update_layout(lv_layer_top());assert(lv_obj_get_scroll_bottom(area)==0);
+  atomic_store(&update_unavailable,false);
+  for(int i=0;i<200;i++){usleep(10000);lv_tick_inc(1501);pump();if(!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED))break;}
+  assert(!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));assert(atomic_load(&update_checks)==1);
+  atomic_store(&update_unavailable,true);
+  for(int i=0;i<200;i++){usleep(10000);lv_tick_inc(1501);pump();label=find_label_prefix(lv_layer_top(),unavailable);if(label)break;}
+  assert(label&&strstr(lv_label_get_text(label),"END-DIAGNOSTIC"));lv_obj_scroll_to_y(lv_obj_get_parent(label),0,LV_ANIM_OFF);lv_obj_update_layout(lv_layer_top());
+  lv_refr_now(NULL);save(argv[4]);
+  puts("PASS actual update worker refusal/status outage/diagnostic scroll/recovery; exactly one POST");
  }
  if(!strcmp(argv[1],"desktop-update-lifecycle")) {
   for(int i=0;i<1000 && !atomic_load(&update_entered);i++)usleep(1000);

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Exercise update refusal/outage feedback with actual LVGL worker",
+  "context": "Prior screenshot only showed initial loading",
+  "next_steps": "A133 candidate integration and remaining quality gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Real widgets/worker and scripted socketpair peer",
+      "invariants": "One operation request; preserved diagnostic; recovery without replay",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-feedback-runtime-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Runtime/visual",
+          "status": "passed",
+          "scope": "fourhostrenders and finalzh-lightinspection",
+          "reason": "actual outage, scroll and recovery assertions",
+          "evidence": ".delivery/quality-review-20261023/update-feedback-runtime/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133/touch",
+          "reason": "hostfixture only",
+          "evidence": ".delivery/quality-review-20261023/update-feedback-runtime/result.json"
+        }
+      ]
+    }
+  ]
+}
