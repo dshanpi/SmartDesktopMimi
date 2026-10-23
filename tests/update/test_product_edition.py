@@ -199,6 +199,24 @@ class ProductEditionTests(unittest.TestCase):
                     self.assertFalse(actual.is_symlink(), target)
                     self.assertEqual(actual.read_bytes(), source.read_bytes(), target)
                     self.assertTrue(actual.stat().st_mode & 0o111, target)
+                stale_ui = os.environ.get('MIMI_STALE_UI_PROGRAM')
+                if stale_ui:
+                    desktop = product / 'build/lv_port_linux/lvglsim'
+                    current_bytes = desktop.read_bytes()
+                    old_bytes = Path(stale_ui).read_bytes()
+                    self.assertNotEqual(old_bytes, current_bytes)
+                    rejected_stage = root / 'stale-ui-rootfs'
+                    rejected_recipe = root / 'stale-ui.mk'
+                    rejected_recipe.write_text(makefile.read_text().replace(str(stage), str(rejected_stage)))
+                    try:
+                        desktop.write_bytes(old_bytes)
+                        rejected = subprocess.run(['make', '--no-print-directory', '-f', str(rejected_recipe), 'all'],
+                                                  cwd=ROOT / 'packaging/aitvbox-suite', capture_output=True, text=True)
+                        self.assertNotEqual(rejected.returncode, 0)
+                        self.assertIn('missing or changed provider input: ' + str(desktop), rejected.stdout + rejected.stderr)
+                        self.assertFalse(rejected_stage.exists(), 'stale UI must fail before installation writes')
+                    finally:
+                        desktop.write_bytes(current_bytes)
                 self.assertEqual((stage / 'etc/smartdesktopmimi/product-edition').read_text().strip(), edition)
                 self.assertEqual((stage / 'usr/bin/your_chat_bot_QIO_1.0.1.bin').exists(), edition == 'private')
                 self.assertEqual((stage / 'factory/tuya').exists(), edition == 'private')
