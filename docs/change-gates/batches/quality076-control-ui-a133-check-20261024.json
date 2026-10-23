@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Verify current HDMI UI A133 translation unit and failure layout",
+  "context": "Host UI tests do not establish target compiler compatibility",
+  "next_steps": "Full candidate link when prepared; remaining UI timeout and responsiveness",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected translation unit and visual review",
+      "invariants": "Do not promote compile-only evidence to board acceptance",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-ui-a133-check-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "A133 selected UI compilation",
+          "status": "passed",
+          "scope": "One production TU with previous selected configuration",
+          "evidence": ".delivery/quality-review-20261023/control-ui-a133-check/result.json"
+        },
+        {
+          "name": "Full image",
+          "status": "blocked",
+          "scope": "15GiB minimum space gate",
+          "reason": "Only1.9GiB free; no backup deletion authorized in this scope",
+          "evidence": ".delivery/quality-review-20261023/control-ui-a133-check/prerecord.json"
+        },
+        {
+          "name": "Physical validation",
+          "status": "not_run",
+          "scope": "New UI on board",
+          "reason": "No linked/deployed current UI candidate",
+          "evidence": ".delivery/quality-review-20261023/control-ui-a133-check/result.json"
+        }
+      ]
+    }
+  ]
+}
