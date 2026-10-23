@@ -203,10 +203,16 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 }
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
-static atomic_int wifi_toggles;
+static atomic_int wifi_toggles, review_wifi_scans, review_scan_error;
+static atomic_bool review_scan_hold, review_scan_entered;
 static int bt_toggles;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
+ if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_SCAN){
+  review_wifi_scans++;atomic_store(&review_scan_entered,true);
+  while(atomic_load(&review_scan_hold))usleep(1000);
+  return atomic_load(&review_scan_error);
+ }
  if(t==TOPIC_WIFI_CONTROL_V2){
   atomic_store(&review_wifi_send_entered,true);
   while(atomic_load(&review_wifi_send_hold))usleep(1000);
@@ -1507,6 +1513,31 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-scan-failure")) {
+  settings.wifi_enabled=false;app_wifi.init();review_wifi_snapshot(true,false);
+  atomic_store(&review_scan_hold,true);atomic_store(&review_scan_error,-EPIPE);
+  struct timespec begin,end;clock_gettime(CLOCK_MONOTONIC,&begin);wifi_control_poll(NULL);clock_gettime(CLOCK_MONOTONIC,&end);
+  double ms=(end.tv_sec-begin.tv_sec)*1000.0+(end.tv_nsec-begin.tv_nsec)/1000000.0;assert(ms<100);
+  for(unsigned i=0;i<1000&&!atomic_load(&review_scan_entered);i++)usleep(1000);
+  assert(atomic_load(&review_scan_entered));
+  for(unsigned i=0;i<10;i++){clock_gettime(CLOCK_MONOTONIC,&begin);pump();clock_gettime(CLOCK_MONOTONIC,&end);
+   ms=(end.tv_sec-begin.tv_sec)*1000.0+(end.tv_nsec-begin.tv_nsec)/1000000.0;assert(ms<100);}
+  atomic_store(&review_scan_hold,false);review_wifi_flush();
+  assert(!is_scanning && !spinner && wifi_scan_unconfirmed && review_wifi_scans==1);
+  review_wifi_snapshot(true,false);wifi_control_poll(NULL);review_wifi_flush();assert(review_wifi_scans==1);
+  atomic_store(&review_scan_error,0);scan_click_cb(NULL);review_wifi_flush();assert(review_wifi_scans==2 && is_scanning);
+  lv_tick_inc(21000);wifi_control_poll(NULL);review_wifi_flush();
+  assert(!is_scanning && !spinner && wifi_scan_unconfirmed && review_wifi_scans==2);
+  review_wifi_snapshot(true,false);wifi_control_render();
+  assert(strstr(lv_label_get_text(wlan_pending_label),ui_i18n_is_zh()?"扫描未确认":"Scan unconfirmed"));
+  puts("PASS scan sender remains responsive; send failure/no-result timeout clears spinner, no automatic retry, explicit retry once");
+ }
+ else if(!strcmp(argv[1],"wifi-snapshot-scan")) {
+  settings.wifi_enabled=false;app_wifi.init();review_wifi_snapshot(true,false);
+  for(unsigned i=0;i<5;i++){pump();usleep(1000);}review_wifi_flush();
+  fprintf(stderr,"Fresh enabled snapshot with stored off: scans=%d\n",(int)review_wifi_scans);
+  assert(review_wifi_scans==1 && "fresh actual enabled state must trigger one initial scan");
+ }
  else if(!strcmp(argv[1],"wifi-toggle-responsive")) {
   settings.wifi_enabled=false;atomic_store(&review_wifi_send_hold,true);
   struct timespec begin,end;clock_gettime(CLOCK_MONOTONIC,&begin);app_wifi.init();clock_gettime(CLOCK_MONOTONIC,&end);

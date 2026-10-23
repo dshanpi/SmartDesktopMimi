@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Restore initial scan and send scan asynchronously",
+  "context": "Fresh enabled snapshot must populate networks even when stored preference was off; no indefinite spinner",
+  "next_steps": "Connection/error/SSID input and backend scan ownership review",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "ActualLVGL scan scheduling and singleflight sender",
+      "invariants": "No preference mutation, no blind automatic scan retry, no workerGUI access",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-scan-ui-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original initial scan omission",
+          "status": "failed",
+          "scope": "ActualLVGL scene",
+          "reason": "0scans on fresh enabled snapshot",
+          "evidence": ".delivery/quality-review-20261023/wifi-scan-ui/original.log"
+        },
+        {
+          "name": "Fixed scan and affected scenes",
+          "status": "passed",
+          "scope": "24realLVGL renders across two runs, controlledsendfailure andvirtualtimeout",
+          "evidence": ".delivery/quality-review-20261023/wifi-scan-ui/result.json"
+        },
+        {
+          "name": "Complete network qualification",
+          "status": "not_run",
+          "scope": "Actualbackend scanownership/connect/A133/physical",
+          "reason": "Legacy scan correlation still unavailable, notradio acceptance",
+          "evidence": ".delivery/quality-review-20261023/wifi-scan-ui/result.json"
+        }
+      ]
+    }
+  ]
+}
