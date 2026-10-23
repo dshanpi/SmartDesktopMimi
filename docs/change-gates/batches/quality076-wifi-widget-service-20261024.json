@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Join actual WiFi widgets to selected backend service logic",
+  "context": "Prior joined widget transport used scripted replies",
+  "next_steps": "Durable integration and remaining quality matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "UI and selected extracted backend runtime",
+      "invariants": "exactfunctions, controlledHAL, no boardchange",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-widget-service-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Source",
+          "status": "passed",
+          "scope": "18functions",
+          "reason": "exactselectedsourcebody",
+          "evidence": ".delivery/quality-review-20261023/wifi-widget-service/result.json"
+        },
+        {
+          "name": "Runtime",
+          "status": "passed",
+          "scope": "success/failure/page lifecycle",
+          "reason": "bothmiddleware roles andactualserviceworker",
+          "evidence": ".delivery/quality-review-20261023/wifi-widget-service/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "wholebackend/radio/device",
+          "reason": "host adapters",
+          "evidence": ".delivery/quality-review-20261023/wifi-widget-service/result.json"
+        }
+      ]
+    }
+  ]
+}
