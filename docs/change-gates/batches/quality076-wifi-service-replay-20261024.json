@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Connect private WiFi replay candidate to actual service queue/worker",
+  "context": "Verify model semantics against actual selected service logic",
+  "next_steps": "Epoch startup/lifecycle, response snapshots, router/UI and full compilation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Extracted private candidate functions with gated HAL",
+      "invariants": "Original SDK and releases unchanged; admission is not completion; failures retained",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-service-replay-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Queue and worker replay integration",
+          "status": "passed",
+          "scope": "Host actual extracted functions, held HAL",
+          "evidence": ".delivery/quality-review-20261023/wifi-service-replay-integration/result.json"
+        },
+        {
+          "name": "Initial failure fixture",
+          "status": "failed",
+          "scope": "Host test timeout",
+          "reason": "Cleanup HAL gate left closed in fixture",
+          "evidence": ".delivery/quality-review-20261023/wifi-service-replay-integration/failure-result.json"
+        },
+        {
+          "name": "Failure completion corrected fixture",
+          "status": "passed",
+          "scope": "Pending through cleanup, error after return, no repeated queue",
+          "evidence": ".delivery/quality-review-20261023/wifi-service-replay-integration/failure-result-r2.json"
+        },
+        {
+          "name": "Complete platform integration",
+          "status": "not_run",
+          "scope": "Startup/response/UI/A133/IPC/physical",
+          "reason": "Private copy with placeholder startup only",
+          "evidence": ".delivery/quality-review-20261023/wifi-service-replay-integration/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
