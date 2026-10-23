@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Verify WiFi candidate through actual middleware and IPC",
+  "context": "Connect new route to real queue and preserve old disconnected marker after completion",
+  "next_steps": "UI consumer and A133/provider integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private provider router/service; actual host middleware dispatch/publish/IPC",
+      "invariants": "Old topics/status remain, no premature marker or ACK completion, no originalSDK mutation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-middleware-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Middleware service chain",
+          "status": "passed",
+          "scope": "Success/failure with actual IPC and controlledHAL, no productionacceptloop",
+          "evidence": ".delivery/quality-review-20261023/wifi-middleware-integration/result-r2.json"
+        },
+        {
+          "name": "Initial full translation units",
+          "status": "failed",
+          "scope": "Service unusedhelper/marker warning; router passed",
+          "reason": "Candidate cleanup and legacy notification integration incomplete",
+          "evidence": ".delivery/quality-review-20261023/wifi-middleware-integration/full-result.json"
+        },
+        {
+          "name": "Corrected full service translation unit",
+          "status": "passed",
+          "scope": "Host Werror object compile, no full link",
+          "evidence": ".delivery/quality-review-20261023/wifi-middleware-integration/full-result-r2.json"
+        },
+        {
+          "name": "Product qualification",
+          "status": "not_run",
+          "scope": "UI/A133/fullprovider/physical",
+          "reason": "Private host candidate only",
+          "evidence": ".delivery/quality-review-20261023/wifi-middleware-integration/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
