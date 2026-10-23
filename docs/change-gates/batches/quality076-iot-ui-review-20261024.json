@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Audit current IoT lifecycle and confirmation UI",
+  "context": "Cover incomplete IoT UI matrix with realLVGL and mocked HTTP",
+  "next_steps": "Readable confirmation summary/action hierarchy; real cloud/device pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "48host renders and selected visual review",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-iot-ui-review-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Current IoT scenes",
+          "status": "passed",
+          "scope": "48LVGL renders, pointers/assertions, mockedHTTP",
+          "evidence": ".delivery/quality-review-20261023/iot-ui-current/run.log"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/iot-ui-current/result.json"
+        }
+      ]
+    }
+  ]
+}
