@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Verify selected desktop handoff and exit restoration",
+  "context": "Close launcher normal/error coverage after selection-order fix",
+  "next_steps": "Physical firstframe/animation and remaining feature acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual launcher host flow",
+      "invariants": "No real signals/device writes; distinguish shell flow from physical display",
+      "paths": [
+        "tests/platform/test_ui_boot_selection.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-boot-handoff-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Launcher flow",
+          "status": "passed",
+          "scope": "3methods/5cases with explicit adapters",
+          "evidence": ".delivery/quality-review-20261023/boot-ui-handoff/run.log"
+        },
+        {
+          "name": "Physical display",
+          "status": "not_run",
+          "scope": "Actual board animation/handoff/touch",
+          "reason": "Host-only fixture",
+          "evidence": ".delivery/quality-review-20261023/boot-ui-handoff/result.json"
+        }
+      ]
+    }
+  ]
+}
