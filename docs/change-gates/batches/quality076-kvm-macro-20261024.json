@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "Preserve macro cancellation ownership and serialize release before replacement",
+  "context": "Original exact-function reproduction proved replacement cancel handle lost",
+  "next_steps": "Session/manual input ownership, queue cancellation and disconnect; full device matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Keyboard macro execution/cleanup ownership",
+      "invariants": "No concurrent macro reports; no report for precanceled waiting macro; no real devices in tests",
+      "paths": [
+        "apps/ipkvm/upstream/hidrpc.go",
+        "apps/ipkvm/upstream/keyboard_macro.go",
+        "apps/ipkvm/upstream/keyboard_macro_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-kvm-macro-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Macro races and error cleanup",
+          "status": "passed",
+          "scope": "3actual package tests,5cleanup branches, injected reports only",
+          "evidence": ".delivery/quality-review-20261023/kvm-macro-ordering/fixed-r2.log"
+        },
+        {
+          "name": "Selected HID regression",
+          "status": "passed",
+          "scope": "Actual package race tests, selected macro/HID",
+          "evidence": ".delivery/quality-review-20261023/kvm-macro-ordering/regression.log"
+        },
+        {
+          "name": "Initial compile",
+          "status": "failed",
+          "scope": "time import removed while queue still uses it; restored subsequently",
+          "reason": "Original failure retained",
+          "evidence": ".delivery/quality-review-20261023/kvm-macro-ordering/fixed.log"
+        },
+        {
+          "name": "Physical USB",
+          "status": "not_run",
+          "scope": "No board activation",
+          "reason": "Host report callback and temporary files only",
+          "evidence": ".delivery/quality-review-20261023/kvm-macro-ordering/prerecord.json"
+        }
+      ]
+    }
+  ]
+}

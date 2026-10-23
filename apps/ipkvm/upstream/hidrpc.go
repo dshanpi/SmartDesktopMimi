@@ -1,7 +1,6 @@
 package kvm
 
 import (
-	"context"
 	"sync"
 	"time"
 
@@ -65,87 +64,6 @@ func (s *keypressState) handleKeypress(key uint8, press bool) error {
 	keys := make([]uint8, 6)
 	copy(keys, s.keys[:])
 	return rpcKeyboardReport(s.modifier, keys)
-}
-
-var (
-	keyboardMacroCancel context.CancelFunc
-	keyboardMacroLock   sync.Mutex
-)
-
-func cancelKeyboardMacro() {
-	keyboardMacroLock.Lock()
-	defer keyboardMacroLock.Unlock()
-
-	if keyboardMacroCancel != nil {
-		keyboardMacroCancel()
-		keyboardMacroCancel = nil
-	}
-}
-
-func setKeyboardMacroCancel(cancel context.CancelFunc) {
-	keyboardMacroLock.Lock()
-	defer keyboardMacroLock.Unlock()
-	keyboardMacroCancel = cancel
-}
-
-func rpcExecuteKeyboardMacro(macro []hidrpc.KeyboardMacroStep) error {
-	cancelKeyboardMacro()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	setKeyboardMacroCancel(cancel)
-
-	err := rpcDoExecuteKeyboardMacro(ctx, macro)
-	setKeyboardMacroCancel(nil)
-	return err
-}
-
-func rpcCancelKeyboardMacro() {
-	cancelKeyboardMacro()
-}
-
-var keyboardClearStateKeys = make([]uint8, 6)
-
-func isClearKeyStep(step hidrpc.KeyboardMacroStep) bool {
-	if step.Modifier != 0 {
-		return false
-	}
-	if len(step.Keys) != 6 {
-		return false
-	}
-	for i := 0; i < 6; i++ {
-		if step.Keys[i] != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func rpcDoExecuteKeyboardMacro(ctx context.Context, macro []hidrpc.KeyboardMacroStep) error {
-	for _, step := range macro {
-		delay := time.Duration(step.Delay) * time.Millisecond
-
-		keys := make([]uint8, 0, len(step.Keys))
-		for _, b := range step.Keys {
-			keys = append(keys, uint8(b))
-		}
-
-		if err := rpcKeyboardReport(uint8(step.Modifier), keys); err != nil {
-			return err
-		}
-
-		select {
-		case <-time.After(delay):
-		case <-ctx.Done():
-			_ = rpcKeyboardReport(0, keyboardClearStateKeys)
-			return ctx.Err()
-		}
-
-		if isClearKeyStep(step) {
-			_ = rpcKeyboardReport(0, keyboardClearStateKeys)
-		}
-	}
-
-	return nil
 }
 
 func handleHidRPCMessage(message hidrpc.Message, session *Session) {
