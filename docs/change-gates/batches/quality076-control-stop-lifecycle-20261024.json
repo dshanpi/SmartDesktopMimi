@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Verify async stop retry/reopen and improve touch targets",
+  "context": "Pending stop must survive UI teardown without duplicate commands",
+  "next_steps": "Malformed/timeout/error dismissal behavior and A133 UI build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected LVGL lifecycle and modal usability",
+      "invariants": "No worker widget access; host tests are not physical acceptance",
+      "paths": [
+        "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-stop-lifecycle-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Lifecycle and touch matrix",
+          "status": "passed",
+          "scope": "16 lifecycle then8 style/bounds renders",
+          "evidence": ".delivery/quality-review-20261023/control-stop-lifecycle/result.json"
+        },
+        {
+          "name": "Remaining full acceptance",
+          "status": "not_run",
+          "scope": "Timeout/malformed/A133/physical",
+          "reason": "Selected host scenarios only",
+          "evidence": ".delivery/quality-review-20261023/control-stop-lifecycle/result.json"
+        }
+      ]
+    }
+  ]
+}

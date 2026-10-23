@@ -390,6 +390,10 @@ static void stop_event(lv_event_t *event)
     if (stop_box) return;
     lv_obj_t *box = lv_msgbox_create(lv_layer_top());
     stop_box = box;
+    int modal_width = lv_display_get_horizontal_resolution(NULL) - 32;
+    if (modal_width > 440) modal_width = 440;
+    lv_obj_set_width(box, modal_width);
+    lv_obj_set_style_text_font(box, UI_TEXT_BODY_MD, 0);
     lv_obj_add_event_cb(box, stop_box_deleted, LV_EVENT_DELETE, NULL);
     lv_msgbox_add_title(box, ui_i18n_is_zh() ? "停止当前任务？" : "Stop current task?");
     stop_message = lv_msgbox_add_text(box, ui_i18n_is_zh()
@@ -402,6 +406,13 @@ static void stop_event(lv_event_t *event)
         lv_label_set_text(stop_message, ui_i18n_is_zh() ? "正在请求停止…" : "Requesting stop...");
     }
     lv_obj_t *cancel = lv_msgbox_add_footer_button(box, ui_i18n_is_zh() ? "关闭" : "Close");
+    lv_obj_set_height(confirm, 44);
+    lv_obj_set_height(cancel, 44);
+    lv_obj_set_flex_grow(confirm, 1);
+    lv_obj_set_flex_grow(cancel, 1);
+    lv_obj_set_style_bg_color(confirm, UI_COLOR_ERROR, 0);
+    lv_obj_set_style_bg_color(cancel, UI_BG_ELEVATED, 0);
+    lv_obj_set_style_text_color(cancel, UI_TEXT_PRIMARY, 0);
     lv_obj_add_event_cb(confirm, stop_confirmed, LV_EVENT_CLICKED, box);
     lv_obj_add_event_cb(cancel, stop_cancelled, LV_EVENT_CLICKED, box);
 }

@@ -66,7 +66,7 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
 }
 /* A local socket pair supplies the idle response; no device service is used. */
 static bool review_hdmi_idle;
-static atomic_bool review_hdmi_stop_failure;
+static atomic_bool review_hdmi_stop_failure, review_hdmi_stop_success;
 static unsigned review_hdmi_delay_us;
 static atomic_int review_stop_commands;
 ssize_t __real_send(int fd,const void *buffer,size_t length,int flags);
@@ -118,7 +118,7 @@ int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
   assert(socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == 0);
   assert(dup2(pair[0], fd) == fd); close(pair[0]); review_control_peer=pair[1];
   if(review_hdmi_delay_us)usleep(review_hdmi_delay_us);
-  const char *reply=review_hdmi_stop_failure?"{\"ok\":false,\"message\":\"stop requested; HID release failed\"}\n":"{\"state\":\"idle\",\"history\":[]}\n";
+  const char *reply=review_hdmi_stop_success?"{\"ok\":true}\n":review_hdmi_stop_failure?"{\"ok\":false,\"message\":\"stop requested; HID release failed\"}\n":"{\"state\":\"idle\",\"history\":[]}\n";
   assert(write(review_control_peer, reply, strlen(reply)) == (ssize_t)strlen(reply));
   return 0;
  }
@@ -1121,7 +1121,7 @@ int main(int argc,char**argv) {
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
- else if(!strcmp(argv[1],"hdmi-stop-failure")) {
+ else if(!strcmp(argv[1],"hdmi-stop-failure") || !strcmp(argv[1],"hdmi-stop-retry") || !strcmp(argv[1],"hdmi-stop-reopen")) {
   review_hdmi_idle=true;app_hdmi_mcp.init();pump();
   lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
   lv_obj_clear_state(lv_obj_get_parent(stop),LV_STATE_DISABLED);
@@ -1145,7 +1145,31 @@ int main(int argc,char**argv) {
   assert(!lv_obj_has_state(lv_obj_get_parent(confirm),LV_STATE_DISABLED));
   assert(atomic_load(&review_stop_commands)==before_commands+1);
   assert(pumped>10 && "GUI timer loop progressed while waiting");
+  lv_area_t stop_area;lv_obj_get_coords(lv_obj_get_parent(confirm),&stop_area);
+  assert(lv_obj_get_height(lv_obj_get_parent(confirm))>=44);
+  assert(stop_area.x1>=0 && stop_area.y1>=0 && stop_area.x2<lv_display_get_horizontal_resolution(NULL) && stop_area.y2<lv_display_get_vertical_resolution(NULL));
   puts("PASS async failed stop, duplicate guard, retained retry and live timer loop");
+  if(strcmp(argv[1],"hdmi-stop-failure")) {
+   review_hdmi_stop_success=true;
+   lv_obj_send_event(lv_obj_get_parent(confirm),LV_EVENT_CLICKED,NULL);
+   if(!strcmp(argv[1],"hdmi-stop-reopen")) {
+    lv_obj_t *old=lv_scr_act();app_hdmi_mcp.close();
+    assert(!find_label(lv_layer_top(),title));
+    app_hdmi_mcp.init();lv_obj_delete(old);pump();
+    stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
+    lv_obj_clear_state(lv_obj_get_parent(stop),LV_STATE_DISABLED);
+    lv_obj_send_event(lv_obj_get_parent(stop),LV_EVENT_CLICKED,NULL);pump();
+    confirm=find_label(lv_layer_top(),ui_tr(UI_STR_STOP));assert(confirm);
+    assert(lv_obj_has_state(lv_obj_get_parent(confirm),LV_STATE_DISABLED));
+    lv_obj_send_event(lv_obj_get_parent(confirm),LV_EVENT_CLICKED,NULL);
+   }
+   for(int i=0;i<1500 && find_label(lv_layer_top(),title);i++){usleep(1000);pump();}
+   assert(!find_label(lv_layer_top(),title));
+   assert(atomic_load(&review_stop_commands)==before_commands+2);
+   puts("PASS retry success and optional pending close/reopen without duplicate send");
+  }
+  for(int i=0;i<10;i++)pump();
+
  }
  else if(strcmp(argv[1],"hdmi")==0 || strcmp(argv[1],"hdmi-idle")==0){
   review_hdmi_idle=!strcmp(argv[1],"hdmi-idle");app_hdmi_mcp.init();
