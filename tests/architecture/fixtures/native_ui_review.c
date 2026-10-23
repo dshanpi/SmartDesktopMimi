@@ -1,3 +1,4 @@
+#include <errno.h>
 #include "src/ui/desktop_update.h"
 /* Real LVGL widgets with in-memory hardware and middleware fixtures.
  * Run through scripts/render_ui_review.py from the repository root.
@@ -1187,11 +1188,34 @@ int main(int argc,char**argv) {
  save(argv[4]);inspect(lv_scr_act());
  if(!strcmp(argv[1],"ai-free-chat")){
   int before=ai_exit_count;
+  fail_assistant_timer=true;
+  lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
+  assert(!fail_assistant_timer && ai_exit_count==before && ai_free_chat_view_is_open());
   lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
   assert(ai_exit_count==before+1);
+  lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
+  assert(ai_exit_count==before+1);
+  lv_tick_inc(6100);pump();assert(ai_free_chat_view_is_open());
+  lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
+  assert(ai_exit_count==before+2);
   ai_status_t idle={.state=AI_STATE_IDLE,.control_center_running=true,.tuya_bound=true,.chat_mode=AI_CHAT_MODE_WAKEUP};
+  idle.last_error_code=-EINPROGRESS;
+  emit(TOPIC_AI_STATUS,&idle,sizeof(idle));pump();assert(ai_free_chat_view_is_open());
+  idle.last_error_code=-ETIMEDOUT;
+  emit(TOPIC_AI_STATUS,&idle,sizeof(idle));pump();assert(ai_free_chat_view_is_open());
+  char retry_image[1024];snprintf(retry_image,sizeof(retry_image),"%s.retry.ppm",argv[4]);save(retry_image);
+  lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
+  assert(ai_exit_count==before+3);
+  idle.last_error_code=0;
   emit(TOPIC_AI_STATUS,&idle,sizeof(idle));pump();assert(!ai_free_chat_view_is_open());
-  puts("PASS real free-chat view: assets rendered, exit command, backend acknowledgement closes overlay");
+  lv_tick_inc(6100);pump();assert(!ai_free_chat_view_is_open() && ai_exit_count==before+3);
+  idle.chat_mode=AI_CHAT_MODE_FREE;idle.free_chat_active=true;
+  emit(TOPIC_AI_STATUS,&idle,sizeof(idle));pump();assert(ai_free_chat_view_is_open());
+  lv_obj_send_event(lv_obj_get_child(lv_layer_top(),-1),LV_EVENT_DOUBLE_CLICKED,NULL);
+  assert(ai_exit_count==before+4);
+  ai_free_chat_view_close();lv_tick_inc(6100);pump();
+  assert(!ai_free_chat_view_is_open() && ai_exit_count==before+4);
+  puts("PASS exit watchdog allocation/duplicate gesture/no-reply retry/pending/error/success and close timer cancellation");
  }
  if(!strcmp(argv[1],"bt-rename")) {
   lv_obj_t *cancel=find_label(lv_layer_top(),ui_tr(UI_STR_CANCEL));assert(cancel);

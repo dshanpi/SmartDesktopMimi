@@ -5,6 +5,7 @@
 #include "../../ui/ui_fonts.h"
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -44,6 +45,8 @@ static lv_obj_t *lottie_view = NULL;
 static ai_free_chat_exit_cb_t exit_requested_cb = NULL;
 static void *exit_requested_user_data = NULL;
 static bool exit_requested = false;
+static bool exit_failed = false;
+static lv_timer_t *exit_timer = NULL;
 static const char *current_emote = NULL;
 static const char *pending_emote = NULL;
 static uint32_t last_click_tick = 0;
@@ -184,17 +187,52 @@ static const char *release_emote_path(const char *source)
     return source;
 }
 
+static void cancel_clear_speech(void);
+static void cancel_speech_typing(bool clear_target);
+static void cancel_speech_fade(void);
+
+static void cancel_exit_timer(void)
+{
+    if (exit_timer) {
+        lv_timer_del(exit_timer);
+        exit_timer = NULL;
+    }
+}
+
+static void show_exit_failure(void)
+{
+    cancel_exit_timer();
+    exit_requested = false;
+    exit_failed = true;
+    cancel_clear_speech();
+    cancel_speech_typing(true);
+    cancel_speech_fade();
+    if (speech_label) lv_label_set_text(speech_label,
+        ui_i18n_is_zh() ? "退出未确认，请双击重试" : "Exit not confirmed. Double-tap to retry.");
+}
+
+static void exit_timeout_cb(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    exit_timer = NULL; /* The one-shot timer is deleted by LVGL. */
+    if (view_root && exit_requested) show_exit_failure();
+}
+
 static void request_exit(void)
 {
     if (exit_requested) return;
-
+    cancel_exit_timer();
+    exit_timer = lv_timer_create(exit_timeout_cb, 6000, NULL);
+    if (!exit_timer) { show_exit_failure(); return; }
+    lv_timer_set_repeat_count(exit_timer, 1);
+    exit_failed = false;
     exit_requested = true;
+    cancel_clear_speech();
+    cancel_speech_typing(true);
+    cancel_speech_fade();
     if (speech_label) lv_label_set_text(speech_label,
                                         ui_i18n_is_zh() ? "正在退出" : "Exiting");
-
-    if (exit_requested_cb) {
-        exit_requested_cb(exit_requested_user_data);
-    }
+    if (exit_requested_cb) exit_requested_cb(exit_requested_user_data);
 }
 
 static void root_event_cb(lv_event_t *e)
@@ -756,6 +794,7 @@ void ai_free_chat_view_open(ai_free_chat_exit_cb_t exit_cb, void *user_data)
     exit_requested_cb = exit_cb;
     exit_requested_user_data = user_data;
     exit_requested = false;
+    exit_failed = false;
     current_emote = NULL;
     pending_emote = NULL;
     last_click_tick = 0;
@@ -839,6 +878,7 @@ void ai_free_chat_view_open(ai_free_chat_exit_cb_t exit_cb, void *user_data)
 
 void ai_free_chat_view_close(void)
 {
+    cancel_exit_timer();
     if (!view_root) return;
 
     cancel_pending_emote();
@@ -853,6 +893,7 @@ void ai_free_chat_view_close(void)
     exit_requested_cb = NULL;
     exit_requested_user_data = NULL;
     exit_requested = false;
+    exit_failed = false;
     current_emote = NULL;
     pending_emote = NULL;
     last_click_tick = 0;
@@ -874,11 +915,18 @@ void ai_free_chat_view_set_status(const ai_status_t *status)
 {
     if (!view_root || !status) return;
 
+    if (exit_requested && status->last_error_code == -EINPROGRESS) return;
+    if (exit_requested && status->last_error_code != 0) {
+        show_exit_failure();
+        return;
+    }
+    if (exit_failed) return;
     if (exit_requested && !status->free_chat_active && status->chat_mode != AI_CHAT_MODE_FREE) {
         ai_free_chat_view_close();
         return;
     }
 
+    if (exit_requested) return;
     apply_status_visuals(status);
     apply_speech_for_state(status->state);
 }
@@ -888,7 +936,7 @@ void ai_free_chat_view_set_text(const char *text)
     size_t old_len;
     bool cumulative;
 
-    if (!speech_label || !text || !text[0]) return;
+    if (exit_requested || exit_failed || !speech_label || !text || !text[0]) return;
 
     cancel_clear_speech();
     if (strncmp(text, "Assistant: ", strlen("Assistant: ")) != 0) {

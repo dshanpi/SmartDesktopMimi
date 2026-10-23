@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Free-chat exit watchdog and strict reply decoder",
+  "context": "Pending inactive and absent timeout failures retained; commit wrapper initial missing output directory failure retained",
+  "next_steps": "Versioned ACK provider integration, concurrent mode ordering and physical validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "UI timeout/retry and reply parser; isolated backend is not selected",
+      "invariants": "No physical stop inferred from send; published baseline unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_free_chat_view.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/tuya_stop_command.py",
+        "integrations/tuyaopen/protocol/ai_command_reply.h",
+        "tests/architecture/test_ai_command_reply.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-exit-ui-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Real LVGL exit lifecycle",
+          "status": "passed",
+          "scope": "8 language/theme/size scenarios and small-screen visual check",
+          "evidence": ".delivery/quality-review-20261023/assistant-exit-watchdog/result.json"
+        },
+        {
+          "name": "Decoder and actual endpoint",
+          "status": "passed",
+          "scope": "Host ASAN/UBSAN real cJSON producer/json-c consumer",
+          "evidence": ".delivery/quality-review-20261023/assistant-exit-ui-commit/endpoint-r2.log"
+        },
+        {
+          "name": "Selected provider and device",
+          "status": "not_run",
+          "scope": "Integration and physical stop",
+          "reason": "Isolated backend not selected; hardware not exercised",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
