@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Reproduce false success for control HID release and validate candidate",
+  "context": "Stop response must reflect release and marker failures",
+  "next_steps": "Bound helper wait before source promotion and UI validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private actual host control daemon with mock HID",
+      "invariants": "No board or selected source mutation; both releases attempted",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-hid-release-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original failed-release response",
+          "status": "failed",
+          "scope": "Host stop interface",
+          "reason": "Returned oktrue on either HID failure",
+          "evidence": ".delivery/quality-review-20261023/control-hid-release/original-result.json"
+        },
+        {
+          "name": "Candidate failure propagation",
+          "status": "passed",
+          "scope": "4 host scenarios, not physical HID",
+          "evidence": ".delivery/quality-review-20261023/control-hid-release/candidate-result.json"
+        }
+      ]
+    }
+  ]
+}
