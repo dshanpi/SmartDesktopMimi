@@ -202,6 +202,7 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
  return __real_lv_timer_create(cb,period,data);
 }
 static int review_connect_error;
+static atomic_bool review_connect_slow;
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 static atomic_int wifi_toggles, review_wifi_scans, review_scan_error;
@@ -229,6 +230,7 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_ENTER_FREE_CHAT)ai_enter_count++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_CONNECT) {
+   if(atomic_load(&review_connect_slow))usleep(200000);
    connect_count++;last_connect=*(const wifi_cmd_t*)d;return review_connect_error;
  }
  return 0;
@@ -397,19 +399,30 @@ static void test_password(void) {
 
  lv_textarea_set_text(password_ta,"short");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
  assert(password_modal && connect_count==0 && strlen(lv_label_get_text(password_error_label))>0);
- review_connect_error=-EPIPE;
+ review_wifi_flush();review_connect_error=-EPIPE;atomic_store(&review_connect_slow,true);
+ struct timespec begin,end;clock_gettime(CLOCK_MONOTONIC,&begin);
  lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+ clock_gettime(CLOCK_MONOTONIC,&end);
+ double duration=(end.tv_sec-begin.tv_sec)*1000.0+(end.tv_nsec-begin.tv_nsec)/1000000.0;
+ fprintf(stderr,"Connection callback %.3fms\n",duration);assert(duration<100 && "connect transport blocks GUI");
+ for(unsigned i=0;i<10;i++){
+  clock_gettime(CLOCK_MONOTONIC,&begin);pump();clock_gettime(CLOCK_MONOTONIC,&end);
+  duration=(end.tv_sec-begin.tv_sec)*1000.0+(end.tv_nsec-begin.tv_nsec)/1000000.0;assert(duration<100);
+ }
+ review_wifi_flush();atomic_store(&review_connect_slow,false);
+
  fprintf(stderr,"Send failure retained=%d commands=%d\n",password_modal!=NULL,connect_count);
  assert(password_modal && "send failure must retain password dialog");
+ assert(!lv_obj_has_state(password_ta,LV_STATE_DISABLED) && !lv_obj_has_state(password_kb,LV_STATE_DISABLED));
  assert(!strcmp(lv_textarea_get_text(password_ta),"review123"));
  assert(!strcmp(lv_label_get_text(password_error_label),ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED)));
  assert(!is_scanning);
  submit=lv_button_create(password_modal);lv_obj_add_event_cb(submit,connect_click_cb,LV_EVENT_CLICKED,"100ASK-Lab");
- lv_obj_send_event(submit,LV_EVENT_CLICKED,NULL);assert(password_modal && connect_count==2 && !is_scanning);
+ lv_obj_send_event(submit,LV_EVENT_CLICKED,NULL);review_wifi_flush();assert(password_modal && connect_count==2 && !is_scanning);
  assert(!strcmp(lv_textarea_get_text(password_ta),"review123"));lv_obj_delete(submit);
  pump();pump();assert(connect_count==2 && "no automatic connection retry");
  connect_count=0;review_connect_error=0;
- lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+ lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);review_wifi_flush();
  assert(!password_modal && !password_kb && !password_ta && connect_count==1);
  assert(!strcmp(last_connect.ssid,"100ASK-Lab") && !strcmp(last_connect.password,"review123"));
  app_wifi.close();
@@ -1539,6 +1552,39 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-connect-lifecycle")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();wifi_spinner_delete();
+  wifi_ap_t ap={.ssid="Lifecycle",.encrypted=true};
+  lv_obj_t *item=create_list_item(wifi_list,&ap);lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);
+  atomic_store(&review_connect_slow,true);review_connect_error=0;
+  lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+  assert(wifi_connect_phase==1 && wifi_sender_busy());
+  lv_obj_send_event(password_kb,LV_EVENT_READY,NULL); /* singleflight */
+  close_modal_cb(NULL);lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);
+  lv_obj_t *new_modal=password_modal;review_wifi_flush();
+  assert(password_modal==new_modal && connect_count==1 && !is_scanning);
+  assert(wifi_connect_phase==2);lv_tick_inc(21000);wifi_control_poll(NULL);review_wifi_flush();
+  assert(wifi_connect_phase==3 && connect_count==1);
+  lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+  app_wifi.close();app_wifi.init();
+  item=create_list_item(wifi_list,&ap);lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);new_modal=password_modal;
+  review_wifi_flush();assert(password_modal==new_modal && connect_count==2 && wifi_connect_phase==0);
+  atomic_store(&review_connect_slow,false);
+  puts("PASS connection singleflight, modal replacement, timeout and page reopen");
+ }
+ else if(!strcmp(argv[1],"wifi-connect-open")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();wifi_spinner_delete();
+  wifi_ap_t ap={.ssid="Open network",.encrypted=false};lv_obj_t *item=create_list_item(wifi_list,&ap);
+  review_connect_error=-EPIPE;lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);review_wifi_flush();
+  assert(wifi_connect_phase==3 && connect_count==1 && !is_scanning && !password_modal);
+  review_connect_error=0;lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);review_wifi_flush();
+  assert(wifi_connect_phase==2 && connect_count==2 && last_connect.password[0]==0);
+  lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);assert(connect_count==2);
+  wifi_runtime_status_t runtime={.enabled=true,.connected=true,.connected_ssid="Other"};
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));assert(wifi_connect_phase==2);
+  strcpy(runtime.connected_ssid,"Open network");emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));assert(wifi_connect_phase==0);
+  puts("PASS open AP send failure/retry, no duplicate waiting send and matching observed network");
+ }
  else if(!strcmp(argv[1],"wifi-message-bounds")) {
   settings.wifi_enabled=true;app_wifi.init();review_wifi_snapshot(true,false);
   wifi_ap_info_t ap={.rssi=4,.encrypted=true};memset(ap.ssid,'A',sizeof(ap.ssid));

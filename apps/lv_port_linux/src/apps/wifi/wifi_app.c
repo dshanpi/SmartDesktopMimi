@@ -62,6 +62,17 @@ static lv_timer_t *wifi_control_timer;
 static uint32_t wifi_query_at, wifi_scan_started_at;
 static uint64_t wifi_page_generation;
 static bool wifi_scan_due, wifi_scan_unconfirmed;
+enum { WIFI_SEND_CONNECT = 3 };
+static unsigned wifi_connect_phase; /* 0 idle, 1 sending, 2 observing, 3 uncertain */
+static uint32_t wifi_connect_started;
+static uint64_t wifi_modal_generation, wifi_connect_modal;
+static char wifi_connect_ssid[33];
+static void close_modal_cb(lv_event_t *e);
+static void wifi_clear_bytes(void *data, size_t size)
+{
+    volatile unsigned char *p = data;
+    while (size--) *p++ = 0;
+}
 static struct {
     pthread_mutex_t lock;
     bool active, done;
@@ -338,8 +349,10 @@ static void *wifi_send_worker(void *unused)
     uint32_t length = wifi_sender.length;
     mw_topic_t topic = wifi_sender.topic;
     memcpy(bytes, wifi_sender.bytes, length);
+    wifi_clear_bytes(wifi_sender.bytes, sizeof(wifi_sender.bytes));
     pthread_mutex_unlock(&wifi_sender.lock);
     int result = mw_publish(topic, bytes, length, MW_DIR_UI_TO_BACKEND);
+    wifi_clear_bytes(bytes, sizeof(bytes));
     pthread_mutex_lock(&wifi_sender.lock);
     wifi_sender.result = result;
     wifi_sender.done = true;
@@ -364,6 +377,7 @@ static int wifi_send_bytes(mw_topic_t topic, const void *bytes, uint32_t length,
     if (pthread_create(&thread, NULL, wifi_send_worker, NULL)) {
         pthread_mutex_lock(&wifi_sender.lock);
         wifi_sender.active = false;
+        wifi_clear_bytes(wifi_sender.bytes, sizeof(wifi_sender.bytes));
         pthread_mutex_unlock(&wifi_sender.lock);
         return -1;
     }
@@ -379,6 +393,7 @@ static int wifi_control_send(const wifi_wire_command *command)
 static void wifi_scan_maybe_start(void)
 {
     if (!wifi_app_active || !wifi_control_timer || !wifi_scan_due || is_scanning ||
+        wifi_connect_phase == 1 || wifi_connect_phase == 2 ||
         wifi_sender_busy() || !wifi_control.known || !wifi_control.ready ||
         !wifi_control.enabled || wifi_control.busy || wifi_control.pending) return;
     wifi_cmd_t command = {.action = CMD_SCAN};
@@ -422,6 +437,10 @@ static void wifi_control_render(void)
     }
     if (wifi_scan_unconfirmed && wifi_control.view == WIFI_CLIENT_READY)
         text = zh ? "扫描未确认，请重试" : "Scan unconfirmed; retry";
+    if (wifi_connect_phase)
+        text = wifi_connect_phase == 1 ? (zh ? "正在发送连接请求" : "Sending connection request") :
+               wifi_connect_phase == 2 ? (zh ? "请求已发送，等待连接" : "Request sent; awaiting connection") :
+               ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED);
     if (wlan_pending_label) lv_label_set_text(wlan_pending_label, text);
 }
 static void wifi_control_reply(const mw_msg_t *msg)
@@ -471,7 +490,21 @@ static void wifi_control_poll(lv_timer_t *timer)
         wifi_control.known = 0;
         wifi_control.view = wifi_control.pending ? WIFI_CLIENT_UNCONFIRMED : WIFI_CLIENT_UNAVAILABLE;
     }
+    if (done && action == WIFI_SEND_CONNECT && page == wifi_page_generation) {
+        wifi_connect_phase = result < 0 ? 3 : 2;
+        if (password_modal && wifi_connect_modal == wifi_modal_generation) {
+            if (password_ta) lv_obj_clear_state(password_ta, LV_STATE_DISABLED);
+            if (password_kb) lv_obj_clear_state(password_kb, LV_STATE_DISABLED);
+            if (result >= 0) close_modal_cb(NULL);
+            else if (password_error_label) {
+                lv_label_set_text(password_error_label, ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED));
+                lv_obj_set_style_text_color(password_error_label, UI_COLOR_ERROR, 0);
+            }
+        }
+    }
     uint32_t now = lv_tick_get();
+    if (wifi_connect_phase == 2 && (uint32_t)(now-wifi_connect_started) >= 20000)
+        wifi_connect_phase = 3;
     wifi_client_tick(&wifi_control, now);
     if (is_scanning && startup_scan_requested && (uint32_t)(now-wifi_scan_started_at) >= 20000) {
         is_scanning = false;wifi_scan_unconfirmed = true;wifi_spinner_delete();
@@ -514,6 +547,9 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
     const wifi_runtime_status_t *runtime = &decoded;
     bool first_runtime_status = !runtime_status_received;
 
+    /* This is an observed network state, not an operation-correlated receipt. */
+    if (wifi_connect_phase && runtime->enabled && runtime->connected &&
+        !strcmp(runtime->connected_ssid, wifi_connect_ssid)) wifi_connect_phase = 0;
     runtime_status_received = true;
     is_wifi_enabled = runtime->enabled;
     is_scanning = runtime->scanning;
@@ -586,6 +622,7 @@ static lv_obj_t * create_list_item(lv_obj_t * parent, wifi_ap_t * ap) {
 
 static void close_modal_cb(lv_event_t * e) {
     LV_UNUSED(e);
+    ++wifi_modal_generation;
     if (password_modal) {
         lv_obj_delete(password_modal);
         password_modal = NULL;
@@ -608,45 +645,51 @@ static bool wifi_password_valid(const char *password)
     return false;
 }
 
-static bool wifi_submit_password(const char *ssid)
+static bool wifi_start_connection(const char *ssid, const char *password)
 {
-    if (!password_ta || !ssid) return false;
-    const char *password = lv_textarea_get_text(password_ta);
-    if (!wifi_password_valid(password)) return false;
+    if (!wifi_app_active || !wifi_control_timer || !ssid || strlen(ssid) > 32 ||
+        wifi_sender_busy() || wifi_connect_phase == 1 || wifi_connect_phase == 2) {
+        if (password_error_label) lv_label_set_text(password_error_label,
+            ui_i18n_is_zh() ? "暂时无法发送，请稍后重试" : "Cannot send yet. Try again shortly.");
+        return false;
+    }
     wifi_cmd_t command = {.action = CMD_CONNECT};
     snprintf(command.ssid, sizeof(command.ssid), "%s", ssid);
     snprintf(command.password, sizeof(command.password), "%s", password);
-    int result = mw_publish(TOPIC_WIFI_COMMAND, &command, sizeof(command), MW_DIR_UI_TO_BACKEND);
-    if (result < 0) {
-        /* A transport error is not proof that the backend did not receive it.
-         * Keep the input for an explicit retry; do not report association. */
-        if (password_error_label) {
-            lv_label_set_text(password_error_label, ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED));
-            lv_obj_set_style_text_color(password_error_label, UI_COLOR_ERROR, 0);
-        }
+    int result = wifi_send_bytes(TOPIC_WIFI_COMMAND, &command, sizeof(command), 0, WIFI_SEND_CONNECT);
+    wifi_clear_bytes(&command, sizeof(command));
+    if (result) {
+        wifi_connect_phase = 3;
+        if (password_error_label) lv_label_set_text(password_error_label, ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED));
+        wifi_control_render();
         return false;
     }
+    snprintf(wifi_connect_ssid, sizeof(wifi_connect_ssid), "%s", ssid);
+    wifi_connect_modal = password_modal ? wifi_modal_generation : 0;
+    wifi_connect_started = lv_tick_get();
+    wifi_connect_phase = 1;
+    if (password_ta) lv_obj_add_state(password_ta, LV_STATE_DISABLED);
+    if (password_kb) lv_obj_add_state(password_kb, LV_STATE_DISABLED);
+    if (password_error_label) lv_label_set_text(password_error_label,
+        ui_i18n_is_zh() ? "正在发送连接请求" : "Sending connection request");
+    wifi_control_render();
     return true;
 }
-
+static void wifi_submit_password(const char *ssid)
+{
+    if (!password_ta || !ssid) return;
+    const char *password = lv_textarea_get_text(password_ta);
+    if (wifi_password_valid(password)) wifi_start_connection(ssid, password);
+}
 static void connect_click_cb(lv_event_t *e)
 {
-    if (wifi_submit_password(lv_event_get_user_data(e))) close_modal_cb(e);
+    wifi_submit_password(lv_event_get_user_data(e));
 }
-
 static void keyboard_event_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_READY) {
-        if (!wifi_submit_password(lv_event_get_user_data(e))) return;
-        /* Legacy association progress still shares the scan indicator. */
-        wifi_spinner_delete();
-        wifi_spinner_show();
-        is_scanning = true;
-        close_modal_cb(NULL);
-    } else if (code == LV_EVENT_CANCEL) {
-        close_modal_cb(NULL);
-    }
+    if (code == LV_EVENT_READY) wifi_submit_password(lv_event_get_user_data(e));
+    else if (code == LV_EVENT_CANCEL) close_modal_cb(NULL);
 }
 
 static void free_modal_data(lv_event_t * e) {
@@ -695,18 +738,7 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     }
 
     if (!ap->encrypted) {
-        wifi_cmd_t cmd = {0};
-        cmd.action = CMD_CONNECT;
-        snprintf(cmd.ssid, sizeof(cmd.ssid), "%s", ap->ssid);
-        mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
-        if (right_cont) {
-            uint32_t count = lv_obj_get_child_count(right_cont);
-            for (uint32_t i = 0; i < count; i++) {
-                lv_obj_t *child = lv_obj_get_child(right_cont, i);
-                if (lv_obj_check_type(child, &lv_label_class))
-                    lv_label_set_text(child, ui_tr(UI_STR_CONNECTING));
-            }
-        }
+        wifi_start_connection(ap->ssid, "");
         return;
     }
 
@@ -715,6 +747,7 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     // Create Full Screen Modal Overlay
     // lv_obj_create inherits the default theme radius; force a square full-screen
     // scrim so the four corners don't show rounded cutouts over the WiFi page.
+    ++wifi_modal_generation;
     password_modal = lv_obj_create(lv_scr_act());
     lv_obj_set_size(password_modal, LV_PCT(100), LV_PCT(100));
     lv_obj_set_style_bg_color(password_modal, lv_color_black(), 0);
@@ -955,6 +988,7 @@ void wifi_app_init(void) {
     wifi_app_active = true;
     ++wifi_page_generation;
     wifi_scan_due = false;wifi_scan_unconfirmed = false;
+    wifi_connect_phase = 0;wifi_connect_ssid[0] = 0;
     wifi_screen = NULL;
     wifi_list = NULL;
     spinner = NULL;

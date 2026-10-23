@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "Send WiFi connections off GUI thread with scoped completion",
+  "context": "Real callback blocks on delayed transport",
+  "next_steps": "Reject unknown renderer scenes; qualify connection correlation and actual provider",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Async connection UI and lifecycle",
+      "invariants": "No worker widget access, no implicit association success, no automatic reconnect request",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-connect-async-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original callback blocking",
+          "status": "failed",
+          "scope": "actualLVGL with delayed sender",
+          "reason": "203.836ms blocking",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-async/result.json"
+        },
+        {
+          "name": "Async lifecycle and affected flows",
+          "status": "passed",
+          "scope": "20correctlyselectedrenders plus8finalinputlockrenders",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-async/result.json"
+        },
+        {
+          "name": "Mistyped scenario selection",
+          "status": "failed",
+          "scope": "first commajoined multi run",
+          "reason": "fallback scene rendered instead; rejected as evidence",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-async/result.json"
+        },
+        {
+          "name": "Full connectivity",
+          "status": "not_run",
+          "scope": "actualIPC/radio/A133",
+          "reason": "host adapter and legacy outcome notcorrelated",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-async/result.json"
+        }
+      ]
+    }
+  ]
+}
