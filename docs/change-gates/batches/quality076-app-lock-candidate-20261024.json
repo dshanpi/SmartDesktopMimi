@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Validate isolated shared lifecycle lock candidate",
+  "context": "Acknowledged app storage writes can be lost during directory replacement",
+  "next_steps": "Combined writer race, unsafe/crash cases, durable SDK promotion and A133 candidate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Isolated full service candidate with shared root-directory lock",
+      "invariants": "No production SDK/source edits; preserve failures; nonblocking busy response",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-app-lock-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Existing service/install regression",
+          "status": "passed",
+          "scope": "4 actual host methods with explicit isolated source override",
+          "evidence": ".delivery/quality-review-20261023/app-lifecycle-lock-candidate/regression.log"
+        },
+        {
+          "name": "Bidirectional lock contention",
+          "status": "passed",
+          "scope": "2 tests actual appctl and compiled appd",
+          "evidence": ".delivery/quality-review-20261023/app-lifecycle-lock-candidate/contention.log"
+        },
+        {
+          "name": "Promotion/A133/device",
+          "status": "not_run",
+          "scope": "Selected source and actual product",
+          "reason": "Candidate only; further fault verification pending",
+          "evidence": ".delivery/quality-review-20261023/app-lifecycle-lock-candidate/result.json"
+        }
+      ]
+    }
+  ]
+}
