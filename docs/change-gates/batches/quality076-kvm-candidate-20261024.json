@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Bind A133 KVM candidate and all-package race regression",
+  "context": "Completed host fixes require candidate/source binding before device validation",
+  "next_steps": "Remaining UI candidate and full business/device matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected Go daemon only",
+      "invariants": "No deployment, no existing release replacement, no full provenance claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-kvm-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "All Go packages race regression",
+          "status": "passed",
+          "scope": "Actual package tests; packages without tests not qualified",
+          "evidence": ".delivery/quality-review-20261023/kvm-a133-candidate/all-packages.log"
+        },
+        {
+          "name": "A133 candidate binding",
+          "status": "passed",
+          "scope": "ELF/source metadata and selected source hashes",
+          "evidence": ".delivery/quality-review-20261023/kvm-a133-candidate/result.json"
+        },
+        {
+          "name": "Physical and complete frontend/system",
+          "status": "not_run",
+          "scope": "USB/browser/device and complete image",
+          "reason": "Separate acceptance required",
+          "evidence": ".delivery/quality-review-20261023/kvm-a133-candidate/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
