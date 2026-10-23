@@ -48,5 +48,23 @@ class WifiControlProtocolTests(unittest.TestCase):
             self.assertEqual(run.stderr, "")
 
 
+    @unittest.skipUnless(shutil.which("gcc"), "gcc required")
+    def test_ui_state_controller(self):
+        with tempfile.TemporaryDirectory(prefix="mimi-wifi-client-") as folder:
+            binary = pathlib.Path(folder) / "test"
+            build = subprocess.run([
+                "gcc", "-std=c11", "-O1", "-g", "-Wall", "-Wextra", "-Werror",
+                "-fsanitize=address,undefined", "-fno-omit-frame-pointer",
+                "-I", str(ROOT / "apps/lv_port_linux/src"),
+                str(ROOT / "tests/architecture/fixtures/wifi_control_client.c"),
+                "-o", str(binary),
+            ], capture_output=True, text=True, timeout=30)
+            self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
+            run = subprocess.run([str(binary)], capture_output=True, text=True, timeout=15)
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            self.assertIn("PASS UI controller", run.stdout)
+            self.assertEqual(run.stderr, "")
+
+
 if __name__ == "__main__":
     unittest.main()

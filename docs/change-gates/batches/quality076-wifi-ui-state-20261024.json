@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Add UI-side correlated WiFi state controller",
+  "context": "Only matching completed operations may persist preferences; silence is uncertainty",
+  "next_steps": "Wire controller into LVGL with asynchronous transport and render regressions",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Pure UI-thread controller and durable native tests",
+      "invariants": "ACK not completion, pending survives reopen, no automatic repeated SET, releases unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/system/wifi_control_client.h",
+        "tests/architecture/fixtures/wifi_control_client.c",
+        "tests/architecture/test_wifi_control_protocol.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-ui-state-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "UI controller scenarios",
+          "status": "passed",
+          "scope": "Compiled C sanitizer checks and durable unittest",
+          "evidence": ".delivery/quality-review-20261023/wifi-ui-state/durable.log"
+        },
+        {
+          "name": "Actual UI integration",
+          "status": "not_run",
+          "scope": "LVGL/transportworker/physical",
+          "reason": "wifi_app.c unchanged; controller not consumed yet",
+          "evidence": ".delivery/quality-review-20261023/wifi-ui-state/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
