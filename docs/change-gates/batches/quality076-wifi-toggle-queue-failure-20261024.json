@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Make private WiFi request admission atomic and reject queue failures",
+  "context": "Rejected requests must not change radio state or leave phantom pending work",
+  "next_steps": "Concurrent/wrap tests and versioned request response integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private service candidate and actual extracted production functions",
+      "invariants": "No source SDK/ABI/device activation until qualified",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-toggle-queue-failure-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original queue rejection",
+          "status": "failed",
+          "scope": "4fault cases",
+          "reason": "Phantom busy and premature disabled state",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-queue-failure/original-result.json"
+        },
+        {
+          "name": "Atomic admission candidate",
+          "status": "passed",
+          "scope": "4faultcases plus2ordering regressions",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-queue-failure/fixed-result.json"
+        },
+        {
+          "name": "Remaining protocol integration",
+          "status": "not_run",
+          "scope": "Concurrent/wrap/publicwire/router/UI/A133/physical",
+          "reason": "Isolated candidate only; legacywrapper logs errors withoutnewack",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-queue-failure/fix-prerecord.json"
+        }
+      ]
+    }
+  ]
+}
