@@ -41,7 +41,8 @@
           "name": "Device acceptance",
           "status": "not_run",
           "scope": "Physical latency/stability and original slab failure",
-          "reason": "No board activation in this batch"
+          "reason": "No board activation in this batch",
+          "evidence": ".delivery/quality-review-20261023/capture-dispatch-priority/normal-entry-result.json (physical=not_run)"
         }
       ]
     }
