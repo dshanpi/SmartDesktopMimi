@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Integrate bounded control IO and bind selected artifacts",
+  "context": "Validated private candidate must become normal SDK input",
+  "next_steps": "Refresh downstream collections and package gates, complete runtime validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Source/artifact binding and selected host tests",
+      "invariants": "Immutable published baseline; no liveboard operation",
+      "paths": [
+        "scripts/build_a133_services.py",
+        "tests/sdk_source.py",
+        "docs/update/source-ownership.json",
+        "docs/update/services-program-reference.json",
+        "tests/platform/test_control_socket.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-sdk-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Normal build and durable tests",
+          "status": "passed",
+          "scope": "Selected SDK only",
+          "evidence": ".delivery/quality-review-20261023/control-sdk-integration/result.json"
+        },
+        {
+          "name": "Image/device",
+          "status": "not_run",
+          "scope": "Physical and complete delivery",
+          "reason": "Collections and runtime acceptance pending",
+          "evidence": ".delivery/quality-review-20261023/control-sdk-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
