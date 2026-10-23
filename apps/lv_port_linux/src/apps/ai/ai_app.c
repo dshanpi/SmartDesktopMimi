@@ -296,6 +296,8 @@ static void on_ai_status(const mw_msg_t *msg)
         cancel_free_chat_enter_timer();
         free_chat_enter_pending = false;
         free_chat_enter_failed = true;
+        if (ai_free_chat_view_is_open()) ai_free_chat_view_close();
+        send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
     }
 
     if (label_state) {

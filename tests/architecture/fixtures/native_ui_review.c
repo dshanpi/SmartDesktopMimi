@@ -1165,6 +1165,25 @@ int main(int argc,char**argv) {
   lv_indev_delete(pointer);
   puts("PASS assistant pointer scroll/offline tap/enter timeout/retry/pending close and reopen without stale timer");
  }
+ if(!strcmp(argv[1],"ai-start-error")){
+  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+  touch_state=LV_INDEV_STATE_RELEASED;
+  ai_state_t failures[]={AI_STATE_NETWORK_UNAVAILABLE,AI_STATE_ERROR};
+  for(int i=0;i<2;i++){
+   ai_status_t ready={.state=AI_STATE_IDLE,.control_center_running=true,.tuya_bound=true};
+   emit(TOPIC_AI_STATUS,&ready,sizeof(ready));pump();
+   lv_obj_t *note=find_label(lv_scr_act(),ui_tr(UI_STR_AI_EXIT_HINT));assert(note);
+   lv_obj_t *panel=lv_obj_get_parent(note);lv_obj_scroll_to_y(panel,0,LV_ANIM_OFF);pump();
+   int exits=ai_exit_count,enters=ai_enter_count;
+   ui075_tap(lv_obj_get_child(panel,2),pointer);assert(ai_enter_count==enters+1 && ai_free_chat_view_is_open());
+   ready.state=failures[i];emit(TOPIC_AI_STATUS,&ready,sizeof(ready));pump();
+   assert(!ai_free_chat_view_is_open() && ai_exit_count==exits+1);
+   emit(TOPIC_AI_STATUS,&ready,sizeof(ready));lv_tick_inc(6100);pump();
+   assert(ai_exit_count==exits+1 && !ai_free_chat_view_is_open());
+  }
+  lv_indev_delete(pointer);
+  puts("PASS inactive offline/error rejection closes pending view once; repeated status and canceled timer are quiet; retry succeeds");
+ }
  save(argv[4]);inspect(lv_scr_act());
  if(!strcmp(argv[1],"ai-free-chat")){
   int before=ai_exit_count;

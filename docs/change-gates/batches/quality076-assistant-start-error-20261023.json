@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Close pending assistant overlay after inactive startup rejection",
+  "context": "Original offline/error transition leaves orphan overlay; failure retained",
+  "next_steps": "Provider state and delayed acknowledgements; remaining feature matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Pending inactive failure cleanup",
+      "invariants": "Active status precedence and protocol unchanged; no board changes",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-assistant-start-error-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Offline/error and prior interaction regression",
+          "status": "passed",
+          "scope": "16 host render scenarios; two errors tested per failure scenario",
+          "evidence": ".delivery/quality-review-20261023/assistant-start-error/result.json"
+        },
+        {
+          "name": "Actual backend and device",
+          "status": "not_run",
+          "scope": "Physical session lifecycle",
+          "reason": "Host fixture only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
