@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Verify isolated allocation-bound RX capacity candidate",
+  "context": "Previously reproduced oversize reads",
+  "next_steps": "Joined actual IRQ/receive tests and all layout consumers rebuild before promotion",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "129 host cases and two A133 objects",
+      "invariants": "Original SDK/overlay unchanged; no mixed module/device claims",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-capacity-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Isolated capacity candidate",
+          "status": "passed",
+          "scope": "Selected host functions and target translation units only",
+          "reason": "Reject before pointer/IO, preserve valid boundary and cleanup",
+          "evidence": ".delivery/quality-review-20261023/sdio-rx-capacity-fix/result.json"
+        }
+      ]
+    }
+  ]
+}
