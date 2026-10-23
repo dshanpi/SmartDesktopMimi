@@ -12,7 +12,11 @@ func loadCurrentSession() *Session {
 }
 
 func replaceCurrentSession(session *Session) *Session {
-	return currentSession.Swap(session)
+	previous := currentSession.Swap(session)
+	if previous != nil && previous != session {
+		previous.stopHIDQueues()
+	}
+	return previous
 }
 
 func clearCurrentSession(session *Session) {

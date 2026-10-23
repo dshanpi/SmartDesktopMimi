@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Release only session-owned HID on close and reject stale input",
+  "context": "Original actual peer close left keyboard/mouse pressed; overlapping sessions require ownership",
+  "next_steps": "Same-session manual/macro ordering, generic RPC routes, write/release faults and real USB",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "HIDchannel session write/close/macro lifetime",
+      "invariants": "Oldclose cannotrelease newerowner; sessioncancel cannotcancel unrelatedmacro; no testdevices",
+      "paths": [
+        "apps/ipkvm/upstream/webrtc.go",
+        "apps/ipkvm/upstream/hidrpc.go",
+        "apps/ipkvm/upstream/keyboard_macro.go",
+        "apps/ipkvm/upstream/session_state.go",
+        "apps/ipkvm/upstream/session_input.go",
+        "apps/ipkvm/upstream/session_input_test.go",
+        "apps/ipkvm/upstream/hid_disconnect_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-kvm-input-owner-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Ownership and original failure regression",
+          "status": "passed",
+          "scope": "5actualpackage race tests with tempHID andunnegotiatedPion",
+          "evidence": ".delivery/quality-review-20261023/kvm-input-ownership/ownership.log"
+        },
+        {
+          "name": "Whole root package regression",
+          "status": "passed",
+          "scope": "go test-race-count1 .; not ./... orphysical",
+          "evidence": ".delivery/quality-review-20261023/kvm-input-ownership/package.log"
+        },
+        {
+          "name": "Device and remaining inputs",
+          "status": "not_run",
+          "scope": "No actual USB/live browser; manualmacro/genericRPC/faultcases pending",
+          "reason": "Host scopedimplementation",
+          "evidence": ".delivery/quality-review-20261023/kvm-input-ownership/prerecord.json"
+        }
+      ]
+    }
+  ]
+}

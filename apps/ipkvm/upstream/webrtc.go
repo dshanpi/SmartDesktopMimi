@@ -49,6 +49,9 @@ type Session struct {
 	hidQueueStop             chan struct{}
 	hidQueueStopOnce         sync.Once
 	hidQueue                 []chan hidQueueMessage
+	inputClosed              bool
+	inputContext             context.Context
+	inputCancel              context.CancelFunc
 	keypress                 *keypressState
 	videoSampleQueue         chan queuedVideoSample
 	videoWriterStop          chan struct{}
@@ -111,6 +114,7 @@ func (s *Session) initQueues() {
 }
 
 func (s *Session) stopHIDQueues() {
+	s.closeHIDInput()
 	s.hidQueueStopOnce.Do(func() {
 		if s.hidQueueStop != nil {
 			close(s.hidQueueStop)

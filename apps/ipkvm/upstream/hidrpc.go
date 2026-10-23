@@ -89,10 +89,12 @@ func handleHidRPCMessage(message hidrpc.Message, session *Session) {
 			hidRPCLogger.Warn().Err(err).Msg("failed to get keypress report")
 			return
 		}
-		if session.keypress == nil {
-			session.keypress = &keypressState{}
-		}
-		rpcErr = session.keypress.handleKeypress(uint8(keypressReport.Key), keypressReport.Press)
+		rpcErr = session.withHID(false, func() error {
+			if session.keypress == nil {
+				session.keypress = &keypressState{}
+			}
+			return session.keypress.handleKeypress(uint8(keypressReport.Key), keypressReport.Press)
+		})
 	case hidrpc.TypeKeyboardReport:
 		keyboardReport, err := message.KeyboardReport()
 		if err != nil {
@@ -103,16 +105,16 @@ func handleHidRPCMessage(message hidrpc.Message, session *Session) {
 		for i, k := range keyboardReport.Keys {
 			keys[i] = uint8(k)
 		}
-		rpcErr = rpcKeyboardReport(uint8(keyboardReport.Modifier), keys)
+		rpcErr = session.keyboardReport(uint8(keyboardReport.Modifier), keys)
 	case hidrpc.TypeKeyboardMacroReport:
 		keyboardMacroReport, err := message.KeyboardMacroReport()
 		if err != nil {
 			hidRPCLogger.Warn().Err(err).Msg("failed to get keyboard macro report")
 			return
 		}
-		rpcErr = rpcExecuteKeyboardMacro(keyboardMacroReport.Steps)
+		rpcErr = session.executeKeyboardMacro(keyboardMacroReport.Steps)
 	case hidrpc.TypeCancelKeyboardMacroReport:
-		rpcCancelKeyboardMacro()
+		keyboardMacros.cancelOwned(session)
 		return
 	case hidrpc.TypeKeypressKeepAliveReport:
 		return
@@ -122,21 +124,21 @@ func handleHidRPCMessage(message hidrpc.Message, session *Session) {
 			hidRPCLogger.Warn().Err(err).Msg("failed to get pointer report")
 			return
 		}
-		rpcErr = rpcAbsMouseReport(pointerReport.X, pointerReport.Y, pointerReport.Button)
+		rpcErr = session.withHID(true, func() error { return rpcAbsMouseReport(pointerReport.X, pointerReport.Y, pointerReport.Button) })
 	case hidrpc.TypeMouseReport:
 		mouseReport, err := message.MouseReport()
 		if err != nil {
 			hidRPCLogger.Warn().Err(err).Msg("failed to get mouse report")
 			return
 		}
-		rpcErr = rpcRelMouseReport(mouseReport.DX, mouseReport.DY, mouseReport.Button)
+		rpcErr = session.withHID(true, func() error { return rpcRelMouseReport(mouseReport.DX, mouseReport.DY, mouseReport.Button) })
 	case hidrpc.TypeWheelReport:
 		wheelReport, err := message.WheelReport()
 		if err != nil {
 			hidRPCLogger.Warn().Err(err).Msg("failed to get wheel report")
 			return
 		}
-		rpcErr = rpcWheelReport(wheelReport.WheelY)
+		rpcErr = session.withHID(true, func() error { return rpcWheelReport(wheelReport.WheelY) })
 	default:
 		hidRPCLogger.Warn().Uint8("type", uint8(message.Type())).Msg("unknown HID RPC message type")
 		return

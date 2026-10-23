@@ -9,6 +9,7 @@ import (
 )
 
 type keyboardMacroRun struct {
+	owner  *Session
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -28,9 +29,24 @@ func (c *keyboardMacroController) cancel() {
 	}
 }
 func (c *keyboardMacroController) execute(steps []hidrpc.KeyboardMacroStep, report func(uint8, []uint8) error) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	run := &keyboardMacroRun{ctx: ctx, cancel: cancel}
+	return c.executeOwned(context.Background(), nil, steps, report)
+}
+func (c *keyboardMacroController) cancelOwned(owner *Session) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.current != nil && c.current.owner == owner {
+		c.current.cancel()
+	}
+}
+func (c *keyboardMacroController) executeOwned(parent context.Context, owner *Session, steps []hidrpc.KeyboardMacroStep, report func(uint8, []uint8) error) error {
+	ctx, cancel := context.WithCancel(parent)
+	run := &keyboardMacroRun{ctx: ctx, cancel: cancel, owner: owner}
+	c.mu.Lock()
+	if err := parent.Err(); err != nil {
+		c.mu.Unlock()
+		cancel()
+		return err
+	}
 	if c.current != nil {
 		c.current.cancel()
 	}
