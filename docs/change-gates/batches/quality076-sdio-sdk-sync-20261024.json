@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Synchronize verified SDIO source to development SDK",
+  "context": "Local standard overlay candidate previously compiled and tested",
+  "next_steps": "Controlled access diagnosis and remaining physical/source gates; SDK full build not run",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "One driver input synchronization with backup and inventory",
+      "invariants": "No board activation; cached binaries not current; no release claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-sdk-sync-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Source readback",
+          "status": "passed",
+          "scope": "One changed file, 105 unchanged tracked driver inputs",
+          "reason": "Exact committed bytes and preserved mode",
+          "evidence": ".delivery/quality-review-20261023/sdio-sdk-sync/result.json"
+        }
+      ]
+    }
+  ]
+}
