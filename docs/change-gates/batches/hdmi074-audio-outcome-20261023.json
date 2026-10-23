@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Record user-confirmed HDMI sound after changing source computer; correct unsupported root-cause inference",
+  "context": "Documentation only; existing rc31/rc8 controlled drafts",
+  "next_steps": "Retain compatibility and remaining release gates; additive draft note only",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-HDMI-074",
+      "record": "docs/change-gates/REQ-MIMI-HDMI-074.md",
+      "scope": "Observed NVIDIA source audible output only",
+      "invariants": "No product change, stable claim or loss of historical failure evidence",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-HDMI-074.md",
+        "docs/delivery/20261023-hdmi-audio-followup.md",
+        "docs/change-gates/batches/hdmi074-audio-outcome-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "User confirms audible HDMI output",
+          "status": "passed",
+          "scope": "Human-confirmed one source/device combination; not objective long-duration acceptance",
+          "evidence": "docs/delivery/20261023-hdmi-audio-followup.md"
+        },
+        {
+          "name": "Original source-computer root cause",
+          "status": "not_run",
+          "scope": "Controlled causal comparison",
+          "reason": "Changing source also renegotiated HDMI; no driver replacement proved",
+          "evidence": "docs/delivery/20261023-hdmi-audio-followup.md"
+        }
+      ]
+    }
+  ]
+}
