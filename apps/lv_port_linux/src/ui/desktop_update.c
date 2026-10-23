@@ -21,6 +21,7 @@ static bool worker_busy;
 static char response[65536];
 static char action_error[256];
 static char operation[16] = "status";
+static char pending_operation[16];
 static lv_obj_t *overlay, *status_label, *buttons[4];
 static lv_timer_t *timer;
 static const char *operations[] = {"check", "download", "install", "cancel"};
@@ -137,34 +138,52 @@ static int request(const char *op, char *out, size_t cap)
 static void *worker(void *unused)
 {
     (void)unused;
-    char op[16], result[65536] = {0}, error[256] = {0};
-    pthread_mutex_lock(&lock);
-    snprintf(op, sizeof(op), "%s", operation);
-    pthread_mutex_unlock(&lock);
-    int rc = request(op, result, sizeof(result));
-    if (strcmp(op, "status") != 0) {
-        char *failure = rc == -2 ? strstr(result, "\r\n\r\n") : NULL;
-        if (rc != 0) snprintf(error, sizeof(error), "%s", failure ? failure + 4 : "Update request failed. Please retry.");
-        rc = request("status", result, sizeof(result));
+    for (;;) {
+        char op[16], result[65536] = {0}, error[256] = {0};
+        pthread_mutex_lock(&lock);
+        snprintf(op, sizeof(op), "%s", operation);
+        pthread_mutex_unlock(&lock);
+        int rc = request(op, result, sizeof(result));
+        if (strcmp(op, "status") != 0) {
+            char *failure = rc == -2 ? strstr(result, "\r\n\r\n") : NULL;
+            if (rc != 0) snprintf(error, sizeof(error), "%s", failure ? failure + 4 : "Update request failed. Please retry.");
+            rc = request("status", result, sizeof(result));
+        }
+        pthread_mutex_lock(&lock);
+        char *body = rc == 0 ? strstr(result, "\r\n\r\n") : NULL;
+        snprintf(response, sizeof(response), "%s", body ? body + 4 : "");
+        if (strcmp(op, "status") != 0) snprintf(action_error, sizeof(action_error), "%s", error);
+        if (pending_operation[0]) {
+            snprintf(operation, sizeof(operation), "%s", pending_operation);
+            pending_operation[0] = '\0';
+            pthread_mutex_unlock(&lock);
+            continue;
+        }
+        worker_busy = false;
+        pthread_mutex_unlock(&lock);
+        return NULL;
     }
-    pthread_mutex_lock(&lock);
-    char *body = rc == 0 ? strstr(result, "\r\n\r\n") : NULL;
-    snprintf(response, sizeof(response), "%s", body ? body + 4 : "");
-    if (strcmp(op, "status") != 0) snprintf(action_error, sizeof(action_error), "%s", error);
-    worker_busy = false;
-    pthread_mutex_unlock(&lock);
-    return NULL;
 }
 
 static void launch(const char *op)
 {
     pthread_mutex_lock(&lock);
-    if (!worker_busy) {
+    if (worker_busy) {
+        /* Polling must not swallow a visible button click. Keep at most one
+         * action; an action already in progress never accepts a duplicate. */
+        if (strcmp(operation, "status") == 0 && strcmp(op, "status") != 0 &&
+            !pending_operation[0])
+            snprintf(pending_operation, sizeof(pending_operation), "%s", op);
+    } else {
         worker_busy = true;
         snprintf(operation, sizeof(operation), "%s", op);
         pthread_t thread;
         if (pthread_create(&thread, NULL, worker, NULL) == 0) pthread_detach(thread);
-        else worker_busy = false;
+        else {
+            worker_busy = false;
+            if (strcmp(op, "status") != 0)
+                snprintf(action_error, sizeof(action_error), "%s", "Update request could not start. Please retry.");
+        }
     }
     pthread_mutex_unlock(&lock);
 }

@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Keep visible updater actions through a concurrent status poll",
+  "context": "Actual worker silently dropped click while polling",
+  "next_steps": "Real LVGL close/reopen worker concurrency and full remaining matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Single queued action and worker failure feedback",
+      "invariants": "One worker; no duplicate action; backend guards unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/test_update_worker.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-worker-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original lost click",
+          "status": "passed",
+          "scope": "Assertion abort retained",
+          "evidence": ".delivery/quality-review-20261023/update-worker/original.log"
+        },
+        {
+          "name": "Worker ordering and retry",
+          "status": "passed",
+          "scope": "Real pthread/exact worker with stub request; queue/duplicates/EAGAIN/409/recovery",
+          "evidence": ".delivery/quality-review-20261023/update-worker/extended.log"
+        },
+        {
+          "name": "Status/transport regression",
+          "status": "passed",
+          "scope": "10 methods including worker initial test",
+          "evidence": ".delivery/quality-review-20261023/update-worker/fixed.log"
+        },
+        {
+          "name": "Device and UI concurrent lifetime",
+          "status": "not_run",
+          "scope": "No deployment or actual window while worker runs",
+          "reason": "Isolated worker fixture only",
+          "evidence": ".delivery/quality-review-20261023/update-worker/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
