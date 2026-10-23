@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Reject malformed updater HTTP responses before accepting success",
+  "context": "Prefix-only status validation accepted truncated and invalid responses",
+  "next_steps": "Strict status JSON/schema and worker lifecycle; actual upgrades remain open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Bounded local updater HTTP response framing",
+      "invariants": "Keep3second total deadline; no actual service/device activation",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/test_update_transport.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-framing-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original negative",
+          "status": "passed",
+          "scope": "11 failures preserved",
+          "evidence": ".delivery/quality-review-20261023/update-http-framing/original.log"
+        },
+        {
+          "name": "Transport regression",
+          "status": "passed",
+          "scope": "7 test methods with14 framing cases and bounded socket failures",
+          "evidence": ".delivery/quality-review-20261023/update-http-framing/fixed.log"
+        },
+        {
+          "name": "Complete upgrade/device",
+          "status": "not_run",
+          "scope": "Only isolated host request function",
+          "reason": "Schema/lifecycle and real upgrade gates stillopen",
+          "evidence": ".delivery/quality-review-20261023/update-http-framing/prerecord.json"
+        }
+      ]
+    }
+  ]
+}

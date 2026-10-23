@@ -21,7 +21,7 @@ class UpdateTransport(unittest.TestCase):
         if start < 0: start = source.index('static int request(')
         body = source[start:source.index('static void *worker')]
         body = body.replace(json.dumps('/run/smartdesktopmimi/update.sock'), json.dumps(cls.socket_path))
-        includes = ['errno.h', 'stdio.h', 'stdlib.h', 'string.h', 'sys/socket.h', 'sys/time.h', 'sys/un.h', 'unistd.h', 'poll.h', 'time.h']
+        includes = ['errno.h', 'stdio.h', 'stdlib.h', 'string.h', 'strings.h', 'sys/socket.h', 'sys/time.h', 'sys/un.h', 'unistd.h', 'poll.h', 'time.h']
         code = [f'#include <{h}>' for h in includes] + [body, 'int main(void) { char out[65536] = {0}; int rc=request("status",out,sizeof(out)); printf("%d",rc); return 0; }']
         (cls.path/'client.c').write_text(chr(10).join(code))
         subprocess.run(['gcc','-Wall','-Wextra','-Werror',str(cls.path/'client.c'),'-o',str(cls.path/'client')],check=True)
@@ -55,6 +55,35 @@ class UpdateTransport(unittest.TestCase):
         response=b'HTTP/1.1 200 OK'+bytes([13,10,13,10])+b'{}'
         rc,_=self.exchange([response[:12],response[12:]],0.01)
         self.assertEqual(rc,0)
+
+    def test_invalid_http_framing_is_not_success(self):
+        cases = {
+            "truncated": b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\n{}",
+            "extra": b"HTTP/1.1 200 OK\r\nContent-Length: 1\r\n\r\n{}",
+            "invalid-status": b"HTTP/1.1 2xx OK\r\n\r\n{}",
+            "missing-headers-end": b"HTTP/1.1 200 OK",
+            "duplicate-length": b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nContent-Length: 2\r\n\r\n{}",
+            "bad-length": b"HTTP/1.1 200 OK\r\nContent-Length: 2x\r\n\r\n{}",
+            "overflow-length": b"HTTP/1.1 200 OK\r\nContent-Length: 18446744073709551616\r\n\r\n{}",
+            "chunked": b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n2\r\n{}\r\n0\r\n\r\n",
+            "embedded-nul": b"HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\n{}\x00",
+            "broken-header": b"HTTP/1.1 200 OK\r\nContent-Length 2\r\n\r\n{}",
+        }
+        for name, data in cases.items():
+            with self.subTest(case=name):
+                rc, _ = self.exchange([data])
+                self.assertEqual(rc, -1)
+
+    def test_valid_framing_and_error_status(self):
+        for response, expected in [
+            (b"HTTP/1.1 202 Accepted\r\nContent-Length: 0\r\n\r\n", 0),
+            (b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\n\r\n{}", 0),
+            (b"HTTP/1.0 200 OK\r\n\r\n{}", 0),
+            (b"HTTP/1.1 409 Conflict\r\nContent-Length: 4\r\n\r\nbusy", -2),
+        ]:
+            with self.subTest(response=response):
+                rc, _ = self.exchange([response[:18], response[18:]], 0.01)
+                self.assertEqual(rc, expected)
 
     def test_slow_trickle_has_total_deadline(self):
         rc,elapsed=self.exchange([b'H']*100,0.2)

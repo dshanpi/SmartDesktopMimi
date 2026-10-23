@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/un.h>
@@ -41,6 +42,54 @@ static int request_wait(int fd, short events, long long deadline)
         if (rc > 0) return (pending.revents & POLLNVAL) ? -1 : 0;
         if (rc == 0 || errno != EINTR) return -1;
     }
+}
+
+/* The local updater sends bounded, close-delimited responses, with an
+ * explicit length for status. Chunked coding is not part of this contract. */
+static int response_status(const char *out, size_t used)
+{
+    if (used < 16 || memchr(out, '\0', used)) return -1;
+    const char *end = strstr(out, "\r\n\r\n");
+    const char *line = strstr(out, "\r\n");
+    if (!end || !line || line > end || line - out < 13 ||
+        (strncmp(out, "HTTP/1.1 ", 9) && strncmp(out, "HTTP/1.0 ", 9)) ||
+        out[9] < '1' || out[9] > '5' || out[10] < '0' || out[10] > '9' ||
+        out[11] < '0' || out[11] > '9' || out[12] != ' ') return -1;
+    size_t declared = 0;
+    int have_length = 0;
+    const char *cursor = line + 2;
+    while (cursor < end) {
+        line = strstr(cursor, "\r\n");
+        if (!line || line > end) return -1;
+        const char *colon = memchr(cursor, ':', (size_t)(line - cursor));
+        if (!colon || colon == cursor) return -1;
+        for (const char *p = cursor; p < colon; ++p) {
+            unsigned char c = (unsigned char)*p;
+            if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                  (c >= '0' && c <= '9') || strchr("!#$%&'*+-.^_`|~", c))) return -1;
+        }
+        for (const char *p = colon + 1; p < line; ++p)
+            if (((unsigned char)*p < 32 && *p != '\t') || *p == 127) return -1;
+        size_t name_length = (size_t)(colon - cursor);
+        if (name_length == 17 && !strncasecmp(cursor, "Transfer-Encoding", 17)) return -1;
+        if (name_length == 14 && !strncasecmp(cursor, "Content-Length", 14)) {
+            if (have_length) return -1;
+            have_length = 1;
+            const char *value = colon + 1;
+            while (value < line && (*value == ' ' || *value == '\t')) ++value;
+            if (value == line || *value < '0' || *value > '9') return -1;
+            while (value < line && *value >= '0' && *value <= '9') {
+                size_t digit = (size_t)(*value++ - '0');
+                if (declared > used / 10 || declared * 10 + digit > used) return -1;
+                declared = declared * 10 + digit;
+            }
+            while (value < line && (*value == ' ' || *value == '\t')) ++value;
+            if (value != line) return -1;
+        }
+        cursor = line + 2;
+    }
+    if (have_length && declared != used - (size_t)(end + 4 - out)) return -1;
+    return out[9] == '2' ? 0 : -2;
 }
 
 static int request(const char *op, char *out, size_t cap)
@@ -82,7 +131,7 @@ static int request(const char *op, char *out, size_t cap)
     }
     close(fd); out[used] = '\0';
     if (used + 1 >= cap) return -1;
-    return strncmp(out, "HTTP/1.1 2", 10) == 0 ? 0 : -2;
+    return response_status(out, used);
 }
 
 static void *worker(void *unused)
