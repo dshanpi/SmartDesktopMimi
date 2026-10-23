@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Reject incomplete persisted updater journals",
+  "context": "Missing fields inherited factory/default replay state",
+  "next_steps": "Remaining transaction semantics and updater candidate integration; physical gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Application update journal read validation",
+      "invariants": "Absentfile defaults retained; writer roundtrip; no failed journal mutation; trust/rollback checks unchanged",
+      "paths": [
+        "services/mimi-update/update/engine.go",
+        "services/mimi-update/update/journal_required_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-journal-required-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "12negativecases",
+          "reason": "incompletejournal accepted",
+          "evidence": ".delivery/quality-review-20261023/update-journal-required/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "targeted/fullGo suite",
+          "reason": "requiredfields and validrecovery",
+          "evidence": ".delivery/quality-review-20261023/update-journal-required/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133power",
+          "reason": "host hooks only",
+          "evidence": ".delivery/quality-review-20261023/update-journal-required/result.json"
+        }
+      ]
+    }
+  ]
+}

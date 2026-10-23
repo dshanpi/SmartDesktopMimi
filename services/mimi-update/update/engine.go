@@ -65,8 +65,21 @@ func (e *Engine) readState() (State, error) {
 	if err != nil {
 		return s, err
 	}
+	// Factory defaults apply only when no journal exists. A persisted journal
+	// must not silently reset replay protection or recovery state via omissions.
+	s = State{}
 	if err = StrictJSON(raw, &s); err != nil {
 		return s, err
+	}
+	var fields map[string]json.RawMessage
+	if err = json.Unmarshal(raw, &fields); err != nil {
+		return s, err
+	}
+	for _, name := range []string{"schema_version", "current", "previous", "trial", "high_water", "failed", "history"} {
+		value, exists := fields[name]
+		if !exists || (name != "failed" && name != "history" && bytes.Equal(bytes.TrimSpace(value), []byte("null"))) {
+			return s, fmt.Errorf("invalid update journal: missing or null %s", name)
+		}
 	}
 	if s.Schema != 1 || !validID(s.Current) || (s.Previous != "" && !validID(s.Previous)) {
 		return s, fmt.Errorf("invalid update journal")
