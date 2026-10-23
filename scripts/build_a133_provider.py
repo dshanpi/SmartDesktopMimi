@@ -12,10 +12,10 @@ import tempfile
 PREFIX = 'openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider'
 TOOL_HASH = 'd2fc9477c990642fa27b56f65512ee751e5b3a1a478e5011b0f4878c0b56b4e0'
 RECIPES = {
-    'private': '38d9de51205b981082db9d7883a17d137db25ef14780f1d086a4e0fedb75369f',
-    'public': '96474fbbeae9cc64b19e9f85e762cf0c0e7d9fe1354e667a5ac69a1dd1a12609',
+    'private': 'bb51acac40f020198ede27c0fc53d5ee216fcffbe84c3fc0129f77a47f48de86',
+    'public': 'e7cea6845725539615e9c3955c5c935355abfe8e84111a5c50cc1d1465bc6231',
 }
-EDITION = 'edition-v5'
+EDITION = 'edition-v6'
 AI_SOURCE = 'apps/lv_port_linux/src/system/service_ai_runtime.c'
 READER_SOURCE = 'apps/lv_port_linux/src/system/mimi_tuya_license_provider.h'
 TUYA_LOCK = 'adapters/tuya/source-lock.json'
@@ -23,7 +23,7 @@ TUYA_LOCK_HASH = '7392aac54a9f2c70d6404aa8ae3690b03784fb3d882bab0e85a574ff42e15b
 TUYA_READER = 'adapters/tuya/mimi_tuya_license_provider.h'
 COMPILER = 'prebuilt/rootfsbuilt/aarch64/toolchain-sunxi-glibc-gcc-1130/toolchain/bin/aarch64-openwrt-linux-gcc'
 PRIVATE_LOCK = 'adapters/100ask/source-lock.json'
-PRIVATE_LOCK_HASH = '639a4aecdf6ea06b11bdb81164196843415199e93d7849be56ce76f807604804'
+PRIVATE_LOCK_HASH = '663bf918b3f9fe5979277f230f3a9886f03b499344483926831ff2c736608b4d'
 PRIVATE_SOURCES = {
     'apps/lv_port_linux/src/system/service_cloud.c': 'adapters/100ask/system/service_cloud.c',
     'apps/lv_port_linux/src/system/service_cloud_validation.c': 'adapters/100ask/system/service_cloud_validation.c',
@@ -95,7 +95,7 @@ def selected_source(component, profile, name, product):
     # SDK's historical private copies are never selected for these two files.
     if product and name in PRIVATE_SOURCES:
         return product[0] / PRIVATE_SOURCES[name], product[0]
-    if name in ('apps/lv_port_linux/src/system/ai_command_reply.h', 'apps/lv_port_linux/src/system/ai_command_transaction.h', AI_SOURCE, 'apps/lv_port_linux/src/middleware/middleware.h', 'apps/lv_port_linux/src/system/cloud_pairing_status.h'):
+    if name in ('apps/lv_port_linux/src/system/settings.c', 'apps/lv_port_linux/src/system/settings.h', 'apps/lv_port_linux/src/system/ai_command_reply.h', 'apps/lv_port_linux/src/system/ai_command_transaction.h', AI_SOURCE, 'apps/lv_port_linux/src/middleware/middleware.h', 'apps/lv_port_linux/src/system/cloud_pairing_status.h'):
         return component / EDITION / 'code' / name, component / EDITION / 'code'
     if name == READER_SOURCE:
         if product:
@@ -125,7 +125,7 @@ def preflight(sdk_value, profile, private_value=None, product_value=None):
     recipe = json.loads(recipe_file.read_text())
     if recipe['cloud_profile'] != profile or recipe['tool_sha256'] != TOOL_HASH:
         raise ValueError('provider profile/tool mismatch')
-    if (recipe.get('edition_source_version') != 5 or
+    if (recipe.get('edition_source_version') != 6 or
             recipe.get('edition_source_requirement') != 'REQ-MIMI-QUALITY-076' or
             recipe.get('reference_state') != 'audited_new_source_reference' or
             recipe.get('source_graph_sha256') != source_graph(recipe) or
@@ -188,7 +188,7 @@ def build(args):
     receipt = dict(requirement='REQ-MIMI-PRIVATE-066', status='passed', phase='preflight',
                    profile=args.profile, recipe_sha256=RECIPES[args.profile], tool_sha256=TOOL_HASH,
                    provider_source_commit=recipe['source_commit'], release_qualified=False,
-                   provider_edition_source_version=5, source_graph_sha256=recipe['source_graph_sha256'],
+                   provider_edition_source_version=6, source_graph_sha256=recipe['source_graph_sha256'],
                    reference_backend_sha256=recipe['reference_backend_sha256'],
                    prior_backend_sha256=recipe['prior_backend_sha256'])
     if product:
