@@ -29,6 +29,7 @@ SDK_ROOT="${1:-${AITVBOX_SDK_ROOT:-/home/ubuntu/A133-Tina5.0-v0.9}}"
 # 清理旧构建
 rm -rf build
 mkdir build
+python3 "${APP_DIR}/../../scripts/ui_settings_receipt.py" prepare --root "${APP_DIR}/../.." --build "${APP_DIR}/build"
 
 # 设置 OpenWrt 必须的环境变量
 export STAGING_DIR="${SDK_ROOT}/out/a133/b6/openwrt/staging_dir"
@@ -48,6 +49,8 @@ cmake -B build -S . \
 cmake --build build --target lvglsim -j$(nproc)
 python3 "${APP_DIR}/../../tools/update/source_ownership.py" \
   --root "${APP_DIR}/../.." --commands "${APP_DIR}/build/compile_commands.json"
+
+python3 "${APP_DIR}/../../scripts/ui_settings_receipt.py" record --root "${APP_DIR}/../.." --build "${APP_DIR}/build"
 
 # 验证
 TARGET_BIN=$(find build/bin -maxdepth 1 -type f -executable ! -name "*.so" | head -n 1)

@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Bind UI and backend shared settings writer before packaging",
+  "context": "Prior collection accepted missing UI program",
+  "next_steps": "Continue control-center/backend save error review and physical validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected writer inputs and actual UI program receipt",
+      "invariants": "No retroactive diagnostic receipt or device acceptance claim",
+      "paths": [
+        "apps/lv_port_linux/build_openwrt.sh",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "scripts/build_a133_provider.py",
+        "scripts/build_apps.sh",
+        "scripts/check_product_edition.py",
+        "tests/update/test_product_edition.py",
+        "tests/update/test_product_provider.py",
+        "scripts/ui_settings_receipt.py",
+        "tests/update/test_ui_settings_receipt.py",
+        "docs/change-gates/batches/quality076-ui-writer-receipt-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual programs and package installation",
+          "status": "passed",
+          "scope": "Two profiles UI/backend/Tuya, six tests; nonprogram fixture parts synthetic",
+          "evidence": ".delivery/quality-review-20261023/ui-writer-receipt/install-tests.log"
+        },
+        {
+          "name": "Provider and writer failures",
+          "status": "passed",
+          "scope": "14 provider and2 receipt suites",
+          "evidence": ".delivery/quality-review-20261023/ui-writer-receipt/receipt-tests.log"
+        },
+        {
+          "name": "Physical acceptance",
+          "status": "not_run",
+          "scope": "Touch, power-loss and concurrent actual writers",
+          "reason": "Host and isolated A133 build only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

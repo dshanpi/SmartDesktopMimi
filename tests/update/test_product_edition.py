@@ -26,6 +26,10 @@ class ProductEditionTests(unittest.TestCase):
         provider = dict(requirement='REQ-MIMI-PRIVATE-066', status='passed', phase='compiled',
                         profile=edition, recipe_sha256=c.RECIPES[edition], provider_edition_source_version=6,
                         original_source_dependency=False, reference_backend_sha256=c.sha(backend), backend_sha256=c.sha(backend))
+        provider['settings_inputs']=c.ui_writer.inputs(ROOT)
+        desktop=build/'lv_port_linux/lvglsim';desktop.write_bytes(header+b'fixture UI')
+        ui=dict(schema=1,protocol=c.ui_writer.PROTOCOL,inputs=provider['settings_inputs'],status='passed',phase='compiled',binary_sha256=c.sha(desktop),binary_bytes=desktop.stat().st_size)
+        (build/'lv_port_linux/ui-settings-build-result.json').write_text(json.dumps(ui))
         if edition == 'private':
             provider.update(private_product_source_lock_sha256=c.PRIVATE_LOCK_HASH,
                             private_tuya_source_lock_sha256=c.TUYA_LOCK_HASH, historical_sdk_pairing_sources_used=False)
@@ -81,6 +85,28 @@ class ProductEditionTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'private provider source lock'):
                     c.check(str(build), 'private')
 
+    def test_missing_stale_or_mixed_ui_is_rejected(self):
+        for case in ('missing', 'changed', 'protocol', 'ui_input', 'backend_input', 'architecture'):
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                build, _ = self.fixture(Path(directory), 'public')
+                receipt=build/'lv_port_linux/ui-settings-build-result.json'
+                data=json.loads(receipt.read_text())
+                binary=build/'lv_port_linux/lvglsim'
+                if case=='missing': binary.unlink()
+                elif case=='changed': binary.write_bytes(binary.read_bytes()+b'changed')
+                elif case=='protocol': data['protocol']='legacy-inode-lock'
+                elif case=='ui_input': data['inputs']={}
+                elif case=='backend_input':
+                    provider=build/'lv_port_linux/provider-build-result.json'
+                    value=json.loads(provider.read_text());value['settings_inputs']={}
+                    provider.write_text(json.dumps(value))
+                else:
+                    binary.write_bytes(b'not an AArch64 program')
+                    data.update(binary_sha256=c.sha(binary),binary_bytes=binary.stat().st_size)
+                receipt.write_text(json.dumps(data))
+                with self.assertRaises((ValueError,OSError)):
+                    c.check(str(build),'public')
+
     def test_init_selects_public_private_and_rejects_unknown_without_start(self):
         script = (ROOT / 'packaging/aitvbox-suite/files/aitvbox.init').read_text()
         with tempfile.TemporaryDirectory() as directory:
@@ -129,7 +155,7 @@ class ProductEditionTests(unittest.TestCase):
                 product = root / 'product'
                 shutil.copytree(fixtures / ('edition066-build-proof-' + edition) / 'build', product / 'build')
                 (product / 'scripts').symlink_to(ROOT / 'scripts', target_is_directory=True)
-                for relative in ('build/lv_port_linux/lvglsim', 'build/hdmi_preview/hdmi_preview', 'build/aitvbox-version',
+                for relative in ('build/hdmi_preview/hdmi_preview', 'build/aitvbox-version',
                                  'build/aitvbox-tuya-pid', 'vendor/tuyaopen-a133-b6-libs/MNN/libMNN.so',
                                  'vendor/tuyaopen-a133-b6-libs/MNN/libMNN_Express.so',
                                  'vendor/tuyaopen-a133-b6-libs/models/mdtc_chunk_300ms.mnn',

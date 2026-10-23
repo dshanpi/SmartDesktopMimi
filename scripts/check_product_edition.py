@@ -7,6 +7,7 @@ import sys
 
 from build_a133_provider import RECIPES, PRIVATE_LOCK_HASH, TUYA_LOCK_HASH, canonical, pinned_file, sha
 import tuya_pairing_sources as tuya
+import ui_settings_receipt as ui_writer
 
 REFERENCE = {
     'public': 'b7e4f6a9da9599d06cfd4801384e9266fcd97e6787dc47e28f7834adc71fe68f',
@@ -50,6 +51,19 @@ def check(build, edition):
     if edition == 'public' and any(key.startswith('private_') for key in provider):
         raise ValueError('public provider contains private component metadata')
     pinned_file(build / 'lv_port_linux/lv_backend', build, provider['backend_sha256'])
+    ui = load(build / 'lv_port_linux/ui-settings-build-result.json')
+    expected_writer = ui_writer.inputs(Path(__file__).resolve().parents[1])
+    if (ui.get('schema') != 1 or ui.get('protocol') != ui_writer.PROTOCOL or
+            ui.get('status') != 'passed' or ui.get('phase') != 'compiled' or
+            ui.get('inputs') != expected_writer or provider.get('settings_inputs') != expected_writer):
+        raise ValueError('UI/backend settings writer mismatch')
+    desktop = build / 'lv_port_linux/lvglsim'
+    pinned_file(desktop, build, ui['binary_sha256'])
+    if desktop.stat().st_size != ui.get('binary_bytes'):
+        raise ValueError('UI program size mismatch')
+    with desktop.open('rb') as stream: header = stream.read(20)
+    if header[:6] != b'\x7fELF\x02\x01' or header[18:20] != b'\xb7\x00':
+        raise ValueError('UI program architecture mismatch')
     runtime = load(build / 'tuyaopen/pairing-build-result.json')
     _, expected = tuya.selection('public')
     expected['profile'] = edition
@@ -70,8 +84,9 @@ def check(build, edition):
     if header[:6] != b'\x7fELF\x02\x01' or header[18:20] != b'\xb7\x00':
         raise ValueError('Tuya program architecture mismatch')
     return dict(schema=1, requirement='REQ-MIMI-PRIVATE-066', status='passed',
-                scope='Provider/Tuya source edition and actual program hashes; not physical acceptance',
-                edition=edition, provider_sha256=provider['backend_sha256'],
+                scope='UI/provider shared writer and Tuya source edition/program hashes; not physical acceptance',
+                edition=edition, desktop_sha256=ui['binary_sha256'], settings_protocol=ui_writer.PROTOCOL,
+                provider_sha256=provider['backend_sha256'],
                 tuya_sha256=runtime['binary_sha256'],
                 provider_record_sha256=sha(build / 'lv_port_linux/provider-build-result.json'),
                 tuya_record_sha256=sha(build / 'tuyaopen/pairing-build-result.json'),

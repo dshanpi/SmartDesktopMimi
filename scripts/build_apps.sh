@@ -353,6 +353,7 @@ cp -f "${PROVIDER_RUN}/compiled/lv_backend" "${BUILD_OUT}/lv_port_linux/"
 cp -f "${PROVIDER_RUN}/compiled/product-provider-result.json" \
     "${BUILD_OUT}/lv_port_linux/provider-build-result.json"
 cp -f "${PRODUCT_ROOT}/apps/lv_port_linux/build/bin/lvglsim"    "${BUILD_OUT}/lv_port_linux/"
+cp -f "${PRODUCT_ROOT}/apps/lv_port_linux/build/settings-build-result.json" "${BUILD_OUT}/lv_port_linux/ui-settings-build-result.json"
 
 echo "==> [2/5] SDK HDMI service (out-of-tree)"
 HDMI_RUN="$(mktemp -d "${BUILD_OUT}/hdmi.XXXXXX")"

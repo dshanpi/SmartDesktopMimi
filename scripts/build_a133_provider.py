@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from ui_settings_receipt import INPUTS as SETTINGS_INPUTS
 
 PREFIX = 'openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider'
 TOOL_HASH = 'd2fc9477c990642fa27b56f65512ee751e5b3a1a478e5011b0f4878c0b56b4e0'
@@ -190,7 +191,8 @@ def build(args):
                    provider_source_commit=recipe['source_commit'], release_qualified=False,
                    provider_edition_source_version=6, source_graph_sha256=recipe['source_graph_sha256'],
                    reference_backend_sha256=recipe['reference_backend_sha256'],
-                   prior_backend_sha256=recipe['prior_backend_sha256'])
+                   prior_backend_sha256=recipe['prior_backend_sha256'],
+                   settings_inputs={name: recipe['sources'][name] for name in SETTINGS_INPUTS})
     if product:
         receipt.update(private_product_source_lock_sha256=PRIVATE_LOCK_HASH,
                        private_tuya_source_lock_sha256=TUYA_LOCK_HASH,

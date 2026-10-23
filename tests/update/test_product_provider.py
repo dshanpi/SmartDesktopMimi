@@ -6,11 +6,13 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
 spec = importlib.util.spec_from_file_location('product_provider', ROOT / 'scripts/build_a133_provider.py')
 p = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(p)
@@ -45,6 +47,9 @@ class ProductProviderTests(unittest.TestCase):
                       edition_source_version=6, edition_source_requirement='REQ-MIMI-QUALITY-076',
                       reference_state='audited_new_source_reference', reference_backend_sha256='a' * 64,
                       prior_backend_sha256='b' * 64, original_backend_sha256='b' * 64)
+        for name in p.SETTINGS_INPUTS:
+            target=component/p.EDITION/'code'/name;target.parent.mkdir(parents=True,exist_ok=True)
+            target.write_bytes((ROOT/name).read_bytes());recipe['sources'][name]=p.sha(target)
         recipe['source_graph_sha256'] = p.source_graph(recipe)
         rf = component / p.EDITION / profile / 'provider-recipe.json'
         rf.parent.mkdir(parents=True, exist_ok=True)
@@ -281,7 +286,7 @@ class ProductProviderTests(unittest.TestCase):
                         'vendor/tuyaopen-a133-b6-libs', 'apps/lv_port_linux',
                         'apps/hdmi_preview', 'apps/platform_services', 'apps/ipkvm']:
                 (product / rel).mkdir(parents=True)
-            for name in ['build_apps.sh', 'lib.sh', 'build_a133_provider.py']:
+            for name in ['build_apps.sh', 'lib.sh', 'build_a133_provider.py', 'ui_settings_receipt.py']:
                 shutil.copyfile(ROOT / 'scripts' / name, product / 'scripts' / name)
             (product / 'scripts/audit_english_ui.py').write_text('pass\n')
             (product / 'apps/lv_port_linux/build_openwrt.sh').touch()
