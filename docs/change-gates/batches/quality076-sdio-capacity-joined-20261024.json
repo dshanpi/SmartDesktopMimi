@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Join actual SDIO capacity receive path and compile affected consumers",
+  "context": "Allocation layout change and previous oversize failure",
+  "next_steps": "Full module link and durable standardoverlay candidate promotion",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "2304 host cases and31 freshly compiled affected objects across two batches",
+      "invariants": "Original SDK/overlay unchanged; no physical rootcause claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-capacity-joined-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Joined path and header consumers",
+          "status": "passed",
+          "scope": "Host memory IO adapters and scoped A133 objects",
+          "reason": "Original failure retained, candidate rejects oversized reads and balances ownership",
+          "evidence": ".delivery/quality-review-20261023/sdio-rx-capacity-joined/result.json"
+        }
+      ]
+    }
+  ]
+}
