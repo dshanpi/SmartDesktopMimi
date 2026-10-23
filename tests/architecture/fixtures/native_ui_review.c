@@ -93,6 +93,8 @@ static void *review_control_serve(void *opaque) {
   used+=(size_t)n;
   if(memchr(buffer,'\n',used))break;
  }
+ const char status_command[]="{\"command\":\"status\"}";
+ c->hold=c->hold && used>=sizeof(status_command)-1 && !memcmp(buffer,status_command,sizeof(status_command)-1);
  if(c->hold) {atomic_store(&review_status_entered,true);while(atomic_load(&review_status_hold))usleep(1000);}
  if(c->delay)usleep(c->delay);
  if(!c->silent && used) {ssize_t n=send(c->fd,c->reply,strlen(c->reply),MSG_NOSIGNAL);if(c->hold && n==(ssize_t)strlen(c->reply))atomic_fetch_add(&review_held_writes,1);}
@@ -1162,6 +1164,39 @@ int main(int argc,char**argv) {
   assert(find_label(lv_scr_act(),ui_tr(UI_STR_READY)));
   assert(app_open_count==opens);
   puts("PASS one in-flight across triple page reopen, stale running reply discarded, fresh idle accepted");
+ }
+ else if(!strcmp(argv[1],"hdmi-status-stop-success") || !strcmp(argv[1],"hdmi-status-stop-failure")) {
+  bool fail=!strcmp(argv[1],"hdmi-status-stop-failure");
+  review_hdmi_idle=true;review_status_running=true;review_status_hold=true;
+  int opens=app_open_count,before=atomic_load(&review_stop_commands);
+  app_hdmi_mcp.init();
+  for(int i=0;i<100 && !atomic_load(&review_status_entered);i++)usleep(1000);
+  assert(atomic_load(&review_status_entered));
+  review_status_running=false;review_hdmi_stop_failure=fail;review_hdmi_stop_success=!fail;
+  lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
+  lv_obj_clear_state(lv_obj_get_parent(stop),LV_STATE_DISABLED);
+  lv_obj_send_event(lv_obj_get_parent(stop),LV_EVENT_CLICKED,NULL);
+  lv_obj_t *confirm=find_label(lv_layer_top(),ui_tr(UI_STR_STOP));assert(confirm);
+  lv_obj_send_event(lv_obj_get_parent(confirm),LV_EVENT_CLICKED,NULL);
+  lv_obj_send_event(lv_obj_get_parent(confirm),LV_EVENT_CLICKED,NULL);
+  const char *title=ui_i18n_is_zh()?"停止当前任务？":"Stop current task?";
+  const char *failure=ui_i18n_is_zh()?"未能确认停止或释放输入，请重试。":"Could not confirm stop or input release. Please retry.";
+  for(int i=0;i<12;i++) {
+   usleep(1000);pump();
+   if(fail?find_label(lv_layer_top(),failure)!=NULL:find_label(lv_layer_top(),title)==NULL)break;
+  }
+  assert(fail?find_label(lv_layer_top(),failure)!=NULL:find_label(lv_layer_top(),title)==NULL);
+  assert(atomic_load(&review_stop_commands)==before+1);
+  review_hdmi_stop_failure=false;review_hdmi_stop_success=false;review_status_hold=false;
+  for(int i=0;i<30;i++){usleep(1000);pump();}
+  assert(atomic_load(&review_held_writes)==1);
+  assert(app_open_count==opens && !find_label(lv_scr_act(),ui_tr(UI_STR_MCP_RUNNING)));
+  if(fail) {
+   assert(find_label(lv_layer_top(),failure));
+   assert(!lv_obj_has_state(lv_obj_get_parent(confirm),LV_STATE_DISABLED));
+   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"停止未确认":"Stop unconfirmed"));
+  }
+  puts("PASS stop completes before held old running reply; one command; stale reply cannot override success/failure");
  }
  else if(!strcmp(argv[1],"hdmi-status-responsive")) {
   review_hdmi_idle=true;review_hdmi_silent=true;

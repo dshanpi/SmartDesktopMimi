@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Verify stop results survive stale status completion",
+  "context": "Status and stop workers can complete out of order",
+  "next_steps": "Current candidate full-link qualification and remaining feature audit",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Two ordered completion scenarios in actual LVGL",
+      "invariants": "Host concurrency fixture is not daemon/physical acceptance",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-status-stop-overlap-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Reordered completion",
+          "status": "passed",
+          "scope": "8renders stop success/failure then stale running reply",
+          "evidence": ".delivery/quality-review-20261023/control-status-stop-overlap/result.json"
+        },
+        {
+          "name": "Initial fixture compilation",
+          "status": "failed",
+          "scope": "memmem not declared",
+          "reason": "Fixture portability error corrected using bounded memcmp",
+          "evidence": ".delivery/quality-review-20261023/control-status-stop-overlap/render/build.log"
+        },
+        {
+          "name": "Actual system acceptance",
+          "status": "not_run",
+          "scope": "Daemon plus board and new full candidate",
+          "reason": "Independent host peers only",
+          "evidence": ".delivery/quality-review-20261023/control-status-stop-overlap/result.json"
+        }
+      ]
+    }
+  ]
+}
