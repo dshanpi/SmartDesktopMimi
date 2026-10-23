@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "KVM auth/HID baseline and reproduced macro cancellation ownership defect",
+  "context": "Begin previously unqualified KVM area from current source",
+  "next_steps": "Fix macro replacement sequencing and cancellation together; then disconnect/input ownership",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Read-only source audit and isolated reproduction",
+      "invariants": "No real HID/network or product edit; preserve original failure",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-kvm-input-audit-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Selected actual Go tests",
+          "status": "passed",
+          "scope": "Authentication and HID selected tests with race detector, not entire package suite",
+          "evidence": ".delivery/quality-review-20261023/kvm-input-audit/baseline.log"
+        },
+        {
+          "name": "Macro cancellation ownership",
+          "status": "failed",
+          "scope": "Exact functions with stub HID, old completion removes new cancel",
+          "reason": "Logical interleaving defect reproduced",
+          "evidence": ".delivery/quality-review-20261023/kvm-input-audit/macro-original.log"
+        },
+        {
+          "name": "Physical KVM",
+          "status": "not_run",
+          "scope": "No device endpoints",
+          "reason": "Host audit only",
+          "evidence": ".delivery/quality-review-20261023/kvm-input-audit/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
