@@ -36,3 +36,17 @@ User renewed upload authorization. See docs/delivery/20261023-rc31-rc8.md. Publi
 
 ## 2026-10-23 actual delivery result
 Both controlled drafts uploaded and all19 assets fully downloaded, signatures and compressed/raw image hashes passed. Remote inventory unchanged. Source pushed4519de2/private dbcb5f1/SDK31a5653. Stable blocked; see docs/delivery/20261023-rc31-rc8-result.md. No board operations.
+
+
+## 2026-10-23 Owner-authorized public prerelease
+
+REQ-MIMI-DELIVERY-058. Owner explicitly approved publishing the full rc31 application and rc8 system as prereleases with known limitations, without stable promotion. Both releases are now public (draft=false, prerelease=true, make_latest=false requested):
+
+- Application: https://github.com/dshanpi/SmartDesktopMimi/releases/tag/v1.0.8-rc.31 (12 assets).
+- System: https://github.com/dshanpi/SmartDesktopMimi/releases/tag/system-a133-v1.0.0-rc.8 (9 assets).
+
+All21 remote asset IDs/sizes/digests remained unchanged and match retained previously downloaded, verified bytes. Both existing immutable version tags still resolve to build source019a27f050d05e96e37f5b55e1bb6a82c155ef17. Anonymous API readback confirms public visibility and prerelease state. No rebuilding, resigning, device operation or stable update-index promotion. Stable gate remains unqualified; known limitations are displayed prominently in release bodies.
+
+Correction: initial publication precheck found release objects still associated with GitHub untagged placeholders, despite earlier tag_name assumptions. The first check failed before mutation and is retained. Existing version Git refs were independently verified, then these release objects were explicitly associated with those refs; no existing tag commit was moved.
+
+Evidence: .delivery/release-20261023/public-prerelease/{prerecord,initial-check-failure,result}.json and per-release before/published records. This owner-approved prerelease visibility change does not reclassify incomplete tests or qualify stable releases.
