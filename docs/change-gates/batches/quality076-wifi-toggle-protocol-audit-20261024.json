@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Audit WiFi runtime completion semantics before recovery fix",
+  "context": "UI no-reply recovery needs trustworthy operation completion state",
+  "next_steps": "Reproduce pending init/runtime and queue failure with selected service harness; coordinate protocol fix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Read-only current backend/middleware/UI inspection",
+      "invariants": "Do not equate requested enabled state to physical HAL completion",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-toggle-protocol-audit-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Selected source audit",
+          "status": "passed",
+          "scope": "Exact selected sources and described call ordering only",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-protocol-audit/result.json"
+        },
+        {
+          "name": "Runtime reproduction/fix",
+          "status": "not_run",
+          "scope": "Backend timing and physicalradio",
+          "reason": "Source hazards only; pending scoped harness",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-protocol-audit/result.json"
+        }
+      ]
+    }
+  ]
+}
