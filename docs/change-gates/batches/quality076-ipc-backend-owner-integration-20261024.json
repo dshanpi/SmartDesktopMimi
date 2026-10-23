@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Integrate backend connection ownership candidate and retain timing failures",
+  "context": "Backend rawfd slot reuse and concurrent transmission risks",
+  "next_steps": "Resolve unsent contention timeout versus poisonedconnection and earlier failures",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Copied actual backend middleware hostintegration",
+      "invariants": "Preserve all failures; no broad qualification from one passing schedule",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-backend-owner-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Earlier concurrentwriter failures",
+          "status": "failed",
+          "scope": "r1/r3 host runs",
+          "reason": "asserted sendfailure; cause notyetproven",
+          "evidence": ".delivery/quality-review-20261023/ipc-backend-owner-integration/result.json"
+        },
+        {
+          "name": "Instrumented selected backend scenarios",
+          "status": "passed",
+          "scope": "r4 socketpair/poll/callback/heartbeat identity",
+          "evidence": ".delivery/quality-review-20261023/ipc-backend-owner-integration/result.json"
+        },
+        {
+          "name": "Full transport qualification",
+          "status": "not_run",
+          "scope": "deadlinefailureexplanation/healthycontention/receive/listener/A133",
+          "reason": "candidate remainsreview_required",
+          "evidence": ".delivery/quality-review-20261023/ipc-backend-owner-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
