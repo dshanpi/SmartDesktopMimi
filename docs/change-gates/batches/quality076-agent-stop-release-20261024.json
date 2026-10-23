@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Report agent stop HID release failures",
+  "context": "Stop CLI returned OK despite release errors",
+  "next_steps": "Init caller reporting and actual agent/physicalHID shutdown",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual agentctl shell stop results",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "platform/runtime/aitvbox-agentctl",
+        "tests/platform/test_agentctl_stop.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-agent-stop-release-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Release fault handling",
+          "status": "passed",
+          "scope": "4 simulated HID results through actual shell; platformrecipe current bytes installed",
+          "evidence": ".delivery/quality-review-20261023/agent-stop-release/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/agent-stop-release/result.json"
+        }
+      ]
+    }
+  ]
+}

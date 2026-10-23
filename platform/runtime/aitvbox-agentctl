@@ -57,9 +57,15 @@ case "${1:-}" in
 		esac
 		umask 077
 		: > "$STOP_FILE"
-		"$HIDCTL" key 0 0 2>/dev/null || true
-		"$HIDCTL" mouse 0 0 0 0 2>/dev/null || true
-		echo "OK"
+		release_failed=0
+		"$HIDCTL" key 0 0 2>/dev/null || release_failed=1
+		"$HIDCTL" mouse 0 0 0 0 2>/dev/null || release_failed=1
+		if [ "$release_failed" != 0 ]; then
+			echo "stop requested; HID release failed" >&2
+			exit 1
+		fi
+		# The stop marker is a request, not acknowledgement from the agent.
+		echo "stop_requested"
 		;;
 	*) echo "usage: $0 {set-key-stdin|configure ENDPOINT MODEL|status|clear|stop}" >&2; exit 2 ;;
 esac
