@@ -32,7 +32,31 @@
 #include "src/apps/user/user_app_config.h"
 #include "src/middleware/middleware.h"
 #include "src/apps/setting/setting_app.h"
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+static bool review_wifi_track_strings;
+static void *review_wifi_strings[256];
+static unsigned review_wifi_strings_live;
+static char *review_wifi_strdup(const char *s) {
+ char *p=strdup(s);
+ if(p && review_wifi_track_strings) {
+  unsigned i;for(i=0;i<256 && review_wifi_strings[i];i++){}
+  assert(i<256);review_wifi_strings[i]=p;review_wifi_strings_live++;
+ }
+ return p;
+}
+static void review_wifi_free(void *p) {
+ if(p) for(unsigned i=0;i<256;i++) if(review_wifi_strings[i]==p) {
+  review_wifi_strings[i]=NULL;review_wifi_strings_live--;break;
+ }
+ free(p);
+}
+#define strdup review_wifi_strdup
+#define free review_wifi_free
 #include "src/apps/wifi/wifi_app.c"
+#undef strdup
+#undef free
 #include <assert.h>
 #include <errno.h>
 #include <sys/socket.h>
@@ -1680,6 +1704,19 @@ int main(int argc,char**argv) {
   emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
   fprintf(stderr,"Held-HAL snapshot consumed: pending=%d enabled_pref=%d save_delta=%d\n",wlan_toggle_pending,settings.wifi_enabled,saves-before);
   assert(wlan_toggle_pending && saves==before && !settings.wifi_enabled && "intermediate enabled snapshot must not confirm operation or save preference");
+ }
+ else if(!strcmp(argv[1],"wifi-ap-lifetime")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);
+  lv_obj_clean(wifi_list);review_wifi_track_strings=true;
+  for(int cycle=0;cycle<20;cycle++) {
+   wifi_ap_info_t ap={0};snprintf(ap.ssid,sizeof(ap.ssid),"Refresh network %d",cycle);ap.rssi=-45;
+   emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+   assert(lv_obj_get_child_count(wifi_list)==1);
+   lv_obj_clean(wifi_list);
+  }
+  fprintf(stderr,"AP refresh outstanding duplicated names=%u\n",review_wifi_strings_live);
+  assert(review_wifi_strings_live==0 && "AP refresh must release all duplicated names");
+  review_wifi_track_strings=false;
  }
  else if(!strcmp(argv[1],"wifi-toggle-failure-hint")) {
   settings.wifi_enabled=false;app_wifi.init();review_wifi_snapshot(false,false);

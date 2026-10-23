@@ -318,7 +318,8 @@ static void wifi_status_handler(const mw_msg_t * msg) {
         } else {
             // 创建新项
             wifi_ap_t ap;
-            ap.ssid = strdup(info->ssid); 
+            /* create_list_item owns the single copy retained by its row. */
+            ap.ssid = decoded.ssid;
             ap.rssi = info->rssi;
             ap.encrypted = info->encrypted;
             ap.connected = info->connected;

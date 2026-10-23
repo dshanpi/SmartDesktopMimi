@@ -88,3 +88,5 @@ UI_SCENE("wifi-toggle-silence")
 UI_SCENE("wifi-toggle-timer-failure")
 
 UI_SCENE("wifi-toggle-failure-hint")
+
+UI_SCENE("wifi-ap-lifetime")
