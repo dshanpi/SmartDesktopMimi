@@ -257,9 +257,13 @@ static void refresh(lv_timer_t *unused)
     pthread_mutex_unlock(&lock);
     json_object *state = parse_status(snapshot), *candidate = NULL, *manifest = NULL;
     if (!state) {
-        lv_label_set_text(status_label, ui_i18n_is_zh()
-            ? "需要支持桌面更新的系统基线。\n更新服务尚未就绪，当前桌面保持运行。"
-            : "A compatible system baseline is required.\nThe update service is not ready; your current desktop keeps running.");
+        const char *unavailable = ui_i18n_is_zh()
+            ? "暂时无法读取更新状态。\n当前桌面保持运行，请稍后重试。"
+            : "Update status is temporarily unavailable.\nYour current desktop keeps running. Please try again shortly.";
+        if (request_error[0])
+            lv_label_set_text_fmt(status_label, "%s\n%s", unavailable, request_error);
+        else
+            lv_label_set_text(status_label, unavailable);
     } else {
         json_object_object_get_ex(state, "candidate", &candidate);
         if (candidate) json_object_object_get_ex(candidate, "manifest", &manifest);

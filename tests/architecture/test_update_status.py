@@ -23,6 +23,7 @@ class UpdateStatus(unittest.TestCase):
 #include <string.h>
 #include <pthread.h>
 #include <stdarg.h>
+#include <stdlib.h>
 typedef void lv_timer_t;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static char response[65536], action_error[256];
@@ -32,14 +33,16 @@ static void *status_label;
 #define LV_STATE_DISABLED 1
 static void lv_obj_remove_state(int *p,int s) { (void)s; *p=1; }
 static void lv_obj_add_state(int *p,int s) { (void)s; *p=0; }
-static void lv_label_set_text(void *p,const char *s) { (void)p; (void)s; }
-static void lv_label_set_text_fmt(void *p,const char *s,...) { (void)p; (void)s; }
-static bool ui_i18n_is_zh(void) {return false;}
+static char displayed[4096];
+static void lv_label_set_text(void *p,const char *s) { (void)p; snprintf(displayed,sizeof(displayed),"%s",s); }
+static void lv_label_set_text_fmt(void *p,const char *s,...) { (void)p; va_list ap;va_start(ap,s);vsnprintf(displayed,sizeof(displayed),s,ap);va_end(ap); }
+static bool ui_i18n_is_zh(void) {return getenv("REVIEW_ZH") != NULL;}
 static void launch(const char *op) {(void)op;}
 '''
         main = r'''int main(void) {
+if(getenv("REVIEW_ACTION_ERROR")) snprintf(action_error,sizeof(action_error),"%s",getenv("REVIEW_ACTION_ERROR"));
 while(fgets(response,sizeof(response),stdin)) {
-refresh(NULL); printf("%d%d%d%d\n",states[0],states[1],states[2],states[3]);
+refresh(NULL); if(getenv("REVIEW_DISPLAY")) {puts(displayed); continue;} printf("%d%d%d%d\n",states[0],states[1],states[2],states[3]);
 } return 0; }'''
         (cls.path/"probe.c").write_text(stub+body+main)
         subprocess.run(["gcc","-Wall","-Wextra","-Werror",str(cls.path/"probe.c"),"-ljson-c","-lpthread","-o",str(cls.path/"probe")],check=True)
@@ -75,3 +78,14 @@ refresh(NULL); printf("%d%d%d%d\n",states[0],states[1],states[2],states[3]);
                ({**VALID,"extra":{"future":True}},"1000")]
         for value,expected in cases:
             with self.subTest(value=value): self.assertEqual(self.run_states([value]),[expected])
+
+    def test_unavailable_keeps_action_diagnostic_without_false_baseline_claim(self):
+        for zh in (False, True):
+            env = dict(os.environ, REVIEW_DISPLAY="1", REVIEW_ACTION_ERROR="installation refused: journal identity missing")
+            if zh: env["REVIEW_ZH"] = "1"
+            else: env.pop("REVIEW_ZH", None)
+            result = subprocess.run([str(self.path/"probe")], input="{}\n", text=True, capture_output=True, check=True, env=env)
+            self.assertIn("installation refused: journal identity missing", result.stdout)
+            self.assertNotIn("baseline", result.stdout.lower())
+            self.assertNotIn("基线", result.stdout)
+            self.assertIn("暂时无法读取" if zh else "temporarily unavailable", result.stdout)

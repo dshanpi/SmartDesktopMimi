@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Preserve action failure feedback during status outage",
+  "context": "Missing status falsely reported missing baseline and hid refusal",
+  "next_steps": "Timer-driven visual and A133 integration; full quality gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Update status UI messages",
+      "invariants": "Buttons remain fail closed; no automatic action retry; bilingual diagnostic retained",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/test_update_status.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-unavailable-feedback-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "actual refresh output",
+          "reason": "action error hidden",
+          "evidence": ".delivery/quality-review-20261023/update-unavailable-feedback/original.log"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "host label/control decisions",
+          "reason": "both languages preserve diagnostic",
+          "evidence": ".delivery/quality-review-20261023/update-unavailable-feedback/fixed.log"
+        },
+        {
+          "name": "Visual/physical",
+          "status": "not_run",
+          "scope": "new unavailable message layout and A133",
+          "reason": "render shows initial loading only",
+          "evidence": ".delivery/quality-review-20261023/update-unavailable-feedback/result.json"
+        }
+      ]
+    }
+  ]
+}
