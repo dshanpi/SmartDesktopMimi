@@ -220,10 +220,16 @@ static void spin(lv_event_t * e)
     struct control * c = lv_event_get_user_data(e);
     if(lv_event_get_code(e) == LV_EVENT_LONG_PRESSED_REPEAT || lv_event_get_code(e) == LV_EVENT_CLICKED) {
         lv_obj_t * l = lv_obj_get_child(lv_event_get_target(e), 0);
-        if(!strcmp(lv_label_get_text(l), "+"))
-            lv_spinbox_increment(c->input);
-        else
-            lv_spinbox_decrement(c->input);
+        /* Device steps are arithmetic, not the spinbox's digit-oriented
+         * zero-crossing behavior. Widen before adding to avoid overflow. */
+        int64_t value = lv_spinbox_get_value(c->input);
+        int64_t step = lv_spinbox_get_step(c->input);
+        value += !strcmp(lv_label_get_text(l), "+") ? step : -step;
+        int64_t min = lv_spinbox_get_min_value(c->input);
+        int64_t max = lv_spinbox_get_max_value(c->input);
+        if(value < min) value = min;
+        if(value > max) value = max;
+        lv_spinbox_set_value(c->input, (int32_t)value);
     }
 }
 static void show_functions(json_object * root)

@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Fix IoT Integer arithmetic across zero",
+  "context": "Actual -3 +10 must equal7, generic digit editor uses different semantics",
+  "next_steps": "Persist schema step independently from cursor selection; strict schema/value validation; real device",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual Integer +/- stepping and payload",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "apps/lv_port_linux/src/apps/iot/iot_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-iot-integer-step-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Current IoT scenes",
+          "status": "passed",
+          "scope": "16 real LVGL renders, original negative preserved; Integer and Boolean payloads",
+          "evidence": ".delivery/quality-review-20261023/iot-integer-step/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/iot-integer-step/result.json"
+        }
+      ]
+    }
+  ]
+}

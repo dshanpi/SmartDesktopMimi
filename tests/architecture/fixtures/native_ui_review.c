@@ -42,6 +42,7 @@
  * read account configuration or call the real cloud. */
 static bool review_iot_connected;
 static unsigned review_iot_commands;
+static bool review_iot_integer;
 static const char *review_iot_reply="{\"accepted\":true,\"state_confirmed\":false}";
 static unsigned review_iot_delay_us;
 static const char *review_iot_devices_reply;
@@ -53,8 +54,9 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
  const char *list_reply=review_iot_devices_reply;int list_rc=review_iot_devices_rc;
  if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
- if(command){assert(!strcmp(command,"{\"code\":\"switch\",\"value\":false}"));review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
+ if(command){assert(!strcmp(command,review_iot_integer?"{\"code\":\"switch\",\"value\":7}":"{\"code\":\"switch\",\"value\":false}"));review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
  if(!strcmp(path,"/v1/devices") && list_reply){snprintf(out,cap,"%s",list_reply);return list_rc;}
+ if(review_iot_integer && strstr(path,"/functions")){snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Integer\",\"values\":\"{\\\"min\\\":-3,\\\"max\\\":17,\\\"step\\\":10}\"}]}");return 0;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
  else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"%s\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}",review_iot_name);
  return 0;
@@ -1162,6 +1164,7 @@ int main(int argc,char**argv) {
   puts("PASS voice: cached/duplicate text, assistant text, expired receipt before timer, long transcript, closed session rejected; confirmation single-use");
  }else if(strncmp(argv[1],"iot",3)==0){
   review_iot_connected=strcmp(argv[1],"iot")!=0;
+  review_iot_integer=!strcmp(argv[1],"iot-integer");
   bool rejected=!strcmp(argv[1],"iot-rejected"),malformed=!strcmp(argv[1],"iot-malformed");
   bool long_modal=!strcmp(argv[1],"iot-long-modal");
   if(long_modal)review_iot_name="TEST living room lamp with a deliberately long descriptive name to verify wrapping and access to confirmation and cancellation on small screens TEST living room lamp with a deliberately long descriptive name to verify wrapping on small screens";
@@ -1181,10 +1184,15 @@ int main(int argc,char**argv) {
    lv_obj_t*l=long_modal?find_label_prefix(lv_scr_act(),"TEST living room"):find_label(lv_scr_act(),device_label);assert(l);
    tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+   if(review_iot_integer){
+    l=find_label(lv_scr_act(),"+");assert(l);tap_widget(lv_obj_get_parent(l));pump();
+    l=find_label(lv_scr_act(),"-");assert(l);tap_widget(lv_obj_get_parent(l));pump();
+    l=find_label(lv_scr_act(),"+");assert(l);tap_widget(lv_obj_get_parent(l));pump();
+   }
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);
    tap_widget(lv_obj_get_parent(l));pump();
    assert(review_iot_commands==0);
-   assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"功能：switch\n设置为：关闭":"Function: switch\nSet to: Off"));
+   assert(find_label(lv_layer_top(),review_iot_integer?(ui_i18n_is_zh()?"功能：switch\n设置为：7":"Function: switch\nSet to: 7"):(ui_i18n_is_zh()?"功能：switch\n设置为：关闭":"Function: switch\nSet to: Off")));
    l=find_label(lv_layer_top(),ui_i18n_is_zh()?"取消":"Cancel");assert(l);
    tap_widget(lv_obj_get_parent(l));pump();assert(review_iot_commands==0);
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);tap_widget(lv_obj_get_parent(l));pump();
