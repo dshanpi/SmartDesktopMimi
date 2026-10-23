@@ -100,6 +100,9 @@ recover_updates() {
 }
 
 acquire_app_lock() {
+	[ -x "$POLICY" ] || die "device app policy validator is unavailable"
+	exec 9<"$APP_ROOT"
+	"$POLICY" lock-root "$APP_ROOT" || die "application lifecycle is busy or unsafe"
 	lock="$APP_ROOT/.appctl.lock"
 	if mkdir "$lock" 2>/dev/null; then
 		printf '%s\n' "$$" >"$lock/pid"

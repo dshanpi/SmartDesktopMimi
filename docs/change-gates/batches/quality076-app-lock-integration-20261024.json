@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "summary": "Integrate shared application lifecycle locking with pinned SDK services",
+  "context": "Prevent acknowledged storage writes lost during application update",
+  "next_steps": "Refresh paired system program references/collections, validate image and actual device",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Public appctl, selected services wrapper and durable tests; matching hardware overlay",
+      "invariants": "Pair appctl/appd/policy, preserve old origin and failure evidence, no stable release",
+      "paths": [
+        "platform/runtime/aitvbox-appctl",
+        "scripts/build_a133_services.py",
+        "tests/sdk_source.py",
+        "docs/update/source-ownership.json",
+        "tests/platform/test_app_lifecycle_lock.py",
+        "tests/platform/app_locked_writer.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-app-lock-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Normal A133 service build",
+          "status": "passed",
+          "scope": "5services and204SDKheaders, selected references",
+          "evidence": ".delivery/quality-review-20261023/app-lock-sdk-integration/normal.log"
+        },
+        {
+          "name": "SelectedSDK durable regression",
+          "status": "passed",
+          "scope": "5 host tests, no source overrides",
+          "evidence": ".delivery/quality-review-20261023/app-lock-sdk-integration/durable.log"
+        },
+        {
+          "name": "Packaged device acceptance",
+          "status": "not_run",
+          "scope": "Paired image/ABI/physical lifecycle",
+          "reason": "Downstream collection refresh and device test pending",
+          "evidence": ".delivery/quality-review-20261023/app-lock-sdk-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
