@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Move status queries off the GUI thread",
+  "context": "Measured206ms synchronous page stall",
+  "next_steps": "Targeted stale reply and single-flight lifecycle tests, full A133 candidate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Async status polling and immediate retained failure",
+      "invariants": "GUI-only widgets; existing stop feedback preserved; published artifacts unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-status-async-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Host async regression",
+          "status": "passed",
+          "scope": "4responsive/12r2/8r3renders with stated version scopes;11transportcases",
+          "evidence": ".delivery/quality-review-20261023/control-status-responsive/async-result.json"
+        },
+        {
+          "name": "Original and intermediate failures",
+          "status": "failed",
+          "scope": "Originalstall,r1expectation,r2retainedfailure regression",
+          "reason": "Preserved and qualified in result",
+          "evidence": ".delivery/quality-review-20261023/control-status-responsive/async-result.json"
+        },
+        {
+          "name": "Remaining lifecycle/device",
+          "status": "not_run",
+          "scope": "Targeted stale/concurrent status and physical current candidate",
+          "reason": "Selected regression completed; further qualification required",
+          "evidence": ".delivery/quality-review-20261023/control-status-responsive/async-result.json"
+        }
+      ]
+    }
+  ]
+}

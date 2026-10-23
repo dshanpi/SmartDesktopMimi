@@ -33,6 +33,8 @@ static lv_obj_t *stop_button;
 static lv_timer_t *monitor_timer;
 static bool previous_running;
 static uint32_t history_digest;
+/* Accessed only by the LVGL thread. */
+static uint64_t status_generation;
 
 static int64_t control_now_ms(void)
 {
@@ -347,25 +349,77 @@ static void apply_status(json_object *status)
     show_stop_failure();
 }
 
+static pthread_mutex_t status_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool status_active, status_done;
+static json_object *status_reply;
+static uint64_t status_request_generation;
+
+static void status_unavailable(void)
+{
+    if (state_label) {
+        lv_label_set_text(state_label, ui_tr(UI_STR_MCP_OFFLINE));
+        show_stop_failure();
+    }
+}
+
+static void *status_worker(void *unused)
+{
+    (void)unused;
+    json_object *reply = control_request("{\"command\":\"status\"}");
+    pthread_mutex_lock(&status_mutex);
+    status_reply = reply;
+    status_done = true;
+    pthread_mutex_unlock(&status_mutex);
+    return NULL;
+}
+
+static void status_completed(lv_timer_t *timer)
+{
+    pthread_mutex_lock(&status_mutex);
+    bool done = status_done;
+    json_object *reply = done ? status_reply : NULL;
+    if (done) {
+        status_reply = NULL;
+        status_active = status_done = false;
+    }
+    pthread_mutex_unlock(&status_mutex);
+    if (!done) return;
+    lv_timer_delete(timer);
+    if (status_request_generation == status_generation && !stop_in_progress()) {
+        if (reply) apply_status(reply);
+        else status_unavailable();
+    }
+    if (reply) json_object_put(reply);
+}
+
 static void monitor_cb(lv_timer_t *timer)
 {
     (void)timer;
     if (stop_in_progress()) return;
-    json_object *status = control_request("{\"command\":\"status\"}");
-    if (status) {
-        apply_status(status);
-        json_object_put(status);
-    } else if (state_label) {
-        lv_label_set_text(state_label, ui_tr(UI_STR_MCP_OFFLINE));
-        show_stop_failure();
+    pthread_mutex_lock(&status_mutex);
+    if (status_active) { pthread_mutex_unlock(&status_mutex); return; }
+    status_active = true;
+    status_done = false;
+    pthread_mutex_unlock(&status_mutex);
+    status_request_generation = status_generation;
+    lv_timer_t *completion = lv_timer_create(status_completed, 20, NULL);
+    pthread_t thread;
+    if (!completion || pthread_create(&thread, NULL, status_worker, NULL)) {
+        if (completion) lv_timer_delete(completion);
+        pthread_mutex_lock(&status_mutex);
+        status_active = false;
+        pthread_mutex_unlock(&status_mutex);
+        status_unavailable();
+        return;
     }
+    pthread_detach(thread);
 }
 
 void hdmi_mcp_app_monitor_start(void)
 {
     if (!desktop_hdmi_supported() || monitor_timer) return;
     monitor_timer = lv_timer_create(monitor_cb, 500, NULL);
-    lv_timer_ready(monitor_timer);
+    if (monitor_timer) lv_timer_ready(monitor_timer);
 }
 
 static void back_event(lv_event_t *event)
@@ -379,6 +433,7 @@ static void stop_confirmed(lv_event_t *event)
     if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
     pthread_mutex_lock(&stop_mutex);
     if (stop_active) { pthread_mutex_unlock(&stop_mutex); return; }
+    status_generation++;
     stop_active = true;
     stop_done = stop_success = false;
     pthread_mutex_unlock(&stop_mutex);
@@ -464,6 +519,7 @@ static lv_obj_t *create_action(lv_obj_t *parent, const char *text,
 
 void hdmi_mcp_app_init(void)
 {
+    status_generation++;
     screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(screen, UI_BG_DESKTOP, 0);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
@@ -559,11 +615,13 @@ void hdmi_mcp_app_init(void)
 
     history_digest = 0;
     lv_scr_load(screen);
+    show_stop_failure();
     monitor_cb(NULL);
 }
 
 void hdmi_mcp_app_close(void)
 {
+    status_generation++;
     if (stop_box) lv_obj_delete(stop_box);
     screen = NULL;
     state_label = NULL;

@@ -67,7 +67,7 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
 /* A local socket pair supplies the idle response; no device service is used. */
 static bool review_hdmi_idle;
 static atomic_bool review_hdmi_stop_failure, review_hdmi_stop_success, review_hdmi_silent;
-static unsigned review_hdmi_delay_us;
+static atomic_uint review_hdmi_delay_us;
 static atomic_int review_stop_commands;
 ssize_t __real_send(int fd,const void *buffer,size_t length,int flags);
 ssize_t __wrap_send(int fd,const void *buffer,size_t length,int flags) {
@@ -78,7 +78,23 @@ ssize_t __wrap_send(int fd,const void *buffer,size_t length,int flags) {
 static atomic_int hdmi_control_connections;
 static int hdmi_mutations;
 extern lv_obj_t *hdmi_switch_obj;
-static int review_control_peer = -1;
+struct review_control_connection {
+ int fd;unsigned delay;bool silent;const char *reply;
+};
+static void *review_control_serve(void *opaque) {
+ struct review_control_connection *c=opaque;
+ char buffer[256];size_t used=0;
+ while(used<sizeof(buffer)) {
+  ssize_t n=read(c->fd,buffer+used,sizeof(buffer)-used);
+  if(n<=0)break;
+  used+=(size_t)n;
+  if(memchr(buffer,'\n',used))break;
+ }
+ if(c->delay)usleep(c->delay);
+ if(!c->silent && used) (void)send(c->fd,c->reply,strlen(c->reply),MSG_NOSIGNAL);
+ else if(c->silent)while(read(c->fd,buffer,sizeof(buffer))>0){}
+ close(c->fd);free(c);return NULL;
+}
 static char review_last_socket[108];
 /* Dedicated updater lifecycle page: actual client/worker, private socketpair. */
 static bool review_update_enabled;
@@ -113,15 +129,14 @@ int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
  if(address->sa_family == AF_UNIX && !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock"))hdmi_control_connections++;
  if (review_hdmi_idle && address->sa_family == AF_UNIX &&
      !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock")) {
-  int pair[2];
-  if (review_control_peer >= 0) close(review_control_peer);
-  assert(socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == 0);
-  assert(dup2(pair[0], fd) == fd); close(pair[0]); review_control_peer=pair[1];
-  if(review_hdmi_silent)return 0;
-  if(review_hdmi_delay_us)usleep(review_hdmi_delay_us);
-  const char *reply=review_hdmi_stop_success?"{\"ok\":true}\n":review_hdmi_stop_failure?"{\"ok\":false,\"message\":\"stop requested; HID release failed\"}\n":"{\"state\":\"idle\",\"history\":[]}\n";
-  assert(write(review_control_peer, reply, strlen(reply)) == (ssize_t)strlen(reply));
-  return 0;
+  int pair[2];assert(socketpair(AF_UNIX,SOCK_STREAM,0,pair)==0);
+  assert(dup2(pair[0],fd)==fd);close(pair[0]);
+  struct review_control_connection *c=calloc(1,sizeof(*c));assert(c);
+  c->fd=pair[1];c->delay=atomic_load(&review_hdmi_delay_us);
+  c->silent=atomic_load(&review_hdmi_silent);
+  c->reply=review_hdmi_stop_success?"{\"ok\":true}\n":review_hdmi_stop_failure?"{\"ok\":false,\"message\":\"stop requested; HID release failed\"}\n":"{\"state\":\"idle\",\"history\":[]}\n";
+  pthread_t thread;assert(pthread_create(&thread,NULL,review_control_serve,c)==0);
+  pthread_detach(thread);return 0;
  }
  errno=ECONNREFUSED;return -1;
 }
@@ -1219,6 +1234,7 @@ int main(int argc,char**argv) {
    assert(hdmi_control_connections==0 && hdmi_mutations==0);
    puts("PASS unavailable HDMI app: clear reason and no agent connection/control");
   }else if(review_hdmi_idle) {
+   for(int i=0;i<100 && !find_label(lv_scr_act(),ui_tr(UI_STR_READY));i++){usleep(1000);pump();}
    assert(find_label(lv_scr_act(),ui_tr(UI_STR_READY)));
    assert(find_label(lv_scr_act(),ui_tr(UI_STR_MCP_EMPTY)));
    lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
