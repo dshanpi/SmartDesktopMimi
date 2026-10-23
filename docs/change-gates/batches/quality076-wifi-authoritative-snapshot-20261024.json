@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Validate authoritative WiFi operation snapshots and preserve V1 payload",
+  "context": "Actual enabled bit cannot prove completion; new snapshot must retain ownership and readiness",
+  "next_steps": "Versioned response codec/topics/router/UI and full build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private actual service function extraction with gated HAL",
+      "invariants": "No old topic payload growth; no completion from enabled or absent owner; releases unchanged",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-authoritative-snapshot-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Operation snapshots",
+          "status": "passed",
+          "scope": "Success/failure/legacy/unavailable host states",
+          "evidence": ".delivery/quality-review-20261023/wifi-authoritative-snapshot/result.json"
+        },
+        {
+          "name": "V1 restoration and affected regressions",
+          "status": "passed",
+          "scope": "Actual public payload type/size, two host integration cases",
+          "evidence": ".delivery/quality-review-20261023/wifi-authoritative-snapshot/legacy-result.json"
+        },
+        {
+          "name": "Full integration",
+          "status": "not_run",
+          "scope": "Wire/router/UI/A133/IPC/physical",
+          "reason": "Private candidate snapshot API only",
+          "evidence": ".delivery/quality-review-20261023/wifi-authoritative-snapshot/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
