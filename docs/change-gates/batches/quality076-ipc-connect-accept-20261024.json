@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Validate real nonblocking Unix connection and accept candidate",
+  "context": "Original empty listener accept blocks",
+  "next_steps": "Endpointownership andpendingconnectnegativebranch beforepromotion",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual private local Unix sockets",
+      "invariants": "No foreignendpoint touched; connectionfailures leaknofd; explicit limits",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-connect-accept-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original empty accept",
+          "status": "failed",
+          "scope": "actual listener emptyqueue",
+          "reason": "childalarm200ms exits77",
+          "evidence": ".delivery/quality-review-20261023/ipc-connect-accept/result.json"
+        },
+        {
+          "name": "Nonblocking handshake/framing/failurecleanup",
+          "status": "passed",
+          "scope": "privateAF_UNIX actualsocket ASAN/UBSAN",
+          "evidence": ".delivery/quality-review-20261023/ipc-connect-accept/result.json"
+        },
+        {
+          "name": "Fullsocket qualification",
+          "status": "not_run",
+          "scope": "endpointownership/pendingconnect/A133",
+          "reason": "blindunlinkstilloriginal, pollbranchnotexercised",
+          "evidence": ".delivery/quality-review-20261023/ipc-connect-accept/result.json"
+        }
+      ]
+    }
+  ]
+}
