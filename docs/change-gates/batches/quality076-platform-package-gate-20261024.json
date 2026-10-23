@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Close independent service package validation bypass",
+  "context": "Independent package accepted corrupt appd despite suite gate",
+  "next_steps": "Full OpenWrt package/image and controlled actual runtime validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual platform install recipe and shared pairing gate",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "packaging/aitvbox-platform/Makefile",
+        "tests/update/test_platform_package.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-platform-package-gate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Platform package install",
+          "status": "passed",
+          "scope": "Ten installed files exact bytes/mode, corrupt service no rootfs write; original negative",
+          "evidence": ".delivery/quality-review-20261023/platform-package-gate/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/platform-package-gate/result.json"
+        }
+      ]
+    }
+  ]
+}

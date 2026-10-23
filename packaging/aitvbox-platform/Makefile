@@ -11,7 +11,11 @@ $(error AITVBOX_PRODUCT_BUILD is not set. Use the product build scripts.)
 endif
 PRODUCT_ROOT := $(abspath $(AITVBOX_PRODUCT_BUILD))
 BUILD_OUT := $(PRODUCT_ROOT)/build/platform
+SERVICE_CHECKER := $(PRODUCT_ROOT)/scripts/check_service_programs.py
 
+PKG_FILE_DEPENDS += $(SERVICE_CHECKER)
+PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/docs/update/services-program-reference.json
+PKG_FILE_DEPENDS += $(BUILD_OUT)/services-build-result.json
 PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-mcpd
 PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-agentd
 PKG_FILE_DEPENDS += $(BUILD_OUT)/aitvbox-controld
@@ -41,9 +45,11 @@ define Build/Configure
 endef
 
 define Build/Compile
+	python3 "$(SERVICE_CHECKER)" --build "$(PRODUCT_ROOT)/build" --product "$(PRODUCT_ROOT)"
 endef
 
 define Package/aitvbox-platform/install
+	python3 "$(SERVICE_CHECKER)" --build "$(PRODUCT_ROOT)/build" --product "$(PRODUCT_ROOT)"
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(BUILD_OUT)/aitvbox-mcpd $(1)/usr/bin/aitvbox-mcpd
 	$(INSTALL_BIN) $(BUILD_OUT)/aitvbox-agentd $(1)/usr/bin/aitvbox-agentd
