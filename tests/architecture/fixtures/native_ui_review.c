@@ -1122,6 +1122,18 @@ int main(int argc,char**argv) {
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
+ else if(!strcmp(argv[1],"hdmi-status-responsive")) {
+  review_hdmi_idle=true;review_hdmi_silent=true;
+  struct timespec begin,end;clock_gettime(CLOCK_MONOTONIC,&begin);
+  app_hdmi_mcp.init();
+  clock_gettime(CLOCK_MONOTONIC,&end);
+  long elapsed=(end.tv_sec-begin.tv_sec)*1000+(end.tv_nsec-begin.tv_nsec)/1000000;
+  fprintf(stderr,"Actual silent status page initialization %ldms\n",elapsed);
+  assert(elapsed<100 && "status query must not block page initialization");
+  for(int i=0;i<100;i++){usleep(1000);pump();}
+  assert(find_label(lv_scr_act(),ui_tr(UI_STR_MCP_OFFLINE)));
+  puts("PASS nonblocking page init and eventual offline feedback");
+ }
  else if(!strcmp(argv[1],"hdmi-stop-dismissed")) {
   review_hdmi_idle=true;app_hdmi_mcp.init();pump();
   lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);

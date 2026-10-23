@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Reproduce GUI-blocking status query",
+  "context": "Global synchronous status query can block GUI event loop",
+  "next_steps": "Async single-flight polling with stale-result guard and lifecycle tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Measured actual page initialization; known failing test scene",
+      "invariants": "Do not label diagnosis as a fix or board reproduction",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-status-responsive-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Status responsiveness",
+          "status": "failed",
+          "scope": "Actual page initialization206ms",
+          "reason": "Synchronous200ms request in GUI thread",
+          "evidence": ".delivery/quality-review-20261023/control-status-responsive/result.json"
+        },
+        {
+          "name": "Async implementation",
+          "status": "not_run",
+          "scope": "Single-flight polling and lifecycle",
+          "reason": "Reproduction completed; product unchanged",
+          "evidence": ".delivery/quality-review-20261023/control-status-responsive/result.json"
+        }
+      ]
+    }
+  ]
+}
