@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Reproduce held keyboard and mouse state after peer close",
+  "context": "Queue shutdown passed but input release missing; overlapping sessions require ownership",
+  "next_steps": "Implement session input ownership and scoped cancellation with adversarial ordering tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Host negative reproduction and concrete repair design",
+      "invariants": "Do not release newer session input; no actual USB/peer traffic",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-held-input-audit-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Held input afterclose",
+          "status": "failed",
+          "scope": "Real peer/dispatcher with temporary HID files, pressed bytes persist",
+          "reason": "No session-specific input release",
+          "evidence": ".delivery/quality-review-20261023/kvm-held-input/original.log"
+        },
+        {
+          "name": "Physical USB",
+          "status": "not_run",
+          "scope": "No connected host input",
+          "reason": "Private temp files only",
+          "evidence": ".delivery/quality-review-20261023/kvm-held-input/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
