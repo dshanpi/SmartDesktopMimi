@@ -441,6 +441,7 @@ echo "==> version: ${BUILD_OUT}/aitvbox-version (AITVBOX_VERSION=${AITVBOX_VERSI
 echo
 "${SELF_DIR}/build_mimi_updater.sh"
 
+python3 "${SELF_DIR}/check_service_programs.py" --build "${BUILD_OUT}" --product "${PRODUCT_ROOT}" > "${BUILD_OUT}/service-programs.json"
 python3 "${SELF_DIR}/check_product_edition.py" --build "${BUILD_OUT}" --edition "${PROVIDER_PROFILE}" > "${BUILD_OUT}/product-edition.json"
 
 echo "Product app build complete. Artifacts under: ${BUILD_OUT}"

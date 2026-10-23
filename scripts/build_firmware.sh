@@ -61,6 +61,7 @@ case "${MIMI_PRODUCT_EDITION}:${AITVBOX_ENABLE_100ASK_CLOUD:-OFF}" in
 esac
 python3 "${PRODUCT_ROOT}/scripts/check_product_edition.py" \
     --build "${AITVBOX_PRODUCT_BUILD}/build" --edition "${MIMI_PRODUCT_EDITION}"
+python3 "${PRODUCT_ROOT}/scripts/check_service_programs.py" --build "${AITVBOX_PRODUCT_BUILD}/build" --product "${AITVBOX_PRODUCT_BUILD}"
 
 if [[ -n "${MIMI_PLATFORM_PRODUCT_LOCK:-}" ]]; then
     python3 - "${PRODUCT_ROOT}" "${MIMI_PLATFORM_PRODUCT_LOCK}" "${MIMI_PRODUCT_EDITION}" "${AITVBOX_PRODUCT_BUILD}/build" <<'LOCK_PREFLIGHT'

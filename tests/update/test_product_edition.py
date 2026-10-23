@@ -155,6 +155,8 @@ class ProductEditionTests(unittest.TestCase):
                 product = root / 'product'
                 shutil.copytree(fixtures / ('edition066-build-proof-' + edition) / 'build', product / 'build')
                 (product / 'scripts').symlink_to(ROOT / 'scripts', target_is_directory=True)
+                (product / 'platform/runtime').mkdir(parents=True)
+                shutil.copy2(ROOT / 'platform/runtime/aitvbox-appctl', product / 'platform/runtime/aitvbox-appctl')
                 for relative in ('build/hdmi_preview/hdmi_preview', 'build/aitvbox-version',
                                  'build/aitvbox-tuya-pid', 'vendor/tuyaopen-a133-b6-libs/MNN/libMNN.so',
                                  'vendor/tuyaopen-a133-b6-libs/MNN/libMNN_Express.so',

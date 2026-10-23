@@ -56,6 +56,11 @@ PKG_FILE_DEPENDS += $(BUILD_OUT)/lv_port_linux/lv_backend
 PKG_FILE_DEPENDS += $(BUILD_OUT)/lv_port_linux/lvglsim
 PKG_FILE_DEPENDS += $(BUILD_OUT)/hdmi_preview/hdmi_preview
 PKG_FILE_DEPENDS += $(EDITION_CHECKER)
+PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/scripts/check_service_programs.py
+PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/docs/update/services-program-reference.json
+PKG_FILE_DEPENDS += $(PRODUCT_ROOT)/platform/runtime/aitvbox-appctl
+PKG_FILE_DEPENDS += $(BUILD_OUT)/platform/services-build-result.json
+PKG_FILE_DEPENDS += $(wildcard $(BUILD_OUT)/platform/aitvbox-*)
 PKG_FILE_DEPENDS += $(BUILD_OUT)/lv_port_linux/provider-build-result.json
 PKG_FILE_DEPENDS += $(BUILD_OUT)/tuyaopen/pairing-build-result.json
 PKG_FILE_DEPENDS += $(BUILD_OUT)/tuyaopen/your_chat_bot_QIO_1.0.1.bin
@@ -97,6 +102,7 @@ endef
 
 define Build/Compile
 	python3 "$(EDITION_CHECKER)" --build "$(BUILD_OUT)" --edition "$(PRODUCT_EDITION)"
+	python3 "$(PRODUCT_ROOT)/scripts/check_service_programs.py" --build "$(BUILD_OUT)" --product "$(PRODUCT_ROOT)"
 endef
 
 define Install/audio-diagnostic
@@ -124,6 +130,7 @@ endef
 
 define Package/aitvbox-suite/install
 	python3 "$(EDITION_CHECKER)" --build "$(BUILD_OUT)" --edition "$(PRODUCT_EDITION)"
+	python3 "$(PRODUCT_ROOT)/scripts/check_service_programs.py" --build "$(BUILD_OUT)" --product "$(PRODUCT_ROOT)"
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(BUILD_OUT)/lv_port_linux/lv_backend $(1)/usr/bin/lv_backend
 	$(INSTALL_BIN) $(BUILD_OUT)/lv_port_linux/lvglsim $(1)/usr/bin/lvglsim
