@@ -90,12 +90,23 @@ static void launch(const char *op)
 static const char *text_field(json_object *object, const char *name)
 {
     json_object *value = NULL;
-    return object && json_object_object_get_ex(object, name, &value) ? json_object_get_string(value) : "";
+    if (!object || !json_object_is_type(object, json_type_object) ||
+        !json_object_object_get_ex(object, name, &value) ||
+        !json_object_is_type(value, json_type_string)) return "";
+    return json_object_get_string(value);
 }
 static bool bool_field(json_object *object, const char *name)
 {
     json_object *value = NULL;
-    return object && json_object_object_get_ex(object, name, &value) && json_object_get_boolean(value);
+    return object && json_object_is_type(object, json_type_object) &&
+        json_object_object_get_ex(object, name, &value) &&
+        json_object_is_type(value, json_type_boolean) && json_object_get_boolean(value);
+}
+static bool can_cancel(json_object *state)
+{
+    const char *phase = text_field(state, "phase");
+    return bool_field(state, "busy") &&
+        (strcmp(phase, "check") == 0 || strcmp(phase, "download") == 0);
 }
 static void refresh(lv_timer_t *unused)
 {
@@ -124,7 +135,7 @@ static void refresh(lv_timer_t *unused)
     bool busy = working || bool_field(state, "busy");
     bool enabled[4] = {state && !busy, candidate && !busy,
         bool_field(state, "downloaded") && !busy,
-        bool_field(state, "busy") && strcmp(text_field(state, "phase"), "install") != 0 && !working};
+        can_cancel(state) && !working};
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) lv_obj_remove_state(buttons[i], LV_STATE_DISABLED);
         else lv_obj_add_state(buttons[i], LV_STATE_DISABLED);

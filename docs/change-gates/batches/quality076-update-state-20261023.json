@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Prevent null-field crash in desktop updater and reject coercive field types",
+  "context": "QUALITY076 exception-path review",
+  "next_steps": "Full state rendering and request lifecycle review; actual update acceptance remains open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Updater UI field interpretation and cancellation eligibility",
+      "invariants": "No daemon or installation/signature policy change; released binaries unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/test_update_state_fields.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-state-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Original failure reproduced then12 helper cases pass",
+          "status": "passed",
+          "scope": "Exact C helpers with UBSAN; not full UI state machine",
+          "evidence": ".delivery/quality-review-20261023/update-state/regression.log"
+        },
+        {
+          "name": "Hardware upgrade and full transport robustness",
+          "status": "not_run",
+          "scope": "Physical and remaining protocol/state paths",
+          "reason": "This batch validates only field handling",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
