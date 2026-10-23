@@ -23,9 +23,23 @@ static struct { const char *user_apps_socket_path; } config={"/tmp/private-fixtu
 #define mimi_user_app_config_get() (&config)
 static int mode;
 static pthread_t peer;
+static const char *frames[]={
+ "{\"ok\":true}garbage\n", "{\"ok\":true}{\"ok\":false}\n",
+ "{\"ok\":true} /* comment */\n", "{\"ok\":true,}\n",
+ "[]\n", "true\n", "null\n", "{\"ok\":true\n",
+ "{\"ok\":true}", "\n", "{\"ok\":true}\0junk\n",
+ " \t{\"ok\":true} \r\n", "{\"ok\":false,\"message\":\"line\\nnext\"}\n"
+};
+
 static void *serve(void *arg) {
- int fd=(int)(intptr_t)arg;char buf[256];assert(read(fd,buf,sizeof(buf))>0);
- if(mode==1) {
+ int fd=(int)(intptr_t)arg;char buf[256];size_t used=0;
+ do {ssize_t n=read(fd,buf+used,sizeof(buf)-used);assert(n>0);used+=(size_t)n;}
+ while(!memchr(buf,'\n',used) && used<sizeof(buf));
+ assert(memchr(buf,'\n',used));
+ if(mode>=3) {
+  const char *s=frames[mode-3];size_t n=mode==13?sizeof("{\"ok\":true}\0junk\n")-1:strlen(s);
+  assert(send(fd,s,n,MSG_NOSIGNAL)==(ssize_t)n);
+ } else if(mode==1) {
   for(int i=0;i<30;i++){if(send(fd," ",1,MSG_NOSIGNAL)<0)break;usleep(200000);}
   send(fd,"\n",1,MSG_NOSIGNAL);
  } else {
@@ -51,7 +65,7 @@ int main(int argc,char **argv){
  assert(!clock_gettime(CLOCK_MONOTONIC,&end));
  double elapsed=end.tv_sec-start.tv_sec+(end.tv_nsec-start.tv_nsec)/1e9;
  fprintf(stderr,"mode=%d elapsed=%.3f\n",mode,elapsed);
- if(mode==2){assert(result);json_object_put(result);}else assert(!result);
+ if(mode==2 || mode>=14){assert(result);json_object_put(result);}else assert(!result);
  if(mode==1)assert(elapsed>=4.8 && elapsed<5.8);
  if(mode==0)assert(elapsed<1);
  if(mode)assert(!pthread_join(peer,NULL));
@@ -68,6 +82,6 @@ class UserAppTransport(unittest.TestCase):
    c=pathlib.Path(tmp)/'test.c';binary=pathlib.Path(tmp)/'test'
    c.write_text(PREFIX+body+SUFFIX)
    subprocess.run(['gcc','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-g',str(c),'-o',str(binary),'-ljson-c','-pthread'],check=True)
-   for mode in range(3):
+   for mode in range(16):
     with self.subTest(mode=mode):subprocess.run([str(binary),str(mode)],check=True,timeout=9)
 if __name__=='__main__':unittest.main()

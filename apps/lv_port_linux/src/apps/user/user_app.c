@@ -122,8 +122,21 @@ static json_object *app_request(json_object *request)
     response[used] = '\0';
     char *newline = memchr(response, '\n', used);
     if (!newline) return NULL;
+    size_t length = (size_t)(newline - response);
+    if (memchr(response, '\0', length)) return NULL;
     *newline = '\0';
-    return json_tokener_parse(response);
+    json_tokener *parser = json_tokener_new();
+    if (!parser) return NULL;
+    json_tokener_set_flags(parser, JSON_TOKENER_STRICT);
+    json_object *result = json_tokener_parse_ex(parser, response, (int)length + 1);
+    if (json_tokener_get_error(parser) != json_tokener_success ||
+        (size_t)parser->char_offset < length ||
+        !json_object_is_type(result, json_type_object)) {
+        if (result) json_object_put(result);
+        result = NULL;
+    }
+    json_tokener_free(parser);
+    return result;
 }
 
 enum {

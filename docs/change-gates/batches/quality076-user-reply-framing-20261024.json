@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Validate complete strict JSON object response frame",
+  "context": "Permissive parser accepts corrupted success prefixes",
+  "next_steps": "Duplicate keys/message schema and async failure injection; A133 integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "User app response framing",
+      "invariants": "One newline frame, same limit/deadline/permissions; no replay",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/test_user_app_transport.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-reply-framing-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "exacttransport",
+          "reason": "seven malformed frame acceptances",
+          "evidence": ".delivery/quality-review-20261023/user-reply-framing/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "16sanitizer cases",
+          "reason": "strict frame handling",
+          "evidence": ".delivery/quality-review-20261023/user-reply-framing/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/user-reply-framing/result.json"
+        }
+      ]
+    }
+  ]
+}
