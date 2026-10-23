@@ -324,7 +324,7 @@ class PlatformHostTests(unittest.TestCase):
                     "-Wextra",
                     "-Werror",
                     "-I",
-                    validation.parent,
+                    provider_source("apps/lv_port_linux/src/system/service_cloud_validation.h").parent,
                     validation,
                     "-o",
                     library,
@@ -361,7 +361,10 @@ class PlatformHostTests(unittest.TestCase):
             self.assertFalse(credential_valid(b"contains/slash/value", 16, 128))
             self.assertFalse(credential_valid(b"validlengthvalue", 20, 10))
 
-        self.assertIn("!service_cloud_bind_token_valid(token_out)", cloud)
+        self.assertIn('#include "pairing_response.h"', cloud)
+        self.assertIn("mimi_pairing_response(resp,wr.len,cpuid,", cloud)
+        self.assertIn("finished-started,pairing_out)!=0", cloud)
+        self.assertIn("pairing_out->expires_in && token_out && token_len>6", cloud)
         self.assertNotIn(
             "service_cloud_credential_value_valid(token_out", cloud
         )
@@ -375,10 +378,12 @@ class PlatformHostTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertIn('TUYA_LICENSE_FILE_DEFAULT "/factory/tuya/license.env"', source)
-        self.assertIn("file_stat.st_uid != 0", source)
-        self.assertIn("S_IRWXG | S_IRWXO", source)
-        self.assertIn('license_value_valid(value, 20)', source)
-        self.assertIn('license_value_valid(value, 32)', source)
+        reader = provider_source("apps/lv_port_linux/src/system/mimi_tuya_license_provider.h").read_text(encoding="utf-8")
+        self.assertIn('#include "mimi_tuya_license_provider.h"', source)
+        self.assertIn("file_stat.st_uid != 0", reader)
+        self.assertIn("S_IRWXG | S_IRWXO", reader)
+        self.assertIn('license_value_valid(value, 20)', reader)
+        self.assertIn('license_value_valid(value, 32)', reader)
         ensure = source.index("static void ensure_runtime_processes(void)")
         preflight = source.index("!refresh_tuya_license_state()", ensure)
         spawn = source.index("start_tuya_process();", ensure)
@@ -491,7 +496,13 @@ class PlatformHostTests(unittest.TestCase):
         self.assertIn("Settings v7 loaded and migrated", settings)
         self.assertIn("Settings v6 loaded and migrated", settings)
         self.assertIn("merge_local_settings_changes", settings)
-        self.assertIn("flock(fd, LOCK_EX)", settings)
+        self.assertIn("flock(lock_fd, LOCK_EX)", settings)
+        self.assertIn('"%s.lock"', settings)
+        flush = settings.index("fsync(temp_fd)")
+        replace = settings.index("rename(temp_path, path)", flush)
+        directory_flush = settings.index("fsync(dir_fd)", replace)
+        self.assertLess(flush, replace)
+        self.assertLess(replace, directory_flush)
 
         dp_doc = (
             REPO / "docs/tuya-iot-dp-schema.md"
@@ -1035,7 +1046,7 @@ int main(int argc, char **argv) {
         settings = (
             REPO / "apps/lv_port_linux/src/system/settings.c"
         ).read_text(encoding="utf-8")
-        self.assertIn(".hdmi_enabled = true", settings)
+        self.assertIn(".hdmi_enabled = false", settings)
 
     @classmethod
     def setUpClass(cls):

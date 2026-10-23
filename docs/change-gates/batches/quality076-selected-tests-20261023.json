@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Run implementation tests against current selected provider and private inputs",
+  "context": "Old tests pinned historical recipe/layout; configured run exposed stale contracts and unresolved capture sequence",
+  "next_steps": "Investigate capture publish latency ordering; remaining full matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Test source fidelity and updated contract locations",
+      "invariants": "No silent fallback or blanket full-suite pass",
+      "paths": [
+        "tests/sdk_source.py",
+        "tests/update/test_sdk_source.py",
+        "tests/platform/test_host_integration.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-selected-tests-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Strict resolver",
+          "status": "passed",
+          "scope": "8 synthetic boundary checks and10 actual inputs",
+          "evidence": ".delivery/quality-review-20261023/selected-test-source-v7/resolved-inputs.json"
+        },
+        {
+          "name": "Four outdated checks",
+          "status": "passed",
+          "scope": "Targeted followups and private response parser",
+          "evidence": ".delivery/quality-review-20261023/selected-test-source-v7/pairing-followup-r2.log"
+        },
+        {
+          "name": "Full platform suite",
+          "status": "failed",
+          "scope": "69 initial pass; four fixed checks; capture sequence remains open",
+          "reason": "Pinned capture changed from synchronous ordering to worker encoding; old sequence assertion errors and latency behavior still unqualified",
+          "evidence": ".delivery/quality-review-20261023/selected-test-source-v7/platform-configured.log"
+        }
+      ]
+    }
+  ]
+}
