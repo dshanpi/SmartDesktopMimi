@@ -246,12 +246,19 @@ int sys_volume_set_percent(int p) {volume=p;return 0;}
 static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
 int mw_subscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(!callbacks[t][i]){callbacks[t][i]=c;return 0;}return -1;}
 int mw_unsubscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(callbacks[t][i]==c)callbacks[t][i]=NULL;return 0;}
-static bool fail_assistant_timer, fail_wifi_timer;
+static bool fail_assistant_timer, fail_wifi_timer, fail_user_timer, fail_user_thread;
+int __real_pthread_create(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *);
+int __wrap_pthread_create(pthread_t *t,const pthread_attr_t *a,void *(*fn)(void *),void *arg)
+{
+ if(fail_user_thread){fail_user_thread=false;return EAGAIN;}
+ return __real_pthread_create(t,a,fn,arg);
+}
 static atomic_bool review_wifi_send_hold,review_wifi_send_entered;
 static atomic_int review_wifi_queries;
 lv_timer_t *__real_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data);
 lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data)
 {
+ if(fail_user_timer && period==20){fail_user_timer=false;return NULL;}
  if(fail_wifi_timer && period==50){fail_wifi_timer=false;return NULL;}
  if(fail_assistant_timer && period==6000){fail_assistant_timer=false;return NULL;}
  return __real_lv_timer_create(cb,period,data);
@@ -1279,6 +1286,26 @@ int main(int argc,char**argv) {
   lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
+ } else if(!strcmp(argv[1],"user-action-start-failure")) {
+  app_user.init();pump();
+  for(int kind=0;kind<2;kind++) {
+   lv_obj_t *label=find_label(lv_scr_act(),kind?"Platform test":"Invoke test");assert(label);
+   for(int failure=0;failure<2;failure++) {
+    int before=atomic_load(&review_user_connections);
+    fail_user_timer=failure==0;fail_user_thread=failure==1;
+    lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+    assert(!fail_user_timer && !fail_user_thread);
+    assert(review_user_connections==before);
+    assert(find_label(lv_scr_act(),ui_tr(kind?UI_STR_USER_HARDWARE_FAILED:UI_STR_USER_LAUNCH_FAILED)));
+    review_user_reply="{\"ok\":true,\"message\":\"Recovered\"}\n";
+    lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+    const char *expected=kind?ui_tr(UI_STR_USER_REQUEST_COMPLETE):"Recovered";
+    for(int i=0;i<600 && !find_label(lv_scr_act(),expected);i++){pump();usleep(1000);}
+    assert(find_label(lv_scr_act(),expected));assert(review_user_connections==before+1);
+    assert(review_user_peer>=0);close(review_user_peer);review_user_peer=-1;review_user_reply=NULL;
+   }
+  }
+  puts("PASS timer/thread startup failure for both commands, no sends, successful explicit retry");
  } else if(!strcmp(argv[1],"user-action-async")) {
   app_user.init();pump();review_user_delay=300000;
   review_user_reply="{\"ok\":true,\"message\":\"Old result\"}\n";
