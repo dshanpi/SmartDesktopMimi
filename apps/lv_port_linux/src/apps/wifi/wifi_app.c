@@ -608,45 +608,42 @@ static bool wifi_password_valid(const char *password)
     return false;
 }
 
-static void connect_click_cb(lv_event_t * e) {
-    const char * ssid = (const char *)lv_event_get_user_data(e);
-    if (password_ta) {
-        const char * password = lv_textarea_get_text(password_ta);
-        if (!wifi_password_valid(password)) return;
-        printf("Connecting to %s\n", ssid);
-        
-        // 发送连接指令到后端
-        wifi_cmd_t cmd = {0};
-        cmd.action = CMD_CONNECT;
-        snprintf(cmd.ssid, sizeof(cmd.ssid), "%s", ssid);
-        snprintf(cmd.password, sizeof(cmd.password), "%s", password);
-        mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
+static bool wifi_submit_password(const char *ssid)
+{
+    if (!password_ta || !ssid) return false;
+    const char *password = lv_textarea_get_text(password_ta);
+    if (!wifi_password_valid(password)) return false;
+    wifi_cmd_t command = {.action = CMD_CONNECT};
+    snprintf(command.ssid, sizeof(command.ssid), "%s", ssid);
+    snprintf(command.password, sizeof(command.password), "%s", password);
+    int result = mw_publish(TOPIC_WIFI_COMMAND, &command, sizeof(command), MW_DIR_UI_TO_BACKEND);
+    if (result < 0) {
+        /* A transport error is not proof that the backend did not receive it.
+         * Keep the input for an explicit retry; do not report association. */
+        if (password_error_label) {
+            lv_label_set_text(password_error_label, ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED));
+            lv_obj_set_style_text_color(password_error_label, UI_COLOR_ERROR, 0);
+        }
+        return false;
     }
-    close_modal_cb(e);
+    return true;
 }
 
-static void keyboard_event_cb(lv_event_t * e) {
+static void connect_click_cb(lv_event_t *e)
+{
+    if (wifi_submit_password(lv_event_get_user_data(e))) close_modal_cb(e);
+}
+
+static void keyboard_event_cb(lv_event_t *e)
+{
     lv_event_code_t code = lv_event_get_code(e);
-    if(code == LV_EVENT_READY) {
-        const char * ssid = (const char *)lv_event_get_user_data(e);
-        if (password_ta) {
-            const char * password = lv_textarea_get_text(password_ta);
-            if (!wifi_password_valid(password)) return;
-            printf("Keyboard OK: Connecting to %s\n", ssid);
-            
-            // 发送连接指令到后端
-            wifi_cmd_t cmd = {0};
-            cmd.action = CMD_CONNECT;
-            snprintf(cmd.ssid, sizeof(cmd.ssid), "%s", ssid);
-            snprintf(cmd.password, sizeof(cmd.password), "%s", password);
-            mw_publish(TOPIC_WIFI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
-            
-            /* Keep the known list visible while the backend associates. */
-            wifi_spinner_delete();
-            wifi_spinner_show();
-            is_scanning = true; // 复用扫描逻辑
-        }
-        close_modal_cb(NULL); 
+    if (code == LV_EVENT_READY) {
+        if (!wifi_submit_password(lv_event_get_user_data(e))) return;
+        /* Legacy association progress still shares the scan indicator. */
+        wifi_spinner_delete();
+        wifi_spinner_show();
+        is_scanning = true;
+        close_modal_cb(NULL);
     } else if (code == LV_EVENT_CANCEL) {
         close_modal_cb(NULL);
     }

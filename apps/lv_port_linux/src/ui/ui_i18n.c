@@ -60,6 +60,7 @@ static const ui_translation_t translations[UI_STR_COUNT] = {
     [UI_STR_SHOW_PASSWORD] = T("显示密码", "Show password"),
     [UI_STR_SECURED_NETWORK] = T("此网络需要密码", "This network requires a password"),
     [UI_STR_NO_NETWORKS] = T("暂未发现网络，点按刷新重新扫描。", "No networks found. Tap Refresh to scan again."),
+    [UI_STR_WIFI_CONNECT_UNCONFIRMED] = T("连接未确认，请检查后重试", "Unconfirmed. Check connection, then retry."),
     [UI_STR_WIFI_PASSWORD_LONG] = T("密码过长，请缩短后重试", "Password too long. Shorten it and retry."),
     [UI_STR_WIFI_PASSWORD_SHORT] = T("密码至少需要 8 个字符", "Password must contain at least 8 characters"),
     [UI_STR_SETTINGS_APPEARANCE] = T("外观与语言", "Appearance & Language"),

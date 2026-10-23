@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Retain WiFi credentials when connection send is unconfirmed",
+  "context": "Original UI ignored transport error and discarded input",
+  "next_steps": "Async open/encrypted connection and correlated outcome",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Password dialog send failure recovery",
+      "invariants": "No automatic retry or false nonreceipt claim; preserve input",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "apps/lv_port_linux/src/ui/ui_i18n.c",
+        "apps/lv_port_linux/src/ui/ui_i18n.h",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-connect-send-failure-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original transport failure UI",
+          "status": "failed",
+          "scope": "actual LVGL adapter EPIPE",
+          "reason": "input discarded",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-send-failure/result.json"
+        },
+        {
+          "name": "Failure recovery and explicit retry",
+          "status": "passed",
+          "scope": "four LVGL runs and affected existing password checks",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-send-failure/result.json"
+        },
+        {
+          "name": "Real connection qualification",
+          "status": "not_run",
+          "scope": "radio/actual transport",
+          "reason": "host adapter only, async and correlation still pending",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-send-failure/result.json"
+        }
+      ]
+    }
+  ]
+}

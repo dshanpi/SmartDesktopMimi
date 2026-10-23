@@ -201,6 +201,7 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
  if(fail_assistant_timer && period==6000){fail_assistant_timer=false;return NULL;}
  return __real_lv_timer_create(cb,period,data);
 }
+static int review_connect_error;
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 static atomic_int wifi_toggles, review_wifi_scans, review_scan_error;
@@ -228,7 +229,7 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_ENTER_FREE_CHAT)ai_enter_count++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_CONNECT) {
-   connect_count++;last_connect=*(const wifi_cmd_t*)d;
+   connect_count++;last_connect=*(const wifi_cmd_t*)d;return review_connect_error;
  }
  return 0;
 }
@@ -396,6 +397,18 @@ static void test_password(void) {
 
  lv_textarea_set_text(password_ta,"short");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
  assert(password_modal && connect_count==0 && strlen(lv_label_get_text(password_error_label))>0);
+ review_connect_error=-EPIPE;
+ lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+ fprintf(stderr,"Send failure retained=%d commands=%d\n",password_modal!=NULL,connect_count);
+ assert(password_modal && "send failure must retain password dialog");
+ assert(!strcmp(lv_textarea_get_text(password_ta),"review123"));
+ assert(!strcmp(lv_label_get_text(password_error_label),ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED)));
+ assert(!is_scanning);
+ submit=lv_button_create(password_modal);lv_obj_add_event_cb(submit,connect_click_cb,LV_EVENT_CLICKED,"100ASK-Lab");
+ lv_obj_send_event(submit,LV_EVENT_CLICKED,NULL);assert(password_modal && connect_count==2 && !is_scanning);
+ assert(!strcmp(lv_textarea_get_text(password_ta),"review123"));lv_obj_delete(submit);
+ pump();pump();assert(connect_count==2 && "no automatic connection retry");
+ connect_count=0;review_connect_error=0;
  lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
  assert(!password_modal && !password_kb && !password_ta && connect_count==1);
  assert(!strcmp(last_connect.ssid,"100ASK-Lab") && !strcmp(last_connect.password,"review123"));
