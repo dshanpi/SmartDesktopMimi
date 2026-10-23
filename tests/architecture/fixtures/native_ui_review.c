@@ -53,7 +53,7 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
  const char *list_reply=review_iot_devices_reply;int list_rc=review_iot_devices_rc;
  if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
- if(command){review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
+ if(command){assert(!strcmp(command,"{\"code\":\"switch\",\"value\":false}"));review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
  if(!strcmp(path,"/v1/devices") && list_reply){snprintf(out,cap,"%s",list_reply);return list_rc;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
  else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"%s\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}",review_iot_name);
@@ -1184,6 +1184,7 @@ int main(int argc,char**argv) {
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);
    tap_widget(lv_obj_get_parent(l));pump();
    assert(review_iot_commands==0);
+   assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"功能：switch\n设置为：关闭":"Function: switch\nSet to: Off"));
    l=find_label(lv_layer_top(),ui_i18n_is_zh()?"取消":"Cancel");assert(l);
    tap_widget(lv_obj_get_parent(l));pump();assert(review_iot_commands==0);
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);tap_widget(lv_obj_get_parent(l));pump();

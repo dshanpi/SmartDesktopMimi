@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Readable IoT confirmation and secondary cancellation",
+  "context": "Cover incomplete IoT UI matrix with realLVGL and mocked HTTP",
+  "next_steps": "Typed value interaction and real device validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Confirmation presentation and 16 actual LVGL renders",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "apps/lv_port_linux/src/apps/iot/iot_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-iot-readable-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Current IoT scenes",
+          "status": "passed",
+          "scope": "16 LVGL renders; cancel0/confirm1 exact Boolean payload",
+          "evidence": ".delivery/quality-review-20261023/iot-confirmation-readable/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/iot-confirmation-readable/result.json"
+        }
+      ]
+    }
+  ]
+}

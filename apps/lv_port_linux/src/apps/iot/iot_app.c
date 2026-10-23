@@ -186,6 +186,12 @@ static void confirm(lv_event_t * e)
     json_object_object_add(cmd, "code", json_object_new_string(c->code));
     json_object_object_add(cmd, "value", value);
     snprintf(pending, sizeof(pending), "%s", json_object_to_json_string_ext(cmd, JSON_C_TO_STRING_PLAIN));
+    char summary[512];
+    const char *display_value = !strcmp(c->type, "Boolean")
+        ? (json_object_get_boolean(value) ? tr("开启", "On") : tr("关闭", "Off"))
+        : json_object_get_string(value);
+    snprintf(summary, sizeof(summary), tr("功能：%s\n设置为：%s", "Function: %s\nSet to: %s"),
+             c->code, display_value);
     json_object_put(cmd);
     modal = lv_obj_create(lv_layer_top());
     lv_obj_set_size(modal, lv_pct(88), LV_SIZE_CONTENT);
@@ -203,11 +209,11 @@ static void confirm(lv_event_t * e)
     l = mimi_ui_text(modal, selected_name, ui_font_body_lg(), MIMI_TEXT);
     lv_obj_set_width(l, lv_pct(100));
     lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
-    l = mimi_ui_text(modal, pending, ui_font_body_md(), MIMI_MUTED);
+    l = mimi_ui_text(modal, summary, ui_font_body_md(), MIMI_MUTED);
     lv_obj_set_width(l, lv_pct(100));
     lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
     button(modal, tr("确认发送", "Send command"), send_confirmed, NULL);
-    button(modal, tr("取消", "Cancel"), close_modal, NULL);
+    mimi_ui_button_style(button(modal, tr("取消", "Cancel"), close_modal, NULL), false);
 }
 static void spin(lv_event_t * e)
 {
