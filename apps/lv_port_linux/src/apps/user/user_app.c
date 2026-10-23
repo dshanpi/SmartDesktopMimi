@@ -79,6 +79,32 @@ static int app_write_all(int fd, const void *buffer, size_t length, int64_t dead
     return 0;
 }
 
+/* Strict JSON syntax is checked separately. Count root members before json-c
+ * collapses duplicate decoded keys, including escaped aliases. Nested extension
+ * fields are not interpreted by this client. NUL strings cannot be shown safely
+ * through the C-string UI API, so reject them instead of hiding their suffix. */
+static bool app_reply_members_valid(const char *data, size_t length, json_object *root)
+{
+    unsigned depth = 0, members = 0;
+    bool quoted = false, escaped = false;
+    for (size_t i = 0; i < length; ++i) {
+        char c = data[i];
+        if (quoted) {
+            if (escaped) escaped = false;
+            else if (c == '\\') {
+                if (length - i >= 6 && !memcmp(data + i, "\\u0000", 6)) return false;
+                escaped = true;
+            } else if (c == '"') quoted = false;
+        } else if (c == '"') quoted = true;
+        else if (c == '{' || c == '[') ++depth;
+        else if (c == '}' || c == ']') {
+            if (!depth) return false;
+            --depth;
+        } else if (c == ':' && depth == 1) ++members;
+    }
+    return members == (unsigned)json_object_object_length(root);
+}
+
 static json_object *app_request(json_object *request)
 {
     const char *endpoint = mimi_user_app_config_get()->user_apps_socket_path;
@@ -131,7 +157,8 @@ static json_object *app_request(json_object *request)
     json_object *result = json_tokener_parse_ex(parser, response, (int)length + 1);
     if (json_tokener_get_error(parser) != json_tokener_success ||
         (size_t)parser->char_offset < length ||
-        !json_object_is_type(result, json_type_object)) {
+        !json_object_is_type(result, json_type_object) ||
+        !app_reply_members_valid(response, length, result)) {
         if (result) json_object_put(result);
         result = NULL;
     }

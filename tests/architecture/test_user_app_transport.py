@@ -12,6 +12,7 @@ PREFIX = r'''#define _GNU_SOURCE
 #include <poll.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +29,17 @@ static const char *frames[]={
  "{\"ok\":true} /* comment */\n", "{\"ok\":true,}\n",
  "[]\n", "true\n", "null\n", "{\"ok\":true\n",
  "{\"ok\":true}", "\n", "{\"ok\":true}\0junk\n",
- " \t{\"ok\":true} \r\n", "{\"ok\":false,\"message\":\"line\\nnext\"}\n"
+ " \t{\"ok\":true} \r\n", "{\"ok\":false,\"message\":\"line\\nnext\"}\n",
+ "{\"ok\":false,\"ok\":true}\n",
+ "{\"ok\":true,\"ok\":false}\n",
+ "{\"ok\":false,\"\\u006fk\":true}\n",
+ "{\"ok\":true,\"message\":\"a\",\"message\":\"b\"}\n",
+ "{\"ok\":true,\"extra\":1,\"extra\":2}\n",
+ "{\"ok\\u0000ignored\":true}\n",
+ "{\"ok\":true,\"message\":\"done\\u0000hidden\"}\n",
+ "{\"ok\":true,\"extra\":{\"x\":1,\"y\":2},\"message\":\"colon:comma,quote\\\"\"}\n",
+ "{\"\\u006fk\":true,\"message\":\"literal\\\\u0000\"}\n"
+
 };
 
 static void *serve(void *arg) {
@@ -65,7 +76,7 @@ int main(int argc,char **argv){
  assert(!clock_gettime(CLOCK_MONOTONIC,&end));
  double elapsed=end.tv_sec-start.tv_sec+(end.tv_nsec-start.tv_nsec)/1e9;
  fprintf(stderr,"mode=%d elapsed=%.3f\n",mode,elapsed);
- if(mode==2 || mode>=14){assert(result);json_object_put(result);}else assert(!result);
+ if(mode==2 || mode==14 || mode==15 || mode==23 || mode==24){assert(result);json_object_put(result);}else assert(!result);
  if(mode==1)assert(elapsed>=4.8 && elapsed<5.8);
  if(mode==0)assert(elapsed<1);
  if(mode)assert(!pthread_join(peer,NULL));
@@ -82,6 +93,6 @@ class UserAppTransport(unittest.TestCase):
    c=pathlib.Path(tmp)/'test.c';binary=pathlib.Path(tmp)/'test'
    c.write_text(PREFIX+body+SUFFIX)
    subprocess.run(['gcc','-Wall','-Wextra','-Werror','-fsanitize=address,undefined','-g',str(c),'-o',str(binary),'-ljson-c','-pthread'],check=True)
-   for mode in range(16):
+   for mode in range(25):
     with self.subTest(mode=mode):subprocess.run([str(binary),str(mode)],check=True,timeout=9)
 if __name__=='__main__':unittest.main()
