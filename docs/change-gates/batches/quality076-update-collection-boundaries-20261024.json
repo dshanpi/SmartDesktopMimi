@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Verify update cleanup preserves recovery and user files",
+  "context": "Cleanup runs during selected version admission",
+  "next_steps": "Remaining quality and physical/source gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual signed fixture installation and filesystem collection",
+      "invariants": "User/current/previous/factory preserved, symlinks not traversed",
+      "paths": [
+        "services/mimi-update/update/collection_boundaries_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-collection-boundaries-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Cleanup boundaries",
+          "status": "passed",
+          "scope": "host Select twice and byte canaries",
+          "reason": "owned removal and protected preservation verified",
+          "evidence": ".delivery/quality-review-20261023/update-collection-boundaries/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "power/storage",
+          "reason": "host fixture only",
+          "evidence": ".delivery/quality-review-20261023/update-collection-boundaries/result.json"
+        }
+      ]
+    }
+  ]
+}
