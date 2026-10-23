@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Compose and compile public A133 WiFi and transport candidate",
+  "context": "Selected provider still uses old shared transport and lacks optional WiFi V2",
+  "next_steps": "Combined runtime validation and private profile; versioned overlay integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "isolated public provider source graph and actual compile",
+      "invariants": "preserve old SDK and releases, secrets excluded, original builder unchanged",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-provider-composition-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Public provider",
+          "status": "passed",
+          "scope": "31 A133 units compile/link",
+          "reason": "new source composition with exact observed deps",
+          "evidence": ".delivery/quality-review-20261023/wifi-provider-composition/result.json"
+        },
+        {
+          "name": "Dependency provenance",
+          "status": "not_run",
+          "scope": "complete SDK/compiler source origin",
+          "reason": "new headers inventoried only; previous limitations retained",
+          "evidence": ".delivery/quality-review-20261023/wifi-provider-composition/result.json"
+        },
+        {
+          "name": "Runtime and delivery",
+          "status": "not_run",
+          "scope": "combined runtime/private/SDK/board",
+          "reason": "isolated public candidate",
+          "evidence": ".delivery/quality-review-20261023/wifi-provider-composition/result.json"
+        }
+      ]
+    }
+  ]
+}
