@@ -26,7 +26,8 @@
 
 typedef struct {
     char id[97];
-    char name[49];
+    /* Manifest names allow 48 Unicode characters, up to four UTF-8 bytes each. */
+    char name[48 * 4 + 1];
     char entry[256];
     uint32_t permissions;
 } user_app_entry_t;
@@ -272,6 +273,10 @@ static void scan_apps(void)
                         json_object_is_type(localized_entry, json_type_string))
                         entry_text = json_object_get_string(localized_entry);
                 }
+            }
+            if (strlen(localized_name_text) >= sizeof(entries[0].name)) {
+                json_object_put(manifest);
+                continue;
             }
             if (!strncmp(entry_text, "ui/", 3) && !strstr(entry_text, "..")) {
                 user_app_entry_t *target = &entries[entry_count];

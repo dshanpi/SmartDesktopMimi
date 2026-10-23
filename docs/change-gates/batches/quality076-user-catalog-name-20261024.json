@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Preserve schema-valid Unicode app names in catalog storage",
+  "context": "48characters interpreted as48bytes",
+  "next_steps": "Catalog validation/visual layout and A133 integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Catalog name byte capacity",
+      "invariants": "Schema remains48characters; no app identity/permissions change",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/test_user_catalog_names.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-catalog-name-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "scanner",
+          "reason": "validnames truncate",
+          "evidence": ".delivery/quality-review-20261023/user-catalog-name/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "7sanitizer cases",
+          "reason": "complete storage",
+          "evidence": ".delivery/quality-review-20261023/user-catalog-name/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "visual/A133",
+          "reason": "scanner only",
+          "evidence": ".delivery/quality-review-20261023/user-catalog-name/result.json"
+        }
+      ]
+    }
+  ]
+}
