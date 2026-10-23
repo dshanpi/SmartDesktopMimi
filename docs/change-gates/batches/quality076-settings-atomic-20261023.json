@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Preserve prior settings when saving fails",
+  "context": "Original truncate-in-place destroyed old record on ENOSPC and partial write",
+  "next_steps": "Integrate same new writer in UI/backend, handle UI errors and validate path/load/crash behavior",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Atomic settings persistence with sidecar writer lock",
+      "invariants": "Pre-rename errors retain original; merge distinct process changes; require coordinated writer upgrade",
+      "paths": [
+        "apps/lv_port_linux/src/system/settings.c",
+        "apps/lv_port_linux/src/system/settings.h",
+        "tests/architecture/fixtures/test_settings_atomic.c",
+        "tests/architecture/test_settings_atomic.py",
+        "tests/architecture/fixtures/test_settings_ui075.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-settings-atomic-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Real source fault and concurrency",
+          "status": "passed",
+          "scope": "5 faults,2 process exits,20 two-process merges plus existing2 settings/store suites",
+          "evidence": ".delivery/quality-review-20261023/settings-atomic-save/durable-final.log"
+        },
+        {
+          "name": "Full product and physical power loss",
+          "status": "not_run",
+          "scope": "Selected provider update, UI feedback, physical durability",
+          "reason": "Source candidate only; process exit not power loss",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

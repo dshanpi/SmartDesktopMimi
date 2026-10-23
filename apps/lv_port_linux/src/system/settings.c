@@ -468,66 +468,73 @@ static void merge_local_settings_changes(sys_settings_t *target,
 }
 
 int sys_settings_save_checked(void) {
-    int result=-1;
-    char path[256];
-    sys_settings_t desired;
-    sys_settings_t merged;
-    sys_settings_t disk;
-    ssize_t count;
+    int result = -1, lock_fd = -1, old_fd = -1, temp_fd = -1, dir_fd = -1;
+    char path[256], lock_path[272], temp_path[272], directory[256];
+    sys_settings_t desired = current_settings, merged = desired, disk;
     size_t written = 0;
-    int fd;
+    ssize_t count;
+    bool replaced = false, temp_created = false;
 
     get_settings_path(path, sizeof(path));
+    snprintf(lock_path, sizeof(lock_path), "%s.lock", path);
+    snprintf(temp_path, sizeof(temp_path), "%s.tmp.XXXXXX", path);
+    snprintf(directory, sizeof(directory), "%s", path);
+    char *slash = strrchr(directory, '/');
+    if (!slash) snprintf(directory, sizeof(directory), ".");
+    else if (slash == directory) slash[1] = '\0';
+    else *slash = '\0';
 
-    desired = current_settings;
-    merged = desired;
-    fd = open(path, O_RDWR | O_CREAT, 0600);
-    if (fd < 0) {
-        printf("Error saving settings to %s!\n", path);
-        return -1;
-    }
-    if (flock(fd, LOCK_EX) != 0) {
-        close(fd);
-        printf("Error locking settings at %s!\n", path);
-        return -1;
-    }
-    (void)fchmod(fd, 0600);
+    /* Replacement changes the settings inode. A persistent sidecar lock is
+     * shared by all new writers and is never unlinked during normal saves.
+     * Upgrade both backend and UI together; legacy inode-lock writers cannot
+     * safely run concurrently with this protocol. */
+    lock_fd = open(lock_path, O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (lock_fd < 0 || flock(lock_fd, LOCK_EX) != 0) goto done;
+    dir_fd = open(directory, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dir_fd < 0) goto done;
+    old_fd = open(path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    if (old_fd >= 0) {
+        do { count = pread(old_fd, &disk, sizeof(disk), 0); }
+        while (count < 0 && errno == EINTR);
+        if (count < 0) goto done;
+        if (persisted_settings_snapshot_valid && count == (ssize_t)sizeof(disk) &&
+            disk.version == SETTINGS_VERSION) {
+            merge_local_settings_changes(&disk, &desired, &persisted_settings_snapshot);
+            merged = disk;
+        }
+        close(old_fd); old_fd = -1;
+    } else if (errno != ENOENT) goto done;
 
-    /* lv_backend and lvglsim are separate processes. Merge only fields changed
-     * since this process last loaded/saved the file, so a Tuya cloud write of
-     * HDMI/BT does not get reverted when the UI later saves brightness. */
-    count = pread(fd, &disk, sizeof(disk), 0);
-    if (persisted_settings_snapshot_valid && count == (ssize_t)sizeof(disk) &&
-        disk.version == SETTINGS_VERSION) {
-        merge_local_settings_changes(&disk, &desired,
-                                     &persisted_settings_snapshot);
-        merged = disk;
-    }
-
-    if (ftruncate(fd, 0) != 0) {
-        flock(fd, LOCK_UN);
-        close(fd);
-        printf("Error truncating settings at %s!\n", path);
-        return -1;
-    }
+    temp_fd = mkstemp(temp_path);
+    if (temp_fd < 0) goto done;
+    temp_created = true;
+    if (fchmod(temp_fd, 0600) != 0) goto done;
     while (written < sizeof(merged)) {
-        count = pwrite(fd, (const char *)&merged + written,
+        count = pwrite(temp_fd, (const char *)&merged + written,
                        sizeof(merged) - written, (off_t)written);
         if (count < 0 && errno == EINTR) continue;
-        if (count <= 0) break;
+        if (count <= 0) goto done;
         written += (size_t)count;
     }
-    if (written == sizeof(merged) && fsync(fd) == 0) {
-        result=0;
-        current_settings = merged;
-        persisted_settings_snapshot = merged;
-        persisted_settings_snapshot_valid = true;
-        printf("Settings saved to %s\n", path);
-    } else {
-        printf("Error writing settings to %s!\n", path);
-    }
-    flock(fd, LOCK_UN);
-    close(fd);
+    if (fsync(temp_fd) != 0) goto done;
+    if (close(temp_fd) != 0) { temp_fd = -1; goto done; }
+    temp_fd = -1;
+    if (rename(temp_path, path) != 0) goto done;
+    replaced = true;
+    /* The new complete record is visible even if directory fsync fails.
+     * Reflect that snapshot but report unconfirmed crash durability as error. */
+    current_settings = merged;
+    persisted_settings_snapshot = merged;
+    persisted_settings_snapshot_valid = true;
+    if (fsync(dir_fd) != 0) goto done;
+    result = 0;
+done:
+    if (old_fd >= 0) close(old_fd);
+    if (temp_fd >= 0) close(temp_fd);
+    if (temp_created && !replaced) unlink(temp_path);
+    if (dir_fd >= 0) close(dir_fd);
+    if (lock_fd >= 0) { flock(lock_fd, LOCK_UN); close(lock_fd); }
+    printf(result == 0 ? "Settings saved to %s\n" : "Error saving settings to %s!\n", path);
     return result;
 }
 

@@ -18,6 +18,8 @@ int main(void)
     assert(sys_settings_save_checked()<0);
     assert(!setenv("LV_SETTINGS_FILE",path,1));sys_settings_init();
     assert(s->brightness==73 && s->volume==42 && s->hdmi_enabled);
-    assert(!unlink(path));assert(!rmdir(dir));
+    assert(!unlink(path));
+    char lock[272];snprintf(lock,sizeof(lock),"%s.lock",path);assert(!unlink(lock));
+    assert(!rmdir(dir));
     puts("PASS UI075 actual settings: first boot 20%/HDMI off; saved choices retained; failed write reported; disk data retained");
 }

@@ -55,7 +55,10 @@ sys_settings_t* sys_settings_get(void);
  * @brief Save current settings to file
  */
 void sys_settings_save(void);
-/* 0 only when the complete settings record was written and synced. */
+/* 0 only after a complete record and its directory entry are synced.
+ * Failure after replacement may leave the complete new record visible.
+ * All concurrent writers must use this sidecar-lock protocol; upgrade the
+ * UI and backend together, without a legacy inode-lock writer running. */
 int sys_settings_save_checked(void);
 
 #endif /* SETTINGS_H */
