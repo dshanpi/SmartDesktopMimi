@@ -6,9 +6,9 @@
  * @brief Unix Domain Socket 进程间通信实现
  */
 
-#include "ipc/ipc_socket.h"
-#include "system/config/app_config.h"
-#include "system/log/app_log.h"
+#include "ipc_socket.h"
+#include "../system/config/app_config.h"
+#include "../system/log/app_log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

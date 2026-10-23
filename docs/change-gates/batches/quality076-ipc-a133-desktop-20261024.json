@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "summary": "Fix transport include portability and verify A133 desktop build",
+  "context": "Actual desktop build exposed host-only include assumption",
+  "next_steps": "Provider coordination and remaining transport audit; no physical claim",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "portable includes and standalone desktop target",
+      "invariants": "unchanged wire semantics, immutable release and backups",
+      "paths": [
+        "apps/lv_port_linux/src/middleware/middleware.c",
+        "apps/lv_port_linux/src/ipc/ipc_socket.c",
+        "apps/lv_port_linux/src/ipc/connection.c",
+        "apps/lv_port_linux/src/ipc/connection.h",
+        "docs/update/source-ownership.json",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-a133-desktop-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Initial build",
+          "status": "failed",
+          "scope": "fresh A133 desktop",
+          "reason": "missing header search path",
+          "evidence": ".delivery/quality-review-20261023/ipc-a133-desktop/result.json"
+        },
+        {
+          "name": "Corrected target",
+          "status": "passed",
+          "scope": "A133 compile/link and676 ownership",
+          "reason": "incremental correction; zero-size linker warning retained",
+          "evidence": ".delivery/quality-review-20261023/ipc-a133-desktop/result.json"
+        },
+        {
+          "name": "Host regression",
+          "status": "passed",
+          "scope": "six transport sanitizer methods",
+          "reason": "actual changed source",
+          "evidence": ".delivery/quality-review-20261023/ipc-a133-desktop/result.json"
+        },
+        {
+          "name": "Full target delivery",
+          "status": "not_run",
+          "scope": "provider/system/physical",
+          "reason": "no deploy; provenance remains",
+          "evidence": ".delivery/quality-review-20261023/ipc-a133-desktop/result.json"
+        }
+      ]
+    }
+  ]
+}

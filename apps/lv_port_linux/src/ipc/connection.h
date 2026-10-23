@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "ipc/ipc_socket.h"
+#include "ipc_socket.h"
 typedef struct mimi_connection mimi_connection;
 /* Successful creation consumes fd. Failure leaves it with the caller. */
 mimi_connection *mimi_connection_create(int fd);

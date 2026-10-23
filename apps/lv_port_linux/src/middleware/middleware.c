@@ -3,10 +3,10 @@
  * @brief 多进程架构消息中间件实现
  */
 
-#include "middleware/middleware.h"
-#include "ipc/connection.h"
-#include "ipc/ipc_socket.h"
-#include "system/log/app_log.h"
+#include "middleware.h"
+#include "../ipc/connection.h"
+#include "../ipc/ipc_socket.h"
+#include "../system/log/app_log.h"
 
 #include <errno.h>
 #include <fcntl.h>

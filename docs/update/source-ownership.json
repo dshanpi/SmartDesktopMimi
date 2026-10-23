@@ -51,7 +51,7 @@
     },
     "apps/lv_port_linux/src/ipc/ipc_socket.c": {
       "owner": "shared-frozen",
-      "sha256": "e1e9c2c1f4b3357ee9014a7dd1787014a19a3cf8e994fac54a74f1886ebda6a2"
+      "sha256": "071d7cf81142b2f2bed17af0d55b1bfb2dd2ec4b3e4473c9c8a644ca605c6a21"
     },
     "apps/lv_port_linux/src/ipc/ipc_socket.h": {
       "owner": "shared-frozen",
@@ -127,7 +127,7 @@
     },
     "apps/lv_port_linux/src/middleware/middleware.c": {
       "owner": "shared-frozen",
-      "sha256": "44d1c9630be5bbfa00fcdebaf205d6130c8f7bd7cd7891870ec9ca028e712a9e"
+      "sha256": "d85a8868d4b29ac1d8a6af53ee3334171df33eb76f285bc962dd686f8a9d926e"
     },
     "apps/lv_port_linux/src/middleware/middleware.h": {
       "owner": "shared-frozen",
@@ -281,11 +281,11 @@
     },
     "apps/lv_port_linux/src/ipc/connection.c": {
       "owner": "shared-frozen",
-      "sha256": "e8c6e4d44de0b85b8ac5a863f6c79bb3f4ca884ae68f0a580cbfaa6f30a795f8"
+      "sha256": "91eb20b6eda583e6c0fcf3aed21d34ff75181fae914dfa9a4d295abbe5554939"
     },
     "apps/lv_port_linux/src/ipc/connection.h": {
       "owner": "shared-frozen",
-      "sha256": "769c287d50f676d80760e0385389f0a4d364ca7f5c2ec0d7872397ee7757a17a"
+      "sha256": "6375dde1e7839ea7edc9c0249dd2744158bf231c809d2292cbbd2e1a43cd07e2"
     },
     "apps/lv_port_linux/src/system/wifi_control_client.h": {
       "owner": "application"

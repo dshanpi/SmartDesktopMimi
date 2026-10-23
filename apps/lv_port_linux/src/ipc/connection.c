@@ -1,5 +1,5 @@
 #include "connection.h"
-#include "ipc/ipc_socket.h"
+#include "ipc_socket.h"
 #include <pthread.h>
 #include <stdatomic.h>
 #include <stdlib.h>
