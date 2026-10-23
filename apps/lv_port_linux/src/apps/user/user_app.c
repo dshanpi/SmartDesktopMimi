@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <poll.h>
+#include <pthread.h>
 #include <time.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -280,62 +281,95 @@ static void set_plain_container(lv_obj_t *object)
                       LV_OBJ_FLAG_SCROLL_CHAIN);
 }
 
+/* Worker owns only JSON; all page pointers and generation are UI-thread owned. */
+static pthread_mutex_t action_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool action_active, action_done;
+static json_object *action_reply;
+static uint64_t page_generation, action_generation;
+static bool action_invoke;
+
+static void show_action_result(json_object *response, bool invoke)
+{
+    json_object *ok = NULL, *message = NULL;
+    bool success = response && json_object_object_get_ex(response, "ok", &ok) &&
+        json_object_is_type(ok, json_type_boolean) && json_object_get_boolean(ok);
+    bool has_message = response && json_object_object_get_ex(response, "message", &message) &&
+        json_object_is_type(message, json_type_string);
+    if (invoke)
+        lv_label_set_text(status_label, success && has_message ? json_object_get_string(message) :
+                          ui_tr(UI_STR_USER_LAUNCH_FAILED));
+    else if (success)
+        lv_label_set_text(status_label, ui_tr(UI_STR_USER_REQUEST_COMPLETE));
+    else
+        lv_label_set_text(status_label, has_message ? json_object_get_string(message) :
+                          ui_tr(UI_STR_USER_HARDWARE_FAILED));
+}
+
+static void *action_worker(void *argument)
+{
+    json_object *request = argument;
+    json_object *response = app_request(request);
+    json_object_put(request);
+    pthread_mutex_lock(&action_mutex);
+    action_reply = response;
+    action_done = true;
+    pthread_mutex_unlock(&action_mutex);
+    return NULL;
+}
+
+static void action_completed(lv_timer_t *timer)
+{
+    pthread_mutex_lock(&action_mutex);
+    bool done = action_done;
+    json_object *response = done ? action_reply : NULL;
+    if (done) { action_reply = NULL; action_done = false; }
+    pthread_mutex_unlock(&action_mutex);
+    if (!done) return;
+    action_active = false;
+    lv_timer_delete(timer);
+    if (status_label && page_generation == action_generation)
+        show_action_result(response, action_invoke);
+    if (response) json_object_put(response);
+}
+
 static void action_event(lv_event_t *event)
 {
     user_action_t *action = lv_event_get_user_data(event);
     if (lv_event_get_code(event) != LV_EVENT_CLICKED || !status_label) return;
-    if (!strcmp(action->command, "app.invoke")) {
-        json_object *request = json_object_new_object();
-        json_object_object_add(request, "command", json_object_new_string("invoke"));
-        json_object_object_add(request, "appId",
-                               json_object_new_string(action->app_id));
-        json_object_object_add(request, "action",
-                               json_object_new_string(action->action));
-        json_object *response = app_request(request);
-        json_object_put(request);
-        json_object *ok = NULL, *message = NULL;
-        if (!response ||
-            !json_object_object_get_ex(response, "ok", &ok) ||
-            !json_object_is_type(ok, json_type_boolean) ||
-            !json_object_get_boolean(ok) ||
-            !json_object_object_get_ex(response, "message", &message) ||
-            !json_object_is_type(message, json_type_string)) {
-            lv_label_set_text(status_label, ui_tr(UI_STR_USER_LAUNCH_FAILED));
-        } else {
-            lv_label_set_text(status_label, json_object_get_string(message));
-        }
-        if (response) json_object_put(response);
-        return;
-    }
+    /* Never replay a potentially side-effecting command while its outcome is pending. */
+    if (action_active) return;
+    bool invoke = !strcmp(action->command, "app.invoke");
     uint32_t required = permission_bit(action->command);
-    if (!required || !(current_permissions & required)) {
+    if (!invoke && (!required || !(current_permissions & required))) {
         lv_label_set_text(status_label, ui_tr(UI_STR_USER_NOT_AUTHORIZED));
         return;
     }
     json_object *request = json_object_new_object();
-    json_object_object_add(request, "command",
-                           json_object_new_string("platformAction"));
-    json_object_object_add(request, "appId",
-                           json_object_new_string(action->app_id));
-    json_object_object_add(request, "capability",
-                           json_object_new_string(action->command));
-    json_object_object_add(request, "arguments", json_object_new_object());
-    json_object *response = app_request(request);
-    json_object_put(request);
-    json_object *ok = NULL, *message = NULL;
-    if (!response || !json_object_object_get_ex(response, "ok", &ok) ||
-        !json_object_is_type(ok, json_type_boolean) ||
-            !json_object_get_boolean(ok)) {
-        if (response &&
-            json_object_object_get_ex(response, "message", &message) &&
-            json_object_is_type(message, json_type_string))
-            lv_label_set_text(status_label, json_object_get_string(message));
-        else
-            lv_label_set_text(status_label, ui_tr(UI_STR_USER_HARDWARE_FAILED));
-    } else {
-        lv_label_set_text(status_label, ui_tr(UI_STR_USER_REQUEST_COMPLETE));
+    if (!request) { show_action_result(NULL, invoke); return; }
+    json_object_object_add(request, "command", json_object_new_string(invoke ? "invoke" : "platformAction"));
+    json_object_object_add(request, "appId", json_object_new_string(action->app_id));
+    if (invoke)
+        json_object_object_add(request, "action", json_object_new_string(action->action));
+    else {
+        json_object_object_add(request, "capability", json_object_new_string(action->command));
+        json_object_object_add(request, "arguments", json_object_new_object());
     }
-    if (response) json_object_put(response);
+    /* Resolve configuration on the UI thread before the worker reads it. */
+    (void)mimi_user_app_config_get();
+    lv_timer_t *timer = lv_timer_create(action_completed, 20, NULL);
+    pthread_t thread;
+    action_generation = page_generation;
+    action_invoke = invoke;
+    action_active = true;
+    if (!timer || pthread_create(&thread, NULL, action_worker, request)) {
+        if (timer) lv_timer_delete(timer);
+        action_active = false;
+        json_object_put(request);
+        show_action_result(NULL, invoke);
+        return;
+    }
+    pthread_detach(thread);
+    lv_label_set_text(status_label, ui_i18n_is_zh() ? "正在处理，请稍候…" : "Working, please wait...");
 }
 
 static void action_delete_event(lv_event_t *event)
@@ -463,6 +497,7 @@ static void render_node(lv_obj_t *parent, json_object *node, unsigned depth,
 
 static void clear_content(void)
 {
+    ++page_generation;
     if (page_content) lv_obj_clean(page_content);
     status_label = NULL;
 }
@@ -622,6 +657,7 @@ void user_app_init(void)
 
 void user_app_close(void)
 {
+    ++page_generation;
     screen = NULL;
     app_list = NULL;
     page_content = NULL;

@@ -165,11 +165,15 @@ static void *review_update_serve(void *arg) {
  shutdown(fd,SHUT_WR);close(fd);atomic_fetch_sub(&update_active,1);return NULL;
 }
 static const char *review_user_reply;
-static int review_user_peer=-1;
+static atomic_int review_user_peer=-1;
+static atomic_int review_user_connections;
+static int review_user_delay;
 int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
  (void)length;
  if(review_user_reply && address->sa_family==AF_UNIX &&
     !strcmp(((const struct sockaddr_un *)address)->sun_path,"/tmp/mimi-result-fixture.sock")) {
+  atomic_fetch_add(&review_user_connections,1);
+  usleep(review_user_delay);
   int pair[2];assert(socketpair(AF_UNIX,SOCK_STREAM,0,pair)==0);
   assert(dup2(pair[0],fd)==fd);close(pair[0]);review_user_peer=pair[1];
   size_t n=strlen(review_user_reply);assert(write(pair[1],review_user_reply,n)==(ssize_t)n);
@@ -1268,12 +1272,35 @@ int main(int argc,char**argv) {
   label=find_label(lv_scr_act(),"Capture HDMI Snapshot");assert(label);
   review_last_socket[0]=0;
   lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);pump();
+  for(int wait=0;wait<300 && !find_label(lv_scr_act(),ui_tr(UI_STR_USER_HARDWARE_FAILED));wait++){pump();usleep(1000);}
   assert(!strcmp(review_last_socket,mimi_user_app_config_get()->user_apps_socket_path));
   assert(find_label(lv_scr_act(),ui_tr(UI_STR_USER_HARDWARE_FAILED)));
   }
   lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
+ } else if(!strcmp(argv[1],"user-action-async")) {
+  app_user.init();pump();review_user_delay=300000;
+  review_user_reply="{\"ok\":true,\"message\":\"Old result\"}\n";
+  lv_obj_t *label=find_label(lv_scr_act(),"Invoke test");assert(label);
+  struct timespec a,b;clock_gettime(CLOCK_MONOTONIC,&a);
+  lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+  clock_gettime(CLOCK_MONOTONIC,&b);
+  assert((b.tv_sec-a.tv_sec)*1e9+b.tv_nsec-a.tv_nsec<100000000);
+  lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+  lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
+  label=find_label(lv_scr_act(),"Invoke test");assert(label);
+  lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+  for(int i=0;i<600;i++){pump();usleep(1000);}
+  assert(atomic_load(&review_user_connections)==1);
+  assert(!find_label(lv_scr_act(),"Old result"));
+  assert(review_user_peer>=0);close(review_user_peer);review_user_peer=-1;
+  review_user_delay=0;review_user_reply="{\"ok\":true,\"message\":\"New result\"}\n";
+  lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+  for(int i=0;i<600 && !find_label(lv_scr_act(),"New result");i++){pump();usleep(1000);}
+  assert(find_label(lv_scr_act(),"New result"));assert(review_user_connections==2);
+  close(review_user_peer);review_user_peer=-1;review_user_reply=NULL;
+  puts("PASS responsive click, one pending operation, stale page result discarded, new request recovered");
  } else if(!strcmp(argv[1],"user-action-result")) {
   app_user.init();pump();
   const char *values[]={"true","false","\"false\"","1","[]","{}","null"};
@@ -1282,6 +1309,7 @@ int main(int argc,char**argv) {
    review_user_reply=reply;
    lv_obj_t *label=find_label(lv_scr_act(),kind?"Platform test":"Invoke test");assert(label);
    lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+   for(int wait=0;wait<600;wait++){pump();usleep(1000);}
    assert(review_user_peer>=0);close(review_user_peer);review_user_peer=-1;review_user_reply=NULL;
    pump();
    const char *expected=i==0?(kind?ui_tr(UI_STR_USER_REQUEST_COMPLETE):"Fixture result"):
