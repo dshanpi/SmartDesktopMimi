@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Correct A133 flash-mode guidance using exact source and actual rc8 keep_data result",
+  "context": "Preserve original partition-mode data failure and limited acceptance",
+  "next_steps": "explain mutable data differences; physical screen acceptance; no reflash",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-SYSTEM-041",
+      "record": "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+      "scope": "Bound A133 vendor FES workflow",
+      "invariants": "No trust reset, raw write, stable claim or erased historical failure",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-SYSTEM-041.md",
+        "docs/change-gates/batches/system041-keep-data-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual keep_data write/verify/direct boot",
+          "status": "passed",
+          "scope": "rc8 same image bound device only",
+          "evidence": ".delivery/a133-boot-repair-20261021/rc8-flash-20261023/keep-data-result.json"
+        },
+        {
+          "name": "Complete data semantics and physical screen",
+          "status": "not_run",
+          "scope": "two mutable changes pending; physical not measured",
+          "reason": "No inference from heartbeat or partial byte equality",
+          "evidence": ".delivery/a133-boot-repair-20261021/rc8-flash-20261023/keep-data-files-check.json"
+        }
+      ]
+    }
+  ]
+}
