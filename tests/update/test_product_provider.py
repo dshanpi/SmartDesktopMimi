@@ -48,6 +48,9 @@ class ProductProviderTests(unittest.TestCase):
         recipe['source_graph_sha256'] = p.source_graph(recipe)
         rf = component / p.EDITION / profile / 'provider-recipe.json'
         rf.parent.mkdir(parents=True, exist_ok=True)
+        report = rf.parent / 'reference-build.json'
+        report.write_text(json.dumps(dict(status='passed', cloud_profile=profile, backend_sha256=recipe['reference_backend_sha256'], compiler_sha256=recipe['compiler_sha256'])))
+        recipe['reference_build_result_sha256'] = p.sha(report)
         rf.write_text(json.dumps(recipe))
         return sdk, component, rf, {profile: p.sha(rf)}, p.sha(tool)
 
@@ -87,6 +90,23 @@ class ProductProviderTests(unittest.TestCase):
         lock_file.parent.mkdir(parents=True, exist_ok=True)
         lock_file.write_text(json.dumps(lock))
         return sdk, component, rf, pins, tool_hash, external, product, lock_file
+
+    def test_reference_report_required_and_consistent(self):
+        for change in ('missing','bytes','alias','profile','backend','compiler','status'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as d:
+                sdk,component,rf,pins,tool_hash=self.fixture(Path(d).resolve())
+                report=rf.parent/'reference-build.json'
+                if change=='missing':report.unlink()
+                elif change=='bytes':report.write_text('{}')
+                elif change=='alias':
+                    other=Path(d)/'report';report.rename(other);report.symlink_to(other)
+                else:
+                    data=json.loads(report.read_text())
+                    field={'profile':'cloud_profile','backend':'backend_sha256','compiler':'compiler_sha256','status':'status'}[change]
+                    data[field]='wrong';report.write_text(json.dumps(data))
+                    recipe=json.loads(rf.read_text());recipe['reference_build_result_sha256']=p.sha(report);rf.write_text(json.dumps(recipe));pins['public']=p.sha(rf)
+                with patch.object(p,'TOOL_HASH',tool_hash),patch.object(p,'RECIPES',pins):
+                    with self.assertRaises(ValueError):p.preflight(str(sdk),'public')
 
     def test_private_requires_product_without_historical_fallback(self):
         with tempfile.TemporaryDirectory() as d:
@@ -201,6 +221,9 @@ class ProductProviderTests(unittest.TestCase):
                 expected = hashlib.sha256(payload).hexdigest()
                 recipe = json.loads(rf.read_text())
                 recipe['reference_backend_sha256'] = expected
+                report=rf.parent/'reference-build.json'
+                data=json.loads(report.read_text());data['backend_sha256']=expected
+                report.write_text(json.dumps(data));recipe['reference_build_result_sha256']=p.sha(report)
                 rf.write_text(json.dumps(recipe))
                 pins['public'] = p.sha(rf)
                 output = root / 'new-build'

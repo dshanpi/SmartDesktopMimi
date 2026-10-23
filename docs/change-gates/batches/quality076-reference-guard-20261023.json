@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Reject stale reference report before provider build",
+  "context": "Inherited sidecar reports previously ignored by preflight",
+  "next_steps": "Concurrent mode ordering, complete candidate packaging and physical acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Report preflight and real program collection/install fixture",
+      "invariants": "No changed program or published baseline; reference recipe differs legitimately from selected recipe",
+      "paths": [
+        "scripts/build_a133_provider.py",
+        "tests/update/test_product_provider.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-reference-guard-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Preflight rejection",
+          "status": "passed",
+          "scope": "14 tests including7 report fault variants",
+          "evidence": ".delivery/quality-review-20261023/assistant-reference-guard/fixed-r2.log"
+        },
+        {
+          "name": "Actual program install",
+          "status": "passed",
+          "scope": "Public/private provider+runtime real; other assets/seal synthetic;5 tests no skip",
+          "evidence": ".delivery/quality-review-20261023/assistant-reference-guard/install-tests.log"
+        },
+        {
+          "name": "Physical and complete package",
+          "status": "not_run",
+          "scope": "Actual device and signed whole product",
+          "reason": "Host fixture only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

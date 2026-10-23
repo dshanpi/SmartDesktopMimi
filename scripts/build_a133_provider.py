@@ -132,6 +132,14 @@ def preflight(sdk_value, profile, private_value=None, product_value=None):
             len(recipe.get('reference_backend_sha256', '')) != 64 or
             READER_SOURCE not in recipe['sources'] or AI_SOURCE not in recipe['sources']):
         raise ValueError('provider edition/source graph/reference mismatch')
+    report_file = recipe_file.parent / 'reference-build.json'
+    pinned_file(report_file, component, recipe['reference_build_result_sha256'])
+    report = json.loads(report_file.read_text())
+    if (not isinstance(report, dict) or report.get('status') != 'passed' or
+            report.get('cloud_profile') != profile or
+            report.get('backend_sha256') != recipe['reference_backend_sha256'] or
+            report.get('compiler_sha256') != recipe['compiler_sha256']):
+        raise ValueError('provider reference report mismatch')
     private = canonical(private_value) if profile == 'private' and private_value else sdk.parent / '.mimi-private-disabled'
     if profile == 'private':
         product = Path(__file__).resolve().parents[1]
