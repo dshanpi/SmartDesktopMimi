@@ -66,6 +66,7 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
 }
 /* A local socket pair supplies the idle response; no device service is used. */
 static bool review_hdmi_idle;
+static bool review_hdmi_stop_failure;
 static int hdmi_control_connections, hdmi_mutations;
 extern lv_obj_t *hdmi_switch_obj;
 static int review_control_peer = -1;
@@ -107,8 +108,8 @@ int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
   if (review_control_peer >= 0) close(review_control_peer);
   assert(socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == 0);
   assert(dup2(pair[0], fd) == fd); close(pair[0]); review_control_peer=pair[1];
-  const char reply[]="{\"state\":\"idle\",\"history\":[]}\n";
-  assert(write(review_control_peer, reply, sizeof(reply)-1) == sizeof(reply)-1);
+  const char *reply=review_hdmi_stop_failure?"{\"ok\":false,\"message\":\"stop requested; HID release failed\"}\n":"{\"state\":\"idle\",\"history\":[]}\n";
+  assert(write(review_control_peer, reply, strlen(reply)) == (ssize_t)strlen(reply));
   return 0;
  }
  errno=ECONNREFUSED;return -1;
@@ -1110,6 +1111,18 @@ int main(int argc,char**argv) {
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
+ else if(!strcmp(argv[1],"hdmi-stop-failure")) {
+  review_hdmi_idle=true;app_hdmi_mcp.init();pump();
+  lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
+  lv_obj_clear_state(lv_obj_get_parent(stop),LV_STATE_DISABLED);
+  lv_obj_send_event(lv_obj_get_parent(stop),LV_EVENT_CLICKED,NULL);pump();
+  const char *title=ui_i18n_is_zh()?"停止当前任务？":"Stop current task?";
+  assert(find_label(lv_layer_top(),title));
+  review_hdmi_stop_failure=true;
+  lv_obj_t *confirm=find_label(lv_layer_top(),ui_tr(UI_STR_STOP));assert(confirm);
+  lv_obj_send_event(lv_obj_get_parent(confirm),LV_EVENT_CLICKED,NULL);pump();
+  assert(find_label(lv_layer_top(),title) && "failed stop must remain visible/retryable");
+ }
  else if(strcmp(argv[1],"hdmi")==0 || strcmp(argv[1],"hdmi-idle")==0){
   review_hdmi_idle=!strcmp(argv[1],"hdmi-idle");app_hdmi_mcp.init();
   if(!desktop_hdmi_supported()) {

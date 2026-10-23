@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Reproduce lost stop failure in actual UI and verify release package",
+  "context": "Backend error propagation must remain visible to user",
+  "next_steps": "Async stop lifecycle with persistent failure and retry feedback",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual LVGL host negative and package fixtures",
+      "invariants": "Published and board unchanged; preserve failure",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-stop-ui-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Failed stop dialog retained",
+          "status": "failed",
+          "scope": "Real LVGL800x480 with socketpair error reply",
+          "reason": "UI discards response and deletes dialog",
+          "evidence": ".delivery/quality-review-20261023/control-stop-ui/original.log"
+        },
+        {
+          "name": "New control packages",
+          "status": "passed",
+          "scope": "Actual recipes with host fixture qualifications",
+          "evidence": ".delivery/quality-review-20261023/control-release-integration/package.log"
+        }
+      ]
+    }
+  ]
+}
