@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Integrate reviewed update UI into A133 desktop candidate",
+  "context": "Prior desktop binary predates unavailable feedback fix",
+  "next_steps": "Physical readiness and remaining domain gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Exact source delta/target link/host install",
+      "invariants": "Backups retained; patch restored; no board or published artifact changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-feedback-a133-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Integration",
+          "status": "passed",
+          "scope": "A133 build and both edition package fixtures",
+          "reason": "source and installed bytes verified",
+          "evidence": ".delivery/quality-review-20261023/update-feedback-a133-integration/result.json"
+        },
+        {
+          "name": "Physical/fullimage",
+          "status": "not_run",
+          "scope": "A133 firmware/deployment",
+          "reason": "host integration only",
+          "evidence": ".delivery/quality-review-20261023/update-feedback-a133-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
