@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Bind WiFi row fixes to A133 desktop and actual installation",
+  "context": "Previous full binary predates row fixes",
+  "next_steps": "Full UI/provider runtime and remaining quality domains",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Incremental A133 source delta and host install",
+      "invariants": "old artifacts preserved; no deployment; scope not full device",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-row-a133-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "A133",
+          "status": "passed",
+          "scope": "exactappdelta/fulltargetlink",
+          "reason": "ownership andreceiptbound",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-a133-integration/result.json"
+        },
+        {
+          "name": "Install",
+          "status": "passed",
+          "scope": "bothprofiles/threepackages",
+          "reason": "oldbinaryrejection andbyte/mode/ownershipchecks",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-a133-integration/result.json"
+        },
+        {
+          "name": "Full delivery",
+          "status": "not_run",
+          "scope": "physical/image/source",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-a133-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
