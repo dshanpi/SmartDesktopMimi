@@ -7,6 +7,9 @@
 #include "../../ui/desktop_capabilities.h"
 
 #include <errno.h>
+#include <poll.h>
+#include <pthread.h>
+#include <time.h>
 #include <json-c/json.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -31,60 +34,147 @@ static lv_timer_t *monitor_timer;
 static bool previous_running;
 static uint32_t history_digest;
 
-static int write_all(int fd, const void *data, size_t length)
+static int64_t control_now_ms(void)
 {
-    const unsigned char *cursor = data;
-    while (length > 0) {
-        ssize_t count = write(fd, cursor, length);
-        if (count < 0 && errno == EINTR) continue;
-        if (count <= 0) return -1;
-        cursor += count;
-        length -= (size_t)count;
-    }
-    return 0;
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now)) return -1;
+    return (int64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
 }
 
-static json_object *control_request(const char *request)
+static int control_wait(int fd, short events, int64_t deadline)
+{
+    for (;;) {
+        int64_t now = control_now_ms();
+        if (now < 0 || now >= deadline) return -1;
+        struct pollfd descriptor = {.fd = fd, .events = events};
+        int ready = poll(&descriptor, 1, (int)(deadline - now));
+        if (ready < 0 && errno == EINTR) continue;
+        if (ready <= 0 || (descriptor.revents & (POLLERR | POLLNVAL))) return -1;
+        return 0;
+    }
+}
+
+static json_object *control_request_timeout(const char *request, int timeout_ms)
 {
     if (!desktop_hdmi_supported()) { errno = ENOTSUP; return NULL; }
-    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    int64_t now = control_now_ms();
+    if (now < 0) return NULL;
+    int64_t deadline = now + timeout_ms;
+    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (fd < 0) return NULL;
-    struct timeval timeout = {.tv_sec = 0, .tv_usec = 200000};
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
-
-    struct sockaddr_un address;
-    memset(&address, 0, sizeof(address));
-    address.sun_family = AF_UNIX;
-    snprintf(address.sun_path, sizeof(address.sun_path), "%s",
-             AGENT_CONTROL_SOCKET);
-    if (connect(fd, (struct sockaddr *)&address, sizeof(address)) != 0 ||
-        write_all(fd, request, strlen(request)) != 0 ||
-        write_all(fd, "\n", 1) != 0) {
-        close(fd);
-        return NULL;
+    struct sockaddr_un address = {.sun_family = AF_UNIX};
+    snprintf(address.sun_path, sizeof(address.sun_path), "%s", AGENT_CONTROL_SOCKET);
+    if (connect(fd, (struct sockaddr *)&address, sizeof(address))) {
+        if (errno != EINPROGRESS || control_wait(fd, POLLOUT, deadline)) {
+            close(fd); return NULL;
+        }
+        int error = 0;
+        socklen_t size = sizeof(error);
+        if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &size) || error) {
+            close(fd); return NULL;
+        }
     }
-
+    const char *parts[] = {request, "\n"};
+    for (int part = 0; part < 2; part++) {
+        size_t length = strlen(parts[part]), sent = 0;
+        while (sent < length) {
+            if (control_wait(fd, POLLOUT, deadline)) { close(fd); return NULL; }
+            ssize_t count = send(fd, parts[part] + sent, length - sent, MSG_DONTWAIT | MSG_NOSIGNAL);
+            if (count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
+            if (count <= 0) { close(fd); return NULL; }
+            sent += (size_t)count;
+        }
+    }
     char *response = malloc(AGENT_RESPONSE_MAX + 1);
-    if (!response) {
-        close(fd);
-        return NULL;
-    }
+    if (!response) { close(fd); return NULL; }
     size_t used = 0;
     while (used < AGENT_RESPONSE_MAX) {
-        ssize_t count = read(fd, response + used, AGENT_RESPONSE_MAX - used);
-        if (count < 0 && errno == EINTR) continue;
+        if (control_wait(fd, POLLIN, deadline)) break;
+        ssize_t count = recv(fd, response + used, AGENT_RESPONSE_MAX - used, MSG_DONTWAIT);
+        if (count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
         if (count <= 0) break;
         used += (size_t)count;
         if (memchr(response, '\n', used)) break;
     }
     close(fd);
-    response[used] = '\0';
     char *newline = memchr(response, '\n', used);
-    if (newline) *newline = '\0';
-    json_object *result = newline ? json_tokener_parse(response) : NULL;
+    json_object *result = NULL;
+    if (newline) {
+        *newline = 0;
+        json_tokener *parser = json_tokener_new();
+        if (parser) {
+            size_t length = (size_t)(newline - response);
+            result = json_tokener_parse_ex(parser, response, (int)length + 1);
+            if (json_tokener_get_error(parser) != json_tokener_success ||
+                (size_t)parser->char_offset < length || !json_object_is_type(result, json_type_object)) {
+                if (result) json_object_put(result);
+                result = NULL;
+            }
+            json_tokener_free(parser);
+        }
+    }
     free(response);
     return result;
+}
+
+static json_object *control_request(const char *request)
+{
+    return control_request_timeout(request, 200);
+}
+
+static pthread_mutex_t stop_mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool stop_active, stop_done, stop_success;
+static lv_obj_t *stop_box, *stop_message, *stop_confirm;
+static lv_timer_t *stop_timer;
+
+static bool stop_in_progress(void)
+{
+    pthread_mutex_lock(&stop_mutex);
+    bool active = stop_active;
+    pthread_mutex_unlock(&stop_mutex);
+    return active;
+}
+
+static void *stop_worker(void *unused)
+{
+    (void)unused;
+    json_object *reply = control_request_timeout("{\"command\":\"stop\"}", 6000);
+    json_object *ok = NULL;
+    bool success = reply && json_object_object_get_ex(reply, "ok", &ok) &&
+                   json_object_is_type(ok, json_type_boolean) && json_object_get_boolean(ok);
+    if (reply) json_object_put(reply);
+    pthread_mutex_lock(&stop_mutex);
+    stop_success = success;
+    stop_done = true;
+    pthread_mutex_unlock(&stop_mutex);
+    return NULL;
+}
+
+static void stop_box_deleted(lv_event_t *event)
+{
+    if (lv_event_get_target(event) == stop_box) {
+        stop_box = stop_message = stop_confirm = NULL;
+    }
+}
+
+static void stop_completed(lv_timer_t *timer)
+{
+    pthread_mutex_lock(&stop_mutex);
+    bool done = stop_done, success = stop_success;
+    if (done) stop_active = stop_done = false;
+    pthread_mutex_unlock(&stop_mutex);
+    if (!done) return;
+    stop_timer = NULL;
+    lv_timer_delete(timer);
+    if (!stop_box) return;
+    if (success) {
+        lv_obj_delete_async(stop_box);
+    } else {
+        lv_label_set_text(stop_message, ui_i18n_is_zh()
+            ? "未能确认停止或释放输入，请重试。"
+            : "Could not confirm stop or input release. Please retry.");
+        lv_obj_clear_state(stop_confirm, LV_STATE_DISABLED);
+    }
 }
 
 static const char *state_text(const char *state)
@@ -240,6 +330,7 @@ static void apply_status(json_object *status)
 static void monitor_cb(lv_timer_t *timer)
 {
     (void)timer;
+    if (stop_in_progress()) return;
     json_object *status = control_request("{\"command\":\"status\"}");
     if (status) {
         apply_status(status);
@@ -265,10 +356,25 @@ static void back_event(lv_event_t *event)
 static void stop_confirmed(lv_event_t *event)
 {
     if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
-    json_object *reply = control_request("{\"command\":\"stop\"}");
-    if (reply) json_object_put(reply);
-    lv_obj_t *box = lv_event_get_user_data(event);
-    if (box) lv_obj_delete_async(box);
+    pthread_mutex_lock(&stop_mutex);
+    if (stop_active) { pthread_mutex_unlock(&stop_mutex); return; }
+    stop_active = true;
+    stop_done = stop_success = false;
+    pthread_mutex_unlock(&stop_mutex);
+    lv_obj_add_state(stop_confirm, LV_STATE_DISABLED);
+    lv_label_set_text(stop_message, ui_i18n_is_zh() ? "正在请求停止…" : "Requesting stop...");
+    stop_timer = lv_timer_create(stop_completed, 30, NULL);
+    pthread_t thread;
+    if (!stop_timer || pthread_create(&thread, NULL, stop_worker, NULL)) {
+        if (stop_timer) { lv_timer_delete(stop_timer); stop_timer = NULL; }
+        pthread_mutex_lock(&stop_mutex);
+        stop_active = false;
+        pthread_mutex_unlock(&stop_mutex);
+        lv_obj_clear_state(stop_confirm, LV_STATE_DISABLED);
+        lv_label_set_text(stop_message, ui_i18n_is_zh() ? "无法发送停止请求，请重试。" : "Could not send stop request. Please retry.");
+        return;
+    }
+    pthread_detach(thread);
 }
 
 static void stop_cancelled(lv_event_t *event)
@@ -281,13 +387,21 @@ static void stop_cancelled(lv_event_t *event)
 static void stop_event(lv_event_t *event)
 {
     if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
+    if (stop_box) return;
     lv_obj_t *box = lv_msgbox_create(lv_layer_top());
+    stop_box = box;
+    lv_obj_add_event_cb(box, stop_box_deleted, LV_EVENT_DELETE, NULL);
     lv_msgbox_add_title(box, ui_i18n_is_zh() ? "停止当前任务？" : "Stop current task?");
-    lv_msgbox_add_text(box, ui_i18n_is_zh()
-                       ? "停止后会立即释放所有自动控制输入。"
-                       : "Stopping immediately releases automated input.");
+    stop_message = lv_msgbox_add_text(box, ui_i18n_is_zh()
+                       ? "将请求结束任务并释放自动控制输入。"
+                       : "Request task termination and release of automated input.");
     lv_obj_t *confirm = lv_msgbox_add_footer_button(box, ui_tr(UI_STR_STOP));
-    lv_obj_t *cancel = lv_msgbox_add_footer_button(box, ui_tr(UI_STR_CANCEL));
+    stop_confirm = confirm;
+    if (stop_in_progress()) {
+        lv_obj_add_state(confirm, LV_STATE_DISABLED);
+        lv_label_set_text(stop_message, ui_i18n_is_zh() ? "正在请求停止…" : "Requesting stop...");
+    }
+    lv_obj_t *cancel = lv_msgbox_add_footer_button(box, ui_i18n_is_zh() ? "关闭" : "Close");
     lv_obj_add_event_cb(confirm, stop_confirmed, LV_EVENT_CLICKED, box);
     lv_obj_add_event_cb(cancel, stop_cancelled, LV_EVENT_CLICKED, box);
 }
@@ -414,6 +528,7 @@ void hdmi_mcp_app_init(void)
 
 void hdmi_mcp_app_close(void)
 {
+    if (stop_box) lv_obj_delete(stop_box);
     screen = NULL;
     state_label = NULL;
     task_label = NULL;

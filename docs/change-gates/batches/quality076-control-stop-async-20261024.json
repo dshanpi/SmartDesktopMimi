@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Keep stop failures visible without blocking UI on stop request",
+  "context": "Stop confirmation previously discarded errors and waited on UI thread",
+  "next_steps": "Success/retry and close-reopen tests, settled visual review and A133 build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Async stop UI and bounded client transaction",
+      "invariants": "Worker has no LVGL access; no board or published changes; status poll limitation retained",
+      "paths": [
+        "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "scripts/render_ui_review.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-stop-async-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Async failure/idle render matrix",
+          "status": "passed",
+          "scope": "16 host LVGL renders and transport adapters",
+          "evidence": ".delivery/quality-review-20261023/control-stop-ui/result.json"
+        },
+        {
+          "name": "Complete lifecycle and physical",
+          "status": "not_run",
+          "scope": "Remaining async success/lifecycle/A133/hardware",
+          "reason": "Only selected failure/idle scenarios verified",
+          "evidence": ".delivery/quality-review-20261023/control-stop-ui/result.json"
+        }
+      ]
+    }
+  ]
+}
