@@ -86,3 +86,5 @@ UI_SCENE("wifi-toggle-reopen")
 UI_SCENE("wifi-toggle-responsive")
 UI_SCENE("wifi-toggle-silence")
 UI_SCENE("wifi-toggle-timer-failure")
+
+UI_SCENE("wifi-toggle-failure-hint")

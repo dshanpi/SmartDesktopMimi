@@ -1681,6 +1681,19 @@ int main(int argc,char**argv) {
   fprintf(stderr,"Held-HAL snapshot consumed: pending=%d enabled_pref=%d save_delta=%d\n",wlan_toggle_pending,settings.wifi_enabled,saves-before);
   assert(wlan_toggle_pending && saves==before && !settings.wifi_enabled && "intermediate enabled snapshot must not confirm operation or save preference");
  }
+ else if(!strcmp(argv[1],"wifi-toggle-failure-hint")) {
+  settings.wifi_enabled=false;app_wifi.init();review_wifi_snapshot(false,false);
+  int saved=saves;lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);review_wifi_flush();
+  for(int repeat=0;repeat<2;repeat++) {
+   wifi_query_at=lv_tick_get()-1000;wifi_control_poll(NULL);review_wifi_flush();
+   wifi_response r={.kind=WIFI_REPLY_SNAPSHOT,.server={2},.sequence=wifi_control.query_sequence,.ready=1,.revision=1,.phase=2,.target=1,.generation=1,.error=-2001,.operation_sequence=wifi_control.operation_sequence};
+   memcpy(r.client,wifi_control.client,16);memcpy(r.owner,wifi_control.client,16);
+   uint8_t bytes[WIFI_REPLY_SIZE];assert(!wifi_wire_response_encode(&r,bytes,sizeof(bytes)));emit(TOPIC_WIFI_CONTROL_REPLY_V2,bytes,sizeof(bytes));
+   assert(wifi_control.view==WIFI_CLIENT_FAILED && !wifi_control.pending && saves==saved);
+   assert(!strcmp(lv_label_get_text(wlan_pending_label),ui_i18n_is_zh()?"切换失败，请重试":"Switch failed; retry"));
+  }
+  assert(!lv_obj_has_state(sw_wlan,LV_STATE_DISABLED));
+ }
  else if(!strcmp(argv[1],"wifi-toggle-silence")) {
   settings.wifi_enabled=false;app_wifi.init();
   wifi_runtime_status_t runtime={.enabled=false};

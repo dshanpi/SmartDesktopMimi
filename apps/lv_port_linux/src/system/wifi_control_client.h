@@ -64,7 +64,14 @@ static inline int wifi_client_receive(wifi_control_client *c,const wifi_response
  c->query_sequence=0;c->observed_at=now;c->known=1;c->ready=r->ready;
  c->enabled=r->enabled;c->busy=r->busy;c->revision=r->revision;memcpy(c->server,r->server,16);
  if(!r->ready) {c->view=c->pending ? WIFI_CLIENT_UNCONFIRMED:WIFI_CLIENT_UNAVAILABLE;return 0;}
- if(!c->pending) {c->view=r->busy ? WIFI_CLIENT_PENDING:WIFI_CLIENT_READY;return 0;}
+ if(!c->pending) {
+  /* A periodic query must not erase the result of our latest failed action. */
+  int failed_ours=r->phase==2 && r->error &&
+      r->operation_sequence==c->operation_sequence &&
+      !memcmp(r->owner,c->client,16) && !memcmp(r->server,c->operation_server,16);
+  c->view=r->busy ? WIFI_CLIENT_PENDING:failed_ours ? WIFI_CLIENT_FAILED:WIFI_CLIENT_READY;
+  return 0;
+ }
  if(memcmp(c->operation_server,r->server,16)) {c->pending=0;c->view=WIFI_CLIENT_CHANGED;return 0;}
  int ours=r->phase && r->operation_sequence==c->operation_sequence && !memcmp(r->owner,c->client,16);
  if(ours) {

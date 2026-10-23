@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Keep WiFi operation failure visible across automatic status refresh",
+  "context": "Page hid the error on next query although same failure remained authoritative",
+  "next_steps": "Complete widget/provider session and SDK qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "WiFi controller error feedback",
+      "invariants": "no failure save; match operation identity; allow explicit retry",
+      "paths": [
+        "apps/lv_port_linux/src/system/wifi_control_client.h",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-failure-hint-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original page",
+          "status": "failed",
+          "scope": "actual LVGL repeatedfailedreply",
+          "reason": "errorlabel erased",
+          "evidence": ".delivery/quality-review-20261023/wifi-failure-hint/result.json"
+        },
+        {
+          "name": "Fixed page",
+          "status": "passed",
+          "scope": "four realLVGL renders and3protocolmethods",
+          "reason": "samefailure persists, noSAVE, retry switchenabled",
+          "evidence": ".delivery/quality-review-20261023/wifi-failure-hint/result.json"
+        },
+        {
+          "name": "Device integration",
+          "status": "not_run",
+          "scope": "realprovider/radio/physical",
+          "reason": "synthetic reply fixture",
+          "evidence": ".delivery/quality-review-20261023/wifi-failure-hint/result.json"
+        }
+      ]
+    }
+  ]
+}
