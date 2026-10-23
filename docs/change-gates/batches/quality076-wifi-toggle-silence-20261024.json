@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Reproduce indefinite WiFi toggle waiting without backend reply",
+  "context": "Network error recovery remains part of full quality audit",
+  "next_steps": "Inspect publication/backend semantics then bounded uncertainty and requery",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Known failing actual LVGL no-reply scenario",
+      "invariants": "No duplicatecommand or falsepreferencesave; no physical claim",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-toggle-silence-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "No-reply feedback",
+          "status": "failed",
+          "scope": "30s virtualUI time, actualpage",
+          "reason": "Still Connecting and disabled without recoveryfeedback",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-silence/result.json"
+        },
+        {
+          "name": "Fix and radio qualification",
+          "status": "not_run",
+          "scope": "Productfix/backend/device",
+          "reason": "Reproduction only; awaiting protocol inspection",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-silence/result.json"
+        }
+      ]
+    }
+  ]
+}

@@ -1482,6 +1482,18 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-toggle-silence")) {
+  settings.wifi_enabled=false;app_wifi.init();
+  wifi_runtime_status_t runtime={.enabled=false};
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  int before_saves=saves,before_toggles=wifi_toggles;
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);
+  assert(wlan_toggle_pending && lv_obj_has_state(sw_wlan,LV_STATE_DISABLED));
+  lv_tick_inc(30000);pump();
+  assert(wifi_toggles==before_toggles+1 && saves==before_saves && !settings.wifi_enabled);
+  fprintf(stderr,"WiFi no reply after30s: pending=%d disabled=%d label=%s\n",wlan_toggle_pending,lv_obj_has_state(sw_wlan,LV_STATE_DISABLED),lv_label_get_text(wlan_pending_label));
+  assert(strcmp(lv_label_get_text(wlan_pending_label),ui_tr(UI_STR_CONNECTING)) && "no-reply toggle must expose uncertainty instead of indefinite connecting");
+ }
  else if(!strcmp(argv[1],"wifi-save")){
   settings.wifi_enabled=false;app_wifi.init();settings_save_error=-EIO;
   wifi_runtime_status_t runtime={.enabled=false};
