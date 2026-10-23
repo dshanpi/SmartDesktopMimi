@@ -455,27 +455,61 @@ OPERATE_RET ai_audio_play_local(char *url, char *song_name, char *artist, int fo
 OPERATE_RET ai_audio_player_stop(AI_AUDIO_PLAYER_TYPE_E type)
 {
     OPERATE_RET rt = OPRT_OK;
+    OPERATE_RET next;
 
     PR_DEBUG("audio player -> stop all player");
 
+    /* Attempt every selected cleanup; later success must not hide failure. */
     switch (type)
     {
     case AI_AUDIO_PLAYER_FG:
-        TUYA_CALL_ERR_LOG(tuya_ai_playlist_clear(__s_tone_playlist));
-        TUYA_CALL_ERR_LOG(tuya_ai_player_stop(__s_tone_player));
+        next = tuya_ai_playlist_clear(__s_tone_playlist);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
+        next = tuya_ai_player_stop(__s_tone_player);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
         break;
     case AI_AUDIO_PLAYER_BG:
-        TUYA_CALL_ERR_LOG(tuya_ai_playlist_clear(__s_music_playlist));
-        TUYA_CALL_ERR_LOG(tuya_ai_player_stop(__s_music_player));
+        next = tuya_ai_playlist_clear(__s_music_playlist);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
+        next = tuya_ai_player_stop(__s_music_player);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
         break;
     case AI_AUDIO_PLAYER_ALL:
-        TUYA_CALL_ERR_LOG(tuya_ai_playlist_clear(__s_tone_playlist));
-        TUYA_CALL_ERR_LOG(tuya_ai_player_stop(__s_tone_player));
-        TUYA_CALL_ERR_LOG(tuya_ai_playlist_clear(__s_music_playlist));
-        TUYA_CALL_ERR_LOG(tuya_ai_player_stop(__s_music_player));
+        next = tuya_ai_playlist_clear(__s_tone_playlist);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
+        next = tuya_ai_player_stop(__s_tone_player);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
+        next = tuya_ai_playlist_clear(__s_music_playlist);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
+        next = tuya_ai_player_stop(__s_music_player);
+        if (next != OPRT_OK) {
+            PR_ERR("audio stop failed: %d", next);
+            if (rt == OPRT_OK) rt = next;
+        }
         break;
     default:
-        break;
+        return OPRT_INVALID_PARM;
     }
 
     return rt;

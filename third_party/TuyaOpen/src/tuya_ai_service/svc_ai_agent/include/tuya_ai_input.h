@@ -87,6 +87,11 @@ VOID tuya_ai_input_start_s(CHAR_T *scode, BOOL_T force);
 * @param[in] scode solution code
 * @return VOID
  */
+/* Confirms this queued stop reached local input cleanup; not cloud delivery
+ * or microphone hardware shutdown. Returns queue error or OPRT_TIMEOUT.
+ * Callers must obey the existing input init/deinit lifetime contract. */
+OPERATE_RET tuya_ai_input_stop_checked_s(CHAR_T *scode);
+#define tuya_ai_input_stop_checked() tuya_ai_input_stop_checked_s(tuya_ai_agent_get_scode(NULL))
 VOID tuya_ai_input_stop_s(CHAR_T *scode);
 #define tuya_ai_input_stop() tuya_ai_input_stop_s(tuya_ai_agent_get_scode(NULL))
 /**

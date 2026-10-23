@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "summary": "Preserve voice stop failures and correlate input stop completion",
+  "context": "QUALITY076 original false-success and nested command failures retained; local candidate only",
+  "next_steps": "Integrate provider acknowledgement and UI recovery, audit lifecycle, verify board before delivery",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Tuya command endpoint, stop-error propagation, input queue completion and candidate transaction helper",
+      "invariants": "Legacy void input API retained; no credentials or published artifacts changed; host evidence not physical acceptance",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-voice-stop-20261023.json",
+        "integrations/tuyaopen/protocol/ai_command_transaction.h",
+        "tests/architecture/fixtures/ai_command_transaction.c",
+        "tests/architecture/fixtures/tuya_command_template.c",
+        "tests/architecture/fixtures/tuya_stop_audio.py",
+        "tests/architecture/fixtures/tuya_stop_command.py",
+        "tests/architecture/fixtures/tuya_stop_exit.py",
+        "tests/architecture/fixtures/tuya_stop_input.py",
+        "tests/architecture/fixtures/tuya_stop_worker.py",
+        "tests/architecture/test_ai_command_transaction.py",
+        "tests/architecture/test_tuya_stop.py",
+        "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c",
+        "third_party/TuyaOpen/src/ai_components/ai_audio/src/ai_audio_player.c",
+        "third_party/TuyaOpen/src/tuya_ai_service/svc_ai_agent/include/tuya_ai_input.h",
+        "third_party/TuyaOpen/src/tuya_ai_service/svc_ai_agent/src/tuya_ai_input.c"
+      ],
+      "checks": [
+        {
+          "name": "Durable exact-function sanitizer regressions",
+          "status": "passed",
+          "scope": "Six suites: command parsing, audio errors, exit/enable, checked input, exact worker FIFO, standalone transaction",
+          "evidence": ".delivery/quality-review-20261023/assistant-input-stop/durable-tests-r2.log"
+        },
+        {
+          "name": "Fresh private A133 runtime compile/link",
+          "status": "passed",
+          "scope": "285 C compile lines, changed input byte join, three warnings retained",
+          "evidence": ".delivery/quality-review-20261023/assistant-runtime-build/result.json"
+        },
+        {
+          "name": "Full protocol and physical lifecycle",
+          "status": "not_run",
+          "scope": "Provider consumer, UI recovery, concurrent teardown, board microphone/audio and delivery",
+          "reason": "Runtime-side and host candidate only; next integration remains",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

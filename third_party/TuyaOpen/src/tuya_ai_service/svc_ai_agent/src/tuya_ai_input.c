@@ -44,7 +44,15 @@
 #define AI_INPUT_TASK_DELAY   (10)
 
 typedef struct {
+    AI_INPUT_STATE_E state;
+    UINT64_T request_id;
+} AI_INPUT_COMMAND_T;
+
+typedef struct {
     CHAR_T scode[AI_SOLUTION_CODE_LEN];
+    UINT64_T next_stop_id;
+    UINT64_T active_stop_id;
+    UINT64_T completed_stop_id;
     BOOL_T queue_sync;
     QUEUE_HANDLE queue;
     UINT32_T lazy_input;
@@ -101,7 +109,7 @@ STATIC AI_INPUT_SESSION_CTX_T* __ai_crt_sctx(CHAR_T *scode)
             if (scode) {
                 strncpy(ai_input_ctx.sctx[idx]->scode, scode, AI_SOLUTION_CODE_LEN);
             }
-            rt = tal_queue_create_init(&ai_input_ctx.sctx[idx]->queue, SIZEOF(AI_INPUT_STATE_E), 3);
+            rt = tal_queue_create_init(&ai_input_ctx.sctx[idx]->queue, SIZEOF(AI_INPUT_COMMAND_T), 3);
             if (rt != OPRT_OK) {
                 PR_ERR("create input queue failed");
                 Free(ai_input_ctx.sctx[idx]);
@@ -369,7 +377,8 @@ VOID tuya_ai_input_start_s(CHAR_T *scode, BOOL_T force)
     }
 
     sctx->queue_sync = FALSE;
-    rt = tal_queue_post(sctx->queue, &state, 0);
+    AI_INPUT_COMMAND_T command = {state, 0};
+    rt = tal_queue_post(sctx->queue, &command, 0);
     if (OPRT_OK != rt) {
         PR_ERR("queue post err, rt:%d", rt);
     } else {
@@ -378,37 +387,42 @@ VOID tuya_ai_input_start_s(CHAR_T *scode, BOOL_T force)
     return;
 }
 
-VOID tuya_ai_input_stop_s(CHAR_T *scode)
+OPERATE_RET tuya_ai_input_stop_checked_s(CHAR_T *scode)
 {
-    OPERATE_RET rt = OPRT_OK;
-    UINT_T cnt = 0;
-    if (!tuya_ai_agent_is_ready()) {
-        return;
-    }
-
+    OPERATE_RET rt;
+    UINT_T waited_ms = 0;
+    if (!ai_input_ctx.mutex) return OPRT_RESOURCE_NOT_READY;
     AI_INPUT_SESSION_CTX_T *sctx = __ai_get_sctx(scode);
-    if (sctx == NULL) {
-        return;
-    }
+    if (sctx == NULL) return OPRT_OK; /* No input session to stop. */
 
-    AI_INPUT_STATE_E state = AI_INPUT_STOPPING;
+    tal_mutex_lock(ai_input_ctx.mutex);
+    if (sctx->next_stop_id == (UINT64_T)-1) {
+        tal_mutex_unlock(ai_input_ctx.mutex);
+        return OPRT_RESOURCE_NOT_READY;
+    }
+    AI_INPUT_COMMAND_T command = {AI_INPUT_STOPPING, ++sctx->next_stop_id};
     sctx->lazy_input = 0;
     sctx->queue_sync = FALSE;
+    rt = tal_queue_post(sctx->queue, &command, 0);
+    tal_mutex_unlock(ai_input_ctx.mutex);
+    if (rt != OPRT_OK) return rt;
 
-    rt = tal_queue_post(sctx->queue, &state, 0);
-    if (OPRT_OK != rt) {
-        PR_ERR("queue post err, rt:%d", rt);
-    } else {
-        PR_DEBUG("ai input stop, state:%d", state);
-        while (!sctx->queue_sync) {
-            tal_system_sleep(100);
-            if (cnt++ >= 5) {
-                PR_ERR("ai input stop timeout, cnt:%d", cnt);
-                break;
-            }
-        }
+    for (;;) {
+        BOOL_T completed;
+        tal_mutex_lock(ai_input_ctx.mutex);
+        completed = sctx->completed_stop_id == command.request_id;
+        tal_mutex_unlock(ai_input_ctx.mutex);
+        if (completed) return OPRT_OK;
+        if (waited_ms >= 600) return OPRT_TIMEOUT;
+        tal_system_sleep(10);
+        waited_ms += 10;
     }
-    return;
+}
+
+VOID tuya_ai_input_stop_s(CHAR_T *scode)
+{
+    OPERATE_RET rt = tuya_ai_input_stop_checked_s(scode);
+    if (rt != OPRT_OK) PR_ERR("ai input stop failed: %d", rt);
 }
 
 VOID tuya_ai_input_deinit(VOID)
@@ -452,7 +466,15 @@ STATIC VOID __ai_input_thread(VOID* arg)
                 tal_mutex_unlock(ai_input_ctx.mutex);
                 need_unlock = FALSE;
                 queue_state = new_state = sctx.state;
-                if (tal_queue_fetch(sctx.queue, &queue_state, 0) == 0) {
+                AI_INPUT_COMMAND_T command = {queue_state, sctx.active_stop_id};
+                if (tal_queue_fetch(sctx.queue, &command, 0) == 0) {
+                    queue_state = command.state;
+                    sctx.active_stop_id = command.request_id;
+                    tal_mutex_lock(ai_input_ctx.mutex);
+                    if (ai_input_ctx.sctx[idx] != NULL) {
+                        ai_input_ctx.sctx[idx]->active_stop_id = command.request_id;
+                    }
+                    tal_mutex_unlock(ai_input_ctx.mutex);
                     PR_DEBUG("recv queue state %d, scode %s", queue_state, sctx.scode);
                 }
                 switch (queue_state) {
@@ -538,6 +560,7 @@ STATIC VOID __ai_input_thread(VOID* arg)
                     tal_mutex_lock(ai_input_ctx.mutex);
                     if (ai_input_ctx.sctx[idx] != NULL) {
                         tuya_ring_buff_reset(ai_input_ctx.sctx[idx]->ringbuf);
+                        ai_input_ctx.sctx[idx]->completed_stop_id = sctx.active_stop_id;
                         ai_input_ctx.sctx[idx]->state = AI_INPUT_IDLE;
                         ai_input_ctx.sctx[idx]->queue_sync = TRUE;
                     }

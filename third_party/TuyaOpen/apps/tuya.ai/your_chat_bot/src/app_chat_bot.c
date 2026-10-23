@@ -261,13 +261,16 @@ static void __main_ui_bridge_send_mode(AI_CHAT_MODE_E mode)
     __main_ui_bridge_send(payload);
 }
 
-static void __main_ui_break_chat(void)
+static OPERATE_RET __main_ui_break_chat(void)
 {
+    OPERATE_RET rt = OPRT_OK;
 #if defined(ENABLE_COMP_AI_AUDIO) && (ENABLE_COMP_AI_AUDIO == 1)
-    ai_audio_player_stop(AI_AUDIO_PLAYER_ALL);
-    tuya_ai_input_stop();
+    rt = ai_audio_player_stop(AI_AUDIO_PLAYER_ALL);
+    OPERATE_RET input_rt = tuya_ai_input_stop_checked();
+    if (rt == OPRT_OK) rt = input_rt;
 #endif
     tuya_ai_agent_event(AI_EVENT_CHAT_BREAK, 0);
+    return rt;
 }
 
 static OPERATE_RET __main_ui_handle_enter_free_chat(BOOL_T wake)
@@ -309,7 +312,12 @@ OPERATE_RET app_chat_bot_set_assistant_enabled(BOOL_T enabled)
         return OPRT_OK;
     }
 
-    __main_ui_break_chat();
+    rt = __main_ui_break_chat();
+    if (rt != OPRT_OK) {
+        PR_WARN("main ui audio stop failed: %d", rt);
+        __main_ui_bridge_send_state("error");
+        return rt;
+    }
     rt = ai_mode_switch(enabled ? AI_CHAT_MODE_WAKEUP : AI_CHAT_MODE_HOLD);
     if (OPRT_OK != rt) {
         PR_WARN("set assistant enabled=%d failed: %d", enabled, rt);
@@ -339,7 +347,12 @@ static OPERATE_RET __main_ui_handle_exit_free_chat(void)
 {
     OPERATE_RET rt;
 
-    __main_ui_break_chat();
+    rt = __main_ui_break_chat();
+    if (rt != OPRT_OK) {
+        PR_WARN("main ui audio stop failed: %d", rt);
+        __main_ui_bridge_send_state("error");
+        return rt;
+    }
     rt = ai_mode_switch(sg_assistant_enabled ? AI_CHAT_MODE_WAKEUP :
                                                 AI_CHAT_MODE_HOLD);
     if (rt != OPRT_OK) {
@@ -353,61 +366,64 @@ static OPERATE_RET __main_ui_handle_exit_free_chat(void)
     return OPRT_OK;
 }
 
-static BOOL_T __json_has_cmd(const char *json, const char *cmd)
+/* Command IDs are opaque bounded tokens, never arbitrary JSON fragments. */
+static BOOL_T __main_ui_request_id_valid(const char *id)
 {
-    char pattern[96];
-
-    if (NULL == json || NULL == cmd) {
-        return FALSE;
+    size_t n = 0;
+    if (!id || !id[0]) return FALSE;
+    for (; id[n]; n++) {
+        unsigned char c = (unsigned char)id[n];
+        if (n >= 64 || !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                         (c >= '0' && c <= '9') || c == '-' || c == '_')) return FALSE;
     }
-
-    snprintf(pattern, sizeof(pattern), "\"cmd\":\"%s\"", cmd);
-    if (strstr(json, pattern)) {
-        return TRUE;
-    }
-
-    snprintf(pattern, sizeof(pattern), "\"cmd\" : \"%s\"", cmd);
-    return strstr(json, pattern) ? TRUE : FALSE;
+    return TRUE;
 }
 
 static void __main_ui_cmd_handle(const char *json)
 {
-    cJSON *root;
-    cJSON *cmd;
+    cJSON *root = cJSON_ParseWithOpts(json, NULL, TRUE);
+    cJSON *cmd, *id, *item;
+    int command_count = 0, id_count = 0, wake_count = 0;
+    OPERATE_RET rt;
+    char response[256];
 
-    root = cJSON_Parse(json);
-    if (NULL == root) {
-        PR_WARN("main ui rejected malformed command");
-        return;
+    if (!cJSON_IsObject(root)) { cJSON_Delete(root); return; }
+    cJSON_ArrayForEach(item, root) {
+        if (item->string && strcmp(item->string, "cmd") == 0) command_count++;
+        if (item->string && strcmp(item->string, "request_id") == 0) id_count++;
+        if (item->string && strcmp(item->string, "wake") == 0) wake_count++;
     }
     cmd = cJSON_GetObjectItemCaseSensitive(root, "cmd");
-    if (cJSON_IsString(cmd) && strcmp(cmd->valuestring, "iot_state") == 0) {
-        OPERATE_RET rt = tuya_device_iot_state_update(json);
-        if (OPRT_OK != rt && OPRT_NOT_SUPPORTED != rt) {
-            PR_WARN("main ui IoT state update failed: %d", rt);
-        }
+    id = cJSON_GetObjectItemCaseSensitive(root, "request_id");
+    if (command_count != 1 || id_count > 1 || wake_count > 1 || !cJSON_IsString(cmd) ||
+        (id && (!cJSON_IsString(id) || !__main_ui_request_id_valid(id->valuestring)))) {
         cJSON_Delete(root);
         return;
     }
-
-    if (__json_has_cmd(json, "enter_free_chat")) {
-        cJSON *wake_item = cJSON_GetObjectItemCaseSensitive(root, "wake");
-        BOOL_T wake = cJSON_IsFalse(wake_item) ? FALSE : TRUE;
-
-        PR_NOTICE("main ui command: enter_free_chat wake=%d", wake);
-        __main_ui_handle_enter_free_chat(wake);
+    if (strcmp(cmd->valuestring, "iot_state") == 0) {
+        rt = tuya_device_iot_state_update(json);
+        if (OPRT_OK != rt && OPRT_NOT_SUPPORTED != rt) PR_WARN("main ui IoT state update failed: %d", rt);
         cJSON_Delete(root);
         return;
     }
-
-    if (__json_has_cmd(json, "exit_free_chat")) {
-        PR_NOTICE("main ui command: exit_free_chat");
-        __main_ui_handle_exit_free_chat();
+    if (strcmp(cmd->valuestring, "enter_free_chat") == 0) {
+        cJSON *wake = cJSON_GetObjectItemCaseSensitive(root, "wake");
+        if (wake && !cJSON_IsBool(wake)) { cJSON_Delete(root); return; }
+        rt = __main_ui_handle_enter_free_chat(cJSON_IsFalse(wake) ? FALSE : TRUE);
+    } else if (strcmp(cmd->valuestring, "exit_free_chat") == 0) {
+        rt = __main_ui_handle_exit_free_chat();
+    } else {
         cJSON_Delete(root);
         return;
     }
-
-    PR_WARN("main ui unknown command");
+    /* A result follows the operation, not merely receipt of the UDP packet.
+     * Old clients without IDs continue receiving the existing mode events. */
+    if (id) {
+        snprintf(response, sizeof(response),
+                 "{\"runtime\":\"tuya\",\"command_result\":\"%s\",\"request_id\":\"%s\",\"result\":%d}",
+                 cmd->valuestring, id->valuestring, (int)rt);
+        __main_ui_bridge_send(response);
+    }
     cJSON_Delete(root);
 }
 
