@@ -155,7 +155,7 @@ static void control_center_action_event(lv_event_t *event)
     }
 }
 
-static lv_obj_t *center_connection,*center_hdmi_detail,*center_notice,*center_error;
+static lv_obj_t *center_connection,*center_hdmi_detail,*center_notice,*center_error,*center_subtitle;
 static lv_obj_t *brightness_slider,*volume_slider,*brightness_value,*volume_value,*mute_switch,*mute_detail;
 static int volume_before_mute=40;
 static bool hdmi_actual,hdmi_known;
@@ -225,15 +225,22 @@ static void cc_controls_read(void)
   lv_label_set_text(mute_detail,value?tr("未开启","Off"):tr("已静音","Muted"));
  }else{lv_label_set_text(volume_value,tr("不可用","Unavailable"));lv_label_set_text(mute_detail,tr("不可用","Unavailable"));lv_obj_add_state(volume_slider,LV_STATE_DISABLED);lv_obj_add_state(mute_switch,LV_STATE_DISABLED);}
 }
+static void cc_error(const char *message)
+{
+ if(!center_error || !lv_obj_is_valid(center_error))return;
+ lv_label_set_text(center_error,message);
+ if(message[0]){lv_obj_clear_flag(center_error,LV_OBJ_FLAG_HIDDEN);lv_obj_add_flag(center_subtitle,LV_OBJ_FLAG_HIDDEN);}
+ else{lv_obj_add_flag(center_error,LV_OBJ_FLAG_HIDDEN);lv_obj_clear_flag(center_subtitle,LV_OBJ_FLAG_HIDDEN);}
+}
 static void cc_apply_control(bool brightness,int requested)
 {
  if(brightness && requested<20)requested=20;
  int actual=-1,rc=brightness?sys_backlight_set_percent(requested):sys_volume_set_percent(requested);
  if(rc==0)rc=brightness?sys_backlight_get_percent(&actual):sys_volume_get_percent(&actual);
- if(rc || actual<0 || actual>100){lv_label_set_text(center_error,tr("设置失败，请重试","Setting failed; please retry"));cc_controls_read();return;}
+ if(rc || actual<0 || actual>100){cc_error(tr("设置失败，请重试","Setting failed; please retry"));cc_controls_read();return;}
  if(brightness)sys_settings_get()->brightness=actual;else sys_settings_get()->volume=actual;
  int saved_rc=sys_settings_save_checked();
- lv_label_set_text(center_error,saved_rc?tr("已应用，保存失败；重启后可能恢复旧值","Applied, but saving failed; may reset after restart"):"");
+ cc_error(saved_rc?tr("已应用，保存未确认；请重试","Applied; save unconfirmed. Please retry."):"");
  cc_controls_read();
 }
 static void cc_slider_event(lv_event_t *e)
@@ -291,7 +298,7 @@ static void control_center_build(void)
  if(CONTROL_CENTER_HEIGHT < 572){lv_obj_add_flag(control_center_panel,LV_OBJ_FLAG_SCROLLABLE);lv_obj_set_scroll_dir(control_center_panel,LV_DIR_VER);}
  int w=CONTROL_CENTER_WIDTH,tw=(w-60)/2;
  cc_label(control_center_panel,ui_tr(UI_STR_CONTROL_CENTER),28,22,ui_font_h1(),HOME_TEXT);
- cc_label(control_center_panel,tr("常用设置，轻触即达","Everyday controls, one touch away"),28,66,ui_font_body_md(),HOME_TEXT_MUTED);
+ center_subtitle=cc_label(control_center_panel,tr("常用设置，轻触即达","Everyday controls, one touch away"),28,66,ui_font_body_md(),HOME_TEXT_MUTED);
  lv_obj_t *settings=cc_surface(control_center_panel,w-162,23,134,42);lv_obj_add_flag(settings,LV_OBJ_FLAG_CLICKABLE);
  lv_obj_set_style_bg_opa(settings,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(settings,0,0);
  cc_label(settings,LV_SYMBOL_SETTINGS,2,10,&lv_font_montserrat_24,HOME_TEXT);
@@ -323,7 +330,7 @@ static void control_center_build(void)
  cc_label(notice,LV_SYMBOL_BELL,27,25,&lv_font_montserrat_24,HOME_GREEN);
  center_notice=cc_label(notice,tr("通知    暂无本地通知","Notifications    No local notifications"),96,25,ui_font_body_lg(),HOME_TEXT_MUTED);
  lv_obj_set_size(center_notice,w-172,48);lv_obj_set_y(center_notice,14);lv_label_set_long_mode(center_notice,LV_LABEL_LONG_DOT);
- center_error=cc_label(control_center_panel,"",28,81,ui_font_body_md(),HOME_CORAL);lv_obj_set_width(center_error,w-56);lv_label_set_long_mode(center_error,LV_LABEL_LONG_DOT);
+ center_error=cc_label(control_center_panel,"",28,66,ui_font_body_md(),HOME_CORAL);lv_obj_set_width(center_error,w-56);lv_label_set_long_mode(center_error,LV_LABEL_LONG_DOT);lv_obj_add_flag(center_error,LV_OBJ_FLAG_HIDDEN);
  lv_obj_t *close=cc_surface(control_center_panel,w/2-60,572-37,120,32);lv_obj_add_flag(close,LV_OBJ_FLAG_CLICKABLE);lv_obj_set_style_border_width(close,0,0);lv_obj_set_style_bg_opa(close,LV_OPA_TRANSP,0);
  cc_label(close,tr("收起  ∧","Collapse  ^"),18,4,ui_font_body_md(),HOME_TEXT_MUTED);lv_obj_add_event_cb(close,cc_close,LV_EVENT_CLICKED,NULL);
  lv_obj_add_flag(control_center_overlay,LV_OBJ_FLAG_HIDDEN);
@@ -609,7 +616,7 @@ static void hdmi_pending_timeout_cb(lv_timer_t *timer)
     if (!hdmi_toggle_pending) return;
     hdmi_toggle_pending = false;
     hdmi_switch_sync(hdmi_known?hdmi_actual:false);
-    if(center_error && lv_obj_is_valid(center_error))lv_label_set_text(center_error,tr("HDMI 未响应，请检查连接","HDMI did not respond; check connection"));
+    if(center_error && lv_obj_is_valid(center_error))cc_error(tr("HDMI 未响应，请检查连接","HDMI did not respond; check connection"));
     cc_status();
 }
 
@@ -748,8 +755,8 @@ void hdmi_ui_handle_status(const hdmi_preview_status_t *status)
     if (hdmi_toggle_pending) {
         if (status->enabled == hdmi_toggle_target) {
             sys_settings_get()->hdmi_enabled=status->enabled;
-            if(sys_settings_save_checked()!=0 && center_error && lv_obj_is_valid(center_error))
-                lv_label_set_text(center_error,tr("HDMI 已切换，保存失败","HDMI changed; saving failed"));
+            int saved_rc=sys_settings_save_checked();
+            cc_error(saved_rc?tr("HDMI 已切换，保存失败","HDMI changed; saving failed"):"");
             hdmi_clear_pending();
             hdmi_switch_sync(status->enabled);
         }

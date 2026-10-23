@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Keep control-center failures readable and clear recovered HDMI error",
+  "context": "Injected save error overlaps first tile; successful retry retains timeout text",
+  "next_steps": "Wi-Fi/BT save failure paths and device tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Control-center error presentation and recovery",
+      "invariants": "No hardware or published image mutation",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-errors-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Native UI faults and recovery",
+          "status": "passed",
+          "scope": "Eight final language/theme/size behavior renders plus prior pointer coverage",
+          "evidence": ".delivery/quality-review-20261023/control-error-layout/final.log"
+        },
+        {
+          "name": "Physical acceptance",
+          "status": "not_run",
+          "scope": "Hardware save and HDMI behavior",
+          "reason": "Host injected status only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

@@ -625,7 +625,14 @@ static void test_center_pointer(void)
 
 static void test_center_controls(void)
 {
- int index=0;test_sliders(lv_layer_top(),&index);assert(index==2);
+ settings_save_error=-EIO;
+ int index=0;test_sliders(lv_layer_top(),&index);assert(index==2);pump();
+ lv_obj_t *error=find_label(lv_layer_top(),ui_i18n_is_zh()?"已应用，保存未确认；请重试":"Applied; save unconfirmed. Please retry.");assert(error);
+ lv_obj_t *wifi=find_label(lv_layer_top(),ui_tr(UI_STR_APP_WIFI));assert(wifi);
+ lv_area_t error_area,tile_area;lv_obj_get_coords(error,&error_area);lv_obj_get_coords(lv_obj_get_parent(wifi),&tile_area);
+ assert(error_area.y2 < tile_area.y1 && "control-center save error overlaps first tile");
+ lv_obj_t *subtitle=find_label(lv_layer_top(),ui_i18n_is_zh()?"常用设置，轻触即达":"Everyday controls, one touch away");assert(subtitle && lv_obj_has_flag(subtitle,LV_OBJ_FLAG_HIDDEN));
+ settings_save_error=0;index=0;test_sliders(lv_layer_top(),&index);pump();assert(!strcmp(lv_label_get_text(error),""));assert(lv_obj_has_flag(error,LV_OBJ_FLAG_HIDDEN) && !lv_obj_has_flag(subtitle,LV_OBJ_FLAG_HIDDEN));
  assert(settings.brightness==64 && settings.volume==37 && backlight==64 && volume==37);
  lv_obj_t *mute_name=find_label(lv_layer_top(),ui_i18n_is_zh()?"静音":"Mute");assert(mute_name);
  lv_obj_t *mute=lv_obj_get_child(lv_obj_get_parent(mute_name),-1);assert(lv_obj_check_type(mute,&lv_switch_class));
@@ -644,6 +651,14 @@ static void test_center_controls(void)
   lv_obj_add_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);lv_tick_inc(2600);pump();
   assert(saves==before+2 && !settings.hdmi_enabled && !lv_obj_has_state(sw,LV_STATE_CHECKED));
   assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 未响应，请检查连接":"HDMI did not respond; check connection"));
+  lv_obj_add_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);
+  status.enabled=true;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();
+  assert(!strcmp(lv_label_get_text(error),"") && lv_obj_has_flag(error,LV_OBJ_FLAG_HIDDEN));
+  assert(!lv_obj_has_flag(subtitle,LV_OBJ_FLAG_HIDDEN));
+  lv_obj_clear_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);
+  settings_save_error=-EIO;status.enabled=false;emit(TOPIC_HDMI_PREVIEW_STATUS,&status,sizeof(status));pump();
+  assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"HDMI 已切换，保存失败":"HDMI changed; saving failed"));
+  settings_save_error=0;
  }
  puts("PASS UI075 controls: sliders apply/read back/save on release; mute restores volume; HDMI request does not save before ACK; timeout does not report success");
 }
