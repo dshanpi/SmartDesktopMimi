@@ -183,6 +183,44 @@ static bool bool_field(json_object *object, const char *name)
         json_object_object_get_ex(object, name, &value) &&
         json_object_is_type(value, json_type_boolean) && json_object_get_boolean(value);
 }
+static bool status_field(json_object *object, const char *name, enum json_type type)
+{
+    json_object *value = NULL;
+    if (!json_object_object_get_ex(object, name, &value) ||
+        !json_object_is_type(value, type)) return false;
+    /* C labels and phase comparisons must not see a truncated JSON string. */
+    return type != json_type_string ||
+        strlen(json_object_get_string(value)) == (size_t)json_object_get_string_len(value);
+}
+static json_object *parse_status(const char *snapshot)
+{
+    struct json_tokener *tok = json_tokener_new();
+    if (!tok) return NULL;
+    json_tokener_set_flags(tok, JSON_TOKENER_STRICT);
+    json_object *state = json_tokener_parse_ex(tok, snapshot, (int)strlen(snapshot));
+    bool parsed = json_tokener_get_error(tok) == json_tokener_success;
+    json_tokener_free(tok);
+    json_object *candidate = NULL, *manifest = NULL;
+    if (!parsed || !state || !json_object_is_type(state, json_type_object)) goto invalid;
+    if (!status_field(state, "busy", json_type_boolean) ||
+        !status_field(state, "downloaded", json_type_boolean) ||
+        !status_field(state, "phase", json_type_string) ||
+        !status_field(state, "current_version", json_type_string) ||
+        !status_field(state, "channel", json_type_string) ||
+        !status_field(state, "error", json_type_string) ||
+        !json_object_object_get_ex(state, "candidate", &candidate)) goto invalid;
+    if (candidate && (!json_object_is_type(candidate, json_type_object) ||
+        !json_object_object_get_ex(candidate, "manifest", &manifest) ||
+        !manifest || !json_object_is_type(manifest, json_type_object) ||
+        !status_field(manifest, "version", json_type_string) ||
+        !*text_field(manifest, "version"))) goto invalid;
+    /* An archive without a candidate cannot identify what would be installed. */
+    if (bool_field(state, "downloaded") && !candidate) goto invalid;
+    return state;
+invalid:
+    if (state) json_object_put(state);
+    return NULL;
+}
 static bool can_cancel(json_object *state)
 {
     const char *phase = text_field(state, "phase");
@@ -198,7 +236,7 @@ static void refresh(lv_timer_t *unused)
     snprintf(request_error, sizeof(request_error), "%s", action_error);
     bool working = worker_busy;
     pthread_mutex_unlock(&lock);
-    json_object *state = json_tokener_parse(snapshot), *candidate = NULL, *manifest = NULL;
+    json_object *state = parse_status(snapshot), *candidate = NULL, *manifest = NULL;
     if (!state) {
         lv_label_set_text(status_label, ui_i18n_is_zh()
             ? "需要支持桌面更新的系统基线。\n更新服务尚未就绪，当前桌面保持运行。"

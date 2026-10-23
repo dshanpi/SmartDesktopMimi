@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Validate updater status before enabling actions",
+  "context": "25 original malformed-state UI decisions reproduced",
+  "next_steps": "Worker/UI lifecycle and small-screen layout; actual upgrades and full delivery remain open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Strict JSON UI state projection and recovery",
+      "invariants": "No service/device action; backend trust and compatibility unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/test_update_status.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-status-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Malformed and recovery",
+          "status": "passed",
+          "scope": "Actual refresh with rendering/poll stubs;28 invalid and7 valid cases",
+          "evidence": ".delivery/quality-review-20261023/update-status-schema/fixed.log"
+        },
+        {
+          "name": "Original failures retained",
+          "status": "passed",
+          "scope": "25 assertion failures before fix",
+          "evidence": ".delivery/quality-review-20261023/update-status-schema/original.log"
+        },
+        {
+          "name": "Device upgrades",
+          "status": "not_run",
+          "scope": "No actual updater request/install",
+          "reason": "Host state projection only",
+          "evidence": ".delivery/quality-review-20261023/update-status-schema/prerecord.json"
+        },
+        {
+          "name": "Real UI build and close",
+          "status": "passed",
+          "scope": "8 native LVGL renders and page close assertions; not physical or visual acceptance",
+          "evidence": ".delivery/quality-review-20261023/update-status-schema/render.log"
+        }
+      ]
+    }
+  ]
+}
