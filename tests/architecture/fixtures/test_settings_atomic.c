@@ -45,9 +45,9 @@ static void setup(char*dir,char*path){
 }
 static void failed_save(int mode){
  char dir[]="/tmp/mimi-save-atomic-XXXXXX",path[256];setup(dir,path);sys_settings_t before,after;read_record(path,&before);
- sys_settings_get()->brightness=42;fault=mode;assert(sys_settings_save_checked()<0);fault=0;read_record(path,&after);
+ sys_settings_get()->brightness=42;fault=mode;assert(sys_settings_save_checked()<0);assert(sys_settings_last_save_result()<0);fault=0;read_record(path,&after);
  if(mode==5){assert(after.brightness==42);assert(sys_settings_get()->brightness==42);}else assert(memcmp(&before,&after,sizeof(before))==0);
- assert(sys_settings_save_checked()==0);read_record(path,&after);assert(after.brightness==42 && after.volume==35);
+ assert(sys_settings_save_checked()==0);assert(sys_settings_last_save_result()==0);read_record(path,&after);assert(after.brightness==42 && after.volume==35);
  cleanup(dir);
 }
 static void interrupted_save(int mode){

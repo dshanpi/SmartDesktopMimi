@@ -60,5 +60,7 @@ void sys_settings_save(void);
  * All concurrent writers must use this sidecar-lock protocol; upgrade the
  * UI and backend together, without a legacy inode-lock writer running. */
 int sys_settings_save_checked(void);
+/* Last attempted save in this process; zero before the first attempt. */
+int sys_settings_last_save_result(void);
 
 #endif /* SETTINGS_H */

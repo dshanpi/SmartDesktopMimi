@@ -21,6 +21,45 @@ static bool settings_dirty = false;
 static lv_obj_t *schema_label = NULL;
 static bool setting_active;
 static bool rebuild_pending;
+static lv_obj_t *save_error_box;
+static void show_save_failure(void);
+static void save_feedback(int result)
+{
+    settings_dirty = result != 0;
+    if (settings_dirty) {
+        if (setting_active) show_save_failure();
+    } else if (save_error_box) {
+        lv_obj_del(save_error_box);
+        save_error_box = NULL;
+    }
+}
+static void retry_save_cb(lv_event_t *event)
+{
+    (void)event;
+    save_feedback(sys_settings_save_checked());
+}
+static void show_save_failure(void)
+{
+    if (save_error_box) return;
+    save_error_box = lv_msgbox_create(lv_layer_top());
+    lv_obj_set_width(save_error_box, lv_pct(85));
+    lv_obj_center(save_error_box);
+    lv_obj_t *title = lv_msgbox_add_title(save_error_box,
+        ui_i18n_is_zh() ? "保存未确认" : "Save not confirmed");
+    lv_obj_set_style_text_font(title, ui_font_h3(), 0);
+    lv_obj_t *text = lv_msgbox_add_text(save_error_box, ui_i18n_is_zh() ?
+        "设置已临时生效，但尚未确认保存。请重试。" :
+        "Your changes are active, but saving is not confirmed. Please retry.");
+    lv_obj_set_style_text_font(text, ui_font_body_md(), 0);
+    lv_obj_t *retry = lv_msgbox_add_footer_button(save_error_box,
+        ui_i18n_is_zh() ? "重试保存" : "Retry save");
+    mimi_ui_button_style(retry, true);
+    lv_obj_set_size(retry, 180, 48);
+    lv_obj_set_height(lv_msgbox_get_footer(save_error_box), 68);
+    lv_obj_set_style_text_font(retry, ui_font_body_md(), 0);
+    lv_obj_add_event_cb(retry, retry_save_cb, LV_EVENT_CLICKED, NULL);
+}
+
 
 static void make_transparent(lv_obj_t *obj)
 {
@@ -88,8 +127,7 @@ static void brightness_slider_cb(lv_event_t *e)
     if (code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
         sys_settings_t *settings = sys_settings_get();
         settings->brightness = value;
-        sys_settings_save();
-        settings_dirty = false;
+        save_feedback(sys_settings_save_checked());
     }
 }
 
@@ -113,8 +151,7 @@ static void volume_slider_cb(lv_event_t *e)
     if (code == LV_EVENT_RELEASED || code == LV_EVENT_PRESS_LOST) {
         sys_settings_t *settings = sys_settings_get();
         settings->volume = value;
-        sys_settings_save();
-        settings_dirty = false;
+        save_feedback(sys_settings_save_checked());
     }
 }
 
@@ -154,6 +191,7 @@ static void color_event_cb(lv_event_t *e)
     printf("Gradient preset clicked: %u (follow-time off)\n",
            (unsigned)*preset_id_ptr);
     ui_theme_set_gradient_preset(*preset_id_ptr);
+    save_feedback(sys_settings_last_save_result());
     ui_clock_apply_theme();
 
     lv_obj_t *cont = lv_obj_get_parent(dot);
@@ -181,6 +219,7 @@ static void follow_time_switch_cb(lv_event_t *e)
     bool on = lv_obj_has_state(sw, LV_STATE_CHECKED);
     printf("Theme follow-time: %s\n", on ? "on" : "off");
     ui_theme_set_follow_time(on);
+    save_feedback(sys_settings_last_save_result());
     if (on) {
         ui_clock_apply_theme();
         schedule_rebuild();
@@ -193,6 +232,7 @@ static void locale_mode_cb(lv_event_t *e)
     sys_locale_mode_t mode = (sys_locale_mode_t)(intptr_t)
                              lv_event_get_user_data(e);
     ui_i18n_set_mode(mode);
+    save_feedback(sys_settings_last_save_result());
     ui_rebuild_home();
     schedule_rebuild();
 }
@@ -203,6 +243,7 @@ static void appearance_mode_cb(lv_event_t *e)
     sys_appearance_mode_t mode = (sys_appearance_mode_t)(intptr_t)
                                  lv_event_get_user_data(e);
     ui_theme_set_appearance(mode);
+    save_feedback(sys_settings_last_save_result());
     ui_rebuild_home();
     schedule_rebuild();
 }
@@ -336,6 +377,7 @@ static lv_obj_t *create_info_row(lv_obj_t *parent, const char *key,
 static void setting_init(void)
 {
     setting_active = true;
+    if (save_error_box) { lv_obj_del(save_error_box); save_error_box = NULL; }
     /* Rebuilds replace the widgets, not their middleware subscriptions. */
     mw_unsubscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
     lv_obj_t *scr = lv_obj_create(NULL);
@@ -428,18 +470,19 @@ static void setting_init(void)
     ai_cmd_t cmd = {.action = AI_CMD_GET_STATUS};
     mw_publish(TOPIC_AI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
     lv_scr_load(scr);
+    if (settings_dirty) show_save_failure();
 }
 
 static void setting_close(void)
 {
     setting_active = false;
+    if (save_error_box) { lv_obj_del(save_error_box); save_error_box = NULL; }
     if (rebuild_pending) lv_async_call_cancel(setting_rebuild_async, NULL);
     rebuild_pending = false;
     schema_label = NULL;
     mw_unsubscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
     if (settings_dirty) {
-        sys_settings_save();
-        settings_dirty = false;
+        save_feedback(sys_settings_save_checked());
     }
 }
 

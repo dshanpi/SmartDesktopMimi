@@ -113,8 +113,10 @@ static void cleanup_review_layout(void) {
 static sys_settings_t settings = {.brightness=78,.volume=50,.wifi_enabled=true,.theme_preset_id=0};
 sys_settings_t *sys_settings_get(void) {return &settings;}
 static int saves, backlight=20, volume=40;
-void sys_settings_save(void) {saves++;}
-int sys_settings_save_checked(void) {saves++;return 0;}
+static int settings_save_error, settings_last_save;
+void sys_settings_save(void) {saves++;settings_last_save=settings_save_error;}
+int sys_settings_save_checked(void) {saves++;settings_last_save=settings_save_error;return settings_last_save;}
+int sys_settings_last_save_result(void) {return settings_last_save;}
 int sys_backlight_get_percent(int *p) {*p=backlight;return 0;}
 int sys_volume_get_percent(int *p) {*p=volume;return 0;}
 int sys_backlight_set_percent(int p) {backlight=p;return 0;}
@@ -206,15 +208,30 @@ static void test_sliders(lv_obj_t *root, int *index) {
  for(uint32_t i=0;i<lv_obj_get_child_count(root);i++)test_sliders(lv_obj_get_child(root,i),index);
 }
 static void pump(void) {lv_tick_inc(40);lv_timer_handler();}
-static void test_settings(void) {
+static void test_settings(const char *image) {
+ settings_save_error=-EIO;int fault_index=0;test_sliders(lv_scr_act(),&fault_index);pump();
+ const char *retry_text=ui_i18n_is_zh()?"重试保存":"Retry save";
+ lv_obj_t *retry=find_label(lv_layer_top(),retry_text);assert(retry);
+ assert(lv_obj_get_height(lv_obj_get_parent(retry))>=48);
+ char failure_image[1024];snprintf(failure_image,sizeof(failure_image),"%s.save-error.ppm",image);save(failure_image);
+ int attempts=saves;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(saves==attempts+1 && find_label(lv_layer_top(),retry_text));
+ settings_save_error=0;retry=find_label(lv_layer_top(),retry_text);lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(!find_label(lv_layer_top(),retry_text));
+
  int index=0;test_sliders(lv_scr_act(),&index);
  assert(index==2 && settings.brightness==64 && settings.volume==37 && backlight==64 && volume==37);
+ ui_i18n_set_mode(SYS_LOCALE_ZH_CN);app_setting.init();pump();settings_save_error=-EIO;attempts=saves;
  lv_obj_t *english=find_label(lv_scr_act(),"English");assert(english);
  lv_obj_send_event(lv_obj_get_parent(english),LV_EVENT_CLICKED,NULL);pump();pump();
- assert(!ui_i18n_is_zh());
+ assert(!ui_i18n_is_zh());assert(saves==attempts+1);
+ retry=find_label(lv_layer_top(),"Retry save");assert(retry && find_label(lv_layer_top(),"Save not confirmed"));
+ settings_save_error=0;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(!find_label(lv_layer_top(),"Retry save"));
+ settings_save_error=-EIO;attempts=saves;
  lv_obj_t *dark=find_label(lv_scr_act(),"Dark");assert(dark);
  lv_obj_send_event(lv_obj_get_parent(dark),LV_EVENT_CLICKED,NULL);pump();pump();
- assert(ui_theme_is_dark());
+ assert(ui_theme_is_dark());assert(saves==attempts+1);
+ retry=find_label(lv_layer_top(),"Retry save");assert(retry);
+ char dark_error[1024];snprintf(dark_error,sizeof(dark_error),"%s.dark-save-error.ppm",image);save(dark_error);
+ settings_save_error=0;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(!find_label(lv_layer_top(),"Retry save"));
  for(int t=0;t<TOPIC_MAX;t++){
   int count=0;for(int i=0;i<10;i++)if(callbacks[t][i])count++;
   assert(count <= (t==TOPIC_CLOUD_STATUS ? 2 : 1));
@@ -224,7 +241,10 @@ static void test_settings(void) {
  lv_obj_send_event(lv_obj_get_parent(english),LV_EVENT_CLICKED,NULL);
  app_setting.close();lv_obj_t *last=lv_scr_act();pump();pump();assert(lv_scr_act()==last);
  assert(callbacks[TOPIC_AI_STATUS][0]==NULL);
- puts("PASS settings: live sliders, release persistence, locale/theme rebuild, subscriptions, close cancellation");
+ app_setting.init();settings_save_error=-EIO;fault_index=0;test_sliders(lv_scr_act(),&fault_index);pump();assert(find_label(lv_layer_top(),"Retry save"));
+ app_setting.close();assert(!find_label(lv_layer_top(),"Retry save"));app_setting.init();pump();retry=find_label(lv_layer_top(),"Retry save");assert(retry);
+ settings_save_error=0;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(!find_label(lv_layer_top(),"Retry save"));app_setting.close();
+ puts("PASS settings: save failure/retry/reopen plus sliders, locale/theme rebuild, subscriptions and close cancellation");
 }
 static void test_password(void) {
  lv_obj_update_layout(password_modal);
@@ -1248,7 +1268,7 @@ int main(int argc,char**argv) {
   assert(lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));
   puts("PASS OTA: download cancel routes correctly; installation disables cancellation");
  }
- if(!strcmp(argv[1],"settings"))test_settings();
+ if(!strcmp(argv[1],"settings"))test_settings(argv[4]);
  if(!strcmp(argv[1],"password"))test_password();
  if(!strcmp(argv[1],"lockscreen"))test_lockscreen();
  if(!strcmp(argv[1],"home")){

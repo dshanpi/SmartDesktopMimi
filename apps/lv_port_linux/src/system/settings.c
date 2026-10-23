@@ -467,7 +467,7 @@ static void merge_local_settings_changes(sys_settings_t *target,
 #undef MERGE_CHANGED_FIELD
 }
 
-int sys_settings_save_checked(void) {
+static int save_settings_record(void) {
     int result = -1, lock_fd = -1, old_fd = -1, temp_fd = -1, dir_fd = -1;
     char path[256], lock_path[272], temp_path[272], directory[256];
     sys_settings_t desired = current_settings, merged = desired, disk;
@@ -538,4 +538,10 @@ done:
     return result;
 }
 
+static int last_save_result;
+int sys_settings_last_save_result(void) { return last_save_result; }
+int sys_settings_save_checked(void) {
+    last_save_result = save_settings_record();
+    return last_save_result;
+}
 void sys_settings_save(void) { (void)sys_settings_save_checked(); }
