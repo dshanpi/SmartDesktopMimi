@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Actual A133 updater production install fixture",
+  "context": "Integrate journal admission fixes into target binary and package byte checks",
+  "next_steps": "Remaining business recovery and physical/source gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Target updater build and host production install",
+      "invariants": "Original failure preserved; no trust or board change; synthetic ancillary scope explicit",
+      "paths": [
+        "tests/update/test_product_edition.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-updater-a133-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Build and install",
+          "status": "passed",
+          "scope": "AArch64 artifact and both edition host install",
+          "reason": "Exact bytes/modes verified",
+          "evidence": ".delivery/quality-review-20261023/updater-a133-integration/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133 execution/rollback/power",
+          "reason": "Host only",
+          "evidence": ".delivery/quality-review-20261023/updater-a133-integration/result.json"
+        }
+      ]
+    }
+  ]
+}

@@ -243,12 +243,15 @@ class ProductEditionTests(unittest.TestCase):
                     entry.chmod(0o755 if entry.is_dir() else (0o444 if entry == marker else 0o644))
                 embedded_updater = factory_root / 'usr/bin/mimi-update'
                 embedded_updater.parent.mkdir(parents=True)
-                shutil.copy2('/bin/true', embedded_updater)
+                updater_fixture = Path(os.environ.get('MIMI_EDITION_UPDATER_FIXTURE', '/bin/true')).resolve()
+                self.assertTrue(updater_fixture.is_file(), str(updater_fixture))
+                shutil.copy2(updater_fixture, embedded_updater)
+                embedded_updater.chmod(0o755)
                 baseline.write(prepared / 'baseline-lock.json', dict(schema_version=1, policy='MIMI-UPDATE-001/1.0.0',
                                factory_commit='a'*40, factory_version='1.0.0-test', factory_package_sha256='b'*64,
                                files=baseline.inventory(factory_root)))
                 updater = product / 'build/mimi-update/mimi-update';updater.parent.mkdir()
-                shutil.copy2('/bin/true', updater)
+                shutil.copy2(updater_fixture, updater)
                 with (top / 'rules.mk').open('a') as macros:macros.write('CP:=cp -fpR\n')
                 sealed_suite = root / 'sealed-suite'
                 suite_recipe = root / 'sealed-suite.mk'
@@ -263,6 +266,10 @@ class ProductEditionTests(unittest.TestCase):
                 result = subprocess.run(['make', '--no-print-directory', '-f', str(updater_recipe), 'all'],
                                         cwd=ROOT / 'packaging/aitvbox-mimi-update', capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                installed_updater = updater_stage / 'usr/bin/mimi-update'
+                self.assertFalse(installed_updater.is_symlink())
+                self.assertEqual(installed_updater.read_bytes(), updater_fixture.read_bytes())
+                self.assertTrue(installed_updater.stat().st_mode & 0o111)
                 payload = lambda tree: {p.relative_to(tree).as_posix() for p in tree.rglob('*') if p.is_file() or p.is_symlink()}
                 self.assertEqual(payload(sealed_suite) & payload(updater_stage), set(), 'opkg package file ownership collision')
                 platform_stage = root / 'platform-package'
