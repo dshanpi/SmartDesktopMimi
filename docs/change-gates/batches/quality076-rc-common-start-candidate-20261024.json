@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate isolated rc.common startup failure propagation",
+  "context": "Exact SDK rc.common swallowed callback errors and submitted empty service",
+  "next_steps": "Audit other service callback conventions before standard overlay integration; actual runtime pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Isolated selected SDK script and current init adapters",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-rc-common-start-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Isolated startup propagation",
+          "status": "passed",
+          "scope": "4boundary and6actualinit hostadapter cases; SDK unchanged",
+          "evidence": ".delivery/quality-review-20261023/rc-common-start-candidate/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/rc-common-start-candidate/result.json"
+        }
+      ]
+    }
+  ]
+}
