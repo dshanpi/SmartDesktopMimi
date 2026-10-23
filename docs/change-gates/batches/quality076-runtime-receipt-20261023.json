@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Bind voice runtime changes into existing build receipt",
+  "context": "Original staged input mutation passed pairing-only verifier; failure retained",
+  "next_steps": "Provider ACK/UI integration and remaining full source/physical gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Six named runtime input hashes checked before build record and program collection",
+      "invariants": "Old receipts rejected; published versions untouched; selected inputs not full provenance",
+      "paths": [
+        "scripts/tuya_pairing_sources.py",
+        "tests/update/test_tuya_pairing_sources.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-runtime-receipt-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Mutation refusal and edition guards",
+          "status": "passed",
+          "scope": "7 receipt tests including12 runtime mutation subcases; adjacent6 passed1 skipped",
+          "evidence": ".delivery/quality-review-20261023/assistant-runtime-receipt/tests.log"
+        },
+        {
+          "name": "Fresh public/private compile and actual collection",
+          "status": "passed",
+          "scope": "New isolated normal builds and actual provider/runtime collection checks",
+          "evidence": ".delivery/quality-review-20261023/assistant-runtime-receipt/collection-result.json"
+        },
+        {
+          "name": "Complete source provenance and physical delivery",
+          "status": "not_run",
+          "scope": "Unlisted transitive inputs and real device/product acceptance",
+          "reason": "Selected runtime receipt change only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

@@ -91,6 +91,22 @@ class TuyaPairingSelectionTests(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         t.verify(str(build), 'public')
 
+    def test_runtime_inputs_cannot_change_after_stage(self):
+        for name in t.RUNTIME_INPUTS:
+            for location in ('product', 'staged'):
+                with self.subTest(name=name, location=location), tempfile.TemporaryDirectory() as directory:
+                    product, build, _, _ = self.fixture(Path(directory).resolve())
+                    with patch.object(t, 'ROOT', product):
+                        t.stage(str(build), 'public')
+                        target = (product / 'third_party/TuyaOpen' / name
+                                  if location == 'product' else build / name)
+                        target.write_bytes(target.read_bytes() + b'/* altered runtime */')
+                        with self.assertRaises(ValueError):
+                            t.verify(str(build), 'public')
+                        with self.assertRaises(ValueError):
+                            t.record(str(build), 'public')
+                        self.assertFalse((build / '.mimi-pairing/build-result.json').exists())
+
     def test_changed_private_or_unguarded_main_cannot_stage(self):
         for changed in ('lock', 'runtime', 'main'):
             with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:

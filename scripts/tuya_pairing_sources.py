@@ -12,6 +12,17 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = 'apps/tuya.ai/your_chat_bot/'
 RECEIPT = '.mimi-pairing/sources.json'
 ABI_SHA = '14775e0d9a1a06ce60946c89dc024e8379c08ff28149009400d58139b5bfe1e4'
+# Bind the runtime stop/command candidate as well as the edition adapter.
+# This selected-input receipt is not a complete compiler/SDK provenance lock.
+RUNTIME_INPUTS = (
+    APP + 'src/app_chat_bot.c',
+    'src/ai_components/ai_audio/src/ai_audio_player.c',
+    'src/tuya_ai_service/svc_ai_agent/src/tuya_ai_input.c',
+    'src/tuya_ai_service/svc_ai_agent/include/tuya_ai_input.h',
+    'src/libcjson/cJSON/cJSON.c',
+    'src/libcjson/cJSON/cJSON.h',
+)
+
 
 
 def selection(profile, private_value=None):
@@ -54,6 +65,7 @@ def selection(profile, private_value=None):
         APP + 'build_a133.sh': ROOT / 'integrations/tuyaopen/build_a133.sh',
         APP + 'config/A133_B6.config': ROOT / 'integrations/tuyaopen/config/A133_B6.config',
     }
+    selected.update({name: ROOT / 'third_party/TuyaOpen' / name for name in RUNTIME_INPUTS})
     for source in selected.values():
         if source.resolve() != source or not source.is_file():
             raise ValueError('missing or aliased pairing input')
