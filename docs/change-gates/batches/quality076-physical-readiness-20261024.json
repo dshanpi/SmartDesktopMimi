@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Record failed board access and passive SDIO timeout evidence",
+  "context": "Read-only readiness before candidate acceptance",
+  "next_steps": "Exact SDIO source/access diagnosis; no blind powercycle",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Pinned SSH and bound passive serial readiness",
+      "invariants": "No board writes/deployment; private raw retained; no causal overclaim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-physical-readiness-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "SSH",
+          "status": "failed",
+          "scope": "banner handshake",
+          "reason": "EOF before authentication",
+          "evidence": ".delivery/quality-review-20261023/physical-readiness-20261024/result.json"
+        },
+        {
+          "name": "Serial evidence",
+          "status": "passed",
+          "scope": "bound passive read only",
+          "reason": "690controller timeout records captured",
+          "evidence": ".delivery/quality-review-20261023/physical-readiness-20261024/result.json"
+        },
+        {
+          "name": "Acceptance",
+          "status": "not_run",
+          "scope": "candidate device tests",
+          "reason": "access/current state not established",
+          "evidence": ".delivery/quality-review-20261023/physical-readiness-20261024/result.json"
+        }
+      ]
+    }
+  ]
+}
