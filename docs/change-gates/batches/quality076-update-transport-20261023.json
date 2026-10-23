@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Bound desktop updater requests against slow or stalled service",
+  "context": "QUALITY076 lifecycle review; original slow-trickle failure retained",
+  "next_steps": "Review framing and UI state transitions; physical validation later",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Unix request whole-operation timeout",
+      "invariants": "No GUI-thread sockets; no installer policy or published artifact changes",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/test_update_transport.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-transport-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Real Unix socket fixture and prior field regressions",
+          "status": "passed",
+          "scope": "5 transport scenarios plus12 helper cases; exact production request with test-only socket path",
+          "evidence": ".delivery/quality-review-20261023/update-transport/regression.log"
+        },
+        {
+          "name": "Complete physical updater acceptance",
+          "status": "not_run",
+          "scope": "Hardware installation/rollback and other unreviewed protocol paths",
+          "reason": "Host transport scope only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

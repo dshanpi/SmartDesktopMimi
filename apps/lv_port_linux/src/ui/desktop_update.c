@@ -2,6 +2,8 @@
 #include "mimi_ui.h"
 #include "ui_fonts.h"
 #include <errno.h>
+#include <poll.h>
+#include <time.h>
 #include <json-c/json.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -22,29 +24,59 @@ static lv_obj_t *overlay, *status_label, *buttons[4];
 static lv_timer_t *timer;
 static const char *operations[] = {"check", "download", "install", "cancel"};
 
+/* One deadline spans connect, send and every receive, including slow peers. */
+static long long request_now_ms(void)
+{
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return -1;
+    return (long long)now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
+static int request_wait(int fd, short events, long long deadline)
+{
+    for (;;) {
+        long long now = request_now_ms();
+        if (now < 0 || now >= deadline) return -1;
+        struct pollfd pending = {.fd = fd, .events = events};
+        int rc = poll(&pending, 1, (int)(deadline - now));
+        if (rc > 0) return (pending.revents & POLLNVAL) ? -1 : 0;
+        if (rc == 0 || errno != EINTR) return -1;
+    }
+}
+
 static int request(const char *op, char *out, size_t cap)
 {
-    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    long long started = request_now_ms();
+    if (started < 0) return -1;
+    long long deadline = started + 3000;
+    int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
     if (fd < 0) return -1;
-    struct timeval timeout = {.tv_sec = 1};
-    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
     struct sockaddr_un address = {.sun_family = AF_UNIX};
     snprintf(address.sun_path, sizeof(address.sun_path), "/run/smartdesktopmimi/update.sock");
-    if (connect(fd, (struct sockaddr *)&address, sizeof(address)) < 0) { close(fd); return -1; }
+    if (connect(fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        int error = 0;
+        socklen_t length = sizeof(error);
+        if (errno != EINPROGRESS || request_wait(fd, POLLOUT, deadline) < 0 ||
+            getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &length) < 0 || error) {
+            close(fd); return -1;
+        }
+    }
     char header[192];
     int size = snprintf(header, sizeof(header), "%s /%s HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Length: 0\r\n\r\n",
                         strcmp(op, "status") == 0 ? "GET" : "POST", op);
     size_t sent = 0;
     while (sent < (size_t)size) {
+        if (request_wait(fd, POLLOUT, deadline) < 0) { close(fd); return -1; }
         ssize_t n = send(fd, header + sent, (size_t)size - sent, MSG_NOSIGNAL);
+        if (n < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
         if (n <= 0) { close(fd); return -1; }
         sent += (size_t)n;
     }
     size_t used = 0;
     while (used + 1 < cap) {
+        if (request_wait(fd, POLLIN, deadline) < 0) { close(fd); return -1; }
         ssize_t n = recv(fd, out + used, cap - used - 1, 0);
         if (n == 0) break;
+        if (n < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
         if (n < 0) { close(fd); return -1; }
         used += (size_t)n;
     }
