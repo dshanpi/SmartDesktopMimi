@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Compile current UI with v7 provider and enforce host declaration checks",
+  "context": "A133 strict compile found missing BT UI helper declaration",
+  "next_steps": "Align legacy implementation test source selection and complete remaining matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "UI header fix, native strict compile, latest program collection",
+      "invariants": "Preserve failed build and physical/source limitations",
+      "paths": [
+        "apps/lv_port_linux/src/apps/bt/bt_app.c",
+        "scripts/render_ui_review.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-v7-integration-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Current A133 UI and program install",
+          "status": "passed",
+          "scope": "675-unit ownership and6 actual program fixture tests after failed compile correction",
+          "evidence": ".delivery/quality-review-20261023/ui-v7-integration/install-tests.log"
+        },
+        {
+          "name": "Strict host render regressions",
+          "status": "passed",
+          "scope": "32 cases, declaration errors fatal",
+          "evidence": ".delivery/quality-review-20261023/ui-v7-integration/strict-host.log"
+        },
+        {
+          "name": "Complete system/device",
+          "status": "not_run",
+          "scope": "Whole image, physical touch/power/stability",
+          "reason": "Program integration only; full image space gate not met",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

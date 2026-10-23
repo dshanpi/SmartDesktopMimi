@@ -18,6 +18,7 @@
 #include "../../middleware/middleware.h"
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
+#include "../../ui/mimi_ui.h"
 #include "../../ui/ui_fonts.h"
 #include "../../ui/ui_i18n.h"
 #include <stdio.h>

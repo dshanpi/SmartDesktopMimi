@@ -72,14 +72,14 @@ def main():
         def compile_one(source):
             obj = build / (source.parent.name + '_' + source.stem + '.o')
             dep = obj.with_suffix('.d')
-            dependencies = [source, config_path]
+            dependencies = [source, config_path, Path(__file__)]
             if dep.exists():
                 dependencies += [Path(p) for p in shlex.split(
                     dep.read_text().replace('\\\n', ' ').split(':', 1)[1])]
             if (not obj.exists() or not dep.exists() or any(
                     not p.exists() or p.stat().st_mtime > obj.stat().st_mtime
                     for p in dependencies)):
-                run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
+                run(['gcc', '-O1', '-g', '-Werror=implicit-function-declaration', '-ffunction-sections', '-fdata-sections',
                      f'-DLV_CONF_PATH="{config_path}"', f'-I{APP}', f'-I{APP / "lvgl"}',
                      '-DMIMI_ENABLE_VOICE_CONTROL=1', *capability_flags, '-MMD', '-MF', dep, '-c', source, '-o', obj], log)
             return obj
@@ -89,7 +89,7 @@ def main():
         run(['g++', '-Wl,--gc-sections', '-Wl,--wrap=fopen', '-Wl,--wrap=time', '-Wl,--wrap=lv_timer_create', '-Wl,--wrap=mimi_iot_configuration_present', '-Wl,--wrap=connect', '-Wl,--wrap=mimi_iot_request', '-Wl,--wrap=lv_lottie_set_src_file', *objects,
              build / 'lvgl/lib/liblvgl.a', '-lm', '-lpthread', '-ljson-c', '-lcurl', '-o', build / 'review'], log)
         manager_fixture = build / 'review_manager_fixture.o'
-        run(['gcc', '-O1', '-g', '-ffunction-sections', '-fdata-sections',
+        run(['gcc', '-O1', '-g', '-Werror=implicit-function-declaration', '-ffunction-sections', '-fdata-sections',
              '-DREVIEW_REAL_APP_MANAGER', '-DMIMI_ENABLE_VOICE_CONTROL=1', *capability_flags, f'-DLV_CONF_PATH="{config_path}"',
              f'-I{APP}', f'-I{APP / "lvgl"}', '-c', sources[0], '-o', manager_fixture], log)
         manager = compile_one(APP / 'src/system/app_manager.c')
