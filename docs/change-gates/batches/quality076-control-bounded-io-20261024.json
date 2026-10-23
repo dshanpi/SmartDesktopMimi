@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate bounded control socket IO candidate",
+  "context": "Incomplete local clients block graceful service stop",
+  "next_steps": "Full provider regression and SDK promotion with artifact pins",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private actual source host candidate",
+      "invariants": "Regular-file writes unchanged; no SDK or device mutation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-bounded-io-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Five process scenarios and two socket boundaries",
+          "status": "passed",
+          "scope": "Host candidate only",
+          "evidence": ".delivery/quality-review-20261023/control-stop-client/candidate-result.json"
+        },
+        {
+          "name": "Integration and board",
+          "status": "not_run",
+          "scope": "Selected SDK artifact and physical runtime",
+          "reason": "Private candidate awaits wider regression and source promotion",
+          "evidence": ".delivery/quality-review-20261023/control-stop-client/candidate-prerecord.json"
+        }
+      ]
+    }
+  ]
+}
