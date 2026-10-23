@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Select v7 backend reset and persistence fixes",
+  "context": "v6 enables HDMI on reset and drops failed flush state",
+  "next_steps": "Rebuild latest UI and complete device/system gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "application selected input integration",
+      "invariants": "Old v6 retained; no credentials or unqualified sdk-inputs",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "scripts/build_a133_provider.py",
+        "scripts/check_product_edition.py",
+        "tests/update/test_product_edition.py",
+        "tests/update/test_product_provider.py",
+        "tests/architecture/fixtures/backend_settings_head.c",
+        "tests/architecture/fixtures/backend_settings_tail.c",
+        "tests/architecture/test_backend_settings_recovery.py",
+        "docs/change-gates/batches/quality076-provider-v7-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Normal entries and install gate",
+          "status": "passed",
+          "scope": "Two profiles and existing verified shared-writer UI, not latest full UI",
+          "evidence": ".delivery/quality-review-20261023/backend-provider-v7/install-tests.log"
+        },
+        {
+          "name": "Physical and full delivery",
+          "status": "not_run",
+          "scope": "Device and complete candidate system",
+          "reason": "Host/build integration only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
