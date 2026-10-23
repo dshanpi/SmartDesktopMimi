@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Start comprehensive quality goal and record first baseline",
+  "context": "User requested all functionality/business/UI review",
+  "next_steps": "Resolve source entry for two skipped checks; full-size visual review and targeted state coverage",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Inventory and host baseline only",
+      "invariants": "Preserve released baseline, private evidence and separate physical acceptance",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-baseline-20261023.json",
+        "apps/lv_port_linux/src/apps/bt/bt_app.c"
+      ],
+      "checks": [
+        {
+          "name": "Architecture and rendered baseline",
+          "status": "passed",
+          "scope": "96 tests passed;32 renders;2 tests explicitly skipped",
+          "evidence": ".delivery/quality-review-20261023/first-batch-result.json"
+        },
+        {
+          "name": "Complete UI and device acceptance",
+          "status": "not_run",
+          "scope": "All workflows and physical interaction",
+          "reason": "Followup required; baseline does not close goal",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        },
+        {
+          "name": "Bluetooth disconnected guidance and provider follow-up",
+          "status": "passed",
+          "scope": "2 fixed-SDK host checks;16 rendered UI states, not physical acceptance",
+          "evidence": ".delivery/quality-review-20261023/bt-render.log"
+        }
+      ]
+    }
+  ]
+}

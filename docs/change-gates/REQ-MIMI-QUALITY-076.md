@@ -1,0 +1,30 @@
+# REQ-MIMI-QUALITY-076 Full product quality review
+
+User requested end-to-end review and optimization on 2026-10-23. Baseline public39eadb9/private dbcb5f1/SDK31a5653. Published rc31/rc8 remain immutable references. Existing incomplete acceptance is retained.
+
+For every area: entry/navigation, normal operation, empty/unavailable, timeout/error, retry/cancel, leave/re-enter, restart/persistence, concurrency/ownership, security/data boundary. UI checks include real rendering, language/theme, clipping, touch targets, feedback, focus and destructive actions. Retain user-approved home and assistant design.
+
+Workflow: inventory; relevant baselines; reproduce; prerecord minimal fixes; targeted regressions; actual rendered review; bounded prepared device validation; qualified new delivery. Host results never replace physical acceptance. Secrets stay private. No blind board stress, flash or power actions.
+
+Prior HDMI slab fault, animation/touch, upgrade/rollback/power loss, data semantics and SDK source qualification remain open. Missing resources remain explicit without repeated credential requests.
+
+| Area | Coverage | Source entry | Initial state |
+|---|---|---|---|
+| home | Home widgets navigation app lifecycle | apps/lv_port_linux/src/ui | not_run |
+| settings | Persistence brightness volume language theme | apps/lv_port_linux/src/apps/setting | not_run |
+| network | Wi-Fi Bluetooth reconnect timeout cancel | apps/lv_port_linux/src/apps | not_run |
+| assistant | Conversation interruption pairing offline errors | apps/lv_port_linux/src/apps/ai | not_run |
+| iot | IoT voice commands authorization result feedback | apps/lv_port_linux/src/apps/iot | not_run |
+| hdmi | Signal audio display lifecycle ownership | apps/hdmi_preview | not_run |
+| kvm | Authentication WebRTC freshness HID emergency stop | apps/ipkvm | not_run |
+| apps | Signing install update uninstall permissions data | apps/platform_services | not_run |
+| updates | Compatibility recovery rollback power interruption | tools/update | not_run |
+| boot | Animation handoff readiness storage guards | packaging | not_run |
+| data | Credentials settings KV backup recovery | integrations | not_run |
+| delivery | Provenance edition boundaries signatures gates | scripts | not_run |
+
+First batch: current source inventory, existing architecture/UI tests and isolated real LVGL rendering. Historical feature documentation must be reconciled with actual source; it is not acceptance evidence. Evidence: .delivery/quality-review-20261023.
+
+First batch results: 98 architecture tests:96 passed,2 skipped because MIMI_A133_PROVIDER_ROOT unset.32 real LVGL renders and app-manager/page assertions passed, not physical validation. Visually reviewed8 Chinese/light pages; Bluetooth dark-theme contrast, assistant sidebar wrapping and update state coverage need follow-up. See first-batch-result.json. No product change yet.
+
+Provider follow-up: both previously skipped checks passed against fixed root provider recipe ab6e835a; baseline coverage now98/98 across two runs. Bluetooth information container no longer dims while disconnected, connection hint foreground increased; individual unavailable transport/volume feedback retained.16 actual LVGL renders across disconnected/connected/details/rename and zh/en light/dark passed, Chinese disconnected full-size image visually inspected. Host-only, physical contrast/touch not_run. Next updater source review found nullable JSON text fields can reach strcmp when busy=true and phase=null; needs reproduction before fix. AI sidebar detailed review remains open.

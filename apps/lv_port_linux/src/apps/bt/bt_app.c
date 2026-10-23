@@ -651,7 +651,8 @@ static void update_playback_details(void) {
     }
 
     if (section_playback_details) {
-        lv_obj_set_style_opa(section_playback_details, connected ? LV_OPA_COVER : LV_OPA_70, 0);
+        /* Connection guidance remains readable; only unavailable controls dim. */
+        lv_obj_set_style_opa(section_playback_details, LV_OPA_COVER, 0);
     }
 }
 
@@ -1391,7 +1392,7 @@ void bt_app_init(void) {
         lv_label_set_text(label_connection_hint, hint);
     }
     lv_obj_set_style_text_font(label_connection_hint, ui_font_body_md(), 0);
-    lv_obj_set_style_text_color(label_connection_hint, lv_color_hex(0x64748B), 0);
+    lv_obj_set_style_text_color(label_connection_hint, lv_color_hex(0xCBD5E1), 0);
     prepare_single_line_label(label_connection_hint);
 
     label_track_album = lv_label_create(right_col);
