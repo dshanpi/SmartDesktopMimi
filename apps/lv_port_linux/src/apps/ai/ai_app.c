@@ -829,6 +829,7 @@ void ai_app_init(void)
     lv_obj_t *recent_title;
     lv_obj_t *right_spacer;
     lv_obj_t *exit_note;
+    const bool compact = lv_display_get_vertical_resolution(NULL) < 620;
 
     latest_tuya_bound = false;
     free_chat_enter_pending = false;
@@ -849,15 +850,15 @@ void ai_app_init(void)
     header = ui_create_app_header(scr, ui_tr(UI_STR_APP_AI), back_event_handler, false, NULL);
 
     content = lv_obj_create(scr);
-    lv_obj_set_size(content, lv_pct(100), LV_MAX(1, 768 - UI_APP_HEADER_H));
+    lv_obj_set_size(content, lv_pct(100), LV_MAX(1, lv_display_get_vertical_resolution(NULL) - UI_APP_HEADER_H));
     lv_obj_set_pos(content, 0, UI_APP_HEADER_H);
     lv_obj_set_style_bg_opa(content, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(content, 0, 0);
-    lv_obj_set_style_pad_left(content, 34, 0);
-    lv_obj_set_style_pad_right(content, 34, 0);
-    lv_obj_set_style_pad_top(content, 24, 0);
-    lv_obj_set_style_pad_bottom(content, 30, 0);
-    lv_obj_set_style_pad_column(content, 22, 0);
+    lv_obj_set_style_pad_left(content, compact ? 16 : 34, 0);
+    lv_obj_set_style_pad_right(content, compact ? 16 : 34, 0);
+    lv_obj_set_style_pad_top(content, compact ? 12 : 24, 0);
+    lv_obj_set_style_pad_bottom(content, compact ? 12 : 30, 0);
+    lv_obj_set_style_pad_column(content, compact ? 16 : 22, 0);
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(content,
                           LV_FLEX_ALIGN_CENTER,
@@ -866,12 +867,13 @@ void ai_app_init(void)
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     left_panel = create_panel(content);
-    lv_obj_set_size(left_panel, 592, lv_pct(100));
-    lv_obj_set_style_pad_left(left_panel, 34, 0);
-    lv_obj_set_style_pad_right(left_panel, 34, 0);
-    lv_obj_set_style_pad_top(left_panel, 28, 0);
-    lv_obj_set_style_pad_bottom(left_panel, 30, 0);
-    lv_obj_set_style_pad_row(left_panel, 16, 0);
+    lv_obj_set_size(left_panel, 1, lv_pct(100));
+    lv_obj_set_flex_grow(left_panel, 1);
+    lv_obj_set_style_pad_left(left_panel, compact ? 16 : 34, 0);
+    lv_obj_set_style_pad_right(left_panel, compact ? 16 : 34, 0);
+    lv_obj_set_style_pad_top(left_panel, compact ? 16 : 28, 0);
+    lv_obj_set_style_pad_bottom(left_panel, compact ? 16 : 30, 0);
+    lv_obj_set_style_pad_row(left_panel, compact ? 10 : 16, 0);
     lv_obj_set_flex_flow(left_panel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(left_panel,
                           LV_FLEX_ALIGN_CENTER,
@@ -879,7 +881,7 @@ void ai_app_init(void)
                           LV_FLEX_ALIGN_CENTER);
 
     assistant_orb = lv_obj_create(left_panel);
-    lv_obj_set_size(assistant_orb, 228, 228);
+    lv_obj_set_size(assistant_orb, compact ? 144 : 228, compact ? 144 : 228);
     lv_obj_set_style_radius(assistant_orb, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(assistant_orb,
                               lv_color_mix(UI_COLOR_PRIMARY,
@@ -903,7 +905,7 @@ void ai_app_init(void)
     lv_obj_align(avatar_icon, LV_ALIGN_CENTER, 0, -20);
 
     wave_row = lv_obj_create(assistant_orb);
-    lv_obj_set_size(wave_row, 156, 48);
+    lv_obj_set_size(wave_row, compact ? 116 : 156, compact ? 32 : 48);
     lv_obj_align(wave_row, LV_ALIGN_BOTTOM_MID, 0, -18);
     lv_obj_set_style_bg_opa(wave_row, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(wave_row, 0, 0);
@@ -930,7 +932,7 @@ void ai_app_init(void)
 
     hero_title = lv_label_create(left_panel);
     lv_label_set_text(hero_title, ui_tr(UI_STR_AI_HELLO));
-    lv_obj_set_width(hero_title, 520);
+    lv_obj_set_width(hero_title, lv_pct(100));
     lv_label_set_long_mode(hero_title, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(hero_title, UI_TEXT_H1, 0);
     lv_obj_set_style_text_color(hero_title, UI_TEXT_PRIMARY, 0);
@@ -938,7 +940,7 @@ void ai_app_init(void)
 
     label_hint = lv_label_create(left_panel);
     lv_label_set_text(label_hint, ui_tr(UI_STR_AI_WAKE_HINT));
-    lv_obj_set_width(label_hint, 520);
+    lv_obj_set_width(label_hint, lv_pct(100));
     lv_label_set_long_mode(label_hint, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(label_hint, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(label_hint, UI_TEXT_SECONDARY, 0);
@@ -946,7 +948,9 @@ void ai_app_init(void)
 
     right_panel = create_panel(content);
     lv_obj_set_size(right_panel, 342, lv_pct(100));
-    lv_obj_set_style_pad_all(right_panel, 26, 0);
+    lv_obj_set_style_pad_all(right_panel, compact ? 18 : 26, 0);
+    lv_obj_add_flag(right_panel, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(right_panel, LV_DIR_VER);
     lv_obj_set_style_pad_row(right_panel, 16, 0);
     lv_obj_set_flex_flow(right_panel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(right_panel,

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Keep assistant content reachable on compact displays",
+  "context": "QUALITY076 actual visual clipping with original failed geometry assertion",
+  "next_steps": "Continue interaction lifecycle and remaining feature reviews; prepared physical validation later",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Assistant geometry, vertical scroll and status copy",
+      "invariants": "Approved two-panel design, backend behavior and published releases retained",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "apps/lv_port_linux/src/ui/ui_i18n.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-assistant-layout-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Real LVGL geometry and scroll access",
+          "status": "passed",
+          "scope": "40 combinations at1024x768 and800x480; original failure retained",
+          "evidence": ".delivery/quality-review-20261023/assistant-layout/result.json"
+        },
+        {
+          "name": "Physical assistant acceptance",
+          "status": "not_run",
+          "scope": "Physical touch and speech",
+          "reason": "Host layout scope",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

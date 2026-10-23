@@ -1105,6 +1105,20 @@ int main(int argc,char**argv) {
   ap.ssid="Workshop-IoT";ap.encrypted=false;create_list_item(wifi_list,&ap);
   if(strcmp(argv[1],"password")==0)lv_obj_send_event(item,LV_EVENT_CLICKED,NULL);
  }
+
+ if(!strncmp(argv[1],"ai",2)){
+  lv_obj_t *hero=find_label(lv_scr_act(),ui_tr(UI_STR_AI_HELLO));assert(hero);
+  lv_obj_t *note=find_label(lv_scr_act(),ui_tr(UI_STR_AI_EXIT_HINT));assert(note);
+  lv_obj_t *panels[]={lv_obj_get_parent(hero),lv_obj_get_parent(note)};
+  pump();lv_obj_update_layout(lv_scr_act());
+  for(int i=0;i<2;i++){lv_area_t a;lv_obj_get_coords(panels[i],&a);
+   assert(a.x1>=0 && a.y1>=UI_APP_HEADER_H && a.x2<review_width && a.y2<review_height);
+  }
+  lv_obj_scroll_to_view_recursive(note,LV_ANIM_OFF);pump();
+  lv_area_t n;lv_obj_get_coords(note,&n);assert(n.x1>=0 && n.x2<review_width && n.y1>=UI_APP_HEADER_H && n.y2<review_height);
+  lv_obj_scroll_to_y(panels[1],0,LV_ANIM_OFF);pump();
+  puts("PASS assistant panel bounds and scroll access to final guidance");
+ }
  save(argv[4]);inspect(lv_scr_act());
  if(!strcmp(argv[1],"ai-free-chat")){
   int before=ai_exit_count;
