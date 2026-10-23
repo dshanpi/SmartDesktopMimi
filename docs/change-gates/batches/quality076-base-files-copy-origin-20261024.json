@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Verify selected base-files copy rule and overlay ordering",
+  "context": "Source integration needs selected install origin",
+  "next_steps": "Complete package and final rootfs check",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Exact initial install copy block",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-base-files-copy-origin-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Isolated startup propagation",
+          "status": "passed",
+          "scope": "Selected rc.common byte/mode readback, not fullpackage",
+          "evidence": ".delivery/quality-review-20261023/base-files-copy-origin/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/base-files-copy-origin/result.json"
+        }
+      ]
+    }
+  ]
+}
