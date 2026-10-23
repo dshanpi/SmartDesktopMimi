@@ -381,6 +381,19 @@ static void test_password(void) {
  }
  assert(!strcmp(lv_textarea_get_text(password_ta),typed));
  lv_indev_delete(pointer);
+ char long_password[67];for(int i=0;i<22;i++)memcpy(long_password+3*i,"\xe4\xb8\xad",3);long_password[66]=0;
+ lv_textarea_set_text(password_ta,long_password);
+ assert(strlen(lv_textarea_get_text(password_ta))==66);
+ lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
+ fprintf(stderr,"Overlong password retained=%d commands=%d\n",password_modal!=NULL,connect_count);
+ assert(password_modal && connect_count==0 && "overlong password must not be truncated and sent");
+ lv_obj_t *submit=lv_button_create(password_modal);
+ lv_obj_add_event_cb(submit,connect_click_cb,LV_EVENT_CLICKED,"100ASK-Lab");
+ lv_obj_send_event(submit,LV_EVENT_CLICKED,NULL);assert(password_modal && connect_count==0);
+ lv_obj_delete(submit);
+ char boundary[64];memset(boundary,'a',63);boundary[63]=0;
+ assert(wifi_password_valid(boundary));assert(wifi_password_valid("12345678"));
+
  lv_textarea_set_text(password_ta,"short");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
  assert(password_modal && connect_count==0 && strlen(lv_label_get_text(password_error_label))>0);
  lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);

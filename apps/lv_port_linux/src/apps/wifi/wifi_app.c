@@ -595,19 +595,24 @@ static void close_modal_cb(lv_event_t * e) {
     }
 }
 
+/* The textarea counts characters; the command buffer counts bytes. */
+static bool wifi_password_valid(const char *password)
+{
+    size_t length = strlen(password);
+    if (length >= 8 && length < sizeof(((wifi_cmd_t *)0)->password)) return true;
+    if (password_error_label) {
+        lv_label_set_text(password_error_label, ui_tr(length < 8 ?
+                         UI_STR_WIFI_PASSWORD_SHORT : UI_STR_WIFI_PASSWORD_LONG));
+        lv_obj_set_style_text_color(password_error_label, UI_COLOR_ERROR, 0);
+    }
+    return false;
+}
+
 static void connect_click_cb(lv_event_t * e) {
     const char * ssid = (const char *)lv_event_get_user_data(e);
     if (password_ta) {
         const char * password = lv_textarea_get_text(password_ta);
-        if (strlen(password) < 8) {
-            if (password_error_label) {
-                lv_label_set_text(password_error_label,
-                                  ui_tr(UI_STR_WIFI_PASSWORD_SHORT));
-                lv_obj_set_style_text_color(password_error_label,
-                                            UI_COLOR_ERROR, 0);
-            }
-            return;
-        }
+        if (!wifi_password_valid(password)) return;
         printf("Connecting to %s\n", ssid);
         
         // 发送连接指令到后端
@@ -626,15 +631,7 @@ static void keyboard_event_cb(lv_event_t * e) {
         const char * ssid = (const char *)lv_event_get_user_data(e);
         if (password_ta) {
             const char * password = lv_textarea_get_text(password_ta);
-            if (strlen(password) < 8) {
-                if (password_error_label) {
-                    lv_label_set_text(password_error_label,
-                                      ui_tr(UI_STR_WIFI_PASSWORD_SHORT));
-                    lv_obj_set_style_text_color(password_error_label,
-                                                UI_COLOR_ERROR, 0);
-                }
-                return;
-            }
+            if (!wifi_password_valid(password)) return;
             printf("Keyboard OK: Connecting to %s\n", ssid);
             
             // 发送连接指令到后端
