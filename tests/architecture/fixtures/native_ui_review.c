@@ -68,6 +68,9 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
 static bool review_hdmi_idle;
 static atomic_bool review_hdmi_stop_failure, review_hdmi_stop_success, review_hdmi_silent;
 static atomic_uint review_hdmi_delay_us;
+static atomic_bool review_status_hold, review_status_entered, review_status_running;
+extern void hdmi_mcp_app_monitor_start(void);
+static atomic_int review_held_writes;
 static atomic_int review_stop_commands;
 ssize_t __real_send(int fd,const void *buffer,size_t length,int flags);
 ssize_t __wrap_send(int fd,const void *buffer,size_t length,int flags) {
@@ -79,7 +82,7 @@ static atomic_int hdmi_control_connections;
 static int hdmi_mutations;
 extern lv_obj_t *hdmi_switch_obj;
 struct review_control_connection {
- int fd;unsigned delay;bool silent;const char *reply;
+ int fd;unsigned delay;bool silent,hold;const char *reply;
 };
 static void *review_control_serve(void *opaque) {
  struct review_control_connection *c=opaque;
@@ -90,8 +93,9 @@ static void *review_control_serve(void *opaque) {
   used+=(size_t)n;
   if(memchr(buffer,'\n',used))break;
  }
+ if(c->hold) {atomic_store(&review_status_entered,true);while(atomic_load(&review_status_hold))usleep(1000);}
  if(c->delay)usleep(c->delay);
- if(!c->silent && used) (void)send(c->fd,c->reply,strlen(c->reply),MSG_NOSIGNAL);
+ if(!c->silent && used) {ssize_t n=send(c->fd,c->reply,strlen(c->reply),MSG_NOSIGNAL);if(c->hold && n==(ssize_t)strlen(c->reply))atomic_fetch_add(&review_held_writes,1);}
  else if(c->silent)while(read(c->fd,buffer,sizeof(buffer))>0){}
  close(c->fd);free(c);return NULL;
 }
@@ -133,8 +137,9 @@ int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
   assert(dup2(pair[0],fd)==fd);close(pair[0]);
   struct review_control_connection *c=calloc(1,sizeof(*c));assert(c);
   c->fd=pair[1];c->delay=atomic_load(&review_hdmi_delay_us);
-  c->silent=atomic_load(&review_hdmi_silent);
+  c->silent=atomic_load(&review_hdmi_silent);c->hold=atomic_load(&review_status_hold);
   c->reply=review_hdmi_stop_success?"{\"ok\":true}\n":review_hdmi_stop_failure?"{\"ok\":false,\"message\":\"stop requested; HID release failed\"}\n":"{\"state\":\"idle\",\"history\":[]}\n";
+  if(review_status_running)c->reply="{\"state\":\"running\",\"history\":[]}\n";
   pthread_t thread;assert(pthread_create(&thread,NULL,review_control_serve,c)==0);
   pthread_detach(thread);return 0;
  }
@@ -1137,6 +1142,27 @@ int main(int argc,char**argv) {
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
  } else if(strcmp(argv[1],"user")==0){app_user.init();}
+ else if(!strcmp(argv[1],"hdmi-status-stale")) {
+  review_hdmi_idle=true;review_status_running=true;review_status_hold=true;
+  int before=atomic_load(&hdmi_control_connections),opens=app_open_count;
+  app_hdmi_mcp.init();
+  for(int i=0;i<100 && !atomic_load(&review_status_entered);i++)usleep(1000);
+  assert(atomic_load(&review_status_entered));
+  for(int i=0;i<3;i++) {
+   lv_obj_t *old=lv_scr_act();app_hdmi_mcp.close();app_hdmi_mcp.init();lv_obj_delete(old);
+  }
+  assert(atomic_load(&hdmi_control_connections)==before+1 && "only one pending status request");
+  review_status_running=false;review_status_hold=false;
+  for(int i=0;i<30;i++){usleep(1000);pump();}
+  assert(app_open_count==opens && "stale running status must not reopen the app");
+  assert(!find_label(lv_scr_act(),ui_tr(UI_STR_MCP_RUNNING)));
+  assert(atomic_load(&review_held_writes)==1 && "held running reply actually delivered to open client");
+  hdmi_mcp_app_monitor_start();
+  for(int i=0;i<100 && !find_label(lv_scr_act(),ui_tr(UI_STR_READY));i++){usleep(1000);pump();}
+  assert(find_label(lv_scr_act(),ui_tr(UI_STR_READY)));
+  assert(app_open_count==opens);
+  puts("PASS one in-flight across triple page reopen, stale running reply discarded, fresh idle accepted");
+ }
  else if(!strcmp(argv[1],"hdmi-status-responsive")) {
   review_hdmi_idle=true;review_hdmi_silent=true;
   struct timespec begin,end;clock_gettime(CLOCK_MONOTONIC,&begin);

@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Verify stale status cannot override reopened page",
+  "context": "Async status must preserve page lifecycle and single-flight behavior",
+  "next_steps": "Stop-versus-status overlap and current full UI candidate qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual LVGL triple page reopen with held running reply",
+      "invariants": "Host connection proof is not physical acceptance",
+      "paths": [
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-status-stale-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Page stale status and fresh recovery",
+          "status": "passed",
+          "scope": "8renders with held reply and one pending request",
+          "evidence": ".delivery/quality-review-20261023/control-status-stale/result.json"
+        },
+        {
+          "name": "Original fixture expectation",
+          "status": "failed",
+          "scope": "r1 Syncing expectation",
+          "reason": "Global monitor can already accept fresh status; expectation corrected",
+          "evidence": ".delivery/quality-review-20261023/control-status-stale/run.log"
+        },
+        {
+          "name": "Remaining qualification",
+          "status": "not_run",
+          "scope": "Stop/status overlap and board",
+          "reason": "Page generation only this batch",
+          "evidence": ".delivery/quality-review-20261023/control-status-stale/result.json"
+        }
+      ]
+    }
+  ]
+}
