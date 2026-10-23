@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Record private SDIO overlay promotion",
+  "context": "Verified candidate now in standardoverlay",
+  "next_steps": "SDK synchronization and physical/source gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Privatecommit reference and hostevidence",
+      "invariants": "No device/push claim; warnings retained",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-overlay-reference-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Privatepromotion",
+          "status": "passed",
+          "scope": "302tests/4384integrity",
+          "reason": "sourceexactcandidate anddurabletests",
+          "evidence": ".delivery/quality-review-20261023/sdio-overlay-promotion/result.json"
+        }
+      ]
+    }
+  ]
+}
