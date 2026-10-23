@@ -10,8 +10,8 @@ import tuya_pairing_sources as tuya
 import ui_settings_receipt as ui_writer
 
 REFERENCE = {
-    'public': '184404f3febe2b4c472f2fa246411497a1f54c7ad9995dc64d2f38d509937bd9',
-    'private': 'cd40cada2c0a3522c75b6e58cbca06b2bfac347d887c8d57760619eea8a78620',
+    'public': '198a910ce03b821e389323560c1130ea2a2a5d5775ee54aba0cac06a5e5151ef',
+    'private': '252e8f8bbca47c7b5d66ef16d448b731860185cc95880bdeb764423f94cec7aa',
 }
 PRIVATE_RUNTIME = '4ae0aa1d2bb328bfdb52e77bef6b6b741cadc48abe0d3f00cfaaa7c7c7c22518'
 
@@ -39,7 +39,7 @@ def check(build, edition):
     if (provider.get('requirement') != 'REQ-MIMI-PRIVATE-066' or provider.get('status') != 'passed' or
             provider.get('phase') != 'compiled' or provider.get('profile') != edition or
             provider.get('recipe_sha256') != RECIPES[edition] or
-            provider.get('provider_edition_source_version') != 8 or
+            provider.get('provider_edition_source_version') != 9 or
             provider.get('original_source_dependency') is not False or
             provider.get('reference_backend_sha256') != REFERENCE[edition] or
             provider.get('backend_sha256') != REFERENCE[edition]):

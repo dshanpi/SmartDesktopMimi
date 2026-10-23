@@ -36,7 +36,7 @@ class ProductProviderTests(unittest.TestCase):
         ai = component / p.EDITION / 'code' / p.AI_SOURCE
         ai.parent.mkdir(parents=True)
         ai.write_text('/* shared runtime includes selected reader */')
-        reader = component / p.EDITION / 'public/mimi_tuya_license_provider.h'
+        reader = component / p.PUBLIC_READER_EDITION / 'public/mimi_tuya_license_provider.h'
         reader.parent.mkdir(parents=True)
         reader.write_text('/* public always disabled */')
         recipe = dict(cloud_profile=profile, tool_sha256=p.sha(tool),
@@ -44,7 +44,7 @@ class ProductProviderTests(unittest.TestCase):
                       inputs={'sdk/include.h': p.sha(dependency)},
                       compiler_target=p.COMPILER, compiler_sha256=p.sha(compiler),
                       source_commit='fixture', translation_units=[], link_flags=[],
-                      edition_source_version=8, edition_source_requirement='REQ-MIMI-QUALITY-076',
+                      edition_source_version=9, edition_source_requirement='REQ-MIMI-QUALITY-076',
                       reference_state='audited_new_source_reference', reference_backend_sha256='a' * 64,
                       prior_backend_sha256='b' * 64, original_backend_sha256='b' * 64)
         for name in p.SETTINGS_INPUTS:
@@ -186,7 +186,7 @@ class ProductProviderTests(unittest.TestCase):
                 files = dict(source=component / 'public/code/provider.c', dependency=sdk / 'include.h',
                              tool=component / 'build_provider.py', recipe=rf, compiler=sdk / p.COMPILER,
                              ai=component / p.EDITION / 'code' / p.AI_SOURCE,
-                             reader=component / p.EDITION / 'public/mimi_tuya_license_provider.h')
+                             reader=component / p.PUBLIC_READER_EDITION / 'public/mimi_tuya_license_provider.h')
                 with patch.object(p, 'TOOL_HASH', tool_hash), patch.object(p, 'RECIPES', pins):
                     p.preflight(str(sdk), 'public')
                     files[target].write_text('changed')
