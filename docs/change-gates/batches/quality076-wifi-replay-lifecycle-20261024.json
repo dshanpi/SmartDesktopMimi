@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Qualify private WiFi replay startup/shutdown lifecycle",
+  "context": "Reject stale requests across service restarts and fail closed when epoch unavailable",
+  "next_steps": "Response snapshots, router/UI recovery and full compile",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual extracted service lifecycle with host HAL/fault adapters",
+      "invariants": "No weak epoch fallback, no success from admission, original SDK/release unchanged",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-replay-lifecycle-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Initial host fixture compile",
+          "status": "failed",
+          "scope": "Werror fixture indentation",
+          "reason": "Two statements on one line; retained original",
+          "evidence": ".delivery/quality-review-20261023/wifi-replay-lifecycle/result.json"
+        },
+        {
+          "name": "Lifecycle host checks",
+          "status": "passed",
+          "scope": "ASAN/UBSAN serial lifecycle, gated HAL and entropy/thread failures",
+          "evidence": ".delivery/quality-review-20261023/wifi-replay-lifecycle/result-r2.json"
+        },
+        {
+          "name": "Complete integration",
+          "status": "not_run",
+          "scope": "FullTU/A133/router/UI/IPC/physical and concurrent lifecycle",
+          "reason": "Private candidate only, actual lifecycle serialized",
+          "evidence": ".delivery/quality-review-20261023/wifi-replay-lifecycle/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
