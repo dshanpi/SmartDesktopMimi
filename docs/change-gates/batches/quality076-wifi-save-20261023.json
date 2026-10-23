@@ -26,7 +26,8 @@
           "name": "800px password keyboard",
           "status": "failed",
           "scope": "Existing geometry assertion also fails committed baseline; unresolved",
-          "evidence": ".delivery/quality-review-20261023/wifi-save-recovery/password-baseline.log"
+          "evidence": ".delivery/quality-review-20261023/wifi-save-recovery/password-baseline.log",
+          "reason": "The keyboard bounds/minimum-height assertion fails on both candidate and unchanged committed baseline; diagnosis remains open."
         },
         {
           "name": "Physical persistence",
