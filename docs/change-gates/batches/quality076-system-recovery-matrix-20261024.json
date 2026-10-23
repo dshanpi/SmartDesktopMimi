@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "System journal recovery and application admission matrix",
+  "context": "Verify interruption and reboot fencing without hardware operations",
+  "next_steps": "System commit baseline semantics and remaining quality gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual reconciliation/persistence and signed application host install",
+      "invariants": "Retain highwater/identity; pending excludes app before staging; no physical claims",
+      "paths": [
+        "services/mimi-update/update/system_recovery_matrix_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-system-recovery-matrix-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Recovery/admission",
+          "status": "passed",
+          "scope": "10 recovery and6 install cases",
+          "reason": "actual code and persisted bytes checked",
+          "evidence": ".delivery/quality-review-20261023/system-recovery-matrix/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "bootloader/power",
+          "reason": "host fixture only",
+          "evidence": ".delivery/quality-review-20261023/system-recovery-matrix/result.json"
+        }
+      ]
+    }
+  ]
+}
