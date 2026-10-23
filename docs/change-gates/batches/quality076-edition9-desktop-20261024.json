@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "summary": "Fresh current desktop and actual installation gate followup",
+  "context": "Compose current quality source with edition9 providers",
+  "next_steps": "Build current source-locked services and rerun actual install fixture",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "A133 desktop and host program install",
+      "invariants": "Old artifacts and failures preserved; no device actions; gates not bypassed",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-edition9-desktop-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Desktop",
+          "status": "passed",
+          "scope": "676 compile units",
+          "reason": "actual original entry",
+          "evidence": ".delivery/quality-review-20261023/edition9-desktop-build/result.json"
+        },
+        {
+          "name": "Collections",
+          "status": "passed",
+          "scope": "public/private programs",
+          "reason": "exact hash receipts",
+          "evidence": ".delivery/quality-review-20261023/edition9-desktop-build/result.json"
+        },
+        {
+          "name": "Install",
+          "status": "failed",
+          "scope": "both profiles",
+          "reason": "missing current service receipt; existing service references mismatch",
+          "evidence": ".delivery/quality-review-20261023/edition9-desktop-build/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "device/fullfirmware",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/edition9-desktop-build/result.json"
+        }
+      ]
+    }
+  ]
+}
