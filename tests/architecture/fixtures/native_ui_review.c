@@ -133,8 +133,10 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 }
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
+static int wifi_toggles;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
+ if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && (((const wifi_cmd_t*)d)->action==CMD_ENABLE || ((const wifi_cmd_t*)d)->action==CMD_DISABLE))wifi_toggles++;
  if(t==TOPIC_HDMI_COMMAND && n==sizeof(hdmi_cmd_t) && ((const hdmi_cmd_t*)d)->action!=HDMI_CMD_GET_STATUS)hdmi_mutations++;
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
  if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
@@ -1141,6 +1143,30 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-save")){
+  settings.wifi_enabled=false;app_wifi.init();settings_save_error=-EIO;
+  wifi_runtime_status_t runtime={.enabled=false};
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  lv_obj_add_state(sw_wlan,LV_STATE_CHECKED);lv_obj_send_event(sw_wlan,LV_EVENT_VALUE_CHANGED,NULL);
+  runtime.enabled=true;emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
+  assert(wifi_settings_dirty);
+  const char *retry_text=ui_i18n_is_zh()?"重试保存":"Retry save";
+  lv_obj_t *retry=find_label(lv_layer_top(),retry_text);assert(retry);
+  int attempts=saves,toggles=wifi_toggles;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();
+  assert(wifi_toggles==toggles);
+  assert(wifi_settings_dirty && saves==attempts+1 && find_label(lv_layer_top(),retry_text));
+  emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();assert(saves==attempts+1 && find_label(lv_layer_top(),retry_text));
+  app_wifi.close();assert(wifi_settings_dirty && "failed close save loses pending Wi-Fi preference");
+  assert(!find_label(lv_layer_top(),retry_text));
+  app_wifi.init();pump();retry=find_label(lv_layer_top(),retry_text);assert(retry);
+  assert(lv_obj_get_height(lv_obj_get_parent(retry))>=48);
+  settings_save_error=0;attempts=saves;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();
+  assert(wifi_toggles==toggles);
+  assert(!wifi_settings_dirty && saves==attempts+1 && !find_label(lv_layer_top(),retry_text));
+  app_wifi.close();assert(saves==attempts+1);
+  puts("PASS Wi-Fi save failure, explicit failed retry, runtime update, close/reopen and successful retry");
+  app_wifi.init();settings_save_error=-EIO;wifi_settings_dirty=true;wifi_save_preference();pump();
+ }
  else if(strcmp(argv[1],"wifi")==0 || strcmp(argv[1],"password")==0){
   app_wifi.init();wifi_spinner_delete();
   wifi_ap_t ap={.ssid="100ASK-Lab",.encrypted=true};

@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Retain failed Wi-Fi preference save and offer explicit retry",
+  "context": "Unchecked close save cleared dirty despite failure",
+  "next_steps": "Diagnose small password keyboard and BT/backend persistence",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Wi-Fi preference persistence UI lifecycle",
+      "invariants": "No radio re-toggle for save retry; no device acceptance",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-save-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Wi-Fi recovery native UI",
+          "status": "passed",
+          "scope": "Eight language/theme/size runs",
+          "evidence": ".delivery/quality-review-20261023/wifi-save-recovery/final.log"
+        },
+        {
+          "name": "800px password keyboard",
+          "status": "failed",
+          "scope": "Existing geometry assertion also fails committed baseline; unresolved",
+          "evidence": ".delivery/quality-review-20261023/wifi-save-recovery/password-baseline.log"
+        },
+        {
+          "name": "Physical persistence",
+          "status": "not_run",
+          "scope": "Radio and real storage failures",
+          "reason": "Host fixture only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

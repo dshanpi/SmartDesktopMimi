@@ -51,6 +51,45 @@ static bool wlan_toggle_target_enabled = false;
 static bool runtime_status_received = false;
 static bool startup_scan_requested = false;
 
+static lv_obj_t *wifi_save_error_box;
+static void wifi_show_save_failure(void);
+static void wifi_save_preference(void)
+{
+    wifi_settings_dirty = sys_settings_save_checked() != 0;
+    if (wifi_settings_dirty) {
+        if (wifi_app_active) wifi_show_save_failure();
+    } else if (wifi_save_error_box) {
+        lv_obj_delete(wifi_save_error_box);
+        wifi_save_error_box = NULL;
+    }
+}
+static void wifi_retry_save(lv_event_t *event)
+{
+    (void)event;
+    wifi_save_preference();
+}
+static void wifi_show_save_failure(void)
+{
+    if (wifi_save_error_box) return;
+    wifi_save_error_box = lv_msgbox_create(lv_layer_top());
+    lv_obj_set_width(wifi_save_error_box, lv_pct(85));
+    lv_obj_center(wifi_save_error_box);
+    lv_obj_t *title = lv_msgbox_add_title(wifi_save_error_box,
+        ui_i18n_is_zh() ? "保存未确认" : "Save not confirmed");
+    lv_obj_set_style_text_font(title, ui_font_h3(), 0);
+    lv_obj_t *text = lv_msgbox_add_text(wifi_save_error_box, ui_i18n_is_zh() ?
+        "Wi-Fi 已切换，但尚未确认保存开关偏好。请重试。" :
+        "Wi-Fi has changed, but saving your preference is not confirmed. Please retry.");
+    lv_obj_set_style_text_font(text, ui_font_body_md(), 0);
+    lv_obj_t *retry = lv_msgbox_add_footer_button(wifi_save_error_box,
+        ui_i18n_is_zh() ? "重试保存" : "Retry save");
+    mimi_ui_button_style(retry, true);
+    lv_obj_set_size(retry, 180, 48);
+    lv_obj_set_height(lv_msgbox_get_footer(wifi_save_error_box), 68);
+    lv_obj_set_style_text_font(retry, ui_font_body_md(), 0);
+    lv_obj_add_event_cb(retry, wifi_retry_save, LV_EVENT_CLICKED, NULL);
+}
+
 /* Modal Components */
 static lv_obj_t * password_modal = NULL;
 static lv_obj_t * password_ta = NULL;
@@ -316,6 +355,7 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
             settings->wifi_enabled = runtime->enabled;
             wifi_settings_dirty = true;
         }
+        if (wifi_settings_dirty) wifi_save_preference();
         if (sw_wlan) {
             lv_obj_clear_state(sw_wlan, LV_STATE_DISABLED);
         }
@@ -903,6 +943,8 @@ void wifi_app_init(void) {
     mw_publish(TOPIC_WIFI_COMMAND, &runtime_cmd, sizeof(runtime_cmd),
                MW_DIR_UI_TO_BACKEND);
 
+    if (wifi_settings_dirty) wifi_show_save_failure();
+
     // Auto-scan on open if enabled
     if (is_wifi_enabled) {
         scan_click_cb(NULL);
@@ -912,6 +954,10 @@ void wifi_app_init(void) {
 void wifi_app_close(void) {
     printf("WiFi App Closed\n");
     wifi_app_active = false;
+    if (wifi_save_error_box) {
+        lv_obj_delete(wifi_save_error_box);
+        wifi_save_error_box = NULL;
+    }
     is_scanning = false;
     wifi_spinner_delete();
     if (password_modal) {
@@ -921,8 +967,7 @@ void wifi_app_close(void) {
         password_ta = NULL;
     }
     if (wifi_settings_dirty) {
-        sys_settings_save();
-        wifi_settings_dirty = false;
+        wifi_save_preference();
     }
     mw_unsubscribe(TOPIC_WIFI_STATUS, wifi_status_handler);
     mw_unsubscribe(TOPIC_WIFI_RUNTIME, wifi_runtime_handler);
