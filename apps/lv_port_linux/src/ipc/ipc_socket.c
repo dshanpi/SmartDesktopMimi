@@ -1,11 +1,14 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 /**
  * @file ipc_socket.c
  * @brief Unix Domain Socket 进程间通信实现
  */
 
-#include "ipc_socket.h"
-#include "../system/config/app_config.h"
-#include "../system/log/app_log.h"
+#include "ipc/ipc_socket.h"
+#include "system/config/app_config.h"
+#include "system/log/app_log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +17,11 @@
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
+#include <poll.h>
+#include <time.h>
+#include <stddef.h>
+#include <sys/file.h>
+#include <pthread.h>
 
 #define IPC_IO_TIMEOUT_MS 20
 
@@ -184,75 +192,36 @@ static int recv_ipc_message(int fd, ipc_msg_t *msg) {
  *                                 客户端实现
  *****************************************************************************/
 
-int ipc_client_connect(int *sock_fd) {
-    struct sockaddr_un addr;
-    struct timeval tv;
-    fd_set fdset;
-    int flags;
-    int ret;
-    const app_config_t *cfg = app_config_get();
-
-    if (!sock_fd) {
-        return -1;
-    }
-
-    /* 创建 socket */
-    *sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (*sock_fd < 0) {
-        perror("socket");
-        return -1;
-    }
-
-    /* 设置为非阻塞以便设置连接超时 */
-    flags = fcntl(*sock_fd, F_GETFL, 0);
-    fcntl(*sock_fd, F_SETFL, flags | O_NONBLOCK);
-
-    /* 配置地址 */
-    memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", cfg->ipc_socket_path);
-
-    /* 发起连接 */
-    ret = connect(*sock_fd, (struct sockaddr *)&addr, sizeof(addr));
-    if (ret < 0 && errno != EINPROGRESS) {
-        perror("connect");
-        close(*sock_fd);
-        *sock_fd = -1;
-        return -1;
-    }
-
-    /* 等待连接完成 */
-    FD_ZERO(&fdset);
-    FD_SET(*sock_fd, &fdset);
-    tv.tv_sec = IPC_CONNECT_TIMEOUT_MS / 1000;
-    tv.tv_usec = (IPC_CONNECT_TIMEOUT_MS % 1000) * 1000;
-
-    ret = select(*sock_fd + 1, NULL, &fdset, NULL, &tv);
-    if (ret <= 0) {
-        perror("connect timeout");
-        close(*sock_fd);
-        *sock_fd = -1;
-        return -1;
-    }
-
-    {
-        int so_error = 0;
-        socklen_t so_error_len = sizeof(so_error);
-        if (getsockopt(*sock_fd, SOL_SOCKET, SO_ERROR, &so_error, &so_error_len) != 0 ||
-            so_error != 0) {
-            if (so_error != 0) errno = so_error;
-            perror("connect");
-            close(*sock_fd);
-            *sock_fd = -1;
-            return -1;
+static int64_t connect_now_ms(void){struct timespec t;if(clock_gettime(CLOCK_MONOTONIC,&t))return -1;return (int64_t)t.tv_sec*1000+t.tv_nsec/1000000;}
+int ipc_client_connect(int *sock_fd)
+{
+    if(!sock_fd){errno=EINVAL;return -1;}*sock_fd=-1;
+    const app_config_t *cfg=app_config_get();struct sockaddr_un addr={.sun_family=AF_UNIX};
+    if(!cfg){errno=EINVAL;return -1;}
+    size_t size=strnlen(cfg->ipc_socket_path,sizeof(cfg->ipc_socket_path));
+    if(!size || size>=sizeof(addr.sun_path)){errno=ENAMETOOLONG;return -1;}
+    memcpy(addr.sun_path,cfg->ipc_socket_path,size+1);
+    int fd=socket(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK|SOCK_CLOEXEC,0);if(fd<0)return -1;
+    int64_t start=connect_now_ms();if(start<0)goto fail;
+    if(connect(fd,(struct sockaddr *)&addr,offsetof(struct sockaddr_un,sun_path)+size+1)<0){
+        if(errno!=EINPROGRESS)goto fail;
+        for(;;){
+            int64_t now=connect_now_ms();if(now<0)goto fail;
+            if(now-start>=IPC_CONNECT_TIMEOUT_MS){errno=ETIMEDOUT;goto fail;}
+            struct pollfd p={.fd=fd,.events=POLLOUT};int rc=poll(&p,1,(int)(IPC_CONNECT_TIMEOUT_MS-(now-start)));
+            if(rc<0 && errno==EINTR)continue;
+            if(rc<=0){if(!rc)errno=ETIMEDOUT;goto fail;}
+            now=connect_now_ms();if(now<0)goto fail;
+            if(now-start>=IPC_CONNECT_TIMEOUT_MS){errno=ETIMEDOUT;goto fail;}
+            if(p.revents&POLLNVAL){errno=EBADF;goto fail;}
+            int error=0;socklen_t length=sizeof(error);
+            if(getsockopt(fd,SOL_SOCKET,SO_ERROR,&error,&length))goto fail;
+            if(error){errno=error;goto fail;}
+            if(!(p.revents&POLLOUT)){errno=ECONNABORTED;goto fail;}break;
         }
     }
-
-    /* 设置 socket 选项 */
-    set_socket_options(*sock_fd);
-
-    APP_LOGI("ipc", "client connected to backend");
-    return 0;
+    set_socket_options(fd);*sock_fd=fd;return 0;
+fail: {int error=errno;close(fd);errno=error;return -1;}
 }
 
 int ipc_client_send(int sock_fd, uint32_t topic, const void *data, uint32_t len, uint32_t flags) {
@@ -318,70 +287,65 @@ int ipc_client_heartbeat(int sock_fd) {
  *                                 服务端实现
  *****************************************************************************/
 
-int ipc_server_start(int *listen_fd) {
-    struct sockaddr_un addr;
-    const app_config_t *cfg = app_config_get();
-
-    if (!listen_fd) {
-        return -1;
-    }
-
-    /* 清理旧的 socket 文件 */
-    unlink(cfg->ipc_socket_path);
-
-    /* 创建 socket */
-    *listen_fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (*listen_fd < 0) {
-        perror("socket");
-        return -1;
-    }
-
-    /* 设置 socket 选项 */
-    set_socket_options(*listen_fd);
-
-    /* 配置地址 */
-    memset(&addr, 0, sizeof(addr));
-    addr.sun_family = AF_UNIX;
-    snprintf(addr.sun_path, sizeof(addr.sun_path), "%s", cfg->ipc_socket_path);
-
-    /* 绑定地址 */
-    if (bind(*listen_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        perror("bind");
-        close(*listen_fd);
-        return -1;
-    }
-
-    /* 设置权限 (可选，允许其他用户访问) */
-    chmod(cfg->ipc_socket_path, (mode_t)cfg->ipc_socket_mode);
-
-    /* 开始监听 */
-    if (listen(*listen_fd, 5) < 0) {
-        perror("listen");
-        close(*listen_fd);
-        return -1;
-    }
-
-    APP_LOGI("ipc", "server started on %s", cfg->ipc_socket_path);
-    return 0;
+static struct {
+    pthread_mutex_t mutex;
+    int fd, lock_fd;
+    char path[108];
+    dev_t device;ino_t inode;
+} endpoint_owner={.mutex=PTHREAD_MUTEX_INITIALIZER,.fd=-1,.lock_fd=-1};
+static bool same_socket_path(const char *path,dev_t device,ino_t inode)
+{
+    struct stat st;return !lstat(path,&st) && S_ISSOCK(st.st_mode) && st.st_dev==device && st.st_ino==inode;
+}
+int ipc_server_start(int *listen_fd)
+{
+    if(!listen_fd){errno=EINVAL;return -1;}*listen_fd=-1;
+    const app_config_t *cfg=app_config_get();struct sockaddr_un addr={.sun_family=AF_UNIX};
+    if(!cfg){errno=EINVAL;return -1;}
+    size_t length=strnlen(cfg->ipc_socket_path,sizeof(cfg->ipc_socket_path));
+    if(!length || length>=sizeof(addr.sun_path)){errno=ENAMETOOLONG;return -1;}
+    memcpy(addr.sun_path,cfg->ipc_socket_path,length+1);
+    char lock_path[sizeof(addr.sun_path)+6];snprintf(lock_path,sizeof(lock_path),"%s.lock",addr.sun_path);
+    pthread_mutex_lock(&endpoint_owner.mutex);
+    if(endpoint_owner.fd>=0){pthread_mutex_unlock(&endpoint_owner.mutex);errno=EALREADY;return -1;}
+    int lock_fd=-1,fd=-1,error=0;bool bound=false;struct stat owned={0},st;
+    lock_fd=open(lock_path,O_RDWR|O_CREAT|O_CLOEXEC|O_NOFOLLOW,0600);if(lock_fd<0)goto fail;
+    if(fstat(lock_fd,&st))goto fail;
+    if(!S_ISREG(st.st_mode) || st.st_uid!=geteuid() || st.st_nlink!=1 || (st.st_mode&077)){errno=EPERM;goto fail;}
+    if(flock(lock_fd,LOCK_EX|LOCK_NB))goto fail;
+    if(!lstat(addr.sun_path,&st)){
+        if(!S_ISSOCK(st.st_mode) || st.st_uid!=geteuid()){errno=EEXIST;goto fail;}
+        int probe=socket(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK|SOCK_CLOEXEC,0);if(probe<0)goto fail;
+        int rc=connect(probe,(struct sockaddr *)&addr,offsetof(struct sockaddr_un,sun_path)+length+1);
+        int probe_error=errno;close(probe);
+        if(!rc || probe_error!=ECONNREFUSED){errno=EADDRINUSE;goto fail;}
+        if(!same_socket_path(addr.sun_path,st.st_dev,st.st_ino)){errno=EAGAIN;goto fail;}
+        if(unlink(addr.sun_path))goto fail;
+    }else if(errno!=ENOENT)goto fail;
+    fd=socket(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK|SOCK_CLOEXEC,0);if(fd<0)goto fail;
+    if(bind(fd,(struct sockaddr *)&addr,offsetof(struct sockaddr_un,sun_path)+length+1))goto fail;
+    if(lstat(addr.sun_path,&owned))goto fail;
+    bound=true;
+    if(chmod(addr.sun_path,(mode_t)cfg->ipc_socket_mode) || listen(fd,5))goto fail;
+    endpoint_owner.fd=fd;endpoint_owner.lock_fd=lock_fd;
+    memcpy(endpoint_owner.path,addr.sun_path,length+1);endpoint_owner.device=owned.st_dev;endpoint_owner.inode=owned.st_ino;
+    *listen_fd=fd;pthread_mutex_unlock(&endpoint_owner.mutex);return 0;
+fail:
+    error=errno;
+    if(bound && same_socket_path(addr.sun_path,owned.st_dev,owned.st_ino))unlink(addr.sun_path);
+    if(fd>=0)close(fd);
+    if(lock_fd>=0)close(lock_fd);
+    pthread_mutex_unlock(&endpoint_owner.mutex);errno=error;return -1;
 }
 
-int ipc_server_accept(int listen_fd, int *client_fd) {
-    struct sockaddr_un addr;
-    socklen_t addr_len = sizeof(addr);
-
-    if (listen_fd < 0 || !client_fd) {
-        return -1;
-    }
-
-    *client_fd = accept(listen_fd, (struct sockaddr *)&addr, &addr_len);
-    if (*client_fd < 0) {
-        perror("accept");
-        return -1;
-    }
-
-    set_nonblocking(*client_fd);
-    APP_LOGI("ipc", "client accepted");
-    return 0;
+int ipc_server_accept(int listen_fd,int *client_fd)
+{
+    if(!client_fd || listen_fd<0){errno=EINVAL;return -1;}*client_fd=-1;
+    int mode=fcntl(listen_fd,F_GETFL);if(mode<0)return -1;
+    if(!(mode&O_NONBLOCK)){errno=EINVAL;return -1;}
+    int fd=accept4(listen_fd,NULL,NULL,SOCK_NONBLOCK|SOCK_CLOEXEC);
+    if(fd<0)return -1;
+    *client_fd=fd;return 0;
 }
 
 int ipc_server_send(int client_fd, uint32_t topic, const void *data, uint32_t len, uint32_t flags) {
@@ -444,13 +408,15 @@ int ipc_server_recv(int client_fd, ipc_msg_t *msg, size_t max_len, bool block) {
     return ret;
 }
 
-void ipc_server_stop(int listen_fd) {
-    const app_config_t *cfg = app_config_get();
-    if (listen_fd >= 0) {
-        APP_LOGI("ipc", "server stopping");
-        close(listen_fd);
-        unlink(cfg->ipc_socket_path);
+void ipc_server_stop(int listen_fd)
+{
+    pthread_mutex_lock(&endpoint_owner.mutex);
+    if(listen_fd>=0 && endpoint_owner.fd==listen_fd){
+        if(same_socket_path(endpoint_owner.path,endpoint_owner.device,endpoint_owner.inode))unlink(endpoint_owner.path);
+        close(endpoint_owner.fd);close(endpoint_owner.lock_fd);
+        endpoint_owner.fd=-1;endpoint_owner.lock_fd=-1;endpoint_owner.path[0]=0;
     }
+    pthread_mutex_unlock(&endpoint_owner.mutex);
 }
 
 int ipc_socket_poll(int sock_fd, int timeout_ms) {

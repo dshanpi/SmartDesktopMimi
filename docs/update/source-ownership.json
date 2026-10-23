@@ -51,7 +51,7 @@
     },
     "apps/lv_port_linux/src/ipc/ipc_socket.c": {
       "owner": "shared-frozen",
-      "sha256": "c8f577d07f56402177d92ea3b7cb9756387da3737106c089d09c485ef307dd75"
+      "sha256": "e1e9c2c1f4b3357ee9014a7dd1787014a19a3cf8e994fac54a74f1886ebda6a2"
     },
     "apps/lv_port_linux/src/ipc/ipc_socket.h": {
       "owner": "shared-frozen",
@@ -127,11 +127,11 @@
     },
     "apps/lv_port_linux/src/middleware/middleware.c": {
       "owner": "shared-frozen",
-      "sha256": "3a64e4b6394bbff20530e59398d52fd29e01c6651accbf03d1d507658f9b338c"
+      "sha256": "44d1c9630be5bbfa00fcdebaf205d6130c8f7bd7cd7891870ec9ca028e712a9e"
     },
     "apps/lv_port_linux/src/middleware/middleware.h": {
       "owner": "shared-frozen",
-      "sha256": "8c9795f8e7d78ae9ea442398ab93c16ab901d5e8d68b4d2b72a4e3248a6845d0"
+      "sha256": "46c5711d67b52604d522689ad313f6c51272fdcc5fc37e803fb0ba216266098a"
     },
     "apps/lv_port_linux/src/platform/platform_capabilities.h": {
       "owner": "platform"
@@ -278,6 +278,24 @@
     },
     "services/mimi-ubuntu-provider/v2_server.h": {
       "owner": "platform"
+    },
+    "apps/lv_port_linux/src/ipc/connection.c": {
+      "owner": "shared-frozen",
+      "sha256": "e8c6e4d44de0b85b8ac5a863f6c79bb3f4ca884ae68f0a580cbfaa6f30a795f8"
+    },
+    "apps/lv_port_linux/src/ipc/connection.h": {
+      "owner": "shared-frozen",
+      "sha256": "769c287d50f676d80760e0385389f0a4d364ca7f5c2ec0d7872397ee7757a17a"
+    },
+    "apps/lv_port_linux/src/system/wifi_control_client.h": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/wifi_status_decode.h": {
+      "owner": "application"
+    },
+    "apps/lv_port_linux/src/system/wifi_control_protocol.h": {
+      "owner": "shared-frozen",
+      "sha256": "22869454728e8a56c7f639ceb9400c61325fb13bc2f0aa9275fd4af25da21f27"
     }
   },
   "migration_complete": false,

@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "summary": "Integrate bounded owned IPC transport and durable regression fixtures",
+  "context": "Earlier isolated candidates now enter real public build source",
+  "next_steps": "Full desktop/A133 build and provider coordination; legacy raw helpers audit",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "public transport source and ownership",
+      "invariants": "Frozen wire ABI; bounded lifetime; no implicit replay; immutable published releases",
+      "paths": [
+        "apps/lv_port_linux/CMakeLists.txt",
+        "apps/lv_port_linux/src/ipc/connection.c",
+        "apps/lv_port_linux/src/ipc/connection.h",
+        "apps/lv_port_linux/src/ipc/ipc_socket.c",
+        "apps/lv_port_linux/src/middleware/middleware.c",
+        "docs/update/source-ownership.json",
+        "tests/architecture/test_ipc_connection.py",
+        "tests/architecture/fixtures/ipc_connection_receive.c",
+        "tests/architecture/fixtures/ipc_middleware_ui.c",
+        "tests/architecture/fixtures/ipc_middleware_backend.c",
+        "tests/architecture/fixtures/ipc_connect_deadline.c",
+        "tests/architecture/fixtures/ipc_endpoint_owner.c",
+        "tests/architecture/fixtures/ipc_connect_accept.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-public-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Integrated transport",
+          "status": "passed",
+          "scope": "six sanitizer host methods",
+          "reason": "actual public source, synthetic schedules explicit",
+          "evidence": ".delivery/quality-review-20261023/ipc-public-integration/result.json"
+        },
+        {
+          "name": "Protocol and ownership",
+          "status": "passed",
+          "scope": "3 protocol and8 checker tests plus inventory",
+          "reason": "prior omissions and pins reviewed",
+          "evidence": ".delivery/quality-review-20261023/ipc-public-integration/result.json"
+        },
+        {
+          "name": "Initial ownership checks",
+          "status": "failed",
+          "scope": "inventory",
+          "reason": "missing previous WiFi entries and stale shared pins retained",
+          "evidence": ".delivery/quality-review-20261023/ipc-public-integration/result.json"
+        },
+        {
+          "name": "Ubuntu provider build",
+          "status": "passed",
+          "scope": "fresh native compile/link",
+          "reason": "not runtime acceptance",
+          "evidence": ".delivery/quality-review-20261023/ipc-public-integration/result.json"
+        },
+        {
+          "name": "Target qualification",
+          "status": "not_run",
+          "scope": "desktop/A133/SDK/physical",
+          "reason": "new shared source baseline not deployed",
+          "evidence": ".delivery/quality-review-20261023/ipc-public-integration/result.json"
+        }
+      ]
+    }
+  ]
+}

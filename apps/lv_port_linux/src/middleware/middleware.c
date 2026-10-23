@@ -3,11 +3,13 @@
  * @brief 多进程架构消息中间件实现
  */
 
-#include "middleware.h"
-#include "../ipc/ipc_socket.h"
-#include "../system/log/app_log.h"
+#include "middleware/middleware.h"
+#include "ipc/connection.h"
+#include "ipc/ipc_socket.h"
+#include "system/log/app_log.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
 #include <string.h>
@@ -18,6 +20,7 @@
 #define UI_MAX_MESSAGES_PER_TICK 16
 
 typedef struct {
+    mimi_connection *connection;
     int fd;
     bool active;
     time_t last_heartbeat;
@@ -28,6 +31,8 @@ static struct {
     bool is_backend;
     bool initialized;
     int ipc_socket;
+    mimi_connection *ui_connection;
+    uint64_t ui_epoch;
     int listen_socket;
     client_t clients[MAX_CLIENTS];
     mw_subscribe_cb_t ui_handlers[TOPIC_MAX][MW_MAX_SUBSCRIBERS];
@@ -41,6 +46,43 @@ static struct {
     .ipc_socket = -1,
     .listen_socket = -1,
 };
+
+/* A slot owns one reference; each operation acquires another under lock. */
+static void ui_detach(mimi_connection *expected)
+{
+    bool removed=false;
+    pthread_mutex_lock(&mw_state.lock);
+    if(mw_state.ui_connection==expected){mw_state.ui_connection=NULL;mw_state.ipc_socket=-1;removed=true;}
+    pthread_mutex_unlock(&mw_state.lock);
+    if(removed){mimi_connection_stop(expected);mimi_connection_release(expected);}
+}
+static mimi_connection *ui_acquire(bool reconnect)
+{
+    pthread_mutex_lock(&mw_state.lock);
+    if(!mw_state.initialized || mw_state.is_backend){pthread_mutex_unlock(&mw_state.lock);return NULL;}
+    uint64_t epoch=mw_state.ui_epoch;
+    mimi_connection *c=mw_state.ui_connection;
+    if(c && mimi_connection_retain(c))c=NULL;
+    pthread_mutex_unlock(&mw_state.lock);
+    if(c || !reconnect)return c;
+    int fd=-1;if(ipc_client_connect(&fd))return NULL;
+    mimi_connection *created=mimi_connection_create(fd);
+    if(!created){close(fd);return NULL;}
+    pthread_mutex_lock(&mw_state.lock);
+    if(mw_state.initialized && !mw_state.is_backend && mw_state.ui_epoch==epoch){
+        if(!mw_state.ui_connection){mw_state.ui_connection=created;mw_state.ipc_socket=fd;created=NULL;}
+        c=mw_state.ui_connection;if(mimi_connection_retain(c))c=NULL;
+    }
+    pthread_mutex_unlock(&mw_state.lock);
+    if(created)mimi_connection_release(created);
+    return c;
+}
+static bool ui_is_current(mimi_connection *c)
+{
+    pthread_mutex_lock(&mw_state.lock);
+    bool current=mw_state.initialized && !mw_state.is_backend && mw_state.ui_connection==c;
+    pthread_mutex_unlock(&mw_state.lock);return current;
+}
 
 static void dispatch_ui_message(const ipc_msg_t *ipc_msg)
 {
@@ -104,96 +146,66 @@ static void dispatch_backend_message(const ipc_msg_t *ipc_msg)
     }
 }
 
-static int handle_new_connection(void)
+static void backend_detach(int slot,mimi_connection *expected,bool timed,time_t observed)
 {
-    int client_fd = -1;
-    if (ipc_server_accept(mw_state.listen_socket, &client_fd) != 0) return -1;
-
+    bool removed=false;
     pthread_mutex_lock(&mw_state.lock);
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (!mw_state.clients[i].active) {
-            mw_state.clients[i].fd = client_fd;
-            mw_state.clients[i].active = true;
-            mw_state.clients[i].last_heartbeat = time(NULL);
-            pthread_mutex_unlock(&mw_state.lock);
-            APP_LOGI("middleware", "client slot %d connected", i);
-            return 0;
+    if(mw_state.clients[slot].active && mw_state.clients[slot].connection==expected &&
+       (!timed || mw_state.clients[slot].last_heartbeat==observed)){
+        mw_state.clients[slot].active=false;mw_state.clients[slot].fd=-1;
+        mw_state.clients[slot].connection=NULL;removed=true;
+    }
+    pthread_mutex_unlock(&mw_state.lock);
+    if(removed){mimi_connection_stop(expected);mimi_connection_release(expected);}
+}
+static int handle_new_connection(int listener,uint64_t epoch)
+{
+    int fd=-1;if(ipc_server_accept(listener,&fd))return -1;
+    mimi_connection *c=mimi_connection_create(fd);if(!c){close(fd);return -1;}
+    pthread_mutex_lock(&mw_state.lock);
+    if(mw_state.initialized && mw_state.is_backend && mw_state.ui_epoch==epoch){
+        for(int i=0;i<MAX_CLIENTS;i++)if(!mw_state.clients[i].active){
+            mw_state.clients[i].connection=c;mw_state.clients[i].fd=fd;
+            mw_state.clients[i].active=true;mw_state.clients[i].last_heartbeat=time(NULL);
+            pthread_mutex_unlock(&mw_state.lock);return 0;
         }
     }
-    pthread_mutex_unlock(&mw_state.lock);
-
-    APP_LOGW("middleware", "max clients reached, reject");
-    close(client_fd);
-    return -1;
+    pthread_mutex_unlock(&mw_state.lock);mimi_connection_release(c);return -1;
 }
-
-static void handle_client_disconnect(int client_idx)
+static int handle_client_message(int slot,mimi_connection *c)
 {
-    int fd;
     pthread_mutex_lock(&mw_state.lock);
-    if (!mw_state.clients[client_idx].active) {
-        pthread_mutex_unlock(&mw_state.lock);
-        return;
-    }
-    fd = mw_state.clients[client_idx].fd;
-    mw_state.clients[client_idx].active = false;
-    mw_state.clients[client_idx].fd = -1;
-    pthread_mutex_unlock(&mw_state.lock);
-    APP_LOGI("middleware", "client slot %d disconnected", client_idx);
-    close(fd);
-}
-
-static int handle_client_message(int client_idx)
-{
-    ipc_msg_t msg;
-    int client_fd;
-    int recv_ret;
-
+    bool current=mw_state.clients[slot].active && mw_state.clients[slot].connection==c;
+    pthread_mutex_unlock(&mw_state.lock);if(!current)return 0;
+    ipc_msg_t msg;int ret=mimi_connection_receive(c,&msg,1000);
+    if(ret<=0)return ret;
     pthread_mutex_lock(&mw_state.lock);
-    if (!mw_state.clients[client_idx].active) {
-        pthread_mutex_unlock(&mw_state.lock);
-        return -1;
-    }
-    client_fd = mw_state.clients[client_idx].fd;
+    current=mw_state.clients[slot].active && mw_state.clients[slot].connection==c;
+    if(current)mw_state.clients[slot].last_heartbeat=time(NULL);
     pthread_mutex_unlock(&mw_state.lock);
-
-    recv_ret = ipc_server_recv(client_fd, &msg, sizeof(msg), false);
-
-    if (recv_ret < 0) return -1;
-    if (recv_ret == 0) return 0;
-
-    pthread_mutex_lock(&mw_state.lock);
-    if (mw_state.clients[client_idx].active) {
-        mw_state.clients[client_idx].last_heartbeat = time(NULL);
-    }
-    pthread_mutex_unlock(&mw_state.lock);
-    if (!(msg.header.flags & IPC_FLAG_HEARTBEAT)) dispatch_backend_message(&msg);
+    if(current && !(msg.header.flags&IPC_FLAG_HEARTBEAT))dispatch_backend_message(&msg);
     return 0;
 }
 
 static int mw_init_ui(void)
 {
+    int fd=-1;if(ipc_client_connect(&fd))return -1;
+    mimi_connection *c=mimi_connection_create(fd);if(!c){close(fd);return -1;}
     pthread_mutex_lock(&mw_state.lock);
-    memset(mw_state.ui_handlers, 0, sizeof(mw_state.ui_handlers));
-    memset(mw_state.ui_subscriber_count, 0, sizeof(mw_state.ui_subscriber_count));
-    pthread_mutex_unlock(&mw_state.lock);
-
-    if (ipc_client_connect(&mw_state.ipc_socket) != 0) {
-        APP_LOGE("middleware", "failed to connect backend");
-        return -1;
-    }
-
-    pthread_mutex_lock(&mw_state.lock);
-    mw_state.is_backend = false;
-    mw_state.initialized = true;
-    pthread_mutex_unlock(&mw_state.lock);
-    APP_LOGI("middleware", "ui mode initialized");
-    return 0;
+    if(mw_state.initialized || mw_state.ui_epoch==UINT64_MAX){pthread_mutex_unlock(&mw_state.lock);mimi_connection_release(c);return -1;}
+    ++mw_state.ui_epoch;
+    memset(mw_state.ui_handlers,0,sizeof(mw_state.ui_handlers));
+    memset(mw_state.ui_subscriber_count,0,sizeof(mw_state.ui_subscriber_count));
+    mw_state.ui_connection=c;mw_state.ipc_socket=fd;
+    mw_state.is_backend=false;mw_state.initialized=true;
+    pthread_mutex_unlock(&mw_state.lock);return 0;
 }
 
 static int mw_init_backend(void)
 {
     pthread_mutex_lock(&mw_state.lock);
+    if(mw_state.initialized || mw_state.ui_epoch==UINT64_MAX){pthread_mutex_unlock(&mw_state.lock);return -1;}
+    ++mw_state.ui_epoch;
     memset(mw_state.backend_handlers, 0, sizeof(mw_state.backend_handlers));
     memset(mw_state.backend_subscriber_count, 0, sizeof(mw_state.backend_subscriber_count));
     memset(mw_state.clients, 0, sizeof(mw_state.clients));
@@ -222,15 +234,17 @@ void mw_deinit(void)
 {
     bool initialized;
     bool is_backend;
-    int ipc_socket;
+    mimi_connection *ui_connection;
     int listen_socket;
-    int client_fds[MAX_CLIENTS];
+    mimi_connection *connections[MAX_CLIENTS];
     int client_count = 0;
 
     pthread_mutex_lock(&mw_state.lock);
     initialized = mw_state.initialized;
     is_backend = mw_state.is_backend;
-    ipc_socket = mw_state.ipc_socket;
+    ui_connection = mw_state.ui_connection;
+    mw_state.ui_connection = NULL;
+    if(mw_state.ui_epoch!=UINT64_MAX)++mw_state.ui_epoch;
     listen_socket = mw_state.listen_socket;
     mw_state.initialized = false;
     mw_state.ipc_socket = -1;
@@ -238,7 +252,8 @@ void mw_deinit(void)
     if (is_backend) {
         for (int i = 0; i < MAX_CLIENTS; i++) {
             if (mw_state.clients[i].active) {
-                client_fds[client_count++] = mw_state.clients[i].fd;
+                connections[client_count++] = mw_state.clients[i].connection;
+                mw_state.clients[i].connection = NULL;
                 mw_state.clients[i].active = false;
                 mw_state.clients[i].fd = -1;
             }
@@ -251,10 +266,10 @@ void mw_deinit(void)
     if (is_backend) {
         ipc_server_stop(listen_socket);
         for (int i = 0; i < client_count; i++) {
-            close(client_fds[i]);
+            mimi_connection_stop(connections[i]);mimi_connection_release(connections[i]);
         }
     } else {
-        ipc_client_disconnect(ipc_socket);
+        if(ui_connection){mimi_connection_stop(ui_connection);mimi_connection_release(ui_connection);}
     }
     APP_LOGI("middleware", "deinitialized");
 }
@@ -268,103 +283,34 @@ bool mw_is_initialized(void)
     return initialized;
 }
 
-int mw_publish(mw_topic_t topic, const void *data, uint32_t len, mw_direction_t direction)
+int mw_publish(mw_topic_t topic,const void *data,uint32_t len,mw_direction_t direction)
 {
     (void)direction;
-    bool initialized;
-    bool is_backend;
-    int ui_socket;
-    int backend_fds[MAX_CLIENTS];
-    int backend_slots[MAX_CLIENTS];
-    int failed_slots[MAX_CLIENTS];
-    int backend_count = 0;
-    int failed_count = 0;
-
+    if(topic>=TOPIC_MAX || len>MW_MSG_DATA_MAX_SIZE || (len && !data))return -1;
+    mimi_connection *connections[MAX_CLIENTS];int slots[MAX_CLIENTS],count=0;
     pthread_mutex_lock(&mw_state.lock);
-    initialized = mw_state.initialized;
-    is_backend = mw_state.is_backend;
-    ui_socket = mw_state.ipc_socket;
-    if (is_backend) {
-        for (int i = 0; i < MAX_CLIENTS; i++) {
-            if (mw_state.clients[i].active) {
-                backend_fds[backend_count++] = mw_state.clients[i].fd;
-                backend_slots[backend_count - 1] = i;
-            }
-        }
+    bool initialized=mw_state.initialized,backend=mw_state.is_backend;
+    if(initialized && backend)for(int i=0;i<MAX_CLIENTS;i++){
+        mimi_connection *c=mw_state.clients[i].connection;
+        if(mw_state.clients[i].active && c && !mimi_connection_retain(c)){connections[count]=c;slots[count++]=i;}
     }
     pthread_mutex_unlock(&mw_state.lock);
-
-    if (!initialized) return -1;
-    if (topic >= TOPIC_MAX) return -1;
-    if (len > MW_MSG_DATA_MAX_SIZE) return -1;
-
-    if (is_backend) {
-        int sent_count = 0;
-        for (int i = 0; i < backend_count; i++) {
-            if (ipc_server_send(backend_fds[i], topic, data, len, IPC_FLAG_NONE) == 0) {
-                sent_count++;
-            } else {
-                failed_slots[failed_count++] = backend_slots[i];
-            }
+    if(!initialized)return -1;
+    if(backend){
+        int sent=0;
+        for(int i=0;i<count;i++){
+            if(!mimi_connection_send(connections[i],topic,data,len,IPC_FLAG_NONE,20))sent++;
+            else if(mimi_connection_stopped(connections[i]))backend_detach(slots[i],connections[i],false,0);
+            mimi_connection_release(connections[i]);
         }
-        for (int i = 0; i < failed_count; i++) {
-            APP_LOGW("middleware", "client slot %d send failed, disconnecting", failed_slots[i]);
-            handle_client_disconnect(failed_slots[i]);
-        }
-        if (sent_count > 0) {
-            pthread_mutex_lock(&mw_state.lock);
-            mw_state.msg_sent++;
-            pthread_mutex_unlock(&mw_state.lock);
-            return 0;
-        }
+        if(sent){pthread_mutex_lock(&mw_state.lock);mw_state.msg_sent++;pthread_mutex_unlock(&mw_state.lock);return 0;}
         return -1;
     }
-
-    if (ui_socket < 0) {
-        int new_socket = -1;
-        if (ipc_client_connect(&new_socket) != 0) return -1;
-        pthread_mutex_lock(&mw_state.lock);
-        if (mw_state.ipc_socket < 0) {
-            mw_state.ipc_socket = new_socket;
-            ui_socket = new_socket;
-            new_socket = -1;
-        } else {
-            ui_socket = mw_state.ipc_socket;
-        }
-        pthread_mutex_unlock(&mw_state.lock);
-        if (new_socket >= 0) {
-            close(new_socket);
-        }
-    }
-
-    int ret = ipc_client_send(ui_socket, topic, data, len, IPC_FLAG_NONE);
-    if (ret < 0) {
-        APP_LOGW("middleware", "send failed, reconnect once");
-        pthread_mutex_lock(&mw_state.lock);
-        if (mw_state.ipc_socket == ui_socket) {
-            close(mw_state.ipc_socket);
-            mw_state.ipc_socket = -1;
-        }
-        pthread_mutex_unlock(&mw_state.lock);
-
-        if (ipc_client_connect(&ui_socket) == 0) {
-            pthread_mutex_lock(&mw_state.lock);
-            if (mw_state.ipc_socket < 0) {
-                mw_state.ipc_socket = ui_socket;
-            } else {
-                close(ui_socket);
-                ui_socket = mw_state.ipc_socket;
-            }
-            pthread_mutex_unlock(&mw_state.lock);
-            ret = ipc_client_send(ui_socket, topic, data, len, IPC_FLAG_NONE);
-        }
-    }
-    if (ret == 0) {
-        pthread_mutex_lock(&mw_state.lock);
-        mw_state.msg_sent++;
-        pthread_mutex_unlock(&mw_state.lock);
-    }
-    return ret;
+    mimi_connection *c=ui_acquire(true);if(!c)return -1;
+    int ret=mimi_connection_send(c,topic,data,len,IPC_FLAG_NONE,100);
+    if(ret<0){if(mimi_connection_stopped(c))ui_detach(c);}
+    else{pthread_mutex_lock(&mw_state.lock);mw_state.msg_sent++;pthread_mutex_unlock(&mw_state.lock);}
+    mimi_connection_release(c);return ret;
 }
 
 static int subscribe_into_table(mw_subscribe_cb_t table[TOPIC_MAX][MW_MAX_SUBSCRIBERS], uint8_t counts[TOPIC_MAX], mw_topic_t topic, mw_subscribe_cb_t cb)
@@ -428,62 +374,21 @@ int mw_unsubscribe(mw_topic_t topic, mw_subscribe_cb_t cb)
 
 void mw_process_ui_messages(void)
 {
-    int ui_socket;
-    bool is_backend;
-
-    pthread_mutex_lock(&mw_state.lock);
-    is_backend = mw_state.is_backend;
-    pthread_mutex_unlock(&mw_state.lock);
-    if (is_backend) return;
-
-    pthread_mutex_lock(&mw_state.lock);
-    ui_socket = mw_state.ipc_socket;
-    pthread_mutex_unlock(&mw_state.lock);
-
-    if (ui_socket < 0) {
-        if (ipc_client_connect(&ui_socket) != 0) return;
-        pthread_mutex_lock(&mw_state.lock);
-        if (mw_state.ipc_socket < 0) {
-            mw_state.ipc_socket = ui_socket;
-        } else {
-            close(ui_socket);
-            ui_socket = mw_state.ipc_socket;
-        }
-        pthread_mutex_unlock(&mw_state.lock);
-        APP_LOGI("middleware", "ui reconnected");
+    mimi_connection *c=ui_acquire(true);if(!c)return;
+    for(int handled=0;handled<UI_MAX_MESSAGES_PER_TICK && ui_is_current(c);handled++){
+        ipc_msg_t msg;int ret=mimi_connection_receive(c,&msg,1000);
+        if(ret<0){if(errno!=EAGAIN && errno!=EWOULDBLOCK)ui_detach(c);break;}
+        if(!ret)break;
+        if(!ui_is_current(c))break;
+        if(!(msg.header.flags&IPC_FLAG_HEARTBEAT))dispatch_ui_message(&msg);
     }
-
-    for (int handled = 0; handled < UI_MAX_MESSAGES_PER_TICK; handled++) {
-        ipc_msg_t msg;
-        int ret = ipc_client_recv(ui_socket, &msg, sizeof(msg));
-        if (ret < 0) {
-            if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                APP_LOGW("middleware", "ui recv error, reset connection");
-                pthread_mutex_lock(&mw_state.lock);
-                if (mw_state.ipc_socket == ui_socket) {
-                    close(mw_state.ipc_socket);
-                    mw_state.ipc_socket = -1;
-                }
-                pthread_mutex_unlock(&mw_state.lock);
-            }
-            break;
-        }
-        if (ret == 0) break;
-        if (msg.header.flags & IPC_FLAG_HEARTBEAT) continue;
-        dispatch_ui_message(&msg);
-    }
+    mimi_connection_release(c);
 }
-
 int mw_pending_ui_messages_count(void)
 {
-    int ui_socket;
-    bool is_backend;
-    pthread_mutex_lock(&mw_state.lock);
-    is_backend = mw_state.is_backend;
-    ui_socket = mw_state.ipc_socket;
-    pthread_mutex_unlock(&mw_state.lock);
-    if (is_backend || ui_socket < 0) return 0;
-    return ipc_socket_poll(ui_socket, 0) > 0 ? 1 : 0;
+    mimi_connection *c=ui_acquire(false);if(!c)return 0;
+    int pending=ipc_socket_poll(mimi_connection_fd(c),0)>0;
+    mimi_connection_release(c);return pending;
 }
 
 int mw_backend_register_handler(mw_topic_t topic, void (*cb)(const mw_msg_t *msg))
@@ -501,85 +406,44 @@ int mw_backend_register_handler(mw_topic_t topic, void (*cb)(const mw_msg_t *msg
 
 void mw_process(void)
 {
-    bool initialized;
-    bool is_backend;
-
+    struct pollfd fds[MAX_CLIENTS+1];mimi_connection *connections[MAX_CLIENTS];int slots[MAX_CLIENTS],count=0;
     pthread_mutex_lock(&mw_state.lock);
-    initialized = mw_state.initialized;
-    is_backend = mw_state.is_backend;
-    pthread_mutex_unlock(&mw_state.lock);
-
-    if (!initialized) return;
-    if (!is_backend) {
-        mw_process_ui_messages();
-        return;
-    }
-
-    struct pollfd fds[MAX_CLIENTS + 1];
-    int client_slots[MAX_CLIENTS + 1];
-    int nfds = 0;
-    pthread_mutex_lock(&mw_state.lock);
-    fds[nfds].fd = mw_state.listen_socket;
-    fds[nfds].events = POLLIN;
-    client_slots[nfds] = -1;
-    nfds++;
-
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-        if (mw_state.clients[i].active) {
-            fds[nfds].fd = mw_state.clients[i].fd;
-            fds[nfds].events = POLLIN;
-            client_slots[nfds] = i;
-            nfds++;
+    if(!mw_state.initialized){pthread_mutex_unlock(&mw_state.lock);return;}
+    if(!mw_state.is_backend){pthread_mutex_unlock(&mw_state.lock);mw_process_ui_messages();return;}
+    uint64_t epoch=mw_state.ui_epoch;
+    int listener=fcntl(mw_state.listen_socket,F_DUPFD_CLOEXEC,0);
+    fds[0]=(struct pollfd){.fd=listener,.events=POLLIN};
+    for(int i=0;i<MAX_CLIENTS;i++){
+        mimi_connection *c=mw_state.clients[i].connection;
+        if(mw_state.clients[i].active && c && !mimi_connection_retain(c)){
+            connections[count]=c;slots[count]=i;fds[++count]=(struct pollfd){.fd=mimi_connection_fd(c),.events=POLLIN};
         }
     }
     pthread_mutex_unlock(&mw_state.lock);
-
-    int ret = poll(fds, nfds, 0);
-    if (ret <= 0) return;
-
-    if (fds[0].revents & POLLIN) {
-        (void)handle_new_connection();
-    }
-
-    int fd_idx = 1;
-    while (fd_idx < nfds) {
-        int slot = client_slots[fd_idx];
-        if (fds[fd_idx].revents & POLLIN) {
-            if (handle_client_message(slot) < 0) handle_client_disconnect(slot);
+    int ret=poll(fds,count+1,0);
+    if(ret>=0){
+        if(fds[0].revents&POLLIN)handle_new_connection(listener,epoch);
+        for(int i=0;i<count;i++){
+            if(handle_client_message(slots[i],connections[i])<0)
+                backend_detach(slots[i],connections[i],false,0);
+            if(fds[i+1].revents&(POLLERR|POLLHUP|POLLNVAL))backend_detach(slots[i],connections[i],false,0);
         }
-        if (fds[fd_idx].revents & (POLLERR | POLLHUP)) {
-            handle_client_disconnect(slot);
-        }
-        fd_idx++;
     }
+    if(listener>=0)close(listener);
+    for(int i=0;i<count;i++)mimi_connection_release(connections[i]);
 }
-
 void mw_backend_check_heartbeat_timeouts(void)
 {
-    bool initialized;
-    bool is_backend;
-    time_t now = time(NULL);
-    int timeout_slots[MAX_CLIENTS];
-    int timeout_count = 0;
-
+    mimi_connection *expired[MAX_CLIENTS];int slots[MAX_CLIENTS],count=0;time_t seen[MAX_CLIENTS],now=time(NULL);
     pthread_mutex_lock(&mw_state.lock);
-    initialized = mw_state.initialized;
-    is_backend = mw_state.is_backend;
-    if (initialized && is_backend) {
-        for (int i = 0; i < MAX_CLIENTS; i++) {
-            if (mw_state.clients[i].active &&
-                now - mw_state.clients[i].last_heartbeat > IPC_HEARTBEAT_TIMEOUT) {
-                timeout_slots[timeout_count++] = i;
-            }
+    if(mw_state.initialized && mw_state.is_backend)for(int i=0;i<MAX_CLIENTS;i++){
+        client_t *slot=&mw_state.clients[i];
+        if(slot->active && now-slot->last_heartbeat>IPC_HEARTBEAT_TIMEOUT && !mimi_connection_retain(slot->connection)){
+            expired[count]=slot->connection;slots[count]=i;seen[count++]=slot->last_heartbeat;
         }
     }
     pthread_mutex_unlock(&mw_state.lock);
-
-    for (int i = 0; i < timeout_count; i++) {
-        int slot = timeout_slots[i];
-        APP_LOGW("middleware", "client %d heartbeat timeout", slot);
-        handle_client_disconnect(slot);
-    }
+    for(int i=0;i<count;i++){backend_detach(slots[i],expired[i],true,seen[i]);mimi_connection_release(expired[i]);}
 }
 
 void mw_backend_run(void)

@@ -77,7 +77,7 @@ cmake_policy(SET CMP0079 NEW)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_C_STANDARD 99) # LVGL officially supports C99 and above
+set(CMAKE_C_STANDARD 11) # Connection lifetime uses C11 atomics; LVGL supports C99 and above
 set(CMAKE_CXX_STANDARD 17) #C17
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
