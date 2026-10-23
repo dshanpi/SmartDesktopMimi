@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Preserve daemon owned endpoint during init stop",
+  "context": "Stop hook precedes procd termination; deleting endpoint early is incorrect",
+  "next_steps": "Integrate singleton candidate and verify current source artifacts",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Public init and private singleton fault cases",
+      "invariants": "No board or SDK source change; preserve original failures",
+      "paths": [
+        "packaging/aitvbox-platform/files/aitvbox-control.init",
+        "tests/platform/test_platform_init.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-owner-init-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original premature unlink",
+          "status": "failed",
+          "scope": "Actual init and bound private socket",
+          "reason": "Stop callback deleted still-owned endpoint",
+          "evidence": ".delivery/quality-review-20261023/control-socket-ownership/init-original.log"
+        },
+        {
+          "name": "Fixed init and package",
+          "status": "passed",
+          "scope": "4 host methods and actual package fixture",
+          "evidence": ".delivery/quality-review-20261023/control-socket-ownership/init-fixed.log"
+        },
+        {
+          "name": "Candidate lock faults",
+          "status": "passed",
+          "scope": "5 private candidate scenarios only",
+          "evidence": ".delivery/quality-review-20261023/control-socket-ownership/fault-result.json"
+        }
+      ]
+    }
+  ]
+}

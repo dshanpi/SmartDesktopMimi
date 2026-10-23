@@ -49,11 +49,11 @@ rm(){ echo cleanup >> "$LOG"; }
                         self.assertNotEqual(result.returncode,0)
                         self.assertNotIn('open',calls)
 
-    def test_stop_failure_observable_without_skipping_cleanup(self):
+    def test_stop_failure_observable_without_removing_socket(self):
         for failed in ('agentctl','logger','none'):
             with self.subTest(failed=failed):
                 result,calls=self.invoke('control','stop_service',failed)
-                self.assertIn('agentctl',calls);self.assertEqual(calls[-1],'cleanup')
+                self.assertIn('agentctl',calls);self.assertNotIn('cleanup',calls)
                 logged=[line for line in calls if line.startswith('logger ')]
                 if failed=='none': self.assertFalse(logged)
                 else:
@@ -73,3 +73,19 @@ rm(){ echo cleanup >> "$LOG"; }
                     else:
                         self.assertNotEqual(result.returncode,0)
                         self.assertNotIn('open',calls);self.assertNotIn('service_submit',calls)
+
+    def test_stop_preserves_daemon_owned_socket(self):
+        import socket
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            endpoint = root / 'control.sock'
+            script = root / 'init'
+            source = ROOT / 'packaging/aitvbox-platform/files/aitvbox-control.init'
+            script.write_text(source.read_text().replace('/usr/bin/aitvbox-agentctl', 'true')
+                              .replace('/var/run/aitvbox/control.sock', str(endpoint)))
+            with socket.socket(socket.AF_UNIX) as server:
+                server.bind(str(endpoint))
+                inode = endpoint.stat().st_ino
+                subprocess.run(['sh', '-c', '. "$1"; stop_service', 'sh', str(script)], check=True)
+                self.assertTrue(endpoint.exists(), 'init deleted live daemon endpoint before process exit')
+                self.assertEqual(endpoint.stat().st_ino, inode)

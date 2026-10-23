@@ -26,5 +26,5 @@ stop_service() {
 		logger -t aitvbox-control "agent stop request or HID release failed; continuing service cleanup" ||
 			printf '%s\n' "agent stop request or HID release failed; continuing service cleanup" >&2
 	fi
-	rm -f /var/run/aitvbox/control.sock
+	# procd has not stopped the daemon yet; only its owner may remove the socket.
 }
