@@ -72,6 +72,10 @@ typedef enum {
     /* Optional PAIR071 extension; all preceding V1 topic numbers stay fixed. */
     TOPIC_CLOUD_PAIRING_STATUS,
 
+    /* QUALITY076: explicit byte protocol, append-only; no V1 layout changes. */
+    TOPIC_WIFI_CONTROL_V2,
+    TOPIC_WIFI_CONTROL_REPLY_V2,
+
     TOPIC_MAX
 } mw_topic_t;
 

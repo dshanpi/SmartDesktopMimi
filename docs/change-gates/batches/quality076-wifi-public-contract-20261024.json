@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Add optional versioned WiFi byte contract and append-only topics",
+  "context": "Public consumers need explicit correlated completion without changing existing ABI",
+  "next_steps": "Actual provider router and UI recovery integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Public optional header/topics and durable host tests",
+      "invariants": "Every old topic/layout preserved; ACK never completion; no installed activation",
+      "paths": [
+        "apps/lv_port_linux/src/middleware/middleware.h",
+        "apps/lv_port_linux/src/system/wifi_control_protocol.h",
+        "tests/architecture/test_wifi_control_protocol.py",
+        "tests/architecture/fixtures/wifi_control_protocol.c",
+        "tests/architecture/fixtures/wifi_control_transport.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-public-contract-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Contract and existing cloud ABI",
+          "status": "passed",
+          "scope": "2 methods including native C sanitizer checks",
+          "evidence": ".delivery/quality-review-20261023/wifi-public-contract/test.log"
+        },
+        {
+          "name": "Actual IPC framing",
+          "status": "passed",
+          "scope": "2 command/reply socketpair frames; synthesized service ACK",
+          "evidence": ".delivery/quality-review-20261023/wifi-public-contract/transport.log"
+        },
+        {
+          "name": "Integrated product",
+          "status": "not_run",
+          "scope": "Actual router/provider/UI/A133/physical",
+          "reason": "Optional contract only, no consumer or selected provider changed",
+          "evidence": ".delivery/quality-review-20261023/wifi-public-contract/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
