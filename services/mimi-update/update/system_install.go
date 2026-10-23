@@ -39,6 +39,7 @@ func ABDirection(cmdline, environment string) (string, error) {
 }
 
 type SystemJournal struct {
+	SystemBaseline string `json:"system_baseline,omitempty"`
 	ProductEdition string `json:"product_edition,omitempty"`
 	Schema         int    `json:"schema_version"`
 	HighWater      uint64 `json:"high_water"`
@@ -61,10 +62,12 @@ func (e *Engine) reconcileSystem(d Device) (SystemJournal, error) {
 	if err != nil {
 		return s, err
 	}
-	if s.BootID == "" {
-		return s, fmt.Errorf("system transaction lacks boot identity")
+	// Older pending journals do not identify the destination build. Preserve
+	// them for explicit recovery; version equality alone cannot confirm boot.
+	if s.BootID == "" || s.SystemBaseline == "" {
+		return s, fmt.Errorf("system transaction lacks boot or destination baseline identity")
 	}
-	if strings.TrimSpace(string(boot)) != s.BootID && d.Runtime["system"] != s.Version {
+	if strings.TrimSpace(string(boot)) != s.BootID && (d.Runtime["system"] != s.Version || d.SystemBaseline != s.SystemBaseline) {
 		s.Phase = "failed" // Interrupted write or bootloader rollback; never retry its sequence.
 		err = atomicJSON(dir, "state.json", s)
 	}
@@ -100,7 +103,7 @@ func validateSystemCommit(s SystemJournal, d Device) error {
 	if s.Phase == "idle" || s.Phase == "committed" {
 		return nil
 	}
-	if s.Version != d.Runtime["system"] || (s.Phase != "applying" && s.Phase != "pending-reboot") {
+	if s.SystemBaseline == "" || s.SystemBaseline != d.SystemBaseline || s.Version != d.Runtime["system"] || (s.Phase != "applying" && s.Phase != "pending-reboot") {
 		return fmt.Errorf("system boot does not match pending transaction")
 	}
 	return nil
@@ -175,7 +178,7 @@ func systemJournal(dir string) (SystemJournal, error) {
 			return s, fmt.Errorf("invalid system journal: missing or null %s", name)
 		}
 	}
-	for _, name := range []string{"boot_id", "product_edition"} {
+	for _, name := range []string{"boot_id", "product_edition", "system_baseline"} {
 		if value, exists := fields[name]; exists && bytes.Equal(bytes.TrimSpace(value), []byte("null")) {
 			return s, fmt.Errorf("invalid system journal: null %s", name)
 		}
@@ -410,7 +413,7 @@ func SystemOperation(ctx context.Context, c Config, operation string, report fun
 	if err = engine.Hooks.Preflight(); err != nil {
 		return err
 	}
-	state = SystemJournal{ProductEdition: m.ProductEdition, Schema: 1, HighWater: m.Sequence, Phase: "applying", Version: m.Version, PackageSHA256: m.OTA.PackageSHA256, BootID: strings.TrimSpace(string(boot))}
+	state = SystemJournal{SystemBaseline: next.SystemBaseline, ProductEdition: m.ProductEdition, Schema: 1, HighWater: m.Sequence, Phase: "applying", Version: m.Version, PackageSHA256: m.OTA.PackageSHA256, BootID: strings.TrimSpace(string(boot))}
 	if err = atomicJSON(dir, "state.json", state); err != nil {
 		return err
 	}

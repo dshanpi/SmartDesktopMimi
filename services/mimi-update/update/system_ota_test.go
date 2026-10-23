@@ -156,7 +156,7 @@ func TestSystemPendingTransactionBlocksApplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	state := SystemJournal{Schema: 1, Phase: "pending-reboot", HighWater: 2, Version: "1.1.0", PackageSHA256: strings.Repeat("a", 64), BootID: strings.TrimSpace(string(boot))}
+	state := SystemJournal{SystemBaseline: "target-baseline", Schema: 1, Phase: "pending-reboot", HighWater: 2, Version: "1.1.0", PackageSHA256: strings.Repeat("a", 64), BootID: strings.TrimSpace(string(boot))}
 	if err = atomicJSON(filepath.Join(e.Root, "system"), "state.json", state); err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestSystemPendingTransactionBlocksApplication(t *testing.T) {
 
 func TestSystemCommitCannotDisableRollbackForWrongVersion(t *testing.T) {
 	_, d, _ := fixture(t)
-	s := SystemJournal{Schema: 1, Phase: "pending-reboot", Version: "99.0.0"}
+	s := SystemJournal{SystemBaseline: d.SystemBaseline, Schema: 1, Phase: "pending-reboot", Version: "99.0.0"}
 	if err := validateSystemCommit(s, d); err == nil {
 		t.Fatal("wrong running system could disable bootloader rollback")
 	}
@@ -205,7 +205,7 @@ func TestSystemInterruptedWriteRecoversOnlyAfterAnotherBoot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	state := SystemJournal{Schema: 1, Phase: "applying", HighWater: 23, Version: "99.0.0", PackageSHA256: strings.Repeat("a", 64), BootID: strings.TrimSpace(string(boot))}
+	state := SystemJournal{SystemBaseline: "target-baseline", Schema: 1, Phase: "applying", HighWater: 23, Version: "99.0.0", PackageSHA256: strings.Repeat("a", 64), BootID: strings.TrimSpace(string(boot))}
 	dir := filepath.Join(e.Root, "system")
 	if err = atomicJSON(dir, "state.json", state); err != nil {
 		t.Fatal(err)

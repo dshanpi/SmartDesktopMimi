@@ -31,7 +31,7 @@ func TestSystemRecoveryJournalMatrix(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					e := &Engine{Root: t.TempDir()}
 					dir := filepath.Join(e.Root, "system")
-					s := SystemJournal{Schema: 1, Phase: phase, HighWater: 42, Version: "2.0.0", PackageSHA256: strings.Repeat("a", 64), BootID: live, ProductEdition: "private"}
+					s := SystemJournal{SystemBaseline: "target-build", Schema: 1, Phase: phase, HighWater: 42, Version: "2.0.0", PackageSHA256: strings.Repeat("a", 64), BootID: live, ProductEdition: "private"}
 					if changed {
 						s.BootID = "previous-boot"
 					}
@@ -43,7 +43,7 @@ func TestSystemRecoveryJournalMatrix(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					d := Device{Runtime: map[string]string{"system": "1.0.0"}}
+					d := Device{SystemBaseline: "target-build", Runtime: map[string]string{"system": "1.0.0"}}
 					if matches {
 						d.Runtime["system"] = s.Version
 					}
@@ -77,13 +77,13 @@ func TestSystemRecoveryJournalMatrix(t *testing.T) {
 		t.Run(phase+"/missing-boot", func(t *testing.T) {
 			e := &Engine{Root: t.TempDir()}
 			dir := filepath.Join(e.Root, "system")
-			s := SystemJournal{Schema: 1, Phase: phase, HighWater: 42, Version: "2.0.0", PackageSHA256: strings.Repeat("a", 64)}
+			s := SystemJournal{SystemBaseline: "target-build", Schema: 1, Phase: phase, HighWater: 42, Version: "2.0.0", PackageSHA256: strings.Repeat("a", 64)}
 			if err := atomicJSON(dir, "state.json", s); err != nil {
 				t.Fatal(err)
 			}
 			path := filepath.Join(dir, "state.json")
 			before, _ := os.ReadFile(path)
-			if _, err := e.reconcileSystem(Device{Runtime: map[string]string{"system": "1.0.0"}}); err == nil {
+			if _, err := e.reconcileSystem(Device{SystemBaseline: "target-build", Runtime: map[string]string{"system": "1.0.0"}}); err == nil {
 				t.Fatal("missing boot identity admitted")
 			}
 			after, err := os.ReadFile(path)
@@ -103,7 +103,7 @@ func TestRecoveredSystemJournalApplicationAdmission(t *testing.T) {
 		for _, mode := range []string{"same-boot", "target-boot", "old-system-after-boot"} {
 			t.Run(phase+"/"+mode, func(t *testing.T) {
 				e, h, m, raw, sig, archive := engineFixture(t)
-				s := SystemJournal{Schema: 1, Phase: phase, HighWater: 42, Version: h.d.Runtime["system"], PackageSHA256: strings.Repeat("a", 64), BootID: strings.TrimSpace(string(boot))}
+				s := SystemJournal{SystemBaseline: h.d.SystemBaseline, Schema: 1, Phase: phase, HighWater: 42, Version: h.d.Runtime["system"], PackageSHA256: strings.Repeat("a", 64), BootID: strings.TrimSpace(string(boot))}
 				if mode != "same-boot" {
 					s.BootID = "previous-boot"
 				}
