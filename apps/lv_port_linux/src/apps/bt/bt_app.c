@@ -84,6 +84,46 @@ static bool ignore_switch_event = false;
 static bool ignore_slider_event = false;
 static bool switch_toggle_pending = false;
 static bool switch_toggle_target_enabled = false;
+static bool bt_settings_dirty, bt_app_active;
+static lv_obj_t *bt_save_error_box;
+static void bt_show_save_failure(void);
+static void bt_save_preference(void)
+{
+    bt_settings_dirty = sys_settings_save_checked() != 0;
+    if (bt_settings_dirty) {
+        if (bt_app_active) bt_show_save_failure();
+    } else if (bt_save_error_box) {
+        lv_obj_delete(bt_save_error_box);
+        bt_save_error_box = NULL;
+    }
+}
+static void bt_retry_save(lv_event_t *event)
+{
+    (void)event;
+    bt_save_preference();
+}
+static void bt_show_save_failure(void)
+{
+    if (bt_save_error_box) return;
+    bt_save_error_box = lv_msgbox_create(lv_layer_top());
+    lv_obj_set_width(bt_save_error_box, lv_pct(85));
+    lv_obj_center(bt_save_error_box);
+    lv_obj_t *title = lv_msgbox_add_title(bt_save_error_box,
+        ui_i18n_is_zh() ? "保存未确认" : "Save not confirmed");
+    lv_obj_set_style_text_font(title, ui_font_h3(), 0);
+    lv_obj_t *text = lv_msgbox_add_text(bt_save_error_box, ui_i18n_is_zh() ?
+        "Bluetooth 已切换，但尚未确认保存开关偏好。请重试。" :
+        "Bluetooth has changed, but saving your preference is not confirmed. Please retry.");
+    lv_obj_set_style_text_font(text, ui_font_body_md(), 0);
+    lv_obj_t *retry = lv_msgbox_add_footer_button(bt_save_error_box,
+        ui_i18n_is_zh() ? "重试保存" : "Retry save");
+    mimi_ui_button_style(retry, true);
+    lv_obj_set_size(retry, 180, 48);
+    lv_obj_set_height(lv_msgbox_get_footer(bt_save_error_box), 68);
+    lv_obj_set_style_text_font(retry, ui_font_body_md(), 0);
+    lv_obj_add_event_cb(retry, bt_retry_save, LV_EVENT_CLICKED, NULL);
+}
+
 static int pending_volume = -1;
 static int last_sent_volume = -1;
 static bool has_avrcp = false;
@@ -740,8 +780,9 @@ static void update_ui_from_runtime(void) {
             sys_settings_t *settings = sys_settings_get();
             if (settings->bluetooth_enabled != cached_runtime.enabled) {
                 settings->bluetooth_enabled = cached_runtime.enabled;
-                sys_settings_save();
+                bt_settings_dirty = true;
             }
+            if (bt_settings_dirty) bt_save_preference();
             clear_switch_pending();
         } else {
             clear_switch_pending();
@@ -1141,6 +1182,7 @@ static lv_obj_t *create_transport_button(lv_obj_t *parent,
 
 void bt_app_init(void) {
     printf("[BT App] Init\n");
+    bt_app_active = true;
 
     bt_layout_t layout;
     get_bt_layout(&layout);
@@ -1702,6 +1744,8 @@ void bt_app_init(void) {
 
     lv_scr_load(scr);
 
+    if (bt_settings_dirty) bt_show_save_failure();
+
     /* 拉取初始状态 */
     bt_cmd_t cmd;
     memset(&cmd, 0, sizeof(cmd));
@@ -1711,6 +1755,12 @@ void bt_app_init(void) {
 
 void bt_app_close(void) {
     printf("[BT App] Close\n");
+    bt_app_active = false;
+    if (bt_save_error_box) {
+        lv_obj_delete(bt_save_error_box);
+        bt_save_error_box = NULL;
+    }
+    if (bt_settings_dirty) bt_save_preference();
 
     mw_unsubscribe(TOPIC_BT_RUNTIME, on_bt_runtime);
     mw_unsubscribe(TOPIC_BT_AVRCP_INFO, on_bt_avrcp_info);

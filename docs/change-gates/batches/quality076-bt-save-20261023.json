@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Retain unconfirmed Bluetooth preference saves and expose retry",
+  "context": "Acknowledged toggle ignored save failure",
+  "next_steps": "IoT reset HDMI default and backend dirty-state failure handling",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "BT save/retry UI lifecycle",
+      "invariants": "No extra radio toggles on save retry; no board changes",
+      "paths": [
+        "apps/lv_port_linux/src/apps/bt/bt_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-bt-save-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Native save lifecycle",
+          "status": "passed",
+          "scope": "Eight final save runs; earlier eight details renders retained",
+          "evidence": ".delivery/quality-review-20261023/bt-save-recovery/final.log"
+        },
+        {
+          "name": "Physical BT and storage",
+          "status": "not_run",
+          "scope": "Actual device behavior",
+          "reason": "Host injected runtime/save only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

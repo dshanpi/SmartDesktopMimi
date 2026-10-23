@@ -133,9 +133,10 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 }
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
-static int wifi_toggles;
+static int wifi_toggles, bt_toggles;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  (void)dir;
+ if(t==TOPIC_BT_COMMAND && n==sizeof(bt_cmd_t) && (((const bt_cmd_t*)d)->action==BT_CMD_ENABLE || ((const bt_cmd_t*)d)->action==BT_CMD_DISABLE))bt_toggles++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && (((const wifi_cmd_t*)d)->action==CMD_ENABLE || ((const wifi_cmd_t*)d)->action==CMD_DISABLE))wifi_toggles++;
  if(t==TOPIC_HDMI_COMMAND && n==sizeof(hdmi_cmd_t) && ((const hdmi_cmd_t*)d)->action!=HDMI_CMD_GET_STATUS)hdmi_mutations++;
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
@@ -251,6 +252,11 @@ static void test_settings(const char *image) {
 #include "lvgl/src/widgets/buttonmatrix/lv_buttonmatrix_private.h"
 static void touch_read(lv_indev_t *indev, lv_indev_data_t *data);
 static void tap_screen(lv_indev_t *pointer, int x, int y);
+static lv_obj_t *find_switch(lv_obj_t *root) {
+ if(lv_obj_check_type(root,&lv_switch_class))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *found=find_switch(lv_obj_get_child(root,i));if(found)return found;}
+ return NULL;
+}
 static void test_password(void) {
  lv_obj_update_layout(password_modal);
  lv_area_t kb,ta,dialog;lv_obj_get_coords(password_kb,&kb);lv_obj_get_coords(password_ta,&ta);
@@ -935,6 +941,25 @@ int main(int argc,char**argv) {
   app_setting.init();
   ai_status_t ai={.tuya_schema_known=true,.tuya_schema_supported_dps=2,.tuya_schema_required_dps=12};emit(TOPIC_AI_STATUS,&ai,sizeof(ai));
   cloud_status_t cloud={.state=CLOUD_STATE_UNAVAILABLE};emit(TOPIC_CLOUD_STATUS,&cloud,sizeof(cloud));
+ }else if(!strcmp(argv[1],"bt-save")){
+  settings.bluetooth_enabled=false;app_bt.init();
+  bt_runtime_t runtime={.enabled=false};emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();
+  lv_obj_t *sw=find_switch(lv_scr_act());assert(sw);
+  settings_save_error=-EIO;int before=saves;
+  lv_obj_add_state(sw,LV_STATE_CHECKED);lv_obj_send_event(sw,LV_EVENT_VALUE_CHANGED,NULL);assert(saves==before);
+  runtime.enabled=true;emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();assert(saves==before+1);
+  const char *retry_text=ui_i18n_is_zh()?"重试保存":"Retry save";
+  lv_obj_t *retry=find_label(lv_layer_top(),retry_text);assert(retry);
+  char failure_image[1024];snprintf(failure_image,sizeof(failure_image),"%s.save-error.ppm",argv[4]);save(failure_image);
+  int toggles=bt_toggles,attempts=saves;
+  lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(saves==attempts+1 && bt_toggles==toggles && find_label(lv_layer_top(),retry_text));
+  emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();assert(saves==attempts+1 && find_label(lv_layer_top(),retry_text));
+  app_bt.close();assert(!find_label(lv_layer_top(),retry_text));app_bt.init();pump();
+  retry=find_label(lv_layer_top(),retry_text);assert(retry && lv_obj_get_height(lv_obj_get_parent(retry))>=48);
+  settings_save_error=0;attempts=saves;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();
+  assert(saves==attempts+1 && bt_toggles==toggles && !find_label(lv_layer_top(),retry_text));
+  app_bt.close();assert(saves==attempts+1);app_bt.init();pump();assert(!find_label(lv_layer_top(),retry_text));
+  puts("PASS BT save failure, retry, runtime refresh, close/reopen, success without radio toggle");
  }else if(strncmp(argv[1],"bt",2)==0){
   app_bt.init();
   if(strcmp(argv[1],"bt")) {
