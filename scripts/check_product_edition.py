@@ -9,8 +9,8 @@ from build_a133_provider import RECIPES, PRIVATE_LOCK_HASH, TUYA_LOCK_HASH, cano
 import tuya_pairing_sources as tuya
 
 REFERENCE = {
-    'public': 'f023f6193c941f4320536315e0c4e861573e439c163a29a1a08e8c065aafec6d',
-    'private': '85ba68fc875f0c97f1b0c86cdcc34de5b1a2866eac38763358b3f067d258d632',
+    'public': '4cb8d3a1eea323787ebe8b3d504cfc665f66a320dccb0afeb471e4df50f2697e',
+    'private': 'b3a779c4c313bf02cf60b0de8a5b5d5cf183096c225bd44e67931bad4af0c7f5',
 }
 PRIVATE_RUNTIME = '4ae0aa1d2bb328bfdb52e77bef6b6b741cadc48abe0d3f00cfaaa7c7c7c22518'
 
@@ -38,7 +38,7 @@ def check(build, edition):
     if (provider.get('requirement') != 'REQ-MIMI-PRIVATE-066' or provider.get('status') != 'passed' or
             provider.get('phase') != 'compiled' or provider.get('profile') != edition or
             provider.get('recipe_sha256') != RECIPES[edition] or
-            provider.get('provider_edition_source_version') != 3 or
+            provider.get('provider_edition_source_version') != 4 or
             provider.get('original_source_dependency') is not False or
             provider.get('reference_backend_sha256') != REFERENCE[edition] or
             provider.get('backend_sha256') != REFERENCE[edition]):

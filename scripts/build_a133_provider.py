@@ -12,10 +12,10 @@ import tempfile
 PREFIX = 'openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider'
 TOOL_HASH = 'd2fc9477c990642fa27b56f65512ee751e5b3a1a478e5011b0f4878c0b56b4e0'
 RECIPES = {
-    'private': 'fded4477968ca3070806597f8deb868741fac83ee68b5895f4eed79ccf35364c',
-    'public': 'e40509021c45d869d6ed735e8e5fe93df0a061eb4e9ab836c9010cf76780f654',
+    'private': 'efa2066db96004793fa6686df11fde6bbaa94b877bc176717d0c8384e67ccdb9',
+    'public': '09f92d0f66c3189c67988f6a0ab428d3f7200a7d6450d6b36c3ae64941d5aae1',
 }
-EDITION = 'edition-v3'
+EDITION = 'edition-v4'
 AI_SOURCE = 'apps/lv_port_linux/src/system/service_ai_runtime.c'
 READER_SOURCE = 'apps/lv_port_linux/src/system/mimi_tuya_license_provider.h'
 TUYA_LOCK = 'adapters/tuya/source-lock.json'
@@ -23,7 +23,7 @@ TUYA_LOCK_HASH = '7392aac54a9f2c70d6404aa8ae3690b03784fb3d882bab0e85a574ff42e15b
 TUYA_READER = 'adapters/tuya/mimi_tuya_license_provider.h'
 COMPILER = 'prebuilt/rootfsbuilt/aarch64/toolchain-sunxi-glibc-gcc-1130/toolchain/bin/aarch64-openwrt-linux-gcc'
 PRIVATE_LOCK = 'adapters/100ask/source-lock.json'
-PRIVATE_LOCK_HASH = 'f6937aa9ffa903a5416bfd4762e720ab5c8f50d6753bbfbf5fc217ac8f634631'
+PRIVATE_LOCK_HASH = '4bdca5c65d0c967778bf35433264f1903b0322e125fddcc839268c7f193113b8'
 PRIVATE_SOURCES = {
     'apps/lv_port_linux/src/system/service_cloud.c': 'adapters/100ask/system/service_cloud.c',
     'apps/lv_port_linux/src/system/service_cloud_validation.c': 'adapters/100ask/system/service_cloud_validation.c',
@@ -125,8 +125,8 @@ def preflight(sdk_value, profile, private_value=None, product_value=None):
     recipe = json.loads(recipe_file.read_text())
     if recipe['cloud_profile'] != profile or recipe['tool_sha256'] != TOOL_HASH:
         raise ValueError('provider profile/tool mismatch')
-    if (recipe.get('edition_source_version') != 3 or
-            recipe.get('edition_source_requirement') != 'REQ-MIMI-PAIR-071' or
+    if (recipe.get('edition_source_version') != 4 or
+            recipe.get('edition_source_requirement') != 'REQ-MIMI-QUALITY-076' or
             recipe.get('reference_state') != 'audited_new_source_reference' or
             recipe.get('source_graph_sha256') != source_graph(recipe) or
             len(recipe.get('reference_backend_sha256', '')) != 64 or
@@ -180,7 +180,7 @@ def build(args):
     receipt = dict(requirement='REQ-MIMI-PRIVATE-066', status='passed', phase='preflight',
                    profile=args.profile, recipe_sha256=RECIPES[args.profile], tool_sha256=TOOL_HASH,
                    provider_source_commit=recipe['source_commit'], release_qualified=False,
-                   provider_edition_source_version=3, source_graph_sha256=recipe['source_graph_sha256'],
+                   provider_edition_source_version=4, source_graph_sha256=recipe['source_graph_sha256'],
                    reference_backend_sha256=recipe['reference_backend_sha256'],
                    prior_backend_sha256=recipe['prior_backend_sha256'])
     if product:

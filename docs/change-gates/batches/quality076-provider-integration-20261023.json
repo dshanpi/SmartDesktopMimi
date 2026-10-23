@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Select and verify versioned provider exit-send fix",
+  "context": "Both profiles full compile/link and strict product entry match; historical references retained",
+  "next_steps": "Actual package fixtures, exit acknowledgement, physical validation and remaining quality matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Versioned product source selection and edition guard",
+      "invariants": "No old reference mutation or published artifact change; private input isolation retained",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "scripts/build_a133_provider.py",
+        "scripts/check_product_edition.py",
+        "tests/update/test_product_provider.py",
+        "tests/update/test_product_edition.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-provider-integration-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Build entry and source boundary",
+          "status": "passed",
+          "scope": "Both complete A133 profiles;17 tests;4307-file overlay integrity",
+          "evidence": ".delivery/quality-review-20261023/assistant-provider-integration/result.json"
+        },
+        {
+          "name": "Actual package installation fixture",
+          "status": "not_run",
+          "scope": "One existing test skipped",
+          "reason": "Program fixture environment unset",
+          "evidence": ".delivery/quality-review-20261023/assistant-provider-integration/entry-tests.log"
+        }
+      ]
+    }
+  ]
+}
