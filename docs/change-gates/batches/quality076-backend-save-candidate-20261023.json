@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Record isolated backend reset/default and failed-save candidate",
+  "context": "Selected v6 reset enables HDMI and ignores save failures",
+  "next_steps": "Versioned integration and durable regression",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Evidence record for isolated exact source candidate",
+      "invariants": "Selected SDK remains unchanged; no physical acceptance",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-backend-save-candidate-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Host faults and A133 build",
+          "status": "passed",
+          "scope": "Four extracted path cases and two full independent backend profiles",
+          "evidence": ".delivery/quality-review-20261023/backend-settings-recovery/result.json"
+        },
+        {
+          "name": "Selected integration and device",
+          "status": "not_run",
+          "scope": "Versioned provider selection and actual behavior",
+          "reason": "Isolated candidate not yet integrated",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
