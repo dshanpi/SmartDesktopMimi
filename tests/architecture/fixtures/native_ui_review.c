@@ -43,6 +43,8 @@
 static bool review_iot_connected;
 static unsigned review_iot_commands;
 static bool review_iot_integer;
+static bool review_iot_enum;
+static const char *review_iot_functions;
 static const char *review_iot_reply="{\"accepted\":true,\"state_confirmed\":false}";
 static unsigned review_iot_delay_us;
 static const char *review_iot_devices_reply;
@@ -54,8 +56,9 @@ int __wrap_mimi_iot_request(const char *path,const char *command,char *out,size_
  const char *list_reply=review_iot_devices_reply;int list_rc=review_iot_devices_rc;
  if(review_iot_delay_us)usleep(review_iot_delay_us);
  if(!review_iot_connected){snprintf(out,cap,"{\"error\":\"not_configured\"}");return -2;}
- if(command){assert(!strcmp(command,review_iot_integer?"{\"code\":\"switch\",\"value\":7}":"{\"code\":\"switch\",\"value\":false}"));review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
+ if(command){assert(!strcmp(command,review_iot_enum?"{\"code\":\"switch\",\"value\":\"on\"}":review_iot_integer?"{\"code\":\"switch\",\"value\":7}":"{\"code\":\"switch\",\"value\":false}"));review_iot_commands++;snprintf(out,cap,"%s",review_iot_reply);return 0;}
  if(!strcmp(path,"/v1/devices") && list_reply){snprintf(out,cap,"%s",list_reply);return list_rc;}
+ if(review_iot_functions && strstr(path,"/functions")){snprintf(out,cap,"%s",review_iot_functions);return 0;}
  if(review_iot_integer && strstr(path,"/functions")){snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Integer\",\"values\":\"{\\\"min\\\":-3,\\\"max\\\":17,\\\"step\\\":10}\"}]}");return 0;}
  if(strstr(path,"/functions"))snprintf(out,cap,"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{}\"}]}");
  else snprintf(out,cap,"{\"devices\":[{\"id\":\"fixture_lamp\",\"name\":\"%s\",\"online\":true,\"status\":[{\"code\":\"switch\",\"value\":false}]}]}",review_iot_name);
@@ -323,6 +326,10 @@ static void test_password(void) {
 }
 #include "native_lockscreen_checks.h"
 
+static lv_obj_t *find_dropdown(lv_obj_t *root){
+ if(lv_obj_check_type(root,&lv_dropdown_class))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *v=find_dropdown(lv_obj_get_child(root,i));if(v)return v;}return NULL;
+}
 static lv_obj_t *find_spinbox(lv_obj_t *root){
  if(lv_obj_check_type(root,&lv_spinbox_class))return root;
  for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *v=find_spinbox(lv_obj_get_child(root,i));if(v)return v;}return NULL;
@@ -1169,6 +1176,13 @@ int main(int argc,char**argv) {
  }else if(strncmp(argv[1],"iot",3)==0){
   review_iot_connected=strcmp(argv[1],"iot")!=0;
   review_iot_integer=!strcmp(argv[1],"iot-integer");
+  review_iot_enum=!strcmp(argv[1],"iot-enum");
+  if(review_iot_enum)review_iot_functions="{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Enum\",\"values\":\"{\\\"range\\\": [\\\"off\\\", \\\"on\\\"]}\"}]}";
+  bool invalid_schema=!strncmp(argv[1],"iot-schema-",11);
+  if(invalid_schema){
+   static const char *cases[]={"{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Enum\",\"values\":\"{\\\"range\\\": [\\\"on\\\\u0000off\\\"]}\"}]}","{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"{} garbage\"}]}","{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Boolean\",\"values\":\"[]\"}]}","{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Integer\",\"values\":\"{\\\"min\\\": \\\"0\\\", \\\"max\\\": 10, \\\"step\\\": 1}\"}]}","{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Integer\",\"values\":\"{\\\"min\\\": 0, \\\"max\\\": 10, \\\"step\\\": 0}\"}]}","{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Enum\",\"values\":\"{\\\"range\\\": [\\\"on\\\\roff\\\"]}\"}]}","{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Enum\",\"values\":\"{\\\"range\\\": [3]}\"}]}"};
+   unsigned index=(unsigned)atoi(argv[1]+11);assert(index<sizeof(cases)/sizeof(cases[0]));review_iot_functions=cases[index];
+  }
   bool rejected=!strcmp(argv[1],"iot-rejected"),malformed=!strcmp(argv[1],"iot-malformed");
   bool long_modal=!strcmp(argv[1],"iot-long-modal");
   if(long_modal)review_iot_name="TEST living room lamp with a deliberately long descriptive name to verify wrapping and access to confirmation and cancellation on small screens TEST living room lamp with a deliberately long descriptive name to verify wrapping on small screens";
@@ -1188,6 +1202,12 @@ int main(int argc,char**argv) {
    lv_obj_t*l=long_modal?find_label_prefix(lv_scr_act(),"TEST living room"):find_label(lv_scr_act(),device_label);assert(l);
    tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+   if(invalid_schema){
+    assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…"));
+    assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"此设备暂时没有可用的控制项":"No supported controls for this device"));
+    assert(review_iot_commands==0);save(argv[4]);puts("PASS invalid schema: no control/no command");return 0;
+   }
+   if(review_iot_enum){lv_obj_t *input=find_dropdown(lv_scr_act());assert(input);lv_dropdown_set_selected(input,1);}
    if(review_iot_integer){
     lv_obj_t *input=find_spinbox(lv_scr_act());assert(input);
     lv_textarea_set_cursor_pos(input,lv_textarea_get_text(input)?strlen(lv_textarea_get_text(input)):0);
@@ -1213,7 +1233,7 @@ int main(int argc,char**argv) {
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);
    tap_widget(lv_obj_get_parent(l));pump();
    assert(review_iot_commands==0);
-   assert(find_label(lv_layer_top(),review_iot_integer?(ui_i18n_is_zh()?"功能：switch\n设置为：7":"Function: switch\nSet to: 7"):(ui_i18n_is_zh()?"功能：switch\n设置为：关闭":"Function: switch\nSet to: Off")));
+   assert(find_label(lv_layer_top(),review_iot_enum?(ui_i18n_is_zh()?"功能：switch\n设置为：on":"Function: switch\nSet to: on"):review_iot_integer?(ui_i18n_is_zh()?"功能：switch\n设置为：7":"Function: switch\nSet to: 7"):(ui_i18n_is_zh()?"功能：switch\n设置为：关闭":"Function: switch\nSet to: Off")));
    l=find_label(lv_layer_top(),ui_i18n_is_zh()?"取消":"Cancel");assert(l);
    tap_widget(lv_obj_get_parent(l));pump();assert(review_iot_commands==0);
    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);tap_widget(lv_obj_get_parent(l));pump();

@@ -269,7 +269,8 @@ static void show_functions(json_object * root)
         struct control * c = &controls[control_count];
         snprintf(c->code, sizeof(c->code), "%s", code);
         snprintf(c->type, sizeof(c->type), "%s", type);
-        json_object * schema = json_tokener_parse(field(f, "values"));
+        const char *schema_text = field(f, "values");
+        json_object * schema = mimi_iot_json_object(schema_text, strlen(schema_text));
         if(!schema) continue;
         lv_obj_t * card = lv_obj_create(content);
         mimi_ui_surface(card, 16);
@@ -314,7 +315,11 @@ static void show_functions(json_object * root)
                     json_object * o = json_object_array_get_idx(range, j);
                     const char * s  = json_object_get_string(o);
                     size_t n        = s ? strlen(s) : 0;
-                    if(json_object_get_type(o) != json_type_string || !n || n >= 256 || strchr(s, '\n') ||
+                    bool printable = true;
+                    for(size_t k = 0; k < n; k++)
+                        if((unsigned char)s[k] < 32 || (unsigned char)s[k] == 127) printable = false;
+                    if(json_object_get_type(o) != json_type_string || !n || n >= 256 ||
+                       n != (size_t)json_object_get_string_len(o) || !printable ||
                        used + n + 2 >= sizeof(options)) {
                         valid = false;
                         break;
