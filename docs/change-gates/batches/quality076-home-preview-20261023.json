@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Keep preview return destination valid across Home rebuild",
+  "context": "Real LVGL crash reproduced on preview exit after old Home deletion",
+  "next_steps": "Remaining navigation lifecycle and actual device gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Home and preview screen lifetime",
+      "invariants": "Preserve app return target; no hardware activation",
+      "paths": [
+        "apps/lv_port_linux/src/system/app_manager.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-home-preview-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Original failure",
+          "status": "passed",
+          "scope": "Negative reproduction SIGSEGV retained",
+          "evidence": ".delivery/quality-review-20261023/home-preview-lifetime/original.log"
+        },
+        {
+          "name": "Native regression",
+          "status": "passed",
+          "scope": "8 Home renders and2 manager lifecycle runs",
+          "evidence": ".delivery/quality-review-20261023/home-preview-lifetime/fixed.log"
+        },
+        {
+          "name": "Device and A133 rebuild",
+          "status": "not_run",
+          "scope": "New app-manager source not deployed",
+          "reason": "Host lifecycle verification only",
+          "evidence": ".delivery/quality-review-20261023/home-preview-lifetime/result.json"
+        }
+      ]
+    }
+  ]
+}

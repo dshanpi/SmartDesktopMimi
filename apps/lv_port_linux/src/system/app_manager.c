@@ -42,6 +42,10 @@ void app_manager_init(void)
 void app_manager_set_home_screen(lv_obj_t *screen)
 {
     if (!screen) return;
+    /* Home may be rebuilt while the transparent preview is active. Retarget
+     * its saved Home destination before ui_rebuild_home deletes the old one.
+     * An application destination must remain unchanged. */
+    if (hdmi_return_screen == home_screen) hdmi_return_screen = screen;
     home_screen = screen;
     printf("[AppManager] Home screen refreshed: %p\n", (void *)home_screen);
 }

@@ -856,6 +856,24 @@ int main(int argc,char**argv) {
  assert(!ui_lockscreen_show());ui_rebuild_home();pump();
  app_manager_show_hdmi_preview_screen();pump();app_manager_hide_hdmi_preview_screen();pump();
  assert(lv_screen_active()!=home && find_label(lv_screen_active(),ui_tr(UI_STR_HOME_TALK_MIMI)));
+ app_manager_show_hdmi_preview_screen();pump();
+ lv_obj_t *preview_before_rebuild=lv_screen_active();
+ ui_rebuild_home();lv_tick_inc(500);pump();pump();
+ assert(lv_screen_active()==preview_before_rebuild);
+ app_manager_hide_hdmi_preview_screen();pump();pump();
+ assert(lv_obj_is_valid(lv_screen_active()));
+ assert(find_label(lv_screen_active(),ui_tr(UI_STR_HOME_TALK_MIMI)));
+ app_manager_hide_hdmi_preview_screen();pump();
+ app_manager_open(APP_ID_SETTING);pump();pump();
+ lv_obj_t *settings_return=lv_screen_active();
+ app_manager_show_hdmi_preview_screen();pump();
+ for(int rebuild=0;rebuild<3;rebuild++){ui_rebuild_home();lv_tick_inc(500);pump();pump();}
+ app_manager_hide_hdmi_preview_screen();pump();pump();
+ assert(lv_screen_active()==settings_return && lv_obj_is_valid(settings_return));
+ assert(find_label(settings_return,ui_tr(UI_STR_SETTINGS_100ASK_MANAGE)));
+ app_manager_back_home();pump();pump();
+ assert(find_label(lv_screen_active(),ui_tr(UI_STR_HOME_TALK_MIMI)));
+ puts("PASS preview return after Home rebuild uses live replacement");
  save(argv[4]);puts("PASS real app manager: locked HDMI entry/return, app navigation, rebuilt Home lifetime");return 0;
 #endif
  /* Keep the retired component tests explicit; production does not enable it. */
