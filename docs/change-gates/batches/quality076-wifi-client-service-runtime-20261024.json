@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Verify UI controller recovery against candidate service replies",
+  "context": "Separate controller andservice tests did not establish joined semantics",
+  "next_steps": "Widget session and versioned SDK integration, physical qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "controller-service protocol join",
+      "invariants": "no SAVE onACK/failure, stale reply ignored, no duplicate SAVE/replay",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-client-service-runtime-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Initial fixture compile",
+          "status": "failed",
+          "scope": "renamed main",
+          "reason": "implicit return no longer legal; retained",
+          "evidence": ".delivery/quality-review-20261023/wifi-client-service-runtime/result.json"
+        },
+        {
+          "name": "Controller/service join",
+          "status": "passed",
+          "scope": "three host scenarios",
+          "reason": "actual wire/owned transport, gated HAL, SAVE events",
+          "evidence": ".delivery/quality-review-20261023/wifi-client-service-runtime/result.json"
+        },
+        {
+          "name": "Complete UI/device",
+          "status": "not_run",
+          "scope": "widgets/preferenceIO/radio",
+          "reason": "purecontroller only",
+          "evidence": ".delivery/quality-review-20261023/wifi-client-service-runtime/result.json"
+        }
+      ]
+    }
+  ]
+}
