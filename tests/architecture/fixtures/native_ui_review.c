@@ -1513,6 +1513,26 @@ int main(int argc,char**argv) {
   assert(pairing_refreshes==1); /* no automatic retry, reprovision or unlink */
   puts("PASS pairing: valid/expired/malformed code and ambiguous HTTP 200; no claim of lost ownership or server fault");
  }else if(strcmp(argv[1],"apps")==0){ui_all_apps_show();pump();lv_tick_inc(250);pump();}
+ else if(!strcmp(argv[1],"wifi-message-bounds")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_snapshot(true,false);
+  wifi_ap_info_t ap={.rssi=4,.encrypted=true};memset(ap.ssid,'A',sizeof(ap.ssid));
+  unsigned before=lv_obj_get_child_count(wifi_list);emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  fprintf(stderr,"Unterminated AP before=%u after=%u\n",before,(unsigned)lv_obj_get_child_count(wifi_list));
+  assert(lv_obj_get_child_count(wifi_list)==before && "unterminated SSID must not mutate UI");
+        ap.ssid[32]=0;
+        ((unsigned char *)&ap)[offsetof(wifi_ap_info_t, encrypted)]=2;
+        emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));assert(lv_obj_get_child_count(wifi_list)==before);
+        ap.encrypted=true;emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+        assert(lv_obj_get_child_count(wifi_list)==before+1);
+        ap.connected=true;emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+        assert(lv_obj_get_child_count(wifi_list)==before+1);
+        wifi_runtime_status_t runtime={0};
+        ((unsigned char *)&runtime)[offsetof(wifi_runtime_status_t, enabled)]=2;
+        emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));
+        assert(is_wifi_enabled && lv_obj_get_child_count(wifi_list)==before+1);
+        fprintf(stderr,"PASS bounded messages, longest SSID and duplicate update\n");
+
+ }
  else if(!strcmp(argv[1],"wifi-scan-failure")) {
   settings.wifi_enabled=false;app_wifi.init();review_wifi_snapshot(true,false);
   atomic_store(&review_scan_hold,true);atomic_store(&review_scan_error,-EPIPE);

@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "summary": "Reject malformed WiFi status before UI use",
+  "context": "Unterminated SSID accepted by actual page",
+  "next_steps": "Connection flow and legacy scan ownership",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "V1 AP/runtime decode and actual UI",
+      "invariants": "V1 ABI unchanged, malformed messages do not mutate state",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "apps/lv_port_linux/src/system/wifi_status_decode.h",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/wifi_status_decode.c",
+        "tests/architecture/test_wifi_status_decode.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-message-bounds-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original malformed AP",
+          "status": "failed",
+          "scope": "actual LVGL",
+          "reason": "unterminated name adds row",
+          "evidence": ".delivery/quality-review-20261023/wifi-message-bounds/result.json"
+        },
+        {
+          "name": "Decoder and page assertions",
+          "status": "passed",
+          "scope": "ASAN/UBSAN decoder and four LVGL renders",
+          "evidence": ".delivery/quality-review-20261023/wifi-message-bounds/result.json"
+        },
+        {
+          "name": "Physical WiFi",
+          "status": "not_run",
+          "scope": "radio/device",
+          "reason": "host-only batch",
+          "evidence": ".delivery/quality-review-20261023/wifi-message-bounds/result.json"
+        }
+      ]
+    }
+  ]
+}

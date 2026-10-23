@@ -8,6 +8,7 @@
 #include "../../system/settings.h"
 #include "../../middleware/middleware.h"
 #include "../../system/wifi_control_client.h"
+#include "../../system/wifi_status_decode.h"
 #include <pthread.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -151,15 +152,12 @@ static void wifi_spinner_show(void) {
 }
 
 static void wifi_status_handler(const mw_msg_t * msg) {
-    if (!wifi_app_active || !wifi_list) return;
+    if (!msg || !wifi_app_active || !wifi_list) return;
 
-    if (msg->topic == TOPIC_WIFI_STATUS && msg->data_len == sizeof(wifi_ap_info_t)) {
-        wifi_ap_info_t * info = (wifi_ap_info_t *)msg->data;
-
-        // 检查 SSID 是否有效
-        if (!info->ssid || strlen(info->ssid) == 0) {
-            return;
-        }
+    if (msg->topic == TOPIC_WIFI_STATUS) {
+        wifi_ap_info_t decoded;
+        if (!wifi_ap_decode(msg->data, msg->data_len, &decoded)) return;
+        const wifi_ap_info_t *info = &decoded;
 
         // 检查是否是扫描完成标记
         if (strcmp(info->ssid, "__SCAN_COMPLETE__") == 0) {
@@ -511,7 +509,9 @@ static void wifi_control_start(void)
 static void wifi_runtime_handler(const mw_msg_t * msg)
 {
     if (!msg || msg->topic != TOPIC_WIFI_RUNTIME || msg->data_len != sizeof(wifi_runtime_status_t)) return;
-    const wifi_runtime_status_t *runtime = (const wifi_runtime_status_t *)msg->data;
+    wifi_runtime_status_t decoded;
+    if (!wifi_runtime_decode(msg->data, msg->data_len, &decoded)) return;
+    const wifi_runtime_status_t *runtime = &decoded;
     bool first_runtime_status = !runtime_status_received;
 
     runtime_status_received = true;
