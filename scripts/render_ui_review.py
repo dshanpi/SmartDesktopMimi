@@ -15,6 +15,21 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'apps/lv_port_linux'
 
 
+def supported_scenes():
+    registry = ROOT / 'tests/architecture/fixtures/native_ui_scenes.def'
+    names = []
+    for line in registry.read_text().splitlines():
+        if not line.strip() or line.startswith('/*'):
+            continue
+        match = re.fullmatch(r'UI_SCENE\("([a-z0-9-]+)"\)', line)
+        if not match or match[1] in names:
+            raise ValueError('Invalid or duplicate scene registry entry: ' + line)
+        names.append(match[1])
+    if not names:
+        raise ValueError('Empty scene registry')
+    return names
+
+
 def run(command, log):
     result = subprocess.run(list(map(str, command)), cwd=ROOT, stdout=log,
                             stderr=subprocess.STDOUT)
@@ -26,7 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, default=APP / 'build/lv_conf.h')
     parser.add_argument('--output', type=Path, default=ROOT / 'output/lvgl-ui-v2-batch1')
-    parser.add_argument('--pages', nargs='+', default=['home', 'control-center', 'apps', 'settings', 'desktop-update', 'wifi', 'password', 'bt', 'bt-connected', 'bt-details', 'bt-rename', 'video', 'video-library', 'ota', 'ota-error', 'ota-downloading', 'ai', 'ai-pairing', 'ai-offline', 'ai-speaking', 'ai-free-chat', 'user', 'hdmi'])
+    parser.add_argument('--pages', nargs='+', choices=supported_scenes(), default=['home', 'control-center', 'apps', 'settings', 'desktop-update', 'wifi', 'password', 'bt', 'bt-connected', 'bt-details', 'bt-rename', 'video', 'video-library', 'ota', 'ota-error', 'ota-downloading', 'ai', 'ai-pairing', 'ai-offline', 'ai-speaking', 'ai-free-chat', 'user', 'hdmi'])
     parser.add_argument('--resolutions', nargs='+', default=['1024x768'],
                         help='Host render sizes only; does not qualify physical displays')
     parser.add_argument('--without-hdmi', action='store_true', help='Exercise unsupported build capability; no provider qualification')

@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Reject unknown native UI review scenarios",
+  "context": "Commajoined scenario accidentally rendered fallback and reported pass",
+  "next_steps": "Continue WiFi actual communication qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Evidence integrity of UI renderer",
+      "invariants": "Unknown scenarios never produce success or output; shared exact registry",
+      "paths": [
+        "scripts/render_ui_review.py",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "tests/architecture/test_ui_review_scenes.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-review-scene-validation-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Historical fallback false positive",
+          "status": "failed",
+          "scope": "wifi-connect-async firstmulti invocation",
+          "reason": "unrecognized commajoined name accepted",
+          "evidence": ".delivery/quality-review-20261023/wifi-connect-async/lifecycle.log"
+        },
+        {
+          "name": "CLI/native rejection and valid scenario",
+          "status": "passed",
+          "scope": "7CLI/14native negative cases and4validrenders",
+          "evidence": ".delivery/quality-review-20261023/ui-review-scene-validation/result.json"
+        },
+        {
+          "name": "All registered scenario revalidation",
+          "status": "not_run",
+          "scope": "fullregistry",
+          "reason": "only affected valid sample plusnegativeguard required thisbatch",
+          "evidence": ".delivery/quality-review-20261023/ui-review-scene-validation/result.json"
+        }
+      ]
+    }
+  ]
+}

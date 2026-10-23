@@ -941,8 +941,18 @@ static void test_iot_summary(void)
  puts("PASS UI075 IoT aggregate: real worker/parser, empty/online counts, absent online and duplicate IDs rejected, auth/config/parse failures, expiry, late closed-page result ignored, recovery and zero Home requests");
 }
 
+static const char *const review_scenes[] = {
+#define UI_SCENE(name) name,
+#include "native_ui_scenes.def"
+#undef UI_SCENE
+};
 int main(int argc,char**argv) {
- assert(argc==5 || argc==7);
+ if (argc != 5 && argc != 7) {fprintf(stderr,"Invalid review arguments\n");return 2;}
+ bool recognized=false;
+ for(size_t i=0;i<sizeof(review_scenes)/sizeof(review_scenes[0]);i++)
+  if(!strcmp(argv[1],review_scenes[i]))recognized=true;
+ if(!recognized){fprintf(stderr,"Unknown UI review scene: %s\n",argv[1]);return 2;}
+
  if(argc==7){review_width=atoi(argv[5]);review_height=atoi(argv[6]);}
  assert(review_width>=480 && review_width<=1920 && review_height>=480 && review_height<=1920);
  pixels=calloc((size_t)review_width*review_height,4);assert(pixels);lv_init();
