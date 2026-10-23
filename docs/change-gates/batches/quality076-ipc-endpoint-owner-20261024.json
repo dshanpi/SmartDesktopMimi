@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Validate IPC endpoint ownership and safe stale cleanup candidate",
+  "context": "Original secondstart replacesliveendpoint andoldstopdeletesreplacement",
+  "next_steps": "Pendingconnectnegativebranch andcoordinatedintegration/A133",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "ActualprivateUnix endpoints withcooperatinglock",
+      "invariants": "Preserveactive/socketreplacement/regular/symlink; keepstablelockinode",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-endpoint-owner-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original liveendpointreplacement",
+          "status": "failed",
+          "scope": "actualtwo listeners",
+          "reason": "newinode andoldstopdeletesnewpath",
+          "evidence": ".delivery/quality-review-20261023/ipc-endpoint-owner/result.json"
+        },
+        {
+          "name": "Ownership andconnectregression",
+          "status": "passed",
+          "scope": "actualtmp sockets processcollision/stale/fileprotection",
+          "evidence": ".delivery/quality-review-20261023/ipc-endpoint-owner/result.json"
+        },
+        {
+          "name": "Fulltargetqualification",
+          "status": "not_run",
+          "scope": "pendingconnect/fullmiddleware/A133",
+          "reason": "candidateisolated, trust/lifecycle assumptionsremain",
+          "evidence": ".delivery/quality-review-20261023/ipc-endpoint-owner/result.json"
+        }
+      ]
+    }
+  ]
+}
