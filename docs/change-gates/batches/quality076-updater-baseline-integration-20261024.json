@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Integrate baseline-bound updater into target artifact and host package checks",
+  "context": "Previous target updater predates destination identity fix",
+  "next_steps": "Remaining quality/source/physical gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Target artifact and both edition host install; matrix binding",
+      "invariants": "Prior artifacts retained; no deployment/publish; scope remains partial",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-updater-baseline-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Target integration",
+          "status": "passed",
+          "scope": "build/readback/host package install",
+          "reason": "actual binary matches installed payload",
+          "evidence": ".delivery/quality-review-20261023/updater-baseline-integration/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133 update/power",
+          "reason": "hostonly",
+          "evidence": ".delivery/quality-review-20261023/updater-baseline-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
