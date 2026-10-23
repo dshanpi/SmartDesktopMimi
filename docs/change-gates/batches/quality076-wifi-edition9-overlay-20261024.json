@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Record inactive edition9 standard overlay inputs and source mappings",
+  "context": "Move verified isolated candidates into versioned SDK source ownership",
+  "next_steps": "Coordinated selector/product locks and negative gates then build references",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "hardware versioned sources; separate hardware commit bound in evidence",
+      "invariants": "oldedition intact, private boundaries, no activation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-edition9-overlay-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Source mapping",
+          "status": "passed",
+          "scope": "73/77recipe inputs",
+          "reason": "exactoverrides andindependentpriorselection",
+          "evidence": ".delivery/quality-review-20261023/wifi-edition9-overlay/result.json"
+        },
+        {
+          "name": "Standard overlay",
+          "status": "passed",
+          "scope": "4384file integrity",
+          "reason": "no SDK copy or target baseline verification",
+          "evidence": ".delivery/quality-review-20261023/wifi-edition9-overlay/result.json"
+        },
+        {
+          "name": "Activation/delivery",
+          "status": "not_run",
+          "scope": "selector/locks/SDK/device",
+          "reason": "inactiveedition9",
+          "evidence": ".delivery/quality-review-20261023/wifi-edition9-overlay/result.json"
+        }
+      ]
+    }
+  ]
+}
