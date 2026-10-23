@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Verify new desktop pairing and installed bytes",
+  "context": "Current UI candidate needs actual install regression and explicit byte readback",
+  "next_steps": "Separate services package installed-byte gate, full image and physical tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Public/private actual suite recipes with selected programs",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "tests/update/test_product_edition.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-iot-package-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual recipe and installed bytes",
+          "status": "passed",
+          "scope": "Both editions, exact installed UI/backend/startUI/privateTuya; ancillary fixtures synthetic",
+          "evidence": ".delivery/quality-review-20261023/ui-iot-package/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/ui-iot-package/result.json"
+        }
+      ]
+    }
+  ]
+}

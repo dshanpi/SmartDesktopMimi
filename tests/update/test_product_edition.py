@@ -186,6 +186,19 @@ class ProductEditionTests(unittest.TestCase):
                 command = ['make', '--no-print-directory', '-f', str(makefile), 'all']
                 result = subprocess.run(command, cwd=ROOT / 'packaging/aitvbox-suite', capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                # Installation success alone does not prove the selected bytes reached rootfs.
+                installed_programs = {
+                    'usr/bin/lvglsim': product / 'build/lv_port_linux/lvglsim',
+                    'usr/bin/lv_backend': product / 'build/lv_port_linux/lv_backend',
+                    'usr/bin/aitvbox-start-ui': ROOT / 'packaging/aitvbox-suite/files/start-ui.sh',
+                }
+                if edition == 'private':
+                    installed_programs['usr/bin/your_chat_bot_QIO_1.0.1.bin'] = product / 'build/tuyaopen/your_chat_bot_QIO_1.0.1.bin'
+                for target, source in installed_programs.items():
+                    actual = stage / target
+                    self.assertFalse(actual.is_symlink(), target)
+                    self.assertEqual(actual.read_bytes(), source.read_bytes(), target)
+                    self.assertTrue(actual.stat().st_mode & 0o111, target)
                 self.assertEqual((stage / 'etc/smartdesktopmimi/product-edition').read_text().strip(), edition)
                 self.assertEqual((stage / 'usr/bin/your_chat_bot_QIO_1.0.1.bin').exists(), edition == 'private')
                 self.assertEqual((stage / 'factory/tuya').exists(), edition == 'private')
