@@ -360,7 +360,7 @@ static void wifi_status_handler(const mw_msg_t * msg) {
             lv_obj_t * new_item = create_list_item(wifi_list, &ap);
             
             // 如果新创建的项是已连接状态，将其移到第一位
-            if (info->connected) {
+            if (info->connected && new_item) {
                 lv_obj_move_to_index(new_item, 0);
                 
                 /* FIX: 同样移除这里的自动 CMD_SCAN */
@@ -628,28 +628,24 @@ static void wifi_runtime_handler(const mw_msg_t * msg)
 
 static void free_wifi_ap_data(lv_event_t * e) {
     wifi_ap_t * ap = (wifi_ap_t *)lv_event_get_user_data(e);
-    if (ap && ap->ssid) {
+    if (ap) {
         free(ap->ssid);
         free(ap);
     }
 }
 
 static lv_obj_t * create_list_item(lv_obj_t * parent, wifi_ap_t * ap) {
-    lv_obj_t * item = wifi_item_create(parent, ap->ssid, ap->connected ? WIFI_STATUS_CONNECTED : "", ap->encrypted);
-    
-    // Bind data to click event
-    // Note: We need to copy ap data because stack variable will be gone
-    // We reuse wifi_ap_t structure but we need to manage memory
-    wifi_ap_t * ap_copy = malloc(sizeof(wifi_ap_t));
-    if (ap_copy) {
-        ap_copy->ssid = strdup(ap->ssid);
-        ap_copy->rssi = ap->rssi;
-        ap_copy->encrypted = ap->encrypted;
-        ap_copy->connected = ap->connected;
-        
-        lv_obj_add_event_cb(item, wifi_list_item_event_cb, LV_EVENT_CLICKED, ap_copy);
-        lv_obj_add_event_cb(item, free_wifi_ap_data, LV_EVENT_DELETE, ap_copy); // Clean up user_data on delete
-    }
+    if (!ap || !ap->ssid) return NULL;
+    /* Do not expose a clickable row until its owned identity is complete. */
+    wifi_ap_t *copy = malloc(sizeof(*copy));
+    if (!copy) return NULL;
+    *copy = *ap;
+    copy->ssid = strdup(ap->ssid);
+    if (!copy->ssid) { free(copy); return NULL; }
+    lv_obj_t *item = wifi_item_create(parent, copy->ssid,
+        copy->connected ? WIFI_STATUS_CONNECTED : "", copy->encrypted);
+    lv_obj_add_event_cb(item, wifi_list_item_event_cb, LV_EVENT_CLICKED, copy);
+    lv_obj_add_event_cb(item, free_wifi_ap_data, LV_EVENT_DELETE, copy);
     return item;
 }
 

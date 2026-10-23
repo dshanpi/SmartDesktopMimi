@@ -36,9 +36,22 @@
 #include <string.h>
 #include <assert.h>
 static bool review_wifi_track_strings;
+static bool review_wifi_fail_strdup, review_wifi_fail_malloc;
+static void *review_wifi_allocations[256];
+static unsigned review_wifi_allocations_live;
+static void *review_wifi_malloc(size_t n) {
+ if(review_wifi_fail_malloc) {review_wifi_fail_malloc=false;return NULL;}
+ void *p=malloc(n);
+ if(p && review_wifi_track_strings) {
+  unsigned i;for(i=0;i<256 && review_wifi_allocations[i];i++){}
+  assert(i<256);review_wifi_allocations[i]=p;review_wifi_allocations_live++;
+ }
+ return p;
+}
 static void *review_wifi_strings[256];
 static unsigned review_wifi_strings_live;
 static char *review_wifi_strdup(const char *s) {
+ if(review_wifi_fail_strdup) {review_wifi_fail_strdup=false;return NULL;}
  char *p=strdup(s);
  if(p && review_wifi_track_strings) {
   unsigned i;for(i=0;i<256 && review_wifi_strings[i];i++){}
@@ -47,14 +60,19 @@ static char *review_wifi_strdup(const char *s) {
  return p;
 }
 static void review_wifi_free(void *p) {
+ if(p) for(unsigned i=0;i<256;i++) if(review_wifi_allocations[i]==p) {
+  review_wifi_allocations[i]=NULL;review_wifi_allocations_live--;break;
+ }
  if(p) for(unsigned i=0;i<256;i++) if(review_wifi_strings[i]==p) {
   review_wifi_strings[i]=NULL;review_wifi_strings_live--;break;
  }
  free(p);
 }
+#define malloc review_wifi_malloc
 #define strdup review_wifi_strdup
 #define free review_wifi_free
 #include "src/apps/wifi/wifi_app.c"
+#undef malloc
 #undef strdup
 #undef free
 #include <assert.h>
@@ -1704,6 +1722,20 @@ int main(int argc,char**argv) {
   emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));pump();
   fprintf(stderr,"Held-HAL snapshot consumed: pending=%d enabled_pref=%d save_delta=%d\n",wlan_toggle_pending,settings.wifi_enabled,saves-before);
   assert(wlan_toggle_pending && saves==before && !settings.wifi_enabled && "intermediate enabled snapshot must not confirm operation or save preference");
+ }
+ else if(!strcmp(argv[1],"wifi-row-allocation")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);review_wifi_flush();
+  lv_obj_clean(wifi_list);review_wifi_track_strings=true;
+  wifi_ap_info_t ap={.ssid="Allocation recovery",.rssi=-30,.connected=true};
+  review_wifi_fail_strdup=true;emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  fprintf(stderr,"Failed name allocation: rows=%u metadata=%u\n",(unsigned)lv_obj_get_child_count(wifi_list),review_wifi_allocations_live);
+  assert(lv_obj_get_child_count(wifi_list)==0 && review_wifi_allocations_live==0);
+  review_wifi_fail_malloc=true;emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  assert(lv_obj_get_child_count(wifi_list)==0 && review_wifi_strings_live==0 && review_wifi_allocations_live==0);
+  emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));assert(lv_obj_get_child_count(wifi_list)==1);
+  assert(wifi_row_ap(lv_obj_get_child(wifi_list,0))->ssid);
+  lv_obj_clean(wifi_list);assert(!review_wifi_strings_live && !review_wifi_allocations_live);
+  review_wifi_track_strings=false;puts("PASS row metadata/name failures and recovery without leaked or partial rows");
  }
  else if(!strcmp(argv[1],"wifi-row-security")) {
   settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);review_wifi_flush();

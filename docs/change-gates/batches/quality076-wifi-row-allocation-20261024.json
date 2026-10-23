@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Reject incomplete WiFi rows on data allocation failure",
+  "context": "NULL name retained in clickable row and metadata leaked",
+  "next_steps": "Current A133 integration and full UI/provider session",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Row data lifetime/failure recovery",
+      "invariants": "no partial clickable identity, no wire/deploy change, preserve failures",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-row-allocation-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "actualLVGL strdup failure",
+          "reason": "partialrow andmetadataretained",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-allocation/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "12 realLVGL runs",
+          "reason": "allocation recovery/security/lifetime",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-allocation/result.json"
+        },
+        {
+          "name": "WholeOOM device",
+          "status": "not_run",
+          "scope": "LVGL internal allocations/physical",
+          "reason": "limited targeted injection",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-allocation/result.json"
+        }
+      ]
+    }
+  ]
+}
