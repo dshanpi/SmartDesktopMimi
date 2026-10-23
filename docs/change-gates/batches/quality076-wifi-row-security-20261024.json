@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Refresh WiFi row security metadata before explicit connection",
+  "context": "New AP status changes visual state but old callback data sent open connection",
+  "next_steps": "Modal state changes, allocation failures and full integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual AP row metadata and icons",
+      "invariants": "no automatic connect, unchanged protocol, failures retained",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-row-security-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "actual widget click",
+          "reason": "stale open metadata",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-security/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "12 actualLVGL runs",
+          "reason": "four transition checks andeight regressions",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-security/result.json"
+        },
+        {
+          "name": "Device",
+          "status": "not_run",
+          "scope": "A133/radio",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/wifi-row-security/result.json"
+        }
+      ]
+    }
+  ]
+}

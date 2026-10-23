@@ -1705,6 +1705,28 @@ int main(int argc,char**argv) {
   fprintf(stderr,"Held-HAL snapshot consumed: pending=%d enabled_pref=%d save_delta=%d\n",wlan_toggle_pending,settings.wifi_enabled,saves-before);
   assert(wlan_toggle_pending && saves==before && !settings.wifi_enabled && "intermediate enabled snapshot must not confirm operation or save preference");
  }
+ else if(!strcmp(argv[1],"wifi-row-security")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);review_wifi_flush();
+  wifi_spinner_delete();lv_obj_clean(wifi_list);
+  wifi_ap_info_t ap={.ssid="Changing network",.rssi=-45};emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  ap.encrypted=true;ap.rssi=-30;emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  lv_obj_t *row=lv_obj_get_child(wifi_list,0);int before=connect_count;
+  lv_obj_send_event(row,LV_EVENT_CLICKED,NULL);review_wifi_flush();
+  fprintf(stderr,"Updated secure AP: modal=%d sent=%d\n",password_modal!=NULL,connect_count-before);
+  assert(password_modal && connect_count==before && "updated secure AP must ask password without open connect");
+  assert(wifi_row_ap(row)->encrypted && wifi_row_ap(row)->rssi==-30);
+  close_modal_cb(NULL);
+  lv_obj_t *right=lv_obj_get_child(row,1);unsigned icons=0;
+  for(uint32_t i=0;i<lv_obj_get_child_count(right);i++) if(lv_obj_check_type(lv_obj_get_child(right,i),&lv_image_class)) icons++;
+  assert(icons==1);
+  ap.encrypted=false;emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  assert(!wifi_row_ap(row)->encrypted);icons=0;
+  for(uint32_t i=0;i<lv_obj_get_child_count(right);i++) if(lv_obj_check_type(lv_obj_get_child(right,i),&lv_image_class)) icons++;
+  assert(icons==0);
+  lv_obj_send_event(row,LV_EVENT_CLICKED,NULL);review_wifi_flush();
+  assert(!password_modal && connect_count==before+1 && !last_connect.password[0]);
+  puts("PASS current AP encryption metadata, lock icon and explicit click behavior");
+ }
  else if(!strcmp(argv[1],"wifi-empty-recovery")) {
   settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);
   lv_obj_clean(wifi_list);

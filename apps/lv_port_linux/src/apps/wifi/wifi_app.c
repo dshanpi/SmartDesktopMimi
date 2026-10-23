@@ -322,8 +322,33 @@ static void wifi_status_handler(const mw_msg_t * msg) {
                 }
             }
             
-            // 更新 user_data 中的 connected 状态 (有点麻烦，因为 user_data 挂在 event 上)
-            // 这里我们主要关注 UI 显示
+            /* Click behavior must use the latest decoded AP, not creation-time metadata. */
+            wifi_ap_t *stored = wifi_row_ap(existing_item);
+            if (stored) {
+                stored->rssi = info->rssi;
+                stored->encrypted = info->encrypted;
+                stored->connected = info->connected;
+            }
+            if (right_cont) {
+                lv_obj_t *lock = NULL;
+                for (uint32_t i = lv_obj_get_child_count(right_cont); i > 0; --i) {
+                    lv_obj_t *child = lv_obj_get_child(right_cont, i - 1);
+                    if (lv_obj_check_type(child, &lv_image_class)) {
+                        if (!info->encrypted) lv_obj_delete(child);
+                        else lock = child;
+                    }
+                }
+                if (info->encrypted && !lock) {
+                    lock = lv_image_create(right_cont);
+                    lv_image_set_src(lock, &lock_outline_28dp_666666);
+                    lv_obj_set_size(lock, 28, 28);
+                    lv_image_set_inner_align(lock, LV_IMAGE_ALIGN_CONTAIN);
+                }
+                if (lock) {
+                    if (info->connected) lv_obj_add_flag(lock, LV_OBJ_FLAG_HIDDEN);
+                    else lv_obj_clear_flag(lock, LV_OBJ_FLAG_HIDDEN);
+                }
+            }
         } else {
             // 创建新项
             wifi_ap_t ap;

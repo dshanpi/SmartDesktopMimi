@@ -92,3 +92,5 @@ UI_SCENE("wifi-toggle-failure-hint")
 UI_SCENE("wifi-ap-lifetime")
 
 UI_SCENE("wifi-empty-recovery")
+
+UI_SCENE("wifi-row-security")
