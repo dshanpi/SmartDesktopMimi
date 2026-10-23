@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Verify WiFi transactions through owned middleware transport",
+  "context": "Previous service integration used older raw transport path",
+  "next_steps": "Private profile and full consumer integration, standard overlay qualification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "host combined runtime",
+      "invariants": "ACK distinct from completion; preserve replay/epoch/legacy ABI; no physical claim",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-owned-runtime-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Composition source proof",
+          "status": "passed",
+          "scope": "18 extracted functions",
+          "reason": "exact current candidate bodies with hashes",
+          "evidence": ".delivery/quality-review-20261023/wifi-owned-runtime/result.json"
+        },
+        {
+          "name": "Combined runtime",
+          "status": "passed",
+          "scope": "success/failure host sanitizer",
+          "reason": "real middleware loop and owned socket transport, gated HAL",
+          "evidence": ".delivery/quality-review-20261023/wifi-owned-runtime/result.json"
+        },
+        {
+          "name": "End to end device",
+          "status": "not_run",
+          "scope": "whole provider/UI/radio/physical",
+          "reason": "host adapters and injected slot",
+          "evidence": ".delivery/quality-review-20261023/wifi-owned-runtime/result.json"
+        }
+      ]
+    }
+  ]
+}
