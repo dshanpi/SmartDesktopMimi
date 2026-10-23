@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Verify isolated WiFi transition-state prototype",
+  "context": "Enabled bit alone cannot establish completion",
+  "next_steps": "Request correlation, opposing requests, queue errors and compatible wire integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private copied service plus provisional V2 type and gated HAL",
+      "invariants": "No SDK/public ABI promotion before concurrency and compatibility proof",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-toggle-phase-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Sequential phase boundaries",
+          "status": "passed",
+          "scope": "Enable anddisable before/after heldHALreturn",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-phase-candidate/result.json"
+        },
+        {
+          "name": "Integration qualification",
+          "status": "not_run",
+          "scope": "Requestcorrelation/opposingcommands/queuefailure/ABI/A133/board",
+          "reason": "Private sequential prototype only",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-phase-candidate/result.json"
+        }
+      ]
+    }
+  ]
+}
