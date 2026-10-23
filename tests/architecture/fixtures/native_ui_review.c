@@ -1705,6 +1705,25 @@ int main(int argc,char**argv) {
   fprintf(stderr,"Held-HAL snapshot consumed: pending=%d enabled_pref=%d save_delta=%d\n",wlan_toggle_pending,settings.wifi_enabled,saves-before);
   assert(wlan_toggle_pending && saves==before && !settings.wifi_enabled && "intermediate enabled snapshot must not confirm operation or save preference");
  }
+ else if(!strcmp(argv[1],"wifi-empty-recovery")) {
+  settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);
+  lv_obj_clean(wifi_list);
+  wifi_ap_info_t end={0};snprintf(end.ssid,sizeof(end.ssid),"__SCAN_COMPLETE__");
+  emit(TOPIC_WIFI_STATUS,&end,sizeof(end));assert(find_label(wifi_list,ui_tr(UI_STR_NO_NETWORKS)));
+  wifi_ap_info_t ap={0};snprintf(ap.ssid,sizeof(ap.ssid),"Recovered network");ap.rssi=-45;
+  emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  fprintf(stderr,"Late AP: rows=%u empty_hint=%d\n",(unsigned)lv_obj_get_child_count(wifi_list),find_label(wifi_list,ui_tr(UI_STR_NO_NETWORKS))!=NULL);
+  assert(!find_label(wifi_list,ui_tr(UI_STR_NO_NETWORKS)) && "late AP must remove obsolete empty state");
+  assert(lv_obj_get_child_count(wifi_list)==1);
+  emit(TOPIC_WIFI_STATUS,&end,sizeof(end));emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  assert(lv_obj_get_child_count(wifi_list)==1);
+  wifi_ap_t *stored=wifi_row_ap(lv_obj_get_child(wifi_list,0));
+  assert(stored && !strcmp(stored->ssid,"Recovered network"));
+  wifi_runtime_status_t runtime={.enabled=false};emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));
+  emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));assert(lv_obj_get_child_count(wifi_list)==0);
+  runtime.enabled=true;emit(TOPIC_WIFI_RUNTIME,&runtime,sizeof(runtime));emit(TOPIC_WIFI_STATUS,&ap,sizeof(ap));
+  assert(lv_obj_get_child_count(wifi_list)==1);puts("PASS empty scan recovery and disabled late result");
+ }
  else if(!strcmp(argv[1],"wifi-ap-lifetime")) {
   settings.wifi_enabled=true;app_wifi.init();review_wifi_flush();review_wifi_snapshot(true,false);
   lv_obj_clean(wifi_list);review_wifi_track_strings=true;

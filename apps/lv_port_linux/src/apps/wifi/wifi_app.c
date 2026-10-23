@@ -162,6 +162,16 @@ static void wifi_spinner_show(void) {
     lv_obj_move_foreground(spinner);
 }
 
+static wifi_ap_t *wifi_row_ap(lv_obj_t *row)
+{
+    for (uint32_t i = 0; i < lv_obj_get_event_count(row); ++i) {
+        lv_event_dsc_t *event = lv_obj_get_event_dsc(row, i);
+        if (lv_event_dsc_get_cb(event) == wifi_list_item_event_cb)
+            return lv_event_dsc_get_user_data(event);
+    }
+    return NULL;
+}
+
 static void wifi_status_handler(const mw_msg_t * msg) {
     if (!msg || !wifi_app_active || !wifi_list) return;
 
@@ -228,24 +238,23 @@ static void wifi_status_handler(const mw_msg_t * msg) {
             // 什么都不做，保持 spinner 显示
         }
 
+        /* Direct labels are the empty-list placeholder; AP rows are containers.
+         * A late valid result supersedes the prior empty scan without resending. */
+        for (uint32_t i = lv_obj_get_child_count(wifi_list); i > 0; --i) {
+            lv_obj_t *child = lv_obj_get_child(wifi_list, i - 1);
+            if (lv_obj_check_type(child, &lv_label_class)) lv_obj_delete(child);
+        }
+
         // 查找是否已存在该 SSID
     lv_obj_t * existing_item = NULL;
     uint32_t cnt = lv_obj_get_child_cnt(wifi_list);
     for (uint32_t i = 0; i < cnt; i++) {
         lv_obj_t * item = lv_obj_get_child(wifi_list, i);
         
-        // FIX: 现在 label_name 在 left_cont (child 0) 里面
-        lv_obj_t * left_cont = lv_obj_get_child(item, 0);
-        if (left_cont) {
-            // 假设 label 是 left_cont 的第一个 child
-            lv_obj_t * label_name = lv_obj_get_child(left_cont, 0);
-            if (label_name && lv_obj_check_type(label_name, &lv_label_class)) {
-                const char * txt = lv_label_get_text(label_name);
-                if (txt && strcmp(txt, info->ssid) == 0) {
-                    existing_item = item;
-                    break;
-                }
-            }
+        wifi_ap_t *stored = wifi_row_ap(item);
+        if (stored && stored->ssid && strcmp(stored->ssid, info->ssid) == 0) {
+            existing_item = item;
+            break;
         }
     }
 
