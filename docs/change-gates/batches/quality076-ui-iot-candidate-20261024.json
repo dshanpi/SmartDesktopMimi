@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Bind current desktop IoT fixes to fresh A133 candidate",
+  "context": "Old desktop candidate predates recent IoT fixes; matrix summaries stale",
+  "next_steps": "Current collection/install gate and actual device readiness; full image space and remaining physical gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Standalone current A133 desktop and matrix reconciliation",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-iot-candidate-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Current desktop compile and selected receipts",
+          "status": "passed",
+          "scope": "675 units, settings receipt, source ownership; existingSDKrestrictions retained",
+          "evidence": ".delivery/quality-review-20261023/ui-iot-candidate/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/ui-iot-candidate/result.json"
+        }
+      ]
+    }
+  ]
+}
