@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate isolated WiFi correlation command codec",
+  "context": "Current middleware discards id and retries send",
+  "next_steps": "Response state contract, server session/replay handling and UI integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Isolated byte codec, no selected SDK changes",
+      "invariants": "Preserve old wire ABI and release baseline; no completion claim from enabled bit",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-wire-codec-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Byte codec checks",
+          "status": "passed",
+          "scope": "Golden vector and malformed validation under ASAN/UBSAN",
+          "evidence": ".delivery/quality-review-20261023/wifi-wire-candidate/result.json"
+        },
+        {
+          "name": "Integrated protocol",
+          "status": "not_run",
+          "scope": "Backend replay, UI recovery, real IPC and radio",
+          "reason": "Codec candidate only",
+          "evidence": ".delivery/quality-review-20261023/wifi-wire-candidate/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
