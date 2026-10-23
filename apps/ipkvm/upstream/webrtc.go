@@ -46,6 +46,8 @@ type Session struct {
 	shouldUmountVirtualMedia bool
 	hidRPCAvailable          bool
 	hidQueueLock             sync.Mutex
+	hidQueueStop             chan struct{}
+	hidQueueStopOnce         sync.Once
 	hidQueue                 []chan hidQueueMessage
 	keypress                 *keypressState
 	videoSampleQueue         chan queuedVideoSample
@@ -100,6 +102,7 @@ func (s *Session) initQueues() {
 	s.hidQueueLock.Lock()
 	defer s.hidQueueLock.Unlock()
 
+	s.hidQueueStop = make(chan struct{})
 	s.hidQueue = make([]chan hidQueueMessage, 0)
 	for i := 0; i < 4; i++ {
 		q := make(chan hidQueueMessage, 256)
@@ -107,9 +110,30 @@ func (s *Session) initQueues() {
 	}
 }
 
+func (s *Session) stopHIDQueues() {
+	s.hidQueueStopOnce.Do(func() {
+		if s.hidQueueStop != nil {
+			close(s.hidQueueStop)
+		}
+	})
+}
 func (s *Session) handleQueues(index int) {
-	for msg := range s.hidQueue[index] {
-		onHidMessage(msg, s)
+	for {
+		select {
+		case <-s.hidQueueStop:
+			return
+		case msg, ok := <-s.hidQueue[index]:
+			if !ok {
+				return
+			}
+			// Closing takes priority over already-buffered input.
+			select {
+			case <-s.hidQueueStop:
+				return
+			default:
+			}
+			onHidMessage(msg, s)
+		}
 	}
 }
 
@@ -230,9 +254,15 @@ func getOnHidMessageHandler(session *Session, scopedLogger *zerolog.Logger, chan
 			return
 		}
 
-		queue <- hidQueueMessage{
-			DataChannelMessage: msg,
-			channel:            channel,
+		select {
+		case <-session.hidQueueStop:
+			return
+		default:
+		}
+		select {
+		case <-session.hidQueueStop:
+			return
+		case queue <- hidQueueMessage{DataChannelMessage: msg, channel: channel}:
 		}
 	}
 }
@@ -337,6 +367,14 @@ func newSession(sessionConfig SessionConfig) (*Session, error) {
 	}
 	session := &Session{peerConnection: peerConnection}
 	session.initQueues()
+	ready := false
+	defer func() {
+		if !ready {
+			session.stopHIDQueues()
+			session.stopVideoWriter()
+			_ = peerConnection.Close()
+		}
+	}()
 	for i := 0; i < 4; i++ {
 		go session.handleQueues(i)
 	}
@@ -454,6 +492,13 @@ func newSession(sessionConfig SessionConfig) (*Session, error) {
 		}
 	})
 
+	// Closing before an offer may never produce an ICE state transition.
+	peerConnection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		if state == webrtc.PeerConnectionStateClosed {
+			session.stopHIDQueues()
+			session.stopVideoWriter()
+		}
+	})
 	peerConnection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
 		scopedLogger.Info().Str("connectionState", connectionState.String()).Msg("ICE Connection State has changed")
 
@@ -484,6 +529,7 @@ func newSession(sessionConfig SessionConfig) (*Session, error) {
 			_ = peerConnection.Close()
 		}
 		if connectionState == webrtc.ICEConnectionStateClosed {
+			session.stopHIDQueues()
 			scopedLogger.Debug().Msg("ICE Connection State is closed, unmounting virtual media")
 			session.stopVideoWriter()
 			clearCurrentSession(session)
@@ -500,6 +546,7 @@ func newSession(sessionConfig SessionConfig) (*Session, error) {
 			}
 		}
 	})
+	ready = true
 	return session, nil
 }
 

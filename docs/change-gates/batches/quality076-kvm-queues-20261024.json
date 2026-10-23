@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "summary": "Stop HID queue workers and blocked producers when peer closes",
+  "context": "Real unnegotiated Pion close leaked4input workers; ICE-only fix also failed",
+  "next_steps": "In-flight HID/session cancellation and held input release; constructor failure injection",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Queued HID lifetime and constructor cleanup",
+      "invariants": "No channel-close/send panic; idempotent stop; no device/media traffic",
+      "paths": [
+        "apps/ipkvm/upstream/webrtc.go",
+        "apps/ipkvm/upstream/hid_queue_lifecycle_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-kvm-queues-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original/first candidate queue leak",
+          "status": "failed",
+          "scope": "4workers remain after peer close; initialICE-onlyfix insufficient",
+          "reason": "Close before negotiation has no ICE transition",
+          "evidence": ".delivery/quality-review-20261023/kvm-session-queues/fixed.log"
+        },
+        {
+          "name": "Queue lifecycle",
+          "status": "passed",
+          "scope": "3 realpackage race tests: Pionclose/blockedproducer/bufferedinput",
+          "evidence": ".delivery/quality-review-20261023/kvm-session-queues/fixed-r2.log"
+        },
+        {
+          "name": "Selected regressions",
+          "status": "passed",
+          "scope": "Video/RTCP/macro/HID/dispatcher selectedracechecks",
+          "evidence": ".delivery/quality-review-20261023/kvm-session-queues/regression.log"
+        },
+        {
+          "name": "Device/inflight/constructorfaults",
+          "status": "not_run",
+          "scope": "No physical held-key proof or constructor fault injection",
+          "reason": "Queue-only scope; inflight lifetime stillopen",
+          "evidence": ".delivery/quality-review-20261023/kvm-session-queues/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
