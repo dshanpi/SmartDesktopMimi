@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "summary": "Audit exact SDK rc.common sequencing and startup error propagation",
+  "context": "Stubbed init-function tests do not prove rc.common/procd behavior",
+  "next_steps": "Fix outer startup error propagation/emptyset behavior in isolated candidate; runtime socket/exit verification",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected staged script replay and prepared procd source review",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-procd-order-audit-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Outer startup failure",
+          "status": "failed",
+          "scope": "Exact rc.common with adaptedprocd returns0 after start_service mkdirfailure",
+          "evidence": ".delivery/quality-review-20261023/procd-order-audit/result.json",
+          "reason": "rc_procd ignores start_service return and invokes procd_close_service; error propagation not yet fixed"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/procd-order-audit/result.json"
+        }
+      ]
+    }
+  ]
+}
