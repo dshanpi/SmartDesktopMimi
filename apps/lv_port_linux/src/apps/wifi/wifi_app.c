@@ -562,14 +562,23 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     mimi_ui_surface(dialog, 18);
     int32_t screen_w = lv_display_get_horizontal_resolution(NULL);
     int32_t screen_h = lv_display_get_vertical_resolution(NULL);
-    lv_obj_set_size(dialog, LV_MIN(820, screen_w - 48), screen_h - 48);
+    bool compact = screen_h < 620;
+    lv_obj_set_size(dialog, LV_MIN(820, screen_w - (compact ? 24 : 48)), screen_h - (compact ? 16 : 48));
     lv_obj_center(dialog);
-    lv_obj_set_style_pad_all(dialog, 24, 0);
-    lv_obj_set_style_pad_row(dialog, 12, 0);
+    lv_obj_set_style_pad_all(dialog, compact ? 8 : 24, 0);
+    lv_obj_set_style_pad_row(dialog, compact ? 6 : 12, 0);
     lv_obj_set_flex_flow(dialog, LV_FLEX_FLOW_COLUMN);
+    lv_obj_t *heading = dialog;
+    if (compact) {
+        heading = lv_obj_create(dialog);
+        lv_obj_remove_style_all(heading);
+        lv_obj_set_size(heading, lv_pct(100), 48);
+        lv_obj_set_flex_flow(heading, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(heading, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    }
 
     // Title
-    lv_obj_t * title = lv_label_create(dialog);
+    lv_obj_t * title = lv_label_create(heading);
     lv_label_set_text_fmt(title,
                           ui_i18n_is_zh() ? "连接到 %s" : "Connect to %s",
                           ssid_copy);
@@ -577,7 +586,7 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     lv_obj_set_style_text_font(title, WIFI_FONT_SECTION, 0);
     lv_obj_set_style_text_color(title, mimi_ui_color(MIMI_TEXT), 0);
     lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_width(title, LV_PCT(100));
+    lv_obj_set_width(title, compact ? LV_MIN(820, screen_w - 24) - 230 : LV_PCT(100));
 
     // Password Input
     password_ta = lv_textarea_create(dialog);
@@ -591,12 +600,12 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
     lv_obj_set_style_text_color(password_ta, mimi_ui_color(MIMI_TEXT), 0);
     lv_obj_set_style_text_color(password_ta, mimi_ui_color(MIMI_MUTED), LV_PART_TEXTAREA_PLACEHOLDER);
     lv_obj_set_style_border_color(password_ta, mimi_ui_color(MIMI_BORDER), 0);
-    lv_obj_set_height(password_ta, 60);
+    lv_obj_set_height(password_ta, compact ? 48 : 60);
     lv_obj_set_style_text_font(password_ta, WIFI_FONT_BODY, 0);
     lv_obj_set_style_radius(password_ta, 12, 0);
 
     // Show Password Checkbox
-    lv_obj_t * cb_show_pass = lv_checkbox_create(dialog);
+    lv_obj_t * cb_show_pass = lv_checkbox_create(heading);
     lv_obj_set_style_min_height(cb_show_pass, 48, 0);
     lv_obj_set_style_pad_ver(cb_show_pass, 10, 0);
     lv_checkbox_set_text(cb_show_pass, ui_tr(UI_STR_SHOW_PASSWORD));
@@ -608,7 +617,7 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
 
     password_error_label = lv_label_create(dialog);
     lv_label_set_text(password_error_label, "");
-    lv_obj_set_height(password_error_label, 28);
+    lv_obj_set_height(password_error_label, compact ? 24 : 28);
     lv_obj_set_width(password_error_label, lv_pct(100));
     lv_obj_set_style_text_font(password_error_label, WIFI_FONT_META, 0);
 
@@ -624,7 +633,7 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
 
     // Cancel Button
     lv_obj_t * btn_cancel = lv_button_create(btn_cont);
-    lv_obj_set_size(btn_cancel, 200, 52);
+    lv_obj_set_size(btn_cancel, compact ? lv_pct(45) : 200, compact ? 48 : 52);
     mimi_ui_button_style(btn_cancel, false);
     lv_obj_add_event_cb(btn_cancel, close_modal_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_t * lbl_cancel = lv_label_create(btn_cancel);
@@ -634,7 +643,7 @@ static void wifi_list_item_event_cb(lv_event_t * e) {
 
     // Connect Button
     lv_obj_t * btn_connect = lv_button_create(btn_cont);
-    lv_obj_set_size(btn_connect, 200, 52);
+    lv_obj_set_size(btn_connect, compact ? lv_pct(45) : 200, compact ? 48 : 52);
     mimi_ui_button_style(btn_connect, true);
     lv_obj_add_event_cb(btn_connect, connect_click_cb, LV_EVENT_CLICKED, (void*)ssid_copy);
     lv_obj_t * lbl_connect = lv_label_create(btn_connect);

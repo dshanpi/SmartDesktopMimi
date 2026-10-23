@@ -248,14 +248,35 @@ static void test_settings(const char *image) {
  settings_save_error=0;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(!find_label(lv_layer_top(),"Retry save"));app_setting.close();
  puts("PASS settings: save failure/retry/reopen plus sliders, locale/theme rebuild, subscriptions and close cancellation");
 }
+#include "lvgl/src/widgets/buttonmatrix/lv_buttonmatrix_private.h"
+static void touch_read(lv_indev_t *indev, lv_indev_data_t *data);
+static void tap_screen(lv_indev_t *pointer, int x, int y);
 static void test_password(void) {
  lv_obj_update_layout(password_modal);
  lv_area_t kb,ta,dialog;lv_obj_get_coords(password_kb,&kb);lv_obj_get_coords(password_ta,&ta);
  lv_obj_get_coords(lv_obj_get_parent(password_kb),&dialog);
+ fprintf(stderr,"PASSWORD geometry keyboard=%d..%d input=%d..%d dialog=%d..%d screen=%d\n",kb.y1,kb.y2,ta.y1,ta.y2,dialog.y1,dialog.y2,review_height);
  assert(kb.y1>ta.y2 && kb.y2<dialog.y2 && kb.y2<review_height && kb.y2-kb.y1>=240);
  const char *letters="abcdefghijklmnopqrstuvwxyz";
  const char *const *map=lv_keyboard_get_map_array(password_kb);
  for(const char *c=letters;*c;c++) {bool found=false;for(int i=0;map[i][0];i++)if(map[i][0]==*c && map[i][1]==0)found=true;assert(found);}
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+ lv_textarea_set_text(password_ta,"");
+ const char *typed="review";
+ for(const char *c=typed;*c;c++){
+  lv_buttonmatrix_t *matrix=(lv_buttonmatrix_t*)password_kb;bool tapped=false;
+  for(uint32_t i=0;i<matrix->btn_cnt;i++){
+   const char *text=lv_buttonmatrix_get_button_text(password_kb,i);
+   if(text && text[0]==*c && text[1]==0){
+    lv_area_t area=matrix->button_areas[i];
+    assert(area.y2-area.y1+1>=44);
+    tap_screen(pointer,kb.x1+(area.x1+area.x2)/2,kb.y1+(area.y1+area.y2)/2);tapped=true;break;
+   }
+  }
+  assert(tapped);
+ }
+ assert(!strcmp(lv_textarea_get_text(password_ta),typed));
+ lv_indev_delete(pointer);
  lv_textarea_set_text(password_ta,"short");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
  assert(password_modal && connect_count==0 && strlen(lv_label_get_text(password_error_label))>0);
  lv_textarea_set_text(password_ta,"review123");lv_obj_send_event(password_kb,LV_EVENT_READY,NULL);
