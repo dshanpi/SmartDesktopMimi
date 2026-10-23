@@ -420,18 +420,12 @@ void ipc_server_stop(int listen_fd)
 }
 
 int ipc_socket_poll(int sock_fd, int timeout_ms) {
-    fd_set fdset;
-    struct timeval tv;
-
-    if (sock_fd < 0) {
-        return -1;
-    }
-
-    FD_ZERO(&fdset);
-    FD_SET(sock_fd, &fdset);
-
-    tv.tv_sec = timeout_ms / 1000;
-    tv.tv_usec = (timeout_ms % 1000) * 1000;
-
-    return select(sock_fd + 1, &fdset, NULL, NULL, &tv);
+    if (sock_fd < 0) { errno = EBADF; return -1; }
+    if (timeout_ms < 0) { errno = EINVAL; return -1; }
+    struct pollfd descriptor = { .fd = sock_fd, .events = POLLIN };
+    int result = poll(&descriptor, 1, timeout_ms);
+    if (result <= 0) return result;
+    if (descriptor.revents & POLLNVAL) { errno = EBADF; return -1; }
+    /* EOF and pending socket errors must reach the receiver for cleanup. */
+    return (descriptor.revents & (POLLIN | POLLHUP | POLLERR)) ? 1 : 0;
 }

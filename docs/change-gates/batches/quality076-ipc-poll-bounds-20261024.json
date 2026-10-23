@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "summary": "Remove fixed fd_set limit from socket readiness helper",
+  "context": "High valid fd aborts in original readiness helper",
+  "next_steps": "Provider coordination and remaining raw helper contracts; relink candidate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "socket readiness",
+      "invariants": "zero timeout and EOF/error cleanup semantics; no release changes",
+      "paths": [
+        "apps/lv_port_linux/src/ipc/ipc_socket.c",
+        "docs/update/source-ownership.json",
+        "tests/architecture/fixtures/ipc_poll_bounds.c",
+        "tests/architecture/test_ipc_connection.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-poll-bounds-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original high descriptor",
+          "status": "failed",
+          "scope": "real socket fd1088",
+          "reason": "runtime buffer overflow abort; initial limit failure separate",
+          "evidence": ".delivery/quality-review-20261023/ipc-poll-bounds/result.json"
+        },
+        {
+          "name": "Corrected readiness",
+          "status": "passed",
+          "scope": "seven host sanitizer methods",
+          "reason": "high descriptor/timeout/EOF/error checked, no skips",
+          "evidence": ".delivery/quality-review-20261023/ipc-poll-bounds/result.json"
+        },
+        {
+          "name": "A133 socket TU",
+          "status": "passed",
+          "scope": "recorded target flags",
+          "reason": "private object, no warning",
+          "evidence": ".delivery/quality-review-20261023/ipc-poll-bounds/result.json"
+        },
+        {
+          "name": "Device acceptance",
+          "status": "not_run",
+          "scope": "full new link/provider/physical",
+          "reason": "no deployment",
+          "evidence": ".delivery/quality-review-20261023/ipc-poll-bounds/result.json"
+        }
+      ]
+    }
+  ]
+}

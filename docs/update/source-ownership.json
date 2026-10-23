@@ -51,7 +51,7 @@
     },
     "apps/lv_port_linux/src/ipc/ipc_socket.c": {
       "owner": "shared-frozen",
-      "sha256": "071d7cf81142b2f2bed17af0d55b1bfb2dd2ec4b3e4473c9c8a644ca605c6a21"
+      "sha256": "212b661a1f4cd844d19de7b2e0f14a4525c24ae5d02bd6b2e9268ec2518436d1"
     },
     "apps/lv_port_linux/src/ipc/ipc_socket.h": {
       "owner": "shared-frozen",

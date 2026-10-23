@@ -26,6 +26,8 @@ class IpcConnectionTests(unittest.TestCase):
             build = subprocess.run(command, capture_output=True, text=True, timeout=60)
             self.assertEqual(build.returncode, 0, build.stdout + build.stderr)
             run = subprocess.run([binary], capture_output=True, text=True, timeout=20)
+            if run.returncode == 77 and name == "ipc_poll_bounds":
+                self.skipTest("hard descriptor limit prevents high-fd test")
             self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
             self.assertNotIn('runtime error:', run.stderr)
             self.assertNotIn('AddressSanitizer', run.stderr)
@@ -41,6 +43,9 @@ class IpcConnectionTests(unittest.TestCase):
     def test_backend_lifetime(self):
         self.assertIn('without new POLLIN', self.run_fixture('ipc_middleware_backend',
             ['ipc/connection.c', 'ipc/ipc_socket.c'], ['send', 'clock_gettime']))
+
+    def test_poll_bounds(self):
+        self.assertIn("PASS high descriptor", self.run_fixture("ipc_poll_bounds", ["ipc/ipc_socket.c"], []))
 
     def test_endpoint_owner(self):
         self.run_fixture("ipc_endpoint_owner", ["ipc/ipc_socket.c"], [])
