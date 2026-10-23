@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Validate pending IPC connect deadline and readiness errors",
+  "context": "Late readiness and invalid poll were accepted by isolated candidate",
+  "next_steps": "Coordinated middleware promotion and durable regression tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Injected pending connection branches with real fd lifetime",
+      "invariants": "No timeout reset, no false success, no leaked fd",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-connect-deadline-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original readiness",
+          "status": "failed",
+          "scope": "injected late/invalid poll",
+          "reason": "two false successes preserved",
+          "evidence": ".delivery/quality-review-20261023/ipc-connect-deadline/result.json"
+        },
+        {
+          "name": "Candidate 13 branches",
+          "status": "passed",
+          "scope": "host ASAN/UBSAN",
+          "reason": "bounded budgets and fd cleanup",
+          "evidence": ".delivery/quality-review-20261023/ipc-connect-deadline/result.json"
+        },
+        {
+          "name": "Full integration",
+          "status": "not_run",
+          "scope": "product/A133/board",
+          "reason": "isolated candidate",
+          "evidence": ".delivery/quality-review-20261023/ipc-connect-deadline/result.json"
+        }
+      ]
+    }
+  ]
+}
