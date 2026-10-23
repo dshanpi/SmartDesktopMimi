@@ -797,16 +797,14 @@ int main(int argc, char **argv) {
             REPO / "apps/ipkvm/upstream/ui/src/authRecovery.ts"
         ).read_text(encoding="utf-8")
 
-        encode_at = capture.index("g_encoder->encode(&packet)")
-        snapshot_at = capture.index(
-            "queue_snapshot_frame((const unsigned char*)gIonMem.vir);",
-            encode_at,
-        )
-        display_at = capture.index(
-            "present_local_frame((uint64_t)frame_count);", snapshot_at
-        )
-        self.assertLess(encode_at, snapshot_at)
-        self.assertLess(snapshot_at, display_at)
+        capture_loop = capture.index("static void* capture_thread")
+        returned_at = capture.index("buffer_returned = true;", capture_loop)
+        publish_at = capture.index("g_encoder_frames.publish(", returned_at)
+        snapshot_at = capture.index("queue_snapshot_frame(", returned_at)
+        display_at = capture.index("present_local_frame(", returned_at)
+        self.assertLess(returned_at, publish_at)
+        self.assertLess(publish_at, snapshot_at)
+        self.assertLess(publish_at, display_at)
         self.assertIn("const videoSampleQueueSize = 6", webrtc)
         self.assertIn("playoutDelayHint = 0", desktop)
         self.assertIn("playoutDelayHint = 0", mobile)

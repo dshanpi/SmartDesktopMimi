@@ -77,7 +77,7 @@ def hdmi_source(name):
     return path
 
 
-CAPTURE_LOCK_SHA256 = '3332510afec829d2fd5643afb8a2af0293e3893155c4d3a275d09c2309d29670'
+CAPTURE_LOCK_SHA256 = 'e84ab80ea1c0a1618efd008abd6166acf0f560f3065bb76d3469370737a8575f'
 
 
 def capture_source(name):

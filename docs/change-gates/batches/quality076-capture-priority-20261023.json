@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "summary": "Publish current encoder frame before secondary display and snapshot work",
+  "context": "Held secondary work delayed current frame publication despite separate encoding worker",
+  "next_steps": "Real device continuous latency and stability; broader goal matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Current frame dispatch ordering and pinned capture build",
+      "invariants": "QBUF before consumers; owned copy; stream-off no publication; no hardware acceptance claim",
+      "paths": [
+        "scripts/build_a133_capture.py",
+        "tests/sdk_source.py",
+        "tests/platform/test_host_integration.py",
+        "tests/platform/test_capture_dispatch.py",
+        "tests/platform/fixtures/capture_dispatch.cpp",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-capture-priority-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Independent and strict entry build",
+          "status": "passed",
+          "scope": "Five units, exact reference,142 compile/28 link inputs",
+          "evidence": ".delivery/quality-review-20261023/capture-dispatch-priority/normal-entry-result.json"
+        },
+        {
+          "name": "Behavioral regression and original negative",
+          "status": "passed",
+          "scope": "Four selected dispatch scenarios; original two failures retained",
+          "evidence": ".delivery/quality-review-20261023/capture-dispatch-priority/durable-original-negative.log"
+        },
+        {
+          "name": "Boundary and priority",
+          "status": "passed",
+          "scope": "Seven host checks, overlay4344 integrity",
+          "evidence": ".delivery/quality-review-20261023/capture-dispatch-priority/boundary-and-priority.log"
+        },
+        {
+          "name": "Device acceptance",
+          "status": "not_run",
+          "scope": "Physical latency/stability and original slab failure",
+          "reason": "No board activation in this batch"
+        }
+      ]
+    }
+  ]
+}
