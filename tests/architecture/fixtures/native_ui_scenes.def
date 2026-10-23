@@ -106,3 +106,5 @@ UI_SCENE("user-action-async")
 UI_SCENE("user-action-start-failure")
 
 UI_SCENE("user-page-missing")
+
+UI_SCENE("user-catalog-scroll")

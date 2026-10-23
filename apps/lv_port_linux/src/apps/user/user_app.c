@@ -666,12 +666,14 @@ void user_app_init(void)
     for (size_t i = 0; i < entry_count; i++) {
         lv_obj_t *button = lv_button_create(app_list);
         lv_obj_set_size(button, lv_pct(100), 52);
+        lv_obj_set_style_pad_ver(button, UI_SPACE_SM, 0);
         lv_obj_clear_flag(button, LV_OBJ_FLAG_OVERFLOW_VISIBLE |
                           LV_OBJ_FLAG_SCROLL_CHAIN);
         lv_obj_add_event_cb(button, open_entry, LV_EVENT_CLICKED,
                             (void *)(uintptr_t)i);
         lv_obj_t *label = lv_label_create(button);
         lv_label_set_text(label, entries[i].name);
+        lv_obj_set_height(label, lv_font_get_line_height(UI_TEXT_BODY_LG));
         lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
         lv_obj_set_width(label, lv_pct(100));
         lv_obj_set_style_text_font(label, UI_TEXT_BODY_LG, 0);

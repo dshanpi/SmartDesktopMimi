@@ -359,6 +359,13 @@ static void test_sliders(lv_obj_t *root, int *index) {
  }
  for(uint32_t i=0;i<lv_obj_get_child_count(root);i++)test_sliders(lv_obj_get_child(root,i),index);
 }
+static lv_obj_t *find_catalog_list(lv_obj_t *root) {
+ if(lv_obj_get_child_count(root)==16 && lv_obj_check_type(lv_obj_get_child(root,0),&lv_button_class))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){
+  lv_obj_t *found=find_catalog_list(lv_obj_get_child(root,i));if(found)return found;
+ }
+ return NULL;
+}
 static void pump(void) {lv_tick_inc(40);lv_timer_handler();}
 static void review_wifi_flush(void) {
  for(unsigned i=0;i<2000 && wifi_sender_busy();i++){usleep(1000);wifi_control_poll(NULL);}
@@ -1344,6 +1351,23 @@ int main(int argc,char**argv) {
    assert(find_label(lv_scr_act(),expected));
   }
   puts("PASS actual invoke/platform callbacks: strict boolean results across14 cases; private socket replies");
+ } else if(!strcmp(argv[1],"user-catalog-scroll")) {
+  app_user.init();pump();lv_obj_t *list=find_catalog_list(lv_scr_act());assert(list);
+  assert(lv_obj_get_scroll_bottom(list)>0);
+  for(int i=0;i<16;i++) {
+   lv_obj_t *button=lv_obj_get_child(list,i);lv_obj_scroll_to_view(button,LV_ANIM_OFF);pump();
+   lv_area_t row,viewport;lv_obj_get_coords(button,&row);lv_obj_get_content_coords(list,&viewport);
+   assert(row.y1>=viewport.y1 && row.y2<=viewport.y2);
+   lv_obj_t *name=lv_obj_get_child(button,0);lv_area_t name_area,inside;
+   lv_obj_get_coords(name,&name_area);lv_obj_get_content_coords(button,&inside);
+   fprintf(stderr,"name=%d..%d inside=%d..%d font=%d\n",name_area.y1,name_area.y2,inside.y1,inside.y2,lv_font_get_line_height(UI_TEXT_BODY_LG));
+   assert(name_area.y1>=inside.y1 && name_area.y2<=inside.y2);
+   char prefix[8];snprintf(prefix,sizeof(prefix),"%02d ",i);
+   assert(!strncmp(lv_label_get_text(name),prefix,3));
+   lv_obj_send_event(button,LV_EVENT_CLICKED,NULL);pump();
+   char title[32];snprintf(title,sizeof(title),"Page %02d",i);assert(find_label(lv_scr_act(),title));
+  }
+  puts("PASS16 long-name rows retain page identity and scroll into viewport");
  } else if(!strcmp(argv[1],"user-page-missing")) {
   const char *root=mimi_user_app_config_get()->user_apps_root;
   assert(strstr(root,"/user-page-missing/apps"));
