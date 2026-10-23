@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Build current A133 desktop candidate with updater fixes",
+  "context": "Prior UI binary predates updater fixes",
+  "next_steps": "Application package/service business logic and device acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Fresh current desktop build",
+      "invariants": "Preserve prior releases and binaries; no board action",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ui-current-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "675unit build and ownership",
+          "status": "passed",
+          "scope": "Selected desktop source and shared settings receipt",
+          "evidence": ".delivery/quality-review-20261023/ui-current-candidate/result.json"
+        },
+        {
+          "name": "Full provenance/system/device",
+          "status": "not_run",
+          "scope": "Complete delivery and real hardware",
+          "reason": "Existing SDK dependencies and physical acceptance remain open",
+          "evidence": ".delivery/quality-review-20261023/ui-current-candidate/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
