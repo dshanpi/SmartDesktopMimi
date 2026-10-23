@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Validate nonblocking incremental IPC receive candidate",
+  "context": "Original receive loops across all fragments in one GUIcall",
+  "next_steps": "Actualconnect/accept and coordinated promotion with durabletests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Connection RX state and actual middleware polling candidate",
+      "invariants": "No incomplete output; no blocking fragment wait; frame deadlinecheckedwhilepolled",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-incremental-receive-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original controlled fragmented receive",
+          "status": "failed",
+          "scope": "actualoldreceiver controlledrecvwrapper",
+          "reason": "onecall726.740ms",
+          "evidence": ".delivery/quality-review-20261023/ipc-incremental-receive/result.json"
+        },
+        {
+          "name": "Fragment/parser/lifecycle checks",
+          "status": "passed",
+          "scope": "529splits andactualmiddlewarehostregressions",
+          "evidence": ".delivery/quality-review-20261023/ipc-incremental-receive/result.json"
+        },
+        {
+          "name": "Fullproduct acceptance",
+          "status": "not_run",
+          "scope": "actualconnect/accept/A133/physical",
+          "reason": "isolatedcandidate",
+          "evidence": ".delivery/quality-review-20261023/ipc-incremental-receive/result.json"
+        }
+      ]
+    }
+  ]
+}
