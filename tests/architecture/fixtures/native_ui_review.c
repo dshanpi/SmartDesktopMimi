@@ -25,6 +25,7 @@
 #include "src/ui/desktop_clock.h"
 #include <time.h>
 #include <stdatomic.h>
+#include <pthread.h>
 #include "src/system/backlight_control.h"
 #include "src/system/volume_control.h"
 #include "src/system/app_registry.h"
@@ -64,8 +65,35 @@ static int hdmi_control_connections, hdmi_mutations;
 extern lv_obj_t *hdmi_switch_obj;
 static int review_control_peer = -1;
 static char review_last_socket[108];
+/* Dedicated updater lifecycle page: actual client/worker, private socketpair. */
+static bool review_update_enabled;
+static atomic_bool update_hold, update_entered;
+static atomic_int update_active, update_checks;
+static void *review_update_serve(void *arg) {
+ int fd=(int)(intptr_t)arg;char input[2048];size_t used=0;
+ while(used+1<sizeof(input)) {
+  ssize_t n=read(fd,input+used,sizeof(input)-used-1);if(n<=0)break;
+  used+=(size_t)n;input[used]=0;if(strstr(input,"\r\n\r\n"))break;
+ }
+ if(used && !strncmp(input,"POST /check ",12))atomic_fetch_add(&update_checks,1);
+ if(atomic_load(&update_hold)) {
+  atomic_store(&update_entered,true);
+  while(atomic_load(&update_hold))usleep(1000);
+ }
+ const char body[]="{\"busy\":false,\"downloaded\":false,\"candidate\":null,\"phase\":\"idle\",\"current_version\":\"fixture-version\",\"channel\":\"stable\",\"error\":\"\"}";
+ char reply[1024];int len=snprintf(reply,sizeof(reply),"HTTP/1.1 200 OK\r\nContent-Length: %zu\r\n\r\n%s",strlen(body),body);
+ assert(send(fd,reply,(size_t)len,MSG_NOSIGNAL)==len);
+ shutdown(fd,SHUT_WR);close(fd);atomic_fetch_sub(&update_active,1);return NULL;
+}
 int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
  (void)length;
+ if(review_update_enabled && address->sa_family==AF_UNIX &&
+    !strcmp(((const struct sockaddr_un *)address)->sun_path,"/run/smartdesktopmimi/update.sock")) {
+  int pair[2];assert(socketpair(AF_UNIX,SOCK_STREAM,0,pair)==0);
+  assert(dup2(pair[0],fd)==fd);close(pair[0]);atomic_fetch_add(&update_active,1);
+  pthread_t thread;assert(pthread_create(&thread,NULL,review_update_serve,(void *)(intptr_t)pair[1])==0);
+  pthread_detach(thread);return 0;
+ }
  if(address->sa_family == AF_UNIX)snprintf(review_last_socket,sizeof(review_last_socket),"%s",((const struct sockaddr_un *)address)->sun_path);
  if(address->sa_family == AF_UNIX && !strcmp(((const struct sockaddr_un *)address)->sun_path, "/var/run/aitvbox/control.sock"))hdmi_control_connections++;
  if (review_hdmi_idle && address->sa_family == AF_UNIX &&
@@ -948,7 +976,8 @@ int main(int argc,char**argv) {
    puts("PASS control center: unsupported HDMI disabled; forced event sends nothing");
   }
  }
- else if(strcmp(argv[1],"desktop-update")==0){
+ else if(strcmp(argv[1],"desktop-update")==0 || !strcmp(argv[1],"desktop-update-lifecycle")){
+  if(!strcmp(argv[1],"desktop-update-lifecycle")){review_update_enabled=true;atomic_store(&update_hold,true);}
   app_setting.init();
   lv_obj_t *entry=find_label(lv_screen_active(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update");
   assert(entry);
@@ -1374,6 +1403,42 @@ int main(int argc,char**argv) {
   int before=saves;lv_obj_send_event(lv_obj_get_parent(cancel),LV_EVENT_CLICKED,NULL);
   assert(!find_label(lv_layer_top(),ui_tr(UI_STR_BT_RENAME)) && saves==before);
   puts("PASS Bluetooth rename: dialog above keyboard, readable keys, 48px actions, cancel without saving");
+ }
+ if(!strcmp(argv[1],"desktop-update-lifecycle")) {
+  for(int i=0;i<1000 && !atomic_load(&update_entered);i++)usleep(1000);
+  assert(atomic_load(&update_entered));
+  const char *close_text=ui_i18n_is_zh()?"关闭":"Close";
+  const char *title_text=ui_i18n_is_zh()?"桌面应用更新":"Desktop application update";
+  lv_obj_t *close=find_label(lv_layer_top(),close_text);assert(close);
+  lv_obj_send_event(lv_obj_get_parent(close),LV_EVENT_CLICKED,NULL);pump();
+  assert(!find_label(lv_layer_top(),title_text));
+  desktop_update_show();pump();assert(find_label(lv_layer_top(),title_text));
+  atomic_store(&update_hold,false);
+  lv_obj_t *check=NULL;
+  for(int i=0;i<100;i++) {
+   usleep(10000);lv_tick_inc(1501);pump();
+   check=find_label(lv_layer_top(),ui_i18n_is_zh()?"检查更新":"Check");assert(check);
+   if(!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED))break;
+  }
+  assert(!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));
+  lv_obj_t *state_label=find_label_prefix(lv_layer_top(),ui_i18n_is_zh()?"当前版本":"Current version");
+  assert(state_label && strstr(lv_label_get_text(state_label),"fixture-version"));
+  atomic_store(&update_entered,false);atomic_store(&update_hold,true);
+  lv_obj_send_event(lv_obj_get_parent(check),LV_EVENT_CLICKED,NULL);
+  close=find_label(lv_layer_top(),close_text);assert(close);
+  lv_obj_send_event(lv_obj_get_parent(close),LV_EVENT_CLICKED,NULL);pump();
+  for(int i=0;i<1000 && !atomic_load(&update_entered);i++)usleep(1000);
+  assert(atomic_load(&update_entered));atomic_store(&update_hold,false);
+  for(int i=0;i<1000 && (atomic_load(&update_checks)!=1 || atomic_load(&update_active));i++)usleep(1000);
+  assert(atomic_load(&update_checks)==1 && !atomic_load(&update_active));
+  usleep(20000);pump();assert(!find_label(lv_layer_top(),title_text));
+  desktop_update_show();pump();usleep(20000);lv_tick_inc(1501);pump();
+  assert(find_label(lv_layer_top(),title_text));
+  close=find_label(lv_layer_top(),close_text);assert(close);
+  lv_obj_send_event(lv_obj_get_parent(close),LV_EVENT_CLICKED,NULL);pump();
+  for(int i=0;i<1000 && atomic_load(&update_active);i++)usleep(1000);
+  assert(!atomic_load(&update_active) && atomic_load(&update_checks)==1);
+  puts("PASS real LVGL close/reopen during held status, close during queued/active action, exactly one POST, no service access");
  }
  if(!strcmp(argv[1],"desktop-update")){
   lv_obj_t *close=find_label(lv_layer_top(),ui_i18n_is_zh()?"关闭":"Close");assert(close);
