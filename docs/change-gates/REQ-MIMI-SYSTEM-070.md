@@ -62,3 +62,8 @@ r2已经通过真实opkg文件归属和封存基线检查，但最终rootfs后�
 验收：12 项实际文件系统权限检查通过；受影响集合 41 项通过，1 项初次跳过，随后以已构建的当前 A133 public/private 程序补跑真实安装 recipe 通过。原 rc6 镜像只读拒绝且哈希未变。首次夹具缺嵌入 updater、过旧 provider 输入、缺旧锁负例的失败日志全部保留，最终修复夹具后通过。
 
 当前板为现场修复的 rc6 系统，签名 rc28 应用真实安装、健康提交、普通重启自动进入新版通过；首页/无线网络/返回/涂鸦智家为真实板坐标回放，不能记人工物理触摸。重启后六项静态恢复状态哈希一致，Tuya 运行数据库变化待语义核查。持续观察尚在运行；回退、事务断电、完整功能/数据、新系统候选和最终发布未验收，不称 stable。详见 docs/validation/a133-boot-repair-20261021.json。下一步先完成新系统候选输入闭合，再进行真实回退/断电与完整功能矩阵，保留可启动演示基线。
+
+
+## 2026-10-23 rc31 / rc8 candidate preparation (SYSTEM070)
+
+Prepare a new local application 1.0.8-rc.31 and system 1.0.0-rc.8 candidate for the integrated boot and capture/driver fixes. Existing signed rc30 admits only rc6/rc7 and remains unchanged. Fresh source build, a new signed compatibility manifest, sealed baseline and normal system/bootchain checks are required. Original trust, hardware identity, data schema and public/private boundaries are preserved. No application behavior change in this version increment. All new build, physical boot, HDMI stability and upgrade/rollback acceptance remain not_run; no stable release or old-result reassignment. Private batch evidence: a133-boot-repair-20261021/system-rc8-r1.

@@ -113,3 +113,8 @@ SDK来源固定私有100askTeam/A133-AIDesktop-Tina5的fa0d799；保留97组件�
 2026-10-21 HDMI074/SYSTEM070：标准SDK overlay重放后暴露旧采集来源锁，固定到已提交的HDMI074锁；6负向检查和实际A133编译一致passed。rc7-r1来源未闭合，r2低空间、r3旧锁拒绝均保留；继续新构建。详见HDMI074追加记录。
 
 2026-10-21 SYSTEM040/SYSTEM070 mapping-order source repair: vendor link_by_name now executes before guard probes. New source-order fixtures reproduced original failure, then all8 storage guard tests passed; baseline/product21 ran,20 passed/1 real-program fixture skip recorded. No board mutation/reboot, rebuild, signing or artifact replacement. Evidence .delivery/a133-boot-repair-20261021/storage-mapping-source-r1; docs/change-gates/REQ-MIMI-SYSTEM-040.md. New source-built image and physical acceptance not_run; current live-repaired rc7 demo remains available, data-retention failure/source audit/remaining release matrix unresolved.
+
+
+## 2026-10-23 rc31 / rc8 candidate preparation (SYSTEM070)
+
+Prepare a new local application 1.0.8-rc.31 and system 1.0.0-rc.8 candidate for the integrated boot and capture/driver fixes. Existing signed rc30 admits only rc6/rc7 and remains unchanged. Fresh source build, a new signed compatibility manifest, sealed baseline and normal system/bootchain checks are required. Original trust, hardware identity, data schema and public/private boundaries are preserved. No application behavior change in this version increment. All new build, physical boot, HDMI stability and upgrade/rollback acceptance remain not_run; no stable release or old-result reassignment. Private batch evidence: a133-boot-repair-20261021/system-rc8-r1.
