@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Compile private A133 WiFi and owned transport candidate",
+  "context": "Verify same reviewed shared delta alongside pinned private adapters",
+  "next_steps": "Full UI-provider integration then versioned standard overlay",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "isolated private provider composition",
+      "invariants": "private deps external, oldSDK/releases unchanged, explicit source map",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-private-provider-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Private preflight and composition",
+          "status": "passed",
+          "scope": "existing private locks andcommon delta",
+          "reason": "13commonexact/64otherunchanged",
+          "evidence": ".delivery/quality-review-20261023/wifi-private-provider/result.json"
+        },
+        {
+          "name": "Private compile/link",
+          "status": "passed",
+          "scope": "33A133units exact observedclosure",
+          "reason": "linkerwarningretained",
+          "evidence": ".delivery/quality-review-20261023/wifi-private-provider/result.json"
+        },
+        {
+          "name": "Full delivery",
+          "status": "not_run",
+          "scope": "runtime/cloud/SDK/device/provenance",
+          "reason": "isolated candidate only",
+          "evidence": ".delivery/quality-review-20261023/wifi-private-provider/result.json"
+        }
+      ]
+    }
+  ]
+}
