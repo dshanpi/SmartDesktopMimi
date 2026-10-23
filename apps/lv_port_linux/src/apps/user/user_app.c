@@ -213,6 +213,12 @@ static bool regular_file(const char *path)
            st.st_size > 0 && st.st_size <= USER_APP_JSON_MAX;
 }
 
+static bool page_string(json_object *value)
+{
+    return json_object_is_type(value, json_type_string) &&
+           (size_t)json_object_get_string_len(value) == strlen(json_object_get_string(value));
+}
+
 static int compare_entries(const void *left, const void *right)
 {
     const user_app_entry_t *a = left;
@@ -243,18 +249,19 @@ static void scan_apps(void)
         json_object *id = NULL, *name = NULL, *ui = NULL, *permissions = NULL;
         json_object *entry = NULL, *presentation = NULL, *localizations = NULL;
         bool valid = json_object_object_get_ex(manifest, "id", &id) &&
-                     json_object_is_type(id, json_type_string) &&
+                     page_string(id) &&
+                     json_object_get_string_len(id) <= 96 &&
                      !strcmp(json_object_get_string(id), item->d_name) &&
                      json_object_object_get_ex(manifest, "name", &name) &&
-                     json_object_is_type(name, json_type_string) &&
+                     page_string(name) &&
                      json_object_object_get_ex(manifest, "ui", &ui) &&
                      json_object_is_type(ui, json_type_object) &&
                      json_object_object_get_ex(manifest, "permissions", &permissions) &&
                      json_object_is_type(permissions, json_type_array) &&
                      json_object_object_get_ex(ui, "entry", &entry) &&
-                     json_object_is_type(entry, json_type_string) &&
+                     page_string(entry) &&
                      json_object_object_get_ex(ui, "presentation", &presentation) &&
-                     json_object_is_type(presentation, json_type_string) &&
+                     page_string(presentation) &&
                      !strcmp(json_object_get_string(presentation), "embedded");
         if (valid) {
             const char *entry_text = json_object_get_string(entry);
@@ -267,10 +274,10 @@ static void scan_apps(void)
                 if (json_object_object_get_ex(localizations, locale_key, &localized) &&
                     json_object_is_type(localized, json_type_object)) {
                     if (json_object_object_get_ex(localized, "name", &localized_name) &&
-                        json_object_is_type(localized_name, json_type_string))
+                        page_string(localized_name))
                         localized_name_text = json_object_get_string(localized_name);
                     if (json_object_object_get_ex(localized, "uiEntry", &localized_entry) &&
-                        json_object_is_type(localized_entry, json_type_string))
+                        page_string(localized_entry))
                         entry_text = json_object_get_string(localized_entry);
                 }
             }
@@ -284,7 +291,7 @@ static void scan_apps(void)
                 size_t permission_count = json_object_array_length(permissions);
                 for (size_t i = 0; i < permission_count; i++) {
                     json_object *permission = json_object_array_get_idx(permissions, i);
-                    if (json_object_is_type(permission, json_type_string))
+                    if (page_string(permission))
                         target->permissions |= permission_bit(
                             json_object_get_string(permission));
                 }
@@ -420,12 +427,6 @@ static void action_event(lv_event_t *event)
 static void action_delete_event(lv_event_t *event)
 {
     lv_free(lv_event_get_user_data(event));
-}
-
-static bool page_string(json_object *value)
-{
-    return json_object_is_type(value, json_type_string) &&
-           (size_t)json_object_get_string_len(value) == strlen(json_object_get_string(value));
 }
 
 static bool page_node_valid(json_object *node, unsigned depth, size_t *count)
