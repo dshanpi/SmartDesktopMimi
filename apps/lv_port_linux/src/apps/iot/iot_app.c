@@ -153,6 +153,7 @@ static lv_obj_t * button(lv_obj_t * parent, const char * text, lv_event_cb_t cb,
 struct control
 {
     char code[129], type[24];
+    int32_t min, max, step;
     lv_obj_t * input;
 };
 static struct control controls[24];
@@ -173,6 +174,15 @@ static void confirm(lv_event_t * e)
 {
     if(is_busy() || modal) return;
     struct control * c = lv_event_get_user_data(e);
+    if(!strcmp(c->type, "Integer")) {
+        int64_t v = lv_spinbox_get_value(c->input);
+        if(v < c->min || v > c->max || c->step < 1 || (v - c->min) % c->step) {
+            pending[0] = 0;
+            lv_label_set_text(message, tr("数值不符合设备范围或步长，请用加减按钮调整。",
+                "Value does not match the device range or step. Adjust with + or -."));
+            return;
+        }
+    }
     json_object *cmd = json_object_new_object(), *value = NULL;
     if(!strcmp(c->type, "Boolean"))
         value = json_object_new_boolean(lv_obj_has_state(c->input, LV_STATE_CHECKED));
@@ -223,10 +233,16 @@ static void spin(lv_event_t * e)
         /* Device steps are arithmetic, not the spinbox's digit-oriented
          * zero-crossing behavior. Widen before adding to avoid overflow. */
         int64_t value = lv_spinbox_get_value(c->input);
-        int64_t step = lv_spinbox_get_step(c->input);
-        value += !strcmp(lv_label_get_text(l), "+") ? step : -step;
-        int64_t min = lv_spinbox_get_min_value(c->input);
-        int64_t max = lv_spinbox_get_max_value(c->input);
+        int64_t step = c->step;
+        int64_t offset = value - c->min;
+        if(!strcmp(lv_label_get_text(l), "+"))
+            value = c->min + (offset / step + 1) * step;
+        else
+            value = c->min + ((offset + step - 1) / step - 1) * step;
+        int64_t min = c->min;
+        int64_t max = c->max;
+        /* Clamp to the last schema-aligned value, not an off-grid maximum. */
+        max = min + ((max - min) / step) * step;
         if(value < min) value = min;
         if(value > max) value = max;
         lv_spinbox_set_value(c->input, (int32_t)value);
@@ -271,13 +287,16 @@ static void show_functions(json_object * root)
             json_object *jmin = NULL, *jmax = NULL, *jstep = NULL;
             int64_t min, max, step;
             if(!json_object_object_get_ex(schema, "min", &jmin) || !json_object_object_get_ex(schema, "max", &jmax) ||
-               !json_object_object_get_ex(schema, "step", &jstep) || (min = json_object_get_int64(jmin)) < INT32_MIN ||
+               !json_object_object_get_ex(schema, "step", &jstep) ||
+               json_object_get_type(jmin) != json_type_int || json_object_get_type(jmax) != json_type_int ||
+               json_object_get_type(jstep) != json_type_int || (min = json_object_get_int64(jmin)) < INT32_MIN ||
                (max = json_object_get_int64(jmax)) > INT32_MAX || (step = json_object_get_int64(jstep)) < 1 ||
                step > INT32_MAX || min > max) {
                 json_object_put(schema);
                 lv_obj_delete(card);
                 continue;
             }
+            c->min = (int32_t)min; c->max = (int32_t)max; c->step = (int32_t)step;
             c->input = lv_spinbox_create(card);
             lv_spinbox_set_range(c->input, (int32_t)min, (int32_t)max);
             lv_spinbox_set_value(c->input, (int32_t)min);

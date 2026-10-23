@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Bind IoT Integer actions to device schema",
+  "context": "Cursor changes widget step and off-grid input could be sent",
+  "next_steps": "Malformed schema and Enum cases, A133 candidate and actualdevice",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Schema-owned Integer controls and confirmation validation",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "apps/lv_port_linux/src/apps/iot/iot_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-iot-schema-step-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Current IoT scenes",
+          "status": "passed",
+          "scope": "16 intermediate plus4 final-source actual LVGL renders; original failure retained",
+          "evidence": ".delivery/quality-review-20261023/iot-schema-step/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/iot-schema-step/result.json"
+        }
+      ]
+    }
+  ]
+}

@@ -323,6 +323,10 @@ static void test_password(void) {
 }
 #include "native_lockscreen_checks.h"
 
+static lv_obj_t *find_spinbox(lv_obj_t *root){
+ if(lv_obj_check_type(root,&lv_spinbox_class))return root;
+ for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *v=find_spinbox(lv_obj_get_child(root,i));if(v)return v;}return NULL;
+}
 static lv_obj_t* find_textarea(lv_obj_t*root){if(lv_obj_check_type(root,&lv_textarea_class))return root;for(uint32_t i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t*v=find_textarea(lv_obj_get_child(root,i));if(v)return v;}return NULL;}
 static void tap_screen(lv_indev_t *pointer, int x, int y) {
  touch_x=x;touch_y=y;lv_obj_update_layout(lv_screen_active());
@@ -1185,6 +1189,23 @@ int main(int argc,char**argv) {
    tap_widget(lv_obj_get_parent(l));
    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
    if(review_iot_integer){
+    lv_obj_t *input=find_spinbox(lv_scr_act());assert(input);
+    lv_textarea_set_cursor_pos(input,lv_textarea_get_text(input)?strlen(lv_textarea_get_text(input)):0);
+    lv_obj_send_event(input,LV_EVENT_RELEASED,NULL);pump();
+    assert(lv_spinbox_get_step(input)==1);
+    lv_spinbox_set_value(input,0); /* In range, but not on min + n * step. */
+    l=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(l);
+    tap_widget(lv_obj_get_parent(l));pump();
+    assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"确认发送":"Send command"));
+    assert(review_iot_commands==0);
+    assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"数值不符合设备范围或步长，请用加减按钮调整。":"Value does not match the device range or step. Adjust with + or -."));
+    lv_spinbox_set_value(input,10);
+    l=find_label(lv_scr_act(),"-");assert(l);tap_widget(lv_obj_get_parent(l));pump();
+    assert(lv_spinbox_get_value(input)==7);
+    lv_spinbox_set_value(input,10);
+    l=find_label(lv_scr_act(),"+");assert(l);tap_widget(lv_obj_get_parent(l));pump();
+    assert(lv_spinbox_get_value(input)==17);
+    lv_spinbox_set_value(input,-3);
     l=find_label(lv_scr_act(),"+");assert(l);tap_widget(lv_obj_get_parent(l));pump();
     l=find_label(lv_scr_act(),"-");assert(l);tap_widget(lv_obj_get_parent(l));pump();
     l=find_label(lv_scr_act(),"+");assert(l);tap_widget(lv_obj_get_parent(l));pump();
