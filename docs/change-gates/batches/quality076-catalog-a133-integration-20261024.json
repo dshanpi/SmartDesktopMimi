@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Integrate catalog corrections into A133 candidate and install fixtures",
+  "context": "Previous candidate predates catalog corrections",
+  "next_steps": "Update/recovery audit and fullphysical/source gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Standalone A133 and hostinstall",
+      "invariants": "Backups preserved; no release/device/provider changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-catalog-a133-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Build",
+          "status": "passed",
+          "scope": "oneTU/fulltarget",
+          "reason": "inputidentity/receipts",
+          "evidence": ".delivery/quality-review-20261023/catalog-a133-integration/result.json"
+        },
+        {
+          "name": "Install",
+          "status": "passed",
+          "scope": "6methods bothprofiles",
+          "reason": "actualpayload/stale rejection",
+          "evidence": ".delivery/quality-review-20261023/catalog-a133-integration/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/catalog-a133-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
