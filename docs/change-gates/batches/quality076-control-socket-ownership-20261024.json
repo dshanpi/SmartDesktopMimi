@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Reproduce control endpoint ownership loss and validate isolated guard",
+  "context": "Concurrent daemon start and old exit can remove live endpoint",
+  "next_steps": "Validate fault cases and coordinate init cleanup before SDK integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private real host daemon processes",
+      "invariants": "No device or selectedSDK mutation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-socket-ownership-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original duplicate endpoint loss",
+          "status": "failed",
+          "scope": "Selected source host pair",
+          "reason": "Old daemon exit removes replacement socket",
+          "evidence": ".delivery/quality-review-20261023/control-socket-ownership/original-result.json"
+        },
+        {
+          "name": "Candidate ownership boundaries",
+          "status": "passed",
+          "scope": "Five isolated host scenarios only",
+          "evidence": ".delivery/quality-review-20261023/control-socket-ownership/candidate-result.json"
+        }
+      ]
+    }
+  ]
+}
