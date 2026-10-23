@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Integrate opt-in strict startup through standard SDK overlay",
+  "context": "Isolated compatibility candidate now promoted to source with two explicit consumers",
+  "next_steps": "Isolated base-files package and product input gates; actual runtime/fullimage pending",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Selected SDK source/standardoverlay and two init consumers",
+      "invariants": "No realdevicecommands; do not equate command acceptance and physical result",
+      "paths": [
+        "packaging/aitvbox-platform/files/aitvbox-apps.init",
+        "packaging/aitvbox-platform/files/aitvbox-control.init",
+        "tests/platform/test_platform_init.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-rc-common-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Isolated startup propagation",
+          "status": "passed",
+          "scope": "15hostsubcases, package readback, 4359overlay integrity only",
+          "evidence": ".delivery/quality-review-20261023/rc-common-integration/result.json"
+        },
+        {
+          "name": "Realcloud/device",
+          "status": "not_run",
+          "scope": "Actual authorization/device effect",
+          "reason": "HostUI review only",
+          "evidence": ".delivery/quality-review-20261023/rc-common-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
