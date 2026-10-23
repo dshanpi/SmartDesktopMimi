@@ -37,7 +37,7 @@ def provider_source(name, profile='private'):
     return path
 
 
-SERVICES_LOCK_SHA256 = '443a4cf09fd411010cff529a89995dd0878ee43ba5b4b2fe69e06ace2f9c92f2'
+SERVICES_LOCK_SHA256 = '6ab42c39356b16c9367cf2d80b5e91501847e8f17b80f9fdcaa9275677c8cace'
 
 
 def services_source(name):

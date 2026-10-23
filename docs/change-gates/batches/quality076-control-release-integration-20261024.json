@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "summary": "Integrate control release failure and helper timeout handling",
+  "context": "Stop must not falsely succeed or block on ordinary hung helper",
+  "next_steps": "Refresh downstream packages and inspect UI failure feedback",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "SDK source/artifact and host subprocess checks",
+      "invariants": "No published/board changes; kernel uninterruptible wait unqualified",
+      "paths": [
+        "scripts/build_a133_services.py",
+        "tests/sdk_source.py",
+        "docs/update/source-ownership.json",
+        "docs/update/services-program-reference.json",
+        "tests/platform/test_control_release.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-release-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Normal build and selected tests",
+          "status": "passed",
+          "scope": "5 host methods and A133 compile",
+          "evidence": ".delivery/quality-review-20261023/control-release-integration/result.json"
+        },
+        {
+          "name": "Physical and package refresh",
+          "status": "not_run",
+          "scope": "Actual runtime and new downstream package",
+          "reason": "Not deployed; downstream refresh pending",
+          "evidence": ".delivery/quality-review-20261023/control-release-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
