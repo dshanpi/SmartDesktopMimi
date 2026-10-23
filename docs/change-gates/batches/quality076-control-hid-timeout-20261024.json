@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Bound ordinary HID helper hangs in isolated control candidate",
+  "context": "Socket timeout alone does not bound dispatch subprocess waits",
+  "next_steps": "Descendant cleanup and business/A133 validation before SDK integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private host daemon and paused helper",
+      "invariants": "No hardware/SDK mutations; never claim kernel-uninterruptible wait bounded",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-hid-timeout-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original helper hang",
+          "status": "failed",
+          "scope": "Stop request waits beyond3s",
+          "reason": "Blocking waitpid prevents mouse release and response",
+          "evidence": ".delivery/quality-review-20261023/control-hid-release/hang-original.json"
+        },
+        {
+          "name": "Candidate helper timeout and prior cases",
+          "status": "passed",
+          "scope": "Host process only",
+          "evidence": ".delivery/quality-review-20261023/control-hid-release/hang-fixed-r2.json"
+        }
+      ]
+    }
+  ]
+}
