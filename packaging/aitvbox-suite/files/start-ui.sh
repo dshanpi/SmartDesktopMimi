@@ -90,7 +90,22 @@ if [ ! -S "$BACKEND_SOCKET" ] || ! pidof lv_backend >/dev/null 2>&1; then
 	exit 1
 fi
 
-if [ ! -x /usr/bin/lvglsim ]; then
+UI_BINARY=/usr/bin/lvglsim
+if [ -n "${MIMI_RELEASE_DIR:-}" ]; then
+    # The root-owned platform launcher supplies a previously verified directory.
+    UI_BINARY="$MIMI_RELEASE_DIR/bin/lvglsim"
+    export LD_LIBRARY_PATH="$MIMI_RELEASE_DIR/lib:/usr/lib"
+elif [ -f /etc/smartdesktopmimi/updater.json ] && [ -f /overlay/smartdesktopmimi-platform/enrollment.json ]; then
+    MIMI_RELEASE_DIR=$(/usr/bin/mimi-update select) || {
+        log_ui "application selection failed; keeping boot screen"
+        exit 1
+    }
+    export MIMI_RELEASE_DIR
+    UI_BINARY="$MIMI_RELEASE_DIR/bin/lvglsim"
+    export LD_LIBRARY_PATH="$MIMI_RELEASE_DIR/lib:/usr/lib"
+fi
+
+if [ ! -x "$UI_BINARY" ]; then
 	log_ui "lvglsim is missing or not executable; keeping boot screen"
 	exit 1
 fi
@@ -152,17 +167,6 @@ cd /tmp || {
 
 log_ui "backend ready; starting lvglsim"
 trap stop_ui_child TERM INT
-UI_BINARY=/usr/bin/lvglsim
-if [ -n "${MIMI_RELEASE_DIR:-}" ]; then
-    # The root-owned platform launcher supplies a previously verified directory.
-    UI_BINARY="$MIMI_RELEASE_DIR/bin/lvglsim"
-    export LD_LIBRARY_PATH="$MIMI_RELEASE_DIR/lib:/usr/lib"
-elif [ -f /etc/smartdesktopmimi/updater.json ] && [ -f /overlay/smartdesktopmimi-platform/enrollment.json ]; then
-    MIMI_RELEASE_DIR=$(/usr/bin/mimi-update select) || exit 1
-    export MIMI_RELEASE_DIR
-    UI_BINARY="$MIMI_RELEASE_DIR/bin/lvglsim"
-    export LD_LIBRARY_PATH="$MIMI_RELEASE_DIR/lib:/usr/lib"
-fi
 "$UI_BINARY" >>"$UI_LOG" 2>&1 &
 UI_PID=$!
 wait "$UI_PID"

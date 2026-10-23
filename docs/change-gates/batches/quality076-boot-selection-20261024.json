@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Select and validate UI before releasing boot animation",
+  "context": "Release selection failure after animation handoff could leave frozen screen",
+  "next_steps": "Healthy handoff and physical firstframe/animation/touch validation",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Launcher selection/error ordering",
+      "invariants": "Do not release framebuffer until selected UI executable exists; keep signature selection unchanged",
+      "paths": [
+        "packaging/aitvbox-suite/files/start-ui.sh",
+        "tests/platform/test_ui_boot_selection.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-boot-selection-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original premature handoff",
+          "status": "failed",
+          "scope": "Actual shell launcher with temporary paths/process stubs",
+          "reason": "Progress100 before failed selection",
+          "evidence": ".delivery/quality-review-20261023/boot-ui-selection/original.log"
+        },
+        {
+          "name": "Failure preservation",
+          "status": "passed",
+          "scope": "2hostcases and shell syntax",
+          "evidence": ".delivery/quality-review-20261023/boot-ui-selection/fixed.log"
+        },
+        {
+          "name": "Physical animation/firstframe",
+          "status": "not_run",
+          "scope": "Real board display",
+          "reason": "No board boot thisbatch",
+          "evidence": ".delivery/quality-review-20261023/boot-ui-selection/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
