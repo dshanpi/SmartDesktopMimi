@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Qualify isolated WiFi admission boundaries",
+  "context": "Follow atomic queue admission without changing selected SDK or public wire ABI",
+  "next_steps": "Versioned wire acknowledgement and UI recovery integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private extracted host candidate only",
+      "invariants": "No board activation or promotion; preserve known failures",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-admission-boundaries-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Admission boundary checks",
+          "status": "passed",
+          "scope": "Overflow, prior pending preservation, twenty rounds of sixteen simultaneous producers under ASAN/UBSAN",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-admission-boundaries/result.json"
+        },
+        {
+          "name": "Integrated completion protocol",
+          "status": "not_run",
+          "scope": "Wire/router/UI and physical radio",
+          "reason": "Candidate remains isolated; no running worker in concurrent admission test",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-admission-boundaries/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
