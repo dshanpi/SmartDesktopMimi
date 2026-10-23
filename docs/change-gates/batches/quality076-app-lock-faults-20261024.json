@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "summary": "Verify lock fault recovery and A133 candidate compilation",
+  "context": "Follow up reproduced acknowledged storage loss and isolated locking fix",
+  "next_steps": "Promote SDK overlay/header dependency/lock and expected artifacts; validate normal build path",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Combined storage/install and lock fault checks plus isolated A133 programs",
+      "invariants": "Preserve existing SDK and failures; no device changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-app-lock-faults-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Lock faults and paused writer/update",
+          "status": "passed",
+          "scope": "3 host methods; actual helper and appctl",
+          "evidence": ".delivery/quality-review-20261023/app-lifecycle-lock-candidate/faults.log"
+        },
+        {
+          "name": "A133 complete programs",
+          "status": "passed",
+          "scope": "Two isolated service builds; linker warnings retained",
+          "evidence": ".delivery/quality-review-20261023/app-lifecycle-lock-candidate/faults-a133-result.json"
+        },
+        {
+          "name": "SDK integration and device",
+          "status": "not_run",
+          "scope": "Normal selected builder and runtime",
+          "reason": "Isolated candidate only",
+          "evidence": ".delivery/quality-review-20261023/app-lifecycle-lock-candidate/a133-prerecord.txt"
+        }
+      ]
+    }
+  ]
+}
