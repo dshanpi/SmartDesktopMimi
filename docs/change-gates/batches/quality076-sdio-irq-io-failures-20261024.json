@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Isolate IRQ error propagation fix before unsafe writes/packet reads",
+  "context": "D80 handler continues after register/length errors",
+  "next_steps": "Actualhelper and targetcompile then reviewed integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Full extracted handler with host IO adapters",
+      "invariants": "Normal packet lengths/enqueue retained; wakeexit balanced; no live mutation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-irq-io-failures-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "12negativebranchcases",
+          "reason": "continued IO after errors",
+          "evidence": ".delivery/quality-review-20261023/sdio-irq-io-failures/original-results.json"
+        },
+        {
+          "name": "Candidate",
+          "status": "passed",
+          "scope": "21hostcases",
+          "reason": "errors exit and positivepacketpaths preserved",
+          "evidence": ".delivery/quality-review-20261023/sdio-irq-io-failures/result.json"
+        },
+        {
+          "name": "Target/device",
+          "status": "not_run",
+          "scope": "A133module/board",
+          "reason": "host isolated only",
+          "evidence": ".delivery/quality-review-20261023/sdio-irq-io-failures/result.json"
+        }
+      ]
+    }
+  ]
+}
