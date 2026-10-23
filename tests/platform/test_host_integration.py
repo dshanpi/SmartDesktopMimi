@@ -2885,6 +2885,45 @@ for expression in expressions:
         run([APPCTL, "remove", "com.100ask.hello"], env=env)
         self.assertFalse((app_root / "com.100ask.hello").exists())
 
+    def test_device_update_rejects_invalid_data_root_without_loss(self):
+        source = self.workspace / "app-data-root"
+        self.make_app(source, version="1.0.0")
+        package = self.runtime / "data-root.aitapp"
+        self.build_app(source, package)
+        app_root = self.runtime / "installed-data-root"
+        trust_root = self.runtime / "trusted-data-root"
+        trust_root.mkdir()
+        shutil.copy2(self.public_key, trust_root / "developer.pem")
+        env = self.appctl_env(app_root, trust_root)
+        run([APPCTL, "install", package], env=env)
+        target = app_root / "com.100ask.hello"
+        target.chmod(0o755)
+        data = target / "data"
+        data.rmdir()  # Replace only the empty freshly installed fixture directory.
+        data.write_bytes(b"irreplaceable-existing-data")
+        manifest = source / "manifest.json"
+        value = json.loads(manifest.read_text())
+        value["version"] = "1.1.0"
+        manifest.write_text(json.dumps(value))
+        self.build_app(source, package)
+        result = run([APPCTL, "install", package], env=env, check=False)
+        self.assertNotEqual(result.returncode, 0, "update silently discarded invalid data root")
+        self.assertEqual(data.read_bytes(), b"irreplaceable-existing-data")
+        self.assertIn(b"application data root is unsafe", result.stderr)
+        data.unlink()
+        data.symlink_to(target / "missing-data")
+        result = run([APPCTL, "install", package], env=env, check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(data.is_symlink())
+        self.assertEqual(os.readlink(data), str(target / "missing-data"))
+        data.unlink()
+        os.mkfifo(data)
+        result = run([APPCTL, "install", package], env=env, check=False)
+        self.assertNotEqual(result.returncode, 0)
+        import stat
+        self.assertTrue(stat.S_ISFIFO(data.lstat().st_mode))
+        self.assertEqual(json.loads((target / "manifest.json").read_text())["version"], "1.0.0")
+
     def test_device_version_policy_recovery_and_publisher_ownership(self):
         source = self.workspace / "app-version"
         shutil.rmtree(source, ignore_errors=True)

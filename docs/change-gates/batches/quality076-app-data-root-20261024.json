@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "summary": "Reject unsafe existing application data root before update",
+  "context": "Signed update silently discarded regular-file data root",
+  "next_steps": "Runtime write ordering, uninstall UX, physical recovery",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Appctl data preservation validation",
+      "invariants": "Preserve old app/data on rejection; existing signature/version policy unchanged",
+      "paths": [
+        "platform/runtime/aitvbox-appctl",
+        "tests/platform/test_host_integration.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-app-data-root-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original lost data",
+          "status": "failed",
+          "scope": "Actual signed update fixture",
+          "reason": "Non-directory data skipped",
+          "evidence": ".delivery/quality-review-20261023/apps-lifecycle-audit/data-root-original-r2.log"
+        },
+        {
+          "name": "Data root rejection and regressions",
+          "status": "passed",
+          "scope": "4 host methods including 3 unsafe root types",
+          "evidence": ".delivery/quality-review-20261023/apps-lifecycle-audit/fixed.log"
+        },
+        {
+          "name": "Physical power/runtime concurrent updates",
+          "status": "not_run",
+          "scope": "Real hardware and running applications",
+          "reason": "Separate validation needed",
+          "evidence": ".delivery/quality-review-20261023/apps-lifecycle-audit/result.json"
+        }
+      ]
+    }
+  ]
+}

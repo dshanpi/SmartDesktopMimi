@@ -289,6 +289,10 @@ install_app() {
 			-1:*) die "version downgrade requires --allow-downgrade" ;;
 			*) die "invalid application version comparison" ;;
 			esac
+		if [ -e "$target/data" ] || [ -L "$target/data" ]; then
+			[ -d "$target/data" ] && [ ! -L "$target/data" ] ||
+				die "application data root is unsafe"
+		fi
 			mv "$target" "$old" || die "cannot stage previous application"
 		if [ -d "$old/data" ]; then
 			if find "$old/data" ! -type d ! -type f | grep -q .; then
