@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "summary": "Reproduce control daemon shutdown blocked by incomplete client",
+  "context": "Audit actual service exit, not rc.common return alone",
+  "next_steps": "Bound request IO and shutdown waits, preserve source and failure",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual host process and private socket",
+      "invariants": "No board access or production source changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-control-stop-client-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Termination with incomplete client",
+          "status": "failed",
+          "scope": "Host compiled selected source",
+          "reason": "SIGTERM blocked until client disconnects",
+          "evidence": ".delivery/quality-review-20261023/control-stop-client/original-result.json"
+        }
+      ]
+    }
+  ]
+}
