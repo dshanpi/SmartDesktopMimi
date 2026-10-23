@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "summary": "Validate HID payload lengths before field access",
+  "context": "Malformed payloads reproduce9actual parser panics",
+  "next_steps": "HID queue/disconnect ownership, fullKVM/device matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "HID parser bounds and dispatcher rejection",
+      "invariants": "0..6 keyboard keys preserved; no device writes; macro count checked beforeallocation",
+      "paths": [
+        "apps/ipkvm/upstream/internal/hidrpc/message.go",
+        "apps/ipkvm/upstream/internal/hidrpc/message_test.go",
+        "apps/ipkvm/upstream/hidrpc_payload_test.go",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-hid-payload-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original parser panic",
+          "status": "failed",
+          "scope": "9panic subcases and extra payload acceptance beforefix",
+          "reason": "Missing payload length guards",
+          "evidence": ".delivery/quality-review-20261023/kvm-hid-payload/original.log"
+        },
+        {
+          "name": "Parser boundaries",
+          "status": "passed",
+          "scope": "7types truncation/extra/valid, keyboard count, macro count",
+          "evidence": ".delivery/quality-review-20261023/kvm-hid-payload/fixed.log"
+        },
+        {
+          "name": "Dispatcher rejection",
+          "status": "passed",
+          "scope": "21 malformed payloads actual handler temporary HID files unchanged",
+          "evidence": ".delivery/quality-review-20261023/kvm-hid-payload/dispatcher.log"
+        },
+        {
+          "name": "Macro/HID regression",
+          "status": "passed",
+          "scope": "Selected actual package race tests",
+          "evidence": ".delivery/quality-review-20261023/kvm-hid-payload/regression.log"
+        },
+        {
+          "name": "Real USB/WebRTC",
+          "status": "not_run",
+          "scope": "Host only",
+          "reason": "No live device activation",
+          "evidence": ".delivery/quality-review-20261023/kvm-hid-payload/prerecord.json"
+        }
+      ]
+    }
+  ]
+}

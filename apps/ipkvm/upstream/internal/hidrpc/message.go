@@ -63,6 +63,9 @@ func (m *Message) KeypressReport() (KeypressReport, error) {
 	if m.t != TypeKeypressReport {
 		return KeypressReport{}, fmt.Errorf("invalid message type: %d", m.t)
 	}
+	if len(m.d) != 2 {
+		return KeypressReport{}, fmt.Errorf("invalid message length: %d", len(m.d))
+	}
 
 	return KeypressReport{
 		Key:   m.d[0],
@@ -78,6 +81,9 @@ type KeyboardReport struct {
 func (m *Message) KeyboardReport() (KeyboardReport, error) {
 	if m.t != TypeKeyboardReport {
 		return KeyboardReport{}, fmt.Errorf("invalid message type: %d", m.t)
+	}
+	if len(m.d) < 1 || len(m.d) > 1+HidKeyBufferSize {
+		return KeyboardReport{}, fmt.Errorf("invalid message length: %d", len(m.d))
 	}
 
 	return KeyboardReport{
@@ -104,12 +110,15 @@ func (m *Message) KeyboardMacroReport() (KeyboardMacroReport, error) {
 	if m.t != TypeKeyboardMacroReport {
 		return KeyboardMacroReport{}, fmt.Errorf("invalid message type: %d", m.t)
 	}
+	if len(m.d) < 5 {
+		return KeyboardMacroReport{}, fmt.Errorf("invalid message length: %d", len(m.d))
+	}
 
 	isPaste := m.d[0] == uint8(1)
 	stepCount := binary.BigEndian.Uint32(m.d[1:5])
 
-	expectedLength := int(stepCount)*9 + 5
-	if len(m.d) != expectedLength {
+	expectedLength := uint64(stepCount)*9 + 5
+	if uint64(len(m.d)) != expectedLength {
 		return KeyboardMacroReport{}, fmt.Errorf("invalid length: %d, expected: %d", len(m.d), expectedLength)
 	}
 
@@ -167,6 +176,9 @@ func (m *Message) MouseReport() (MouseReport, error) {
 	if m.t != TypeMouseReport {
 		return MouseReport{}, fmt.Errorf("invalid message type: %d", m.t)
 	}
+	if len(m.d) != 3 {
+		return MouseReport{}, fmt.Errorf("invalid message length: %d", len(m.d))
+	}
 
 	return MouseReport{
 		DX:     int8(m.d[0]),
@@ -197,6 +209,9 @@ type KeyboardMacroState struct {
 func (m *Message) KeyboardMacroState() (KeyboardMacroState, error) {
 	if m.t != TypeKeyboardMacroState {
 		return KeyboardMacroState{}, fmt.Errorf("invalid message type: %d", m.t)
+	}
+	if len(m.d) != 2 {
+		return KeyboardMacroState{}, fmt.Errorf("invalid message length: %d", len(m.d))
 	}
 
 	return KeyboardMacroState{
