@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Record actual IPC concurrent frame corruption",
+  "context": "Background publishers share stream fd without complete-frame serialization",
+  "next_steps": "Connection lifetime and transmission ownership candidate with bounded IO",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual middleware/socket deterministic concurrency reproduction",
+      "invariants": "Preserve failure; no board or rootcause extrapolation",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-concurrent-send-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Concurrent shortwrite frame integrity",
+          "status": "failed",
+          "scope": "actualmw_publish/ipc_client_send/socketpair",
+          "reason": "both publishers return success but first payload corrupt",
+          "evidence": ".delivery/quality-review-20261023/ipc-concurrent-send/result.json"
+        },
+        {
+          "name": "Sequential control",
+          "status": "passed",
+          "scope": "samefunctions with nonoverlapping sends",
+          "evidence": ".delivery/quality-review-20261023/ipc-concurrent-send/result.json"
+        },
+        {
+          "name": "Transport repair and target acceptance",
+          "status": "not_run",
+          "scope": "lifetime/serialization/A133",
+          "reason": "requires coordinatedownership fix; no product mutation yet",
+          "evidence": ".delivery/quality-review-20261023/ipc-concurrent-send/result.json"
+        }
+      ]
+    }
+  ]
+}
