@@ -339,18 +339,19 @@ static void free_chat_exit_requested(void *user_data)
     send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
 }
 
+static void stop_local_free_chat(void)
+{
+    const bool needs_exit = free_chat_enter_pending || ai_free_chat_view_is_open();
+    cancel_free_chat_enter_timer();
+    free_chat_enter_pending = false;
+    if (needs_exit) send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
+    if (ai_free_chat_view_is_open()) ai_free_chat_view_close();
+}
+
 static void back_event_handler(lv_event_t *e)
 {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        if (free_chat_enter_pending) {
-            cancel_free_chat_enter_timer();
-            free_chat_enter_pending = false;
-            send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
-        }
-        if (ai_free_chat_view_is_open()) {
-            send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
-            ai_free_chat_view_close();
-        }
+        stop_local_free_chat();
         send_ai_cmd(AI_CMD_STOP_LISTEN);
         app_manager_back_home();
     }
@@ -1051,17 +1052,7 @@ void ai_app_init(void)
 void ai_app_close(void)
 {
     hide_bind_modal();
-    cancel_free_chat_enter_timer();
-
-    if (free_chat_enter_pending) {
-        send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
-        free_chat_enter_pending = false;
-    }
-
-    if (ai_free_chat_view_is_open()) {
-        send_ai_cmd(AI_CMD_EXIT_FREE_CHAT);
-        ai_free_chat_view_close();
-    }
+    stop_local_free_chat();
 
     mw_unsubscribe(TOPIC_AI_STATUS, on_ai_status);
     mw_unsubscribe(TOPIC_AI_TEXT, on_ai_text);

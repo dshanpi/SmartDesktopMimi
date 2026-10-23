@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "summary": "Send one exit command when closing a pending assistant session",
+  "context": "Original exact count assertion failed; retained",
+  "next_steps": "Timer allocation fault injection and late status review",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Shared local assistant cleanup",
+      "invariants": "No protocol or published artifact changes",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-assistant-close-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Pending close command count and pointer regression",
+          "status": "passed",
+          "scope": "8 host language/theme/resolution cases",
+          "evidence": ".delivery/quality-review-20261023/assistant-close/result.json"
+        },
+        {
+          "name": "Actual hardware session lifecycle",
+          "status": "not_run",
+          "scope": "Real backend and voice",
+          "reason": "Host fixture only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}

@@ -1146,7 +1146,9 @@ int main(int argc,char**argv) {
   assert(find_label(panel,ui_tr(UI_STR_AI_OPEN_FAILED)));
   char timeout_image[1024];snprintf(timeout_image,sizeof(timeout_image),"%s.timeout.ppm",argv[4]);save(timeout_image);
   ui075_tap(button,pointer);assert(ai_enter_count==2 && ai_free_chat_view_is_open());
+  int before_close=ai_exit_count;
   lv_obj_t *old=lv_scr_act();app_ai.close();assert(!ai_free_chat_view_is_open());
+  assert(ai_exit_count==before_close+1);
   int exits=ai_exit_count;app_ai.init();lv_obj_delete(old);lv_tick_inc(6100);pump();
   assert(ai_exit_count==exits && ai_enter_count==2);
   lv_indev_delete(pointer);
