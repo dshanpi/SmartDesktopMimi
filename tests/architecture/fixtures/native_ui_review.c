@@ -1377,6 +1377,38 @@ int main(int argc,char**argv) {
  }
  if(!strcmp(argv[1],"desktop-update")){
   lv_obj_t *close=find_label(lv_layer_top(),ui_i18n_is_zh()?"关闭":"Close");assert(close);
+  lv_obj_t *title=find_label(lv_layer_top(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update");assert(title);
+  lv_obj_t *panel=lv_obj_get_parent(title);lv_area_t pa;lv_obj_get_coords(panel,&pa);
+  assert(pa.x1>=8 && pa.y1>=8 && pa.x2<review_width-8 && pa.y2<review_height-8);
+  const char *actions_zh[]={"检查更新","下载","安装并重启","取消下载","关闭"};
+  const char *actions_en[]={"Check","Download","Install & restart","Cancel download","Close"};
+  lv_area_t action_areas[5];
+  for(int i=0;i<5;i++) {
+   lv_obj_t *label=find_label(lv_layer_top(),ui_i18n_is_zh()?actions_zh[i]:actions_en[i]);assert(label);
+   lv_obj_t *button=lv_obj_get_parent(label);lv_obj_get_coords(button,&action_areas[i]);
+   lv_area_t la,container;lv_obj_get_coords(label,&la);lv_obj_get_coords(lv_obj_get_parent(button),&container);
+   assert(action_areas[i].y1>=container.y1 && action_areas[i].y2<=container.y2);
+   assert(lv_obj_get_height(button)>=48);
+   assert(action_areas[i].x1>=pa.x1 && action_areas[i].x2<=pa.x2 && action_areas[i].y1>=pa.y1 && action_areas[i].y2<=pa.y2);
+   assert(la.x1>=action_areas[i].x1 && la.x2<=action_areas[i].x2 && la.y1>=action_areas[i].y1 && la.y2<=action_areas[i].y2);
+   if(i>0 && i<4)assert(action_areas[i].x1>action_areas[i-1].x2);
+  }
+  assert(action_areas[4].y1>action_areas[0].y2);
+  lv_obj_t *status=find_label(lv_layer_top(),ui_tr(UI_STR_LOADING));assert(status);
+  char long_status[2048];long_status[0]=0;
+  for(int i=0;i<24;i++)strcat(long_status,"Update status / failure detail remains readable.\n");
+  lv_label_set_text(status,long_status);lv_obj_update_layout(lv_layer_top());
+  lv_obj_t *status_area=lv_obj_get_parent(status);lv_area_t sa;lv_obj_get_coords(status_area,&sa);
+  assert(sa.y1>pa.y1 && sa.y2<action_areas[0].y1 && lv_obj_get_height(status_area)>=80);
+  assert(lv_obj_get_scroll_bottom(status_area)>0);
+  lv_obj_scroll_by(status_area,0,-80,LV_ANIM_OFF);lv_obj_update_layout(lv_layer_top());
+  assert(lv_obj_get_scroll_y(status_area)>0);
+  for(int i=0;i<5;i++) {
+   lv_obj_t *label=find_label(lv_layer_top(),ui_i18n_is_zh()?actions_zh[i]:actions_en[i]);assert(label);
+   lv_area_t after;lv_obj_get_coords(lv_obj_get_parent(label),&after);
+   assert(after.x1==action_areas[i].x1 && after.x2==action_areas[i].x2 && after.y1==action_areas[i].y1 && after.y2==action_areas[i].y2);
+  }
+  puts("PASS updater panel/actions/text fit; long status scrolls without moving controls");
   lv_obj_send_event(lv_obj_get_parent(close),LV_EVENT_CLICKED,NULL);pump();
   assert(!find_label(lv_layer_top(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update"));
   puts("PASS desktop update: dedicated settings entry, close stays on Settings");

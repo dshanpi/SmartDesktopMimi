@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Fit updater modal and keep controls reachable on small screens",
+  "context": "Actual800x480 render and containment assertion failed with fixed520px panel",
+  "next_steps": "Worker lifecycle and complete function/device matrix remain open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Responsive updater modal and independent status scrolling",
+      "invariants": "Same actions/backend; no device operations;48px targets",
+      "paths": [
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-update-layout-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual LVGL layout",
+          "status": "passed",
+          "scope": "8 size/language/theme cases,24-line scroll, action positions and close assertions",
+          "evidence": ".delivery/quality-review-20261023/update-small-screen/final.log"
+        },
+        {
+          "name": "Original clipping",
+          "status": "passed",
+          "scope": "Original assertion abort retained",
+          "evidence": ".delivery/quality-review-20261023/update-small-screen/original.log"
+        },
+        {
+          "name": "State and transport regression",
+          "status": "passed",
+          "scope": "9 host unittest methods",
+          "evidence": ".delivery/quality-review-20261023/update-small-screen/regression.log"
+        },
+        {
+          "name": "Physical UI and update",
+          "status": "not_run",
+          "scope": "No board deployment",
+          "reason": "Host-only layout validation",
+          "evidence": ".delivery/quality-review-20261023/update-small-screen/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
