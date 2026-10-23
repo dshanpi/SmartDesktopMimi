@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Guard private WiFi transition candidate against stale completions",
+  "context": "Shared busy flag fails opposing queued/inflight requests",
+  "next_steps": "Queue failure and concurrent enqueue/correlation before SDK integration",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private candidate two controlled host schedules",
+      "invariants": "No SDK/ABI/physical promotion from isolated tests",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-wifi-toggle-overlap-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Phase-only overlap",
+          "status": "failed",
+          "scope": "Held opposite transition and obsolete queued actions",
+          "reason": "Old completion clears latest busy; queue runs obsolete actions",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-overlap/original-result.json"
+        },
+        {
+          "name": "Generation candidate",
+          "status": "passed",
+          "scope": "Held opposite transition and queued en/off/en",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-overlap/queued-result-r2.json"
+        },
+        {
+          "name": "Integration qualification",
+          "status": "not_run",
+          "scope": "Queuefailures/concurrentcallers/versionedwire/A133/device",
+          "reason": "Private prototype only",
+          "evidence": ".delivery/quality-review-20261023/wifi-toggle-overlap/generation-result.json"
+        }
+      ]
+    }
+  ]
+}
