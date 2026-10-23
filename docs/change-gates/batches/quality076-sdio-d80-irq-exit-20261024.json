@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Reproduce D80 IRQ wake release failure and isolate exit candidate",
+  "context": "Historical firmware branch narrows prior unbounded-loop attribution",
+  "next_steps": "Full handler IO failure and isolated target compile",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Exact complete handler with host adapters, isolated candidate",
+      "invariants": "No live attribution or SDK mutation; originalfailure preserved",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-sdio-d80-irq-exit-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "D80 readerror wake balance",
+          "reason": "missing relax path",
+          "evidence": ".delivery/quality-review-20261023/sdio-d80-irq-exit/original.log"
+        },
+        {
+          "name": "Candidate",
+          "status": "passed",
+          "scope": "12 hostcases UBSAN",
+          "reason": "common release reached",
+          "evidence": ".delivery/quality-review-20261023/sdio-d80-irq-exit/result.json"
+        },
+        {
+          "name": "Target/device",
+          "status": "not_run",
+          "scope": "fullTU/board",
+          "reason": "isolatedhost only",
+          "evidence": ".delivery/quality-review-20261023/sdio-d80-irq-exit/result.json"
+        }
+      ]
+    }
+  ]
+}
