@@ -164,8 +164,17 @@ static void *review_update_serve(void *arg) {
  assert(send(fd,reply,(size_t)len,MSG_NOSIGNAL)==len);
  shutdown(fd,SHUT_WR);close(fd);atomic_fetch_sub(&update_active,1);return NULL;
 }
+static const char *review_user_reply;
+static int review_user_peer=-1;
 int __wrap_connect(int fd, const struct sockaddr *address, socklen_t length) {
  (void)length;
+ if(review_user_reply && address->sa_family==AF_UNIX &&
+    !strcmp(((const struct sockaddr_un *)address)->sun_path,"/tmp/mimi-result-fixture.sock")) {
+  int pair[2];assert(socketpair(AF_UNIX,SOCK_STREAM,0,pair)==0);
+  assert(dup2(pair[0],fd)==fd);close(pair[0]);review_user_peer=pair[1];
+  size_t n=strlen(review_user_reply);assert(write(pair[1],review_user_reply,n)==(ssize_t)n);
+  return 0;
+ }
  if(review_update_enabled && address->sa_family==AF_UNIX &&
     !strcmp(((const struct sockaddr_un *)address)->sun_path,"/run/smartdesktopmimi/update.sock")) {
   int pair[2];assert(socketpair(AF_UNIX,SOCK_STREAM,0,pair)==0);
@@ -1265,6 +1274,21 @@ int main(int argc,char**argv) {
   lv_obj_t *old=lv_scr_act();app_user.close();app_user.init();lv_obj_delete(old);pump();
   assert(find_label(lv_scr_act(),text));
   puts("PASS platform-configured real user-app catalog/select/reopen; no execution/storage claim");
+ } else if(!strcmp(argv[1],"user-action-result")) {
+  app_user.init();pump();
+  const char *values[]={"true","false","\"false\"","1","[]","{}","null"};
+  for(int kind=0;kind<2;kind++)for(size_t i=0;i<sizeof(values)/sizeof(values[0]);i++) {
+   char reply[160];snprintf(reply,sizeof(reply),kind?"{\"ok\":%s}\n":"{\"ok\":%s,\"message\":\"Fixture result\"}\n",values[i]);
+   review_user_reply=reply;
+   lv_obj_t *label=find_label(lv_scr_act(),kind?"Platform test":"Invoke test");assert(label);
+   lv_obj_send_event(lv_obj_get_parent(label),LV_EVENT_CLICKED,NULL);
+   assert(review_user_peer>=0);close(review_user_peer);review_user_peer=-1;review_user_reply=NULL;
+   pump();
+   const char *expected=i==0?(kind?ui_tr(UI_STR_USER_REQUEST_COMPLETE):"Fixture result"):
+      ui_tr(kind?UI_STR_USER_HARDWARE_FAILED:UI_STR_USER_LAUNCH_FAILED);
+   assert(find_label(lv_scr_act(),expected));
+  }
+  puts("PASS actual invoke/platform callbacks: strict boolean results across14 cases; private socket replies");
  } else if(!strcmp(argv[1],"user-page-invalid")) {
   app_user.init();pump();
   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"应用页面格式无效，请重新安装应用。":"Invalid app page. Please reinstall the app."));

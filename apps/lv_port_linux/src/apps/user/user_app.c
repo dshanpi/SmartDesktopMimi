@@ -263,6 +263,7 @@ static void action_event(lv_event_t *event)
         json_object *ok = NULL, *message = NULL;
         if (!response ||
             !json_object_object_get_ex(response, "ok", &ok) ||
+            !json_object_is_type(ok, json_type_boolean) ||
             !json_object_get_boolean(ok) ||
             !json_object_object_get_ex(response, "message", &message) ||
             !json_object_is_type(message, json_type_string)) {
@@ -290,7 +291,8 @@ static void action_event(lv_event_t *event)
     json_object_put(request);
     json_object *ok = NULL, *message = NULL;
     if (!response || !json_object_object_get_ex(response, "ok", &ok) ||
-        !json_object_get_boolean(ok)) {
+        !json_object_is_type(ok, json_type_boolean) ||
+            !json_object_get_boolean(ok)) {
         if (response &&
             json_object_object_get_ex(response, "message", &message) &&
             json_object_is_type(message, json_type_string))
