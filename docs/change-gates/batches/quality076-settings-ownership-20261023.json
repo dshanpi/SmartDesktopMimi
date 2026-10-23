@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "summary": "Rebind shared settings ownership after coordinated backend source update",
+  "context": "Frozen settings hashes blocked full UI source audit",
+  "next_steps": "Official UI receipt and writer compatibility gates, physical tests",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Two shared frozen input digests only, roles unchanged",
+      "invariants": "Both profiles use exact same source; no gate bypass",
+      "paths": [
+        "docs/update/source-ownership.json",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-settings-ownership-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Shared inputs and full UI compile",
+          "status": "passed",
+          "scope": "Full A133 link and recovered675-source ownership audit; initial wrapper failure retained",
+          "evidence": ".delivery/quality-review-20261023/settings-ui-a133/result.json"
+        },
+        {
+          "name": "Source ownership regression",
+          "status": "passed",
+          "scope": "Existing ownership test suite",
+          "evidence": ".delivery/quality-review-20261023/settings-ui-a133/ownership-tests.log"
+        },
+        {
+          "name": "Official paired delivery",
+          "status": "not_run",
+          "scope": "Complete paired executable receipt and device",
+          "reason": "Isolated diagnostic build only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
