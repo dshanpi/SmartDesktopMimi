@@ -121,6 +121,13 @@ int sys_volume_set_percent(int p) {volume=p;return 0;}
 static mw_subscribe_cb_t callbacks[TOPIC_MAX][10];
 int mw_subscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(!callbacks[t][i]){callbacks[t][i]=c;return 0;}return -1;}
 int mw_unsubscribe(mw_topic_t t,mw_subscribe_cb_t c) {for(int i=0;i<10;i++)if(callbacks[t][i]==c)callbacks[t][i]=NULL;return 0;}
+static bool fail_assistant_timer;
+lv_timer_t *__real_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data);
+lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data)
+{
+ if(fail_assistant_timer && period==6000){fail_assistant_timer=false;return NULL;}
+ return __real_lv_timer_create(cb,period,data);
+}
 static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
@@ -1141,6 +1148,10 @@ int main(int argc,char**argv) {
   state.state=AI_STATE_IDLE;emit(TOPIC_AI_STATUS,&state,sizeof(state));pump();
   /* The button caption is OPEN, while the section title uses FREE_CHAT. */
   lv_obj_t *button=lv_obj_get_child(panel,2);assert(lv_obj_check_type(button,&lv_button_class));
+  fail_assistant_timer=true;ui075_tap(button,pointer);
+  assert(!fail_assistant_timer);
+  assert(ai_enter_count==0 && !ai_free_chat_view_is_open());
+  assert(find_label(panel,ui_tr(UI_STR_AI_OPEN_FAILED)));
   ui075_tap(button,pointer);assert(ai_enter_count==1 && ai_free_chat_view_is_open());
   lv_tick_inc(6100);pump();assert(!ai_free_chat_view_is_open() && ai_exit_count==1);
   assert(find_label(panel,ui_tr(UI_STR_AI_OPEN_FAILED)));

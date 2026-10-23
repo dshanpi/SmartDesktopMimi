@@ -386,7 +386,9 @@ static void free_chat_event_handler(lv_event_t *e)
         } else {
             free_chat_enter_pending = false;
             free_chat_enter_failed = true;
+            if (ai_free_chat_view_is_open()) ai_free_chat_view_close();
             if (has_latest_status) update_buttons(&latest_status);
+            return;
         }
         send_ai_cmd(AI_CMD_ENTER_FREE_CHAT);
     }

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Abort assistant start when its timeout timer cannot be created",
+  "context": "Original injected NULL causes enter command and stuck overlay; failure retained",
+  "next_steps": "Late status and exit acknowledgement review; other functional areas remain",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Timer creation failure and host-only fault injection",
+      "invariants": "No production fault injection, protocol or published artifact changes",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "scripts/render_ui_review.py",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-assistant-allocation-20261023.json"
+      ],
+      "checks": [
+        {
+          "name": "Injected timer failure and retry lifecycle",
+          "status": "passed",
+          "scope": "8 host language/theme/size cases",
+          "evidence": ".delivery/quality-review-20261023/assistant-allocation/result.json"
+        },
+        {
+          "name": "Actual backend and physical conversation",
+          "status": "not_run",
+          "scope": "Device lifecycle",
+          "reason": "Host fixture only",
+          "evidence": "docs/change-gates/REQ-MIMI-QUALITY-076.md"
+        }
+      ]
+    }
+  ]
+}
