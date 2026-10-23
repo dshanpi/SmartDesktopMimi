@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "summary": "Validate UI-side actual middleware connection ownership candidate",
+  "context": "Concurrent frame corruption and oldfd lifecycle risks",
+  "next_steps": "Backend slots/poll/heartbeat ownership and receive/connect deadlines",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Copied actual middleware UI path",
+      "invariants": "No automatic mutation replay; no callback under statelock; old identity cannot detach new slot",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-ipc-ui-owner-integration-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "UI transmission/lifetime/reentrant callback",
+          "status": "passed",
+          "scope": "actualcandidate middleware/socketpair ASAN/UBSAN",
+          "evidence": ".delivery/quality-review-20261023/ipc-ui-owner-integration/result.json"
+        },
+        {
+          "name": "Complete middleware and product",
+          "status": "not_run",
+          "scope": "backendslots/actualconnect/receive/A133",
+          "reason": "candidateisolated andbackendoriginal; tests useconnectadapter",
+          "evidence": ".delivery/quality-review-20261023/ipc-ui-owner-integration/result.json"
+        }
+      ]
+    }
+  ]
+}
