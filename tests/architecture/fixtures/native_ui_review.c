@@ -1366,6 +1366,7 @@ int main(int argc,char**argv) {
    assert(!strncmp(lv_label_get_text(name),prefix,3));
    lv_obj_send_event(button,LV_EVENT_CLICKED,NULL);pump();
    char title[32];snprintf(title,sizeof(title),"Page %02d",i);assert(find_label(lv_scr_act(),title));
+   for(int j=0;j<16;j++)assert(lv_obj_has_state(lv_obj_get_child(list,j),LV_STATE_CHECKED)==(j==i));
   }
   puts("PASS16 long-name rows retain page identity and scroll into viewport");
  } else if(!strcmp(argv[1],"user-page-missing")) {

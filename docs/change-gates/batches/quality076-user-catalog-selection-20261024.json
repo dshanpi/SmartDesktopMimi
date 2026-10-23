@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Show exclusive selected app and readable catalog labels",
+  "context": "No visible selectedrow; dark inverse labels black onblue",
+  "next_steps": "Candidateintegration and remainingquality/physical gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Catalog selection/contrast",
+      "invariants": "Stable index selection; no action execution; fixedrow geometry",
+      "paths": [
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-user-catalog-selection-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Original",
+          "status": "failed",
+          "scope": "selectedrow assertion",
+          "reason": "no selectedstate",
+          "evidence": ".delivery/quality-review-20261023/user-catalog-selection/result.json"
+        },
+        {
+          "name": "Fixed",
+          "status": "passed",
+          "scope": "fourrenders64selections",
+          "reason": "exclusive state/bounds andvisualwhite labels",
+          "evidence": ".delivery/quality-review-20261023/user-catalog-selection/result.json"
+        },
+        {
+          "name": "Physical",
+          "status": "not_run",
+          "scope": "A133",
+          "reason": "host only",
+          "evidence": ".delivery/quality-review-20261023/user-catalog-selection/result.json"
+        }
+      ]
+    }
+  ]
+}

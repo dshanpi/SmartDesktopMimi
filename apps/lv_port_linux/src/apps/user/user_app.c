@@ -553,6 +553,11 @@ static void open_entry(lv_event_t *event)
     if (lv_event_get_code(event) != LV_EVENT_CLICKED) return;
     size_t index = (size_t)(uintptr_t)lv_event_get_user_data(event);
     if (index >= entry_count) return;
+    for (size_t i = 0; i < entry_count; ++i) {
+        lv_obj_t *row = lv_obj_get_child(app_list, (int32_t)i);
+        if (i == index) lv_obj_add_state(row, LV_STATE_CHECKED);
+        else lv_obj_clear_state(row, LV_STATE_CHECKED);
+    }
     bool available = regular_file(entries[index].entry);
     json_object *page = available ? json_object_from_file(entries[index].entry) : NULL;
     clear_content();
@@ -667,6 +672,10 @@ void user_app_init(void)
         lv_obj_t *button = lv_button_create(app_list);
         lv_obj_set_size(button, lv_pct(100), 52);
         lv_obj_set_style_pad_ver(button, UI_SPACE_SM, 0);
+        lv_obj_set_style_border_width(button, 2, 0);
+        lv_obj_set_style_border_opa(button, LV_OPA_TRANSP, 0);
+        lv_obj_set_style_border_color(button, UI_TEXT_PRIMARY, LV_STATE_CHECKED);
+        lv_obj_set_style_border_opa(button, LV_OPA_COVER, LV_STATE_CHECKED);
         lv_obj_clear_flag(button, LV_OBJ_FLAG_OVERFLOW_VISIBLE |
                           LV_OBJ_FLAG_SCROLL_CHAIN);
         lv_obj_add_event_cb(button, open_entry, LV_EVENT_CLICKED,
@@ -677,7 +686,7 @@ void user_app_init(void)
         lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
         lv_obj_set_width(label, lv_pct(100));
         lv_obj_set_style_text_font(label, UI_TEXT_BODY_LG, 0);
-        lv_obj_set_style_text_color(label, UI_TEXT_INVERSE, 0);
+        lv_obj_set_style_text_color(label, lv_color_white(), 0);
         lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_center(label);
     }
