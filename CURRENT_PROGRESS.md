@@ -1,3 +1,11 @@
+# Latest continuation — 2026-10-24
+
+2026-10-24 QUALITY076 RX capacity promotion and source sync: local hardware commit 27d2cf50493e263df79bf61e003043cd040e8f1a promotes the exact previously compiled three-file candidate. Added durable host tests extract the capacity-protected overlay receive functions, use non-copying IO stubs, and pass 52 ASAN/UBSAN cases. Allocator capacity initialization/reuse are source assertions in this runner; historical allocator runtime evidence remains separate. Overlay integrity passed for all 4384 files. Existing module 0502d0d03180ad3ca3add2a3552b71407e45496bcc1d1afb1868904f3d169ebb and all 35 recorded object hashes were rechecked, without redundant rebuild.
+
+Actual SDK target is .delivery/sdk-restored, established from recorded compiler paths and exact 106-file previous inventory. Initial lookup used the manifest's historical export root and failed before any write; this failed attempt is retained. Three committed files were synchronized with original backups and mode preservation; 103 other tracked driver inputs are unchanged. SDK cached objects/modules remain stale and must not be packaged as this candidate. No board operation, push, signing, or release occurred. Full image build remains blocked by less than 15 GiB free space; CMD52/slab cause, kernel/generated/compiler provenance, physical transfers/stability, upgrade/rollback/power/data gates remain open. Evidence: .delivery/quality-review-20261023/sdio-rx-capacity-promotion/result.json. Next: restore build capacity through reviewed storage management, refresh SDK outputs only when admitted, and complete controlled device readiness/recovery and the remaining 12-domain quality matrix. Overall project remains incomplete.
+
+---
+
 > 2026-10-16T11:04:11.302453+00:00 UI075 rc28包含最后两处展示修正，来源918d2a7；完整构建/签名/三项CI及全部17远端附件复验passed，旧rc27不变。未上机/未稳定发布，物理验收和资源依赖未完成。
 
 > 2026-10-16T10:44:09.701308+00:00 UI075最终细节：组件库说明完整显示、控制中心箭头随开合更新；四页面32图、大屏8组/小屏专用8组指针和A133增量编译passed。大屏脚本用于小屏的失败保留。新源码未打包/未上机，rc27不变；物理及逐像素相同未宣称。

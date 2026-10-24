@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "summary": "Promote capacity-protected SDIO source and record exact SDK synchronization",
+  "context": "Continue REQ-MIMI-QUALITY-076 from compiled local candidate; no board or release actions",
+  "next_steps": "Reviewed build-space recovery and remaining controlled physical/source/quality gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Private SDK three-file defensive fix, durable fixed-path host regression and source readback",
+      "invariants": "Preserve backups, existing failures, hardware identity, unrelated files, and distinction between host and physical acceptance",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-sdio-capacity-promotion-20261024.json",
+        "docs/change-gates/batches/quality076-sdio-capacity-promotion-20261024.json"
+      ],
+      "checks": [
+        {
+          "name": "Host and source verification",
+          "status": "passed",
+          "scope": "52 ASAN/UBSAN fixed receive contract cases; 4384 overlay files; 35 existing object hashes; three SDK source changes and 103 unchanged files",
+          "reason": "Exact compiled candidate promoted, source backed up and read back; no device IO in tests",
+          "evidence": "docs/validation/quality076-sdio-capacity-promotion-20261024.json"
+        },
+        {
+          "name": "Historical SDK location lookup",
+          "status": "failed",
+          "scope": "Initial source inventory lookup before mutation",
+          "reason": "Manifest source_root was the historical export location; correct target established from compiler paths and previous full inventory",
+          "evidence": ".delivery/quality-review-20261023/sdio-rx-capacity-promotion/sync-attempt-r1.json"
+        },
+        {
+          "name": "Full system image",
+          "status": "blocked",
+          "scope": "Full SDK image build",
+          "reason": "Available storage remains below 15 GiB; no backup deletion authorized or attempted",
+          "evidence": "docs/validation/quality076-sdio-capacity-promotion-20261024.json"
+        },
+        {
+          "name": "Physical qualification",
+          "status": "not_run",
+          "scope": "Device load, transfers, stability, upgrade/rollback/power/data",
+          "reason": "Local source promotion and host validation only",
+          "evidence": "docs/validation/quality076-sdio-capacity-promotion-20261024.json"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "status": "local_overlay_promoted_and_source_synced",
+  "hardware_commit": "27d2cf50493e263df79bf61e003043cd040e8f1a",
+  "candidate_hashes": {
+    "aicwf_rx_prealloc.h": "644bfc163ecb6c20ff5056893cac80fb68cf556dc9b6a57d0a709f40d3175bfb",
+    "aicwf_sdio.c": "c713b49f5828e6c6b654e62f51ab04ace32f8f95a08eb51bf1ef342e683f8f4e",
+    "aicwf_rx_prealloc.c": "55cba069689ec738551db0bba777fdd85b2bf1d32fe38d018cf13c76d58fdf8f"
+  },
+  "host_contract_cases": 52,
+  "sanitizers": "ASAN/UBSAN; non-copying IO stubs",
+  "overlay_integrity_files": 4384,
+  "module_current_readback": "passed; existing 35 object hashes and module exact",
+  "sdk_source_sync": {
+    "root": ".delivery/sdk-restored",
+    "changed": [
+      "kernel/linux-4.9/drivers/net/wireless/aic8800/aic8800_fdrv/aicwf_rx_prealloc.c",
+      "kernel/linux-4.9/drivers/net/wireless/aic8800/aic8800_fdrv/aicwf_rx_prealloc.h",
+      "kernel/linux-4.9/drivers/net/wireless/aic8800/aic8800_fdrv/aicwf_sdio.c"
+    ],
+    "other_tracked_driver_files_unchanged": 103,
+    "mode_preserved": true
+  },
+  "sdk_cached_objects": "stale; not built or packaged",
+  "full_image": "blocked; available space below 15 GiB",
+  "board": "not_run",
+  "rootcause_and_slab": "unresolved",
+  "push": false,
+  "limitations": [
+    "allocator assignment/reuse checked statically here; historical allocator runtime evidence retained",
+    "kernel/generated/compiler provenance inherited",
+    "baseline component validation not repeated",
+    "no physical transfers or device stability evidence"
+  ],
+  "prior_failure": "sync-attempt-r1.json: historical export root lookup failed before writes; corrected by actual compiler provenance and full inventory"
+}
