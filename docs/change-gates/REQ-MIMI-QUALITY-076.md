@@ -661,3 +661,6 @@ Status: readiness partially passed on rc8; FEL USB admission/recovery failed; rc
 
 
 2026-10-25 recovery follow-up after user reports black screen: fresh normal rc8 boot observed, boot ID 7caee1dc-709b-4b3b-8db8-cd9fb5227a02, uptime advanced30/50/125seconds, UI activity ready and heartbeat advancing, WiFi DHCP successful. LCD driver reports unblank1024x768/backlight51/fps29; physical screen has not been observed or user-confirmed. No new power/reboot/flash issued in this follow-up; do not invent causality for the new boot. HDMI again disabled with normal protocol, absent process confirmed. Exact stale task authorization symlink and temporary helper removed, serial verification passed. Prior failure remains historical; current normal runtime recovery supersedes earlier unknown boot state. rc9 installation and full physical acceptance still not_run. Evidence: physical-acceptance-20261025/user-recovery-result.json.
+
+
+2026-10-25 user explicitly confirmed the physical screen is lit and showing the desktop. Old rc8 runtime and physical LCD recovery now passed_user_confirmed; rc9 was not flashed and remains physically unqualified. No further power, boot-mode or update action; serial validation session closed.

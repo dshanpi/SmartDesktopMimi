@@ -73,5 +73,12 @@
     "helper_binary": "removed",
     "flash": "not_run",
     "recovery_causality": "Fresh boot observed at beginning of user-reported black-screen turn; no new power or reboot command issued in this turn. Cannot attribute it to prior relay command or a user action without evidence."
+  },
+  "physical_display_confirmation": {
+    "utc": "2026-10-25T11:35:48.513171+00:00",
+    "status": "passed_user_confirmed",
+    "scope": "Original rc8 physical LCD and desktop recovered",
+    "user_evidence": "已经亮屏并显示桌面",
+    "new_rc9_acceptance": "not_run"
   }
 }

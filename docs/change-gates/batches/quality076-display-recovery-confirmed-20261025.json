@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "summary": "Record user confirmation of physical rc8 screen recovery",
+  "context": "Normal rc8 runtime already read back; user now confirms actual illuminated desktop",
+  "next_steps": "Keep recovered runtime; qualify scoped USB download path before future rc9 admission",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Old rc8 physical display recovery only",
+      "invariants": "No rc9 acceptance inferred and prior failed attempt retained",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-physical-acceptance-20261025.json",
+        "docs/change-gates/batches/quality076-display-recovery-confirmed-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "Physical screen and desktop recovery",
+          "status": "passed",
+          "scope": "rc8 actual display, user confirmed",
+          "reason": "User explicitly states illuminated screen and desktop",
+          "evidence": "docs/validation/quality076-physical-acceptance-20261025.json"
+        }
+      ]
+    }
+  ]
+}
