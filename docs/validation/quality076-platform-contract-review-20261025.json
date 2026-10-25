@@ -1,0 +1,34 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "status": "passed_scoped_host_review",
+  "previous_evidence": "docs/validation/pairing-client-071.json",
+  "legacy_topics_compared": 23,
+  "message_layout": "sizeof and all five field offsets identical to rc31 header",
+  "host_tests": 4,
+  "scope": "WiFi codec/transport/controller and prior pairing contract; host ASAN/UBSAN",
+  "wire_extensions": [
+    {
+      "topic": 23,
+      "version": 2,
+      "bytes": 64
+    },
+    {
+      "topic": 24,
+      "version": 2,
+      "bytes": 128
+    }
+  ],
+  "heartbeat": "local API only; no changed wire layout",
+  "compatibility": "New control requires successful discovery and matched V2 completion; old V1 state is not confirmation",
+  "frozen_headers": {
+    "apps/lv_port_linux/src/system/backend_types.h": "1deb1d5c4c0d0b9d4dd1795d80cf2d487ccfe8b669afbb250d222674cb22a085",
+    "apps/lv_port_linux/src/middleware/middleware.h": "e810b8f2f105dc857a28c707eb07f704abc07c4adcf1e90d5907d81a9f4bd64b",
+    "apps/lv_port_linux/src/ipc/ipc_socket.h": "43bf645d440b2688f72c99c0efbc30caf49484c819f1ac9f4b16608f58b86f3f",
+    "core/ports/aitvbox_ports.h": "dfaaf4b964b63809065af14c5df960b8a1f7f9b22517a4514e19c5117ea25f55",
+    "apps/lv_port_linux/src/system/cloud_pairing_status.h": "aafe1aafac977f2995dffeb8df45a4c5b104e5d9242d2289d65f34778b66bf98",
+    "apps/lv_port_linux/src/system/wifi_control_protocol.h": "22869454728e8a56c7f639ceb9400c61325fb13bc2f0aa9275fd4af25da21f27"
+  },
+  "evidence": ".delivery/quality-review-20261023/candidate-refresh-20261025/contract-review",
+  "physical": "not_run",
+  "release_qualified": false
+}

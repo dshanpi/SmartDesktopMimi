@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "summary": "Record reviewed optional WiFi contract extension for clean builds",
+  "context": "rc32 build gate caught stale middleware hash",
+  "next_steps": "Retry clean rc32 build with reviewed lock; physical compatibility remains not_run",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Contract metadata review and byte-codec freeze",
+      "invariants": "Preserve legacy23topic IDs and message layout; do not claim V2 support from V1 state",
+      "paths": [
+        "docs/update/platform-contract-lock.json",
+        "docs/validation/quality076-platform-contract-review-20261025.json",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-contract-review-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "ABI and protocol regression",
+          "status": "passed",
+          "scope": "23legacyIDs/layout and4hosttests",
+          "reason": "Exact old/new compiled comparison and current protocol/controller/transport/pairing checks",
+          "evidence": "docs/validation/quality076-platform-contract-review-20261025.json"
+        },
+        {
+          "name": "Original clean build",
+          "status": "failed",
+          "scope": "rc32 r1 before desktop compile",
+          "reason": "Stale middleware contract hash; original log retained",
+          "evidence": ".delivery/a133-rc32-build-r1-20261025/contracts.log"
+        },
+        {
+          "name": "Physical mixed versions",
+          "status": "not_run",
+          "scope": "Old/new UI and providers on actual device",
+          "reason": "Host review only",
+          "evidence": "docs/validation/quality076-platform-contract-review-20261025.json"
+        }
+      ]
+    }
+  ]
+}
