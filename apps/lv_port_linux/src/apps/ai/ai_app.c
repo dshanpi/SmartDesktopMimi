@@ -434,6 +434,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
 {
     lv_obj_t *card;
     lv_obj_t *content_panel;
+    lv_obj_t *copy_panel;
     lv_obj_t *qr_panel;
     lv_obj_t *brand_label;
     lv_obj_t *title;
@@ -441,13 +442,19 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_t *guide_group;
     lv_obj_t *guide_title;
     lv_obj_t *guide_text;
-    lv_obj_t *spacer;
     lv_obj_t *later_note;
     lv_obj_t *close_btn;
     lv_obj_t *close_label;
     lv_obj_t *qr_title;
     lv_obj_t *qr_holder;
     lv_obj_t *qr_status;
+
+    const int screen_width = lv_display_get_horizontal_resolution(NULL);
+    const int screen_height = lv_display_get_vertical_resolution(NULL);
+    const bool compact = screen_width < 900 || screen_height < 620;
+    const int card_width = LV_MIN(840, screen_width - 32);
+    const int card_height = LV_MIN(520, screen_height - 32);
+    const int qr_panel_width = compact ? 312 : 366;
 
     if (!status) return;
 
@@ -483,7 +490,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_clear_flag(bind_modal, LV_OBJ_FLAG_SCROLLABLE);
 
     card = lv_obj_create(bind_modal);
-    lv_obj_set_size(card, 840, 520);
+    lv_obj_set_size(card, card_width, card_height);
     lv_obj_center(card);
     lv_obj_set_style_radius(card, 28, 0);
     lv_obj_set_style_bg_color(card, UI_BG_CARD, 0);
@@ -495,6 +502,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_style_shadow_width(card, 32, 0);
     lv_obj_set_style_shadow_offset_y(card, 10, 0);
     lv_obj_set_style_pad_all(card, 0, 0);
+    lv_obj_set_style_pad_column(card, 0, 0);
     lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(card,
                           LV_FLEX_ALIGN_START,
@@ -504,35 +512,46 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
 
     content_panel = lv_obj_create(card);
-    lv_obj_set_size(content_panel, 474, lv_pct(100));
+    /* Account for the card border so both panels stay inside its clip area. */
+    lv_obj_set_size(content_panel, card_width - qr_panel_width - 2, lv_pct(100));
     lv_obj_set_style_bg_opa(content_panel, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(content_panel, 0, 0);
-    lv_obj_set_style_pad_left(content_panel, 40, 0);
-    lv_obj_set_style_pad_right(content_panel, 36, 0);
-    lv_obj_set_style_pad_top(content_panel, 32, 0);
-    lv_obj_set_style_pad_bottom(content_panel, 28, 0);
-    lv_obj_set_style_pad_row(content_panel, 12, 0);
+    lv_obj_set_style_pad_left(content_panel, compact ? 24 : 40, 0);
+    lv_obj_set_style_pad_right(content_panel, compact ? 20 : 36, 0);
+    lv_obj_set_style_pad_top(content_panel, compact ? 20 : 32, 0);
+    lv_obj_set_style_pad_bottom(content_panel, compact ? 20 : 28, 0);
+    lv_obj_set_style_pad_row(content_panel, compact ? 8 : 12, 0);
     lv_obj_set_flex_flow(content_panel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(content_panel,
                           LV_FLEX_ALIGN_START,
                           LV_FLEX_ALIGN_START,
                           LV_FLEX_ALIGN_START);
-    /* 文案变长时允许轻量滚动，避免裁掉底部「稍后绑定」按钮 */
-    lv_obj_set_scroll_dir(content_panel, LV_DIR_VER);
-    lv_obj_set_scrollbar_mode(content_panel, LV_SCROLLBAR_MODE_AUTO);
+    lv_obj_clear_flag(content_panel, LV_OBJ_FLAG_SCROLLABLE);
 
-    brand_label = lv_label_create(content_panel);
+    /* Keep the exit in view; only explanatory text may scroll on short screens. */
+    copy_panel = lv_obj_create(content_panel);
+    lv_obj_set_size(copy_panel, lv_pct(100), 0);
+    lv_obj_set_flex_grow(copy_panel, 1);
+    lv_obj_set_style_bg_opa(copy_panel, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(copy_panel, 0, 0);
+    lv_obj_set_style_pad_all(copy_panel, 0, 0);
+    lv_obj_set_style_pad_row(copy_panel, compact ? 8 : 12, 0);
+    lv_obj_set_flex_flow(copy_panel, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_scroll_dir(copy_panel, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(copy_panel, LV_SCROLLBAR_MODE_AUTO);
+
+    brand_label = lv_label_create(copy_panel);
     lv_label_set_text(brand_label, ui_i18n_is_zh() ? "涂鸦助手  设备绑定" : "Tuya Assistant  Device pairing");
     lv_obj_set_style_text_font(brand_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(brand_label, UI_COLOR_SUCCESS, 0);
 
-    title = lv_label_create(content_panel);
+    title = lv_label_create(copy_panel);
     lv_label_set_text(title, ui_tr(UI_STR_AI_PAIR_TITLE));
     lv_obj_set_width(title, lv_pct(100));
     lv_obj_set_style_text_font(title, UI_TEXT_H1, 0);
     lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
 
-    tip = lv_label_create(content_panel);
+    tip = lv_label_create(copy_panel);
     lv_label_set_text(tip, ui_i18n_is_zh()
                       ? "使用智能生活扫描二维码，绑定完成后助手会自动打开。"
                       : "Scan the QR code with Smart Life. The assistant opens automatically after pairing.");
@@ -541,11 +560,8 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_style_text_font(tip, UI_TEXT_BODY_LG, 0);
     lv_obj_set_style_text_color(tip, UI_TEXT_SECONDARY, 0);
 
-    /*
-     * 固定高度容易在长文案/大字号下裁切；用 CONTENT 并靠 spacer 把
-     * 底部按钮顶住，避免左侧内容把「稍后绑定」顶出卡片。
-     */
-    guide_group = lv_obj_create(content_panel);
+    /* Let translated instructions wrap naturally inside the scrolling copy. */
+    guide_group = lv_obj_create(copy_panel);
     lv_obj_set_width(guide_group, lv_pct(100));
     lv_obj_set_height(guide_group, LV_SIZE_CONTENT);
     lv_obj_set_style_radius(guide_group, 14, 0);
@@ -575,13 +591,6 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_style_text_color(guide_text, UI_TEXT_SECONDARY, 0);
     lv_obj_set_style_text_line_space(guide_text, 2, 0);
 
-    spacer = lv_obj_create(content_panel);
-    lv_obj_set_width(spacer, 1);
-    lv_obj_set_height(spacer, 1);
-    lv_obj_set_flex_grow(spacer, 1);
-    lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(spacer, 0, 0);
-
     later_note = lv_label_create(content_panel);
     lv_label_set_text(later_note, ui_i18n_is_zh()
                       ? "你可以先返回桌面，稍后再完成绑定。"
@@ -592,7 +601,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_style_text_color(later_note, UI_TEXT_SECONDARY, 0);
 
     close_btn = lv_button_create(content_panel);
-    lv_obj_set_size(close_btn, 210, 58);
+    lv_obj_set_size(close_btn, 210, compact ? 48 : 58);
     lv_obj_set_style_radius(close_btn, 14, 0);
     lv_obj_set_style_bg_color(close_btn, UI_BG_ELEVATED, 0);
     lv_obj_set_style_bg_color(close_btn, UI_BORDER_DEFAULT, LV_STATE_PRESSED);
@@ -610,7 +619,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_center(close_label);
 
     qr_panel = lv_obj_create(card);
-    lv_obj_set_size(qr_panel, 366, lv_pct(100));
+    lv_obj_set_size(qr_panel, qr_panel_width, lv_pct(100));
     lv_obj_set_style_bg_color(qr_panel, UI_BG_ELEVATED, 0);
     lv_obj_set_style_bg_opa(qr_panel, LV_OPA_COVER, 0);
     lv_obj_set_style_border_width(qr_panel, 0, 0);
@@ -635,7 +644,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_set_style_text_align(qr_title, LV_TEXT_ALIGN_CENTER, 0);
 
     qr_holder = lv_obj_create(qr_panel);
-    lv_obj_set_size(qr_holder, 310, 310);
+    lv_obj_set_size(qr_holder, compact ? 264 : 310, compact ? 264 : 310);
     lv_obj_set_style_radius(qr_holder, 22, 0);
     lv_obj_set_style_bg_color(qr_holder, lv_color_white(), 0);
     lv_obj_set_style_bg_opa(qr_holder, LV_OPA_COVER, 0);
@@ -649,7 +658,7 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_obj_clear_flag(qr_holder, LV_OBJ_FLAG_SCROLLABLE);
 
     bind_qrcode = lv_qrcode_create(qr_holder);
-    lv_qrcode_set_size(bind_qrcode, 270);
+    lv_qrcode_set_size(bind_qrcode, compact ? 224 : 270);
     lv_qrcode_set_dark_color(bind_qrcode, lv_color_hex(0x111827));
     lv_qrcode_set_light_color(bind_qrcode, lv_color_white());
     lv_qrcode_set_quiet_zone(bind_qrcode, true);

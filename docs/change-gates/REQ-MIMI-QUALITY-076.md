@@ -664,3 +664,14 @@ Status: readiness partially passed on rc8; FEL USB admission/recovery failed; rc
 
 
 2026-10-25 user explicitly confirmed the physical screen is lit and showing the desktop. Old rc8 runtime and physical LCD recovery now passed_user_confirmed; rc9 was not flashed and remains physically unqualified. No further power, boot-mode or update action; serial validation session closed.
+
+
+## 2026-10-25 assistant pairing modal responsive follow-up
+
+Pre-record: `.delivery/quality-review-20261023/assistant-pairing-responsive-20261025/prerecord.json`, source base a1aaef6e385dfdd805b650c9bbca2921ed31b70e. The existing 840x520 top-layer modal overflows an 800x480 display; previous main-screen checks missed it. The new geometry check fails on the original source. Card dimensions now fit display margins, both panels account for border and zero column gap, and the QR scales on the compact profile. The exit stays in a fixed footer while explanatory content may scroll. Pairing state, cloud calls, credentials and protocol remain unchanged.
+
+Flow: pending valid QR opens one modal; repeated status reuses it; changed URL refreshes it; pointer exit sends STOP_LISTEN and requests home, suppressing the same URL; a new URL can reopen; bound/not-pending/empty URL removes it. Tests exercise these branches with synthetic example.invalid content, without a cloud request.
+
+56 real LVGL renders across seven assistant scenes, two resolutions/languages/themes passed; pairing-specific assertions cover top-layer/card/panel/QR/button visibility and real pointer dismissal without automatic scrolling. Home request is counted by a fixture, not a physical navigation claim. Two scene-registry tests and production A133 changed-TU compile passed (not full build). Original failed geometry, failed local encoding before mutation, consequent after-r1 failure and intermediate eight-render pass are retained. Details: `docs/validation/quality076-assistant-pairing-responsive-20261025.json`.
+
+No device or release operation. Signed rc32/rc9 packages remain unchanged and do not contain this later source fix. Actual scan, touch, cloud, complete assistant concurrency and the rc9 physical/USB/upgrade/rollback/data gates remain open; next review assistant mode/restart ordering, then build a new version for changed source.

@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-25",
+  "source_base": "a1aaef6e385dfdd805b650c9bbca2921ed31b70e",
+  "source_state": "uncommitted at validation; commit bound externally after gate",
+  "scope": "Tuya pairing modal top-layer geometry and exit visibility at 1024x768 and 800x480; unchanged pairing business state and transport",
+  "inputs": {
+    "apps/lv_port_linux/src/apps/ai/ai_app.c": "9be22282c6ea153668b134150f6dd9a290b120d5b8c22c9988e7800d8f6c2e6a",
+    "tests/architecture/fixtures/native_ui_review.c": "141e99f4eac2c069da5eec44d2846bce060f17cd28feae8c65c8dde30471cdd0"
+  },
+  "host": {
+    "status": "passed",
+    "renders": 56,
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "resolutions": [
+      "1024x768",
+      "800x480"
+    ],
+    "scenes": [
+      "ai-pairing",
+      "ai",
+      "ai-offline",
+      "ai-speaking",
+      "ai-free-chat",
+      "ai-interaction",
+      "ai-start-error"
+    ],
+    "checks": [
+      "top-layer card/panels/QR/scan/status/exit bounds and ancestor clipping",
+      "square QR at least 200px, exit at least 48px",
+      "real LVGL pointer click without scroll-to-view dismisses modal and requests home/STOP_LISTEN via fixture",
+      "repeated status retains one modal; changed URL keeps current modal",
+      "dismissed URL stays hidden, new URL reopens",
+      "bound/not-pending/empty URL removes modal"
+    ],
+    "registry_tests": 2,
+    "evidence": "assistant-pairing-responsive-20261025/final.log"
+  },
+  "target_compile": {
+    "status": "passed",
+    "scope": "actual changed AI translation unit with production A133 compiler/headers/config; not a full new product build",
+    "object_sha256": "7347f3d1b58e68bd4b7e48634c48d0ddcfe673a332e41c5b361c1cf8053f0546",
+    "evidence": "assistant-pairing-responsive-20261025/a133-final-compile.log"
+  },
+  "history": [
+    {
+      "status": "passed",
+      "scope": "8 original renders; old scene did not check top-layer bounds",
+      "evidence": "before"
+    },
+    {
+      "status": "failed",
+      "scope": "new geometry assertion on original 800x480 modal",
+      "evidence": "regression-before/800x480/ai-pairing-zh-light.log"
+    },
+    {
+      "status": "failed",
+      "scope": "local script encoding failed before product write; after-r1 consequently still original and fails",
+      "evidence": "after-r1.log"
+    },
+    {
+      "status": "passed",
+      "scope": "first responsive implementation 8 renders",
+      "evidence": "after-r2.log"
+    },
+    {
+      "status": "passed",
+      "scope": "removed inherited row gap, added both panel bounds, final56 renders",
+      "evidence": "final.log"
+    }
+  ],
+  "visual_review": {
+    "status": "passed",
+    "scope": "Final 800x480 English dark reviewed: QR, instructions and footer fully visible; intermediate 1024x768 Chinese light reviewed, final geometry automated at all eight combinations"
+  },
+  "physical": {
+    "status": "not_run",
+    "reason": "board retains user-confirmed rc8/rc31; no flash/reboot/power or credential operation this batch"
+  },
+  "cloud_pairing": "not_run; synthetic example.invalid QR only",
+  "packaging": "not_run; signed rc32/rc9 artifacts remain immutable and do not include this source change",
+  "remaining": [
+    "physical touchscreen and actual QR scan/cloud flow",
+    "new candidate build after remaining source optimization",
+    "concurrent assistant mode/restart",
+    "rc9 USB admission and complete physical/upgrade/rollback/power/data acceptance"
+  ]
+}

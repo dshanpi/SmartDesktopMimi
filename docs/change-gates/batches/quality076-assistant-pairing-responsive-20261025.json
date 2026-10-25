@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "summary": "Fit Tuya pairing modal to small display and keep exit reachable",
+  "context": "User continues all quality optimizations; old top-layer modal had unchecked fixed geometry",
+  "next_steps": "Review assistant mode/restart and remaining physical gates; use new candidate version for later source",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Pairing modal layout and host pointer/state regression",
+      "invariants": "Pairing business protocol/data unchanged; original failures retained; no physical acceptance inferred",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-assistant-pairing-responsive-20261025.json",
+        "docs/change-gates/batches/quality076-assistant-pairing-responsive-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "Responsive modal and assistant regression",
+          "status": "passed",
+          "scope": "56 real LVGL host renders, synthetic pointer/status and 2 scene registry tests",
+          "reason": "Old bounds assertion fails and fixed bounds/state/exit checks pass",
+          "evidence": "docs/validation/quality076-assistant-pairing-responsive-20261025.json"
+        },
+        {
+          "name": "A133 translation-unit compile",
+          "status": "passed",
+          "scope": "Changed AI source with production config; no new full build",
+          "reason": "Compiler exit0",
+          "evidence": "docs/validation/quality076-assistant-pairing-responsive-20261025.json"
+        },
+        {
+          "name": "Physical scan/touch and deployment",
+          "status": "not_run",
+          "scope": "No device operation or package replacement",
+          "reason": "Keep recovered board; rc9 download path not qualified",
+          "evidence": "docs/validation/quality076-assistant-pairing-responsive-20261025.json"
+        }
+      ]
+    }
+  ]
+}

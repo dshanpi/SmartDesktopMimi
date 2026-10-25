@@ -270,7 +270,7 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 }
 static int review_connect_error;
 static atomic_bool review_connect_slow;
-static int connect_count, ai_enter_count, ai_exit_count, ota_commands, last_ota_command, pairing_refreshes;
+static int connect_count, ai_enter_count, ai_exit_count, ai_stop_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 static atomic_int wifi_toggles, review_wifi_scans, review_scan_error;
 static atomic_bool review_scan_hold, review_scan_entered;
@@ -295,6 +295,7 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
  if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
+ if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_STOP_LISTEN)ai_stop_count++;
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_ENTER_FREE_CHAT)ai_enter_count++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && ((const wifi_cmd_t*)d)->action==CMD_CONNECT) {
    if(atomic_load(&review_connect_slow))usleep(200000);
@@ -303,12 +304,12 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  return 0;
 }
 void mw_get_status(mw_status_t*s) {memset(s,0,sizeof(*s));}
-static int app_open_count;
+static int app_open_count, app_back_home_count;
 static app_id_t last_app_open;
 #ifndef REVIEW_REAL_APP_MANAGER
 void app_manager_init(void) {}
 void app_manager_open(app_id_t id) {last_app_open=id;app_open_count++;}
-void app_manager_back_home(void) {}
+void app_manager_back_home(void) {app_back_home_count++;}
 void app_manager_set_home_screen(lv_obj_t*s) {(void)s;}
 void app_manager_refresh_current(void) {}
 void app_manager_show_hdmi_preview_screen(void) {}
@@ -531,6 +532,71 @@ static void tap_widget(lv_obj_t *widget) {
  }
  lv_indev_t*p=lv_indev_create();lv_indev_set_type(p,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(p,touch_read);
  touch_state=LV_INDEV_STATE_RELEASED;tap_screen(p,(b.x1+b.x2)/2,(b.y1+b.y2)/2);lv_indev_delete(p);
+}
+/* Pairing lives on the top layer: active-screen checks cannot catch its clipping. */
+static void assert_pairing_visible(lv_obj_t *widget) {
+ assert(widget && !lv_obj_has_flag(widget,LV_OBJ_FLAG_HIDDEN));
+ lv_area_t b;lv_obj_get_coords(widget,&b);
+ assert(b.x1>=0 && b.y1>=0 && b.x2<review_width && b.y2<review_height);
+ for(lv_obj_t *p=lv_obj_get_parent(widget);p;p=lv_obj_get_parent(p)) {
+  lv_area_t a;lv_obj_get_coords(p,&a);
+  assert(!lv_obj_has_flag(p,LV_OBJ_FLAG_HIDDEN));
+  assert(b.x1>=a.x1 && b.y1>=a.y1 && b.x2<=a.x2 && b.y2<=a.y2);
+ }
+}
+static lv_obj_t *check_pairing_geometry(void) {
+ pump();lv_obj_update_layout(lv_layer_top());
+ lv_obj_t *scan=find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_SCAN));assert(scan);
+ lv_obj_t *panel=lv_obj_get_parent(scan),*card=lv_obj_get_parent(panel);
+ lv_obj_t *holder=lv_obj_get_child(panel,1),*qr=lv_obj_get_child(holder,0);
+ lv_obj_t *later=find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER));assert(later);
+ lv_obj_t *button=lv_obj_get_parent(later);
+ assert_pairing_visible(card);assert_pairing_visible(panel);
+ assert_pairing_visible(lv_obj_get_child(card,0));assert_pairing_visible(scan);
+ assert_pairing_visible(holder);assert_pairing_visible(qr);
+ assert_pairing_visible(find_label(panel,ui_tr(UI_STR_AI_PAIR_WAITING)));
+ assert_pairing_visible(button);assert_pairing_visible(later);
+ assert(lv_obj_get_width(qr)==lv_obj_get_height(qr) && lv_obj_get_width(qr)>=200);
+ assert(lv_obj_get_height(button)>=48 && lv_obj_get_width(button)>=48);
+ return button;
+}
+static void test_ai_pairing(ai_status_t *status) {
+ lv_obj_t *button=check_pairing_geometry();
+ lv_obj_t *modal=lv_obj_get_child(lv_layer_top(),-1);
+ uint32_t children=lv_obj_get_child_count(lv_layer_top());
+ for(int i=0;i<3;i++)emit(TOPIC_AI_STATUS,status,sizeof(*status));
+ assert(lv_obj_get_child_count(lv_layer_top())==children);
+ assert(lv_obj_get_child(lv_layer_top(),-1)==modal);
+ snprintf(status->bind_url,sizeof(status->bind_url),"https://example.invalid/host-test-refreshed");
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));
+ assert(lv_obj_get_child(lv_layer_top(),-1)==modal);
+ button=check_pairing_geometry();
+ /* No scroll-to-view: the exit must already be visible and pointer reachable. */
+ lv_area_t b;lv_obj_get_coords(button,&b);int stops=ai_stop_count,homes=app_back_home_count;
+ lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+ touch_state=LV_INDEV_STATE_RELEASED;tap_screen(pointer,(b.x1+b.x2)/2,(b.y1+b.y2)/2);lv_indev_delete(pointer);
+ assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
+ assert(ai_stop_count==stops+1);
+#ifndef REVIEW_REAL_APP_MANAGER
+ assert(app_back_home_count==homes+1);
+#else
+ (void)homes;
+#endif
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));pump();
+ assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
+ snprintf(status->bind_url,sizeof(status->bind_url),"https://example.invalid/host-test-only");
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
+ status->tuya_bound=true;emit(TOPIC_AI_STATUS,status,sizeof(*status));pump();
+ assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
+ status->tuya_bound=false;emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
+ status->tuya_bind_qr_pending=false;emit(TOPIC_AI_STATUS,status,sizeof(*status));pump();
+ assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
+ status->tuya_bind_qr_pending=true;emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
+ status->bind_url[0]=0;emit(TOPIC_AI_STATUS,status,sizeof(*status));pump();
+ assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
+ snprintf(status->bind_url,sizeof(status->bind_url),"https://example.invalid/host-test-only");
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
+ puts("PASS pairing: top-layer bounds, square QR, visible 48px exit, real pointer dismissal, repeated/changed URL and bound/pending/empty cleanup");
 }
 static lv_obj_t* find_keyboard(lv_obj_t*root) {
  if(lv_obj_check_type(root,&lv_keyboard_class))return root;
@@ -1281,6 +1347,7 @@ int main(int argc,char**argv) {
   ai_text_t text={0};snprintf(text.text,sizeof(text.text),"A long response checks readable wrapping and conversation layout without pretending microphone or speaker hardware was tested.");
   emit(TOPIC_AI_TEXT,&text,sizeof(text));pump();
   if(ai.free_chat_active){assert(ai_free_chat_view_is_open());for(int frame=0;frame<12;frame++)pump();}
+  if(!strcmp(argv[1],"ai-pairing"))test_ai_pairing(&ai);
  }
  else if(strcmp(argv[1],"user-catalog")==0 || strcmp(argv[1],"user-signed-catalog")==0){
   const char *name=getenv("MIMI_REVIEW_APP_NAME"), *text=getenv("MIMI_REVIEW_APP_TEXT");
