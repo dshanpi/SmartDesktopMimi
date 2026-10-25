@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "summary": "Prepare a new local application version for accumulated quality fixes",
+  "context": "Disk capacity recovered; old published rc31 and rc8 remain immutable",
+  "next_steps": "Clean application build and receipt validation, then matching system candidate inputs",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Local candidate version and build preparation",
+      "invariants": "No reused release version or physical/upload claim",
+      "paths": [
+        "VERSION",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-candidate-refresh-plan-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "New candidate build",
+          "status": "not_run",
+          "scope": "Application rc32 and subsequent matching system candidate",
+          "reason": "Prerecord before build",
+          "evidence": ".delivery/quality-review-20261023/candidate-refresh-20261025/prerecord.json"
+        }
+      ]
+    }
+  ]
+}
