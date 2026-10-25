@@ -267,3 +267,5 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 - 2026-10-21 SYSTEM070 实际启动修复及打包门禁：`docs/change-gates/batches/20261021-a133-boot-repair.json`；签名rc28已在现场修复系统运行，完整发布仍未验收。
 
 - 2026-10-24 QUALITY076: SDIO capacity candidate promoted and SDK source synchronized; 52 fixed-path host checks and 4384-file overlay integrity passed. Hardware/full image and complete quality gates remain open; see REQ-MIMI-QUALITY-076 and batch quality076-sdio-capacity-promotion-20261024.
+
+- 2026-10-25 QUALITY076: signed local rc32/rc9 candidates and40file final readback passed; physical/outerOTA/source-closure gates remain open. See quality076-rc9-build-20261025 batch and REQ-MIMI-QUALITY-076.
