@@ -533,6 +533,14 @@ static void tap_widget(lv_obj_t *widget) {
  lv_indev_t*p=lv_indev_create();lv_indev_set_type(p,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(p,touch_read);
  touch_state=LV_INDEV_STATE_RELEASED;tap_screen(p,(b.x1+b.x2)/2,(b.y1+b.y2)/2);lv_indev_delete(p);
 }
+static unsigned review_qr_updates;
+static bool review_qr_fail_once;
+lv_result_t __real_lv_qrcode_update(lv_obj_t *obj, const void *data, uint32_t size);
+lv_result_t __wrap_lv_qrcode_update(lv_obj_t *obj, const void *data, uint32_t size) {
+ review_qr_updates++;
+ if(review_qr_fail_once) {review_qr_fail_once=false;return LV_RESULT_INVALID;}
+ return __real_lv_qrcode_update(obj,data,size);
+}
 /* Pairing lives on the top layer: active-screen checks cannot catch its clipping. */
 static void assert_pairing_visible(lv_obj_t *widget) {
  assert(widget && !lv_obj_has_flag(widget,LV_OBJ_FLAG_HIDDEN));
@@ -564,12 +572,20 @@ static void test_ai_pairing(ai_status_t *status) {
  lv_obj_t *button=check_pairing_geometry();
  lv_obj_t *modal=lv_obj_get_child(lv_layer_top(),-1);
  uint32_t children=lv_obj_get_child_count(lv_layer_top());
+ unsigned renders=review_qr_updates;
  for(int i=0;i<3;i++)emit(TOPIC_AI_STATUS,status,sizeof(*status));
+ assert(review_qr_updates==renders && "same URL must not regenerate the QR");
  assert(lv_obj_get_child_count(lv_layer_top())==children);
  assert(lv_obj_get_child(lv_layer_top(),-1)==modal);
  snprintf(status->bind_url,sizeof(status->bind_url),"https://example.invalid/host-test-refreshed");
  emit(TOPIC_AI_STATUS,status,sizeof(*status));
+ assert(review_qr_updates==renders+1);
  assert(lv_obj_get_child(lv_layer_top(),-1)==modal);
+ snprintf(status->bind_url,sizeof(status->bind_url),"https://example.invalid/host-test-retry");
+ review_qr_fail_once=true;emit(TOPIC_AI_STATUS,status,sizeof(*status));
+ assert(!review_qr_fail_once && review_qr_updates==renders+2);
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));assert(review_qr_updates==renders+3);
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));assert(review_qr_updates==renders+3);
  button=check_pairing_geometry();
  /* No scroll-to-view: the exit must already be visible and pointer reachable. */
  lv_area_t b;lv_obj_get_coords(button,&b);int stops=ai_stop_count,homes=app_back_home_count;
@@ -588,7 +604,10 @@ static void test_ai_pairing(ai_status_t *status) {
  emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
  status->tuya_bound=true;emit(TOPIC_AI_STATUS,status,sizeof(*status));pump();
  assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
- status->tuya_bound=false;emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
+ status->tuya_bound=false;renders=review_qr_updates;review_qr_fail_once=true;
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));assert(!review_qr_fail_once && review_qr_updates==renders+1);
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));assert(review_qr_updates==renders+2);check_pairing_geometry();
+ emit(TOPIC_AI_STATUS,status,sizeof(*status));assert(review_qr_updates==renders+2);
  status->tuya_bind_qr_pending=false;emit(TOPIC_AI_STATUS,status,sizeof(*status));pump();
  assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
  status->tuya_bind_qr_pending=true;emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
@@ -596,6 +615,7 @@ static void test_ai_pairing(ai_status_t *status) {
  assert(!find_label(lv_layer_top(),ui_tr(UI_STR_AI_PAIR_LATER)));
  snprintf(status->bind_url,sizeof(status->bind_url),"https://example.invalid/host-test-only");
  emit(TOPIC_AI_STATUS,status,sizeof(*status));check_pairing_geometry();
+ puts("PASS pairing QR cache: repeated URL skips rendering; changed URL renders; initial/refresh failure retries once then caches");
  puts("PASS pairing: top-layer bounds, square QR, visible 48px exit, real pointer dismissal, repeated/changed URL and bound/pending/empty cleanup");
 }
 static lv_obj_t* find_keyboard(lv_obj_t*root) {

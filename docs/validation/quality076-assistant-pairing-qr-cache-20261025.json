@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "source_base": "03c011cb1c9e0d75c951b3e30a78fee481c84315",
+  "source_state": "uncommitted validation; committed result bound externally",
+  "scope": "Only regenerate pairing QR when URL changes or last render failed",
+  "inputs": {
+    "apps/lv_port_linux/src/apps/ai/ai_app.c": "faabbee31df6eb30a608618f4745d93da11688d0e853e5de87b07ac656d2cb22",
+    "tests/architecture/fixtures/native_ui_review.c": "8e9fa153fe9a485aa0de7176d3e42c66f864922970d4bfed3003737b05137584",
+    "scripts/render_ui_review.py": "e75e26edf839845cbbc08804dcc437fa5707ffd268b2815cf318f5078fcd3fc3"
+  },
+  "host": {
+    "status": "passed",
+    "renders": 16,
+    "scenes": [
+      "ai-pairing",
+      "pairing"
+    ],
+    "resolutions": [
+      "1024x768",
+      "800x480"
+    ],
+    "languages": [
+      "zh",
+      "en"
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "checks": [
+      "three identical statuses cause zero further QR encoder calls",
+      "changed URL calls actual encoder once",
+      "injected failure during initial creation retries same URL next status",
+      "injected failure during refresh retries same URL next status",
+      "successful retry restores caching",
+      "prior top-layer bounds, pointer dismissal and lifecycle checks pass"
+    ],
+    "registry_tests": 2,
+    "visual_equality": "all8 pairing PNG files byte-identical to preceding responsive fix",
+    "evidence": "assistant-pairing-qr-cache-20261025/final.log"
+  },
+  "target_compile": {
+    "status": "passed",
+    "scope": "Changed AI translation unit, production A133 compiler and config",
+    "object_sha256": "174868508fddc25d2f7d3b65c3f89bfcb6954cf265dbc18a179b77d5faa01736"
+  },
+  "history": [
+    {
+      "status": "failed",
+      "scope": "new encoder-count assertion fails on previous source; repeated status regenerates QR",
+      "evidence": "before/800x480/ai-pairing-zh-light.log"
+    }
+  ],
+  "limits": [
+    "Encoder failure simulated by link wrapper returning LV_RESULT_INVALID, not physical memory exhaustion",
+    "No measured CPU, power or board stability improvement claimed",
+    "Not full new application/system build",
+    "Cloud scan, physical touch, assistant mode/restart and complete physical release acceptance remain not_run"
+  ],
+  "device": "not_run; recovered rc8/rc31 unchanged",
+  "release": "not_run; original rc32/rc9 candidates unchanged"
+}

@@ -28,6 +28,7 @@ static lv_obj_t *pairing_status_label = NULL;
 static lv_obj_t *iot_schema_status_label = NULL;
 static lv_obj_t *bind_modal = NULL;
 static lv_obj_t *bind_qrcode = NULL;
+static bool bind_qrcode_valid = false;
 static bool bind_modal_dismissed = false;
 static char dismissed_bind_url[AI_BIND_URL_MAX] = {0};
 static char modal_bind_url[AI_BIND_URL_MAX] = {0};
@@ -406,6 +407,7 @@ static void bind_modal_close_event(lv_event_t *e)
             lv_obj_delete(bind_modal);
             bind_modal = NULL;
             bind_qrcode = NULL;
+            bind_qrcode_valid = false;
             modal_bind_url[0] = '\0';
         }
 
@@ -425,6 +427,7 @@ static void hide_bind_modal(void)
         bind_modal = NULL;
         bind_qrcode = NULL;
     }
+    bind_qrcode_valid = false;
     bind_modal_dismissed = false;
     dismissed_bind_url[0] = '\0';
     modal_bind_url[0] = '\0';
@@ -469,8 +472,12 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     }
 
     if (bind_modal) {
-        if (bind_qrcode) {
-            lv_qrcode_update(bind_qrcode, status->bind_url, strlen(status->bind_url));
+        /* Status heartbeats do not change the QR. Cache only successful renders
+         * so a transient encoding/allocation failure can retry on the next status. */
+        if (bind_qrcode && (!bind_qrcode_valid ||
+                           strcmp(modal_bind_url, status->bind_url) != 0)) {
+            bind_qrcode_valid = lv_qrcode_update(bind_qrcode, status->bind_url,
+                                                strlen(status->bind_url)) == LV_RESULT_OK;
         }
         snprintf(modal_bind_url, sizeof(modal_bind_url), "%s", status->bind_url);
         return;
@@ -662,7 +669,8 @@ static void maybe_show_bind_modal(const ai_status_t *status)
     lv_qrcode_set_dark_color(bind_qrcode, lv_color_hex(0x111827));
     lv_qrcode_set_light_color(bind_qrcode, lv_color_white());
     lv_qrcode_set_quiet_zone(bind_qrcode, true);
-    lv_qrcode_update(bind_qrcode, status->bind_url, strlen(status->bind_url));
+    bind_qrcode_valid = lv_qrcode_update(bind_qrcode, status->bind_url,
+                                        strlen(status->bind_url)) == LV_RESULT_OK;
     lv_obj_center(bind_qrcode);
 
     qr_status = lv_label_create(qr_panel);

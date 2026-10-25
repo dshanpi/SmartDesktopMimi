@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "summary": "Avoid repeated pairing QR encoding while retaining failure retry",
+  "context": "User requested all quality optimization; identical status was needlessly regenerating QR",
+  "next_steps": "Cross-process assistant ordering, new candidate and remaining physical acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Pairing QR successful render cache and failure retry",
+      "invariants": "No cached failure, no change to cloud/protocol/identity/exit behavior; published artifacts immutable",
+      "paths": [
+        "apps/lv_port_linux/src/apps/ai/ai_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "scripts/render_ui_review.py",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-assistant-pairing-qr-cache-20261025.json",
+        "docs/change-gates/batches/quality076-assistant-pairing-qr-cache-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "Actual QR call counts, retry and existing layout/state regression",
+          "status": "passed",
+          "scope": "16 LVGL host renders plus two registry tests and eight exact screenshot comparisons",
+          "reason": "Original repeat-call assertion fails; final assertions pass with real encoder and one-shot return-code failure injection",
+          "evidence": "docs/validation/quality076-assistant-pairing-qr-cache-20261025.json"
+        },
+        {
+          "name": "A133 compile",
+          "status": "passed",
+          "scope": "Changed AI translation unit only",
+          "reason": "Production compiler exit0 with no diagnostics",
+          "evidence": "docs/validation/quality076-assistant-pairing-qr-cache-20261025.json"
+        },
+        {
+          "name": "Physical behavior and full candidate",
+          "status": "not_run",
+          "scope": "Board, cloud scan, new signed package",
+          "reason": "Source-only batch; actual rc9 installation still unqualified",
+          "evidence": "docs/validation/quality076-assistant-pairing-qr-cache-20261025.json"
+        }
+      ]
+    }
+  ]
+}
