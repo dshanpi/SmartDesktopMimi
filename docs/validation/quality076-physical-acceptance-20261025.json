@@ -44,5 +44,34 @@
     "device_authorized_keys_symlink": "remove exact /etc/dropbear/authorized_keys -> /tmp/mimi-acceptance-20261025.keys after physical access restored; cannot verify removal now"
   },
   "next": "Check this board USB data connection and actual relay power wiring/other power feeds; restore normal boot and scoped USB visibility. Do not blindly repeat FEL or power cycles. Fresh backup and admission recheck required before installation. No stable release.",
-  "windows_pnp_exact_bound_location": "No present USB device matched exact saved location after recovery; enumeration completed exit0 with empty result."
+  "windows_pnp_exact_bound_location": "No present USB device matched exact saved location after recovery; enumeration completed exit0 with empty result.",
+  "recovery_followup": {
+    "utc": "2026-10-25T11:34:47.610810+00:00",
+    "status": "normal_boot_runtime_recovered_physical_screen_confirmation_pending",
+    "system": "1.0.0-rc.8",
+    "boot_id": "7caee1dc-709b-4b3b-8db8-cd9fb5227a02",
+    "uptime_sample_seconds": [
+      30.49,
+      50.35,
+      125.04
+    ],
+    "ui_activity_ready_at_50_and_125_seconds": true,
+    "wifi": "DHCP assigned prior address",
+    "display_driver": {
+      "output": "LCD 1024x768",
+      "blank": "unblank",
+      "backlight": 51,
+      "fps": 29,
+      "physical_pixels": "not_observed"
+    },
+    "hdmi": "off_confirmed_at_125_seconds",
+    "ext4_p7_p9_errors": [
+      0,
+      0
+    ],
+    "temporary_auth_symlink": "removed_verified",
+    "helper_binary": "removed",
+    "flash": "not_run",
+    "recovery_causality": "Fresh boot observed at beginning of user-reported black-screen turn; no new power or reboot command issued in this turn. Cannot attribute it to prior relay command or a user action without evidence."
+  }
 }

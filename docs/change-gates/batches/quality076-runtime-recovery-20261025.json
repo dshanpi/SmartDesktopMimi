@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "summary": "Record subsequent rc8 normal runtime recovery and task access cleanup",
+  "context": "User reports black screen; fresh boot observed before new recovery action",
+  "next_steps": "Confirm physical display with user; rc9 remains uninstalled; resolve USB download path before any transition",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual bound board readiness and attempted controlled installation",
+      "invariants": "Keep user identity/data, exact target and artifact binding; no false rc9 acceptance; preserve failures",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-physical-acceptance-20261025.json",
+        "docs/change-gates/batches/quality076-runtime-recovery-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "Subsequent rc8 runtime recovery and temporary auth cleanup",
+          "status": "passed",
+          "scope": "Serial-confirmed normal runtime, not physical screen or rc9 qualification",
+          "reason": "Fresh boot ID and advancing heartbeat; LCD driver enabled; exact task symlink removed",
+          "evidence": "docs/validation/quality076-physical-acceptance-20261025.json"
+        }
+      ]
+    }
+  ]
+}

@@ -272,3 +272,6 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 
 
 2026-10-25 QUALITY076 physical acceptance: rc8 readiness/HDMI-off/backups/layout checks passed, rc9 flash not started because confirmed FEL did not enumerate at bound USB location. One power recovery unconfirmed. New-candidate physical matrix blocked/not_run. See docs/validation/quality076-physical-acceptance-20261025.json; preserved failures and private evidence.
+
+
+2026-10-25 recovery follow-up after user reports black screen: fresh normal rc8 boot observed, boot ID 7caee1dc-709b-4b3b-8db8-cd9fb5227a02, uptime advanced30/50/125seconds, UI activity ready and heartbeat advancing, WiFi DHCP successful. LCD driver reports unblank1024x768/backlight51/fps29; physical screen has not been observed or user-confirmed. No new power/reboot/flash issued in this follow-up; do not invent causality for the new boot. HDMI again disabled with normal protocol, absent process confirmed. Exact stale task authorization symlink and temporary helper removed, serial verification passed. Prior failure remains historical; current normal runtime recovery supersedes earlier unknown boot state. rc9 installation and full physical acceptance still not_run. Evidence: physical-acceptance-20261025/user-recovery-result.json.
