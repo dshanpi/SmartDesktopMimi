@@ -1,3 +1,15 @@
+# Latest physical acceptance — 2026-10-25
+
+2026-10-25 physical acceptance attempt: bound serial and fresh temporary SSH access confirmed the board still ran system rc8 / factory app rc31. Old-version UI heartbeat and p7/p9 zero ext4 errors were read; these do not qualify rc9. HDMI normal control was set off and monitor/process cessation confirmed. Two byte-identical current logical archives (25 regular files) plus the complete private partition were saved off-device and verified. Eight layout/bootchain/DTB components exactly match the retained rc8 package; rc9 compressed/raw hashes match the signed build evidence.
+
+The fixed serial-shell FEL recipe rebooted and serial reached Boot0 "early jump fel", but no bound USB FEL device appeared. No firmware write was attempted. One authorized bound power recovery returned commanded-on only; no fresh boot serial or SSH recovery followed. Reopening the serial adapter did not produce data. Windows enumeration found no present USB device at the exact saved binding. Last actual board execution state is FEL, normal boot unconfirmed; the cause of absent USB/power response is unresolved. Do not blindly repeat transitions or cycles, and never treat command acknowledgement as physical recovery.
+
+Local temporary SSH private key was removed and serial session closed. The device temporary authorized_keys symlink must be removed after physical access returns; cleanup is not falsely marked complete. Fresh private backups and all failed attempts remain under .delivery/quality-review-20261023/physical-acceptance-20261025 and the local private session backup. Original stale SSH pin/missing authorization and the first two HDMI helper attempts remain recorded; corrected helper used the existing normal protocol, not a product modification.
+
+Status: readiness partially passed on rc8; FEL USB admission/recovery failed; rc9 installation and every new-candidate physical test not_run, blocked on actual USB data/power path. Need check board USB connection and relay-controlled supply/other power feeds, establish normal boot and scoped USB enumeration, then recheck backups/admission and continue. No flash, upload, or stable release. Product build source remains 7a6ec0487e9a2d2ad42cb0494b6e570be41da87e; this is record-only.
+
+---
+
 # Latest continuation — 2026-10-25
 
 2026-10-25 QUALITY076 storage/build continuation: user cleanup restored about21GiB, so the15GiB minimum was met. Standard SDK kernel refresh compiled34driverobjects and reused one unchanged object without capacity-header dependency; all31layoutconsumers rebuilt. Full private system rc9 subsequently completed the normal application/kernel/rootfs/pack/signed-SWU pipeline in383seconds, from public source7a6ec0487e9a2d2ad42cb0494b6e570be41da87e and hardware27d2cf50493e263df79bf61e003043cd040e8f1a. Factory app is signed1.0.8-rc.32, restricted to proposed systemrc9; older system pairings not newly qualified.

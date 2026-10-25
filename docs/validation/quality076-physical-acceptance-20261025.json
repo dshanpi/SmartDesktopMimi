@@ -1,0 +1,48 @@
+{
+  "utc": "2026-10-25T11:10:29.966845+00:00",
+  "status": "blocked_physical_usb_and_power_path",
+  "candidate_system": "1.0.0-rc.9",
+  "candidate_application": "1.0.8-rc.32",
+  "candidate_source": "7a6ec0487e9a2d2ad42cb0494b6e570be41da87e",
+  "image_gzip_sha256": "85db31224ccd55eb23559e6bdcd8e5f881210f753613fd54707abfe4f847baea",
+  "image_raw_sha256": "4670b36b4fa9ded7a554d6395cd04d196d8d75b8aa61ad292cf496ef7467f4a2",
+  "actual_last_running": {
+    "system": "1.0.0-rc.8",
+    "app": "1.0.8-rc.31",
+    "uptime_seconds": 73512,
+    "ui_heartbeat": "passed_old_version_only",
+    "ext4_errors_p7_p9": [
+      0,
+      0
+    ]
+  },
+  "passed": [
+    "fresh bound serial shell and actual old version readback",
+    "SSH host public key pinned through bound serial, temporary key login",
+    "HDMI disabled via normal fixed protocol, process absent and monitor stopped",
+    "double identical logical archive and full private partition saved off device; 25 regular files readable",
+    "eight bootchain/layout components byte-identical to retained rc8 image",
+    "candidate compressed/raw image hashes verified"
+  ],
+  "failed": [
+    "initial old SSH session; host key mismatch and missing old authorization identified",
+    "first helper used wrong IPC envelope and was rejected; second closed before request handling; corrected third disabled normally",
+    "Linux-to-FEL fixed recipe reached boot0 early jump FEL, but bound FEL USB device never enumerated",
+    "one recovery power cycle returned command success without fresh boot or SSH recovery"
+  ],
+  "not_run": [
+    "firmware write (flash script was never launched)",
+    "rc9 physical boot UI touch voice HDMI radios",
+    "rc9 upgrade rollback power interruption and data preservation after installation",
+    "outer system OTA source/destination admission"
+  ],
+  "final_hardware_state": "Last observed serial: early jump fel. Serial adapter online; no bound USB download device. No fresh serial data after one power cycle or serial reopen; SSH timed out. Normal boot unconfirmed. Do not label power command acknowledgement as hardware recovery.",
+  "cleanup": {
+    "local_task_private_key": "removed",
+    "serial_session": "closed",
+    "device_runtime_tmp": "reboot observed; current contents not readable",
+    "device_authorized_keys_symlink": "remove exact /etc/dropbear/authorized_keys -> /tmp/mimi-acceptance-20261025.keys after physical access restored; cannot verify removal now"
+  },
+  "next": "Check this board USB data connection and actual relay power wiring/other power feeds; restore normal boot and scoped USB visibility. Do not blindly repeat FEL or power cycles. Fresh backup and admission recheck required before installation. No stable release.",
+  "windows_pnp_exact_bound_location": "No present USB device matched exact saved location after recovery; enumeration completed exit0 with empty result."
+}

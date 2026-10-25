@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Record actual old-board readiness and failed scoped FEL USB admission; rc9 never flashed",
+  "context": "User requests autonomous acceptance; current host candidate previously built and verified",
+  "next_steps": "Restore actual board USB data/power path, remove temporary auth symlink, fresh admission checks then real rc9 matrix; no blind retries or stable claim",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Actual bound board readiness and attempted controlled installation",
+      "invariants": "Keep user identity/data, exact target and artifact binding; no false rc9 acceptance; preserve failures",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-physical-acceptance-20261025.json",
+        "docs/change-gates/batches/quality076-physical-acceptance-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "Old board readiness, HDMI off and private backup",
+          "status": "passed",
+          "scope": "rc8/rc31 only; signed candidate hashes and layout match",
+          "reason": "Fresh bound serial/SSH and archive readback",
+          "evidence": "docs/validation/quality076-physical-acceptance-20261025.json"
+        },
+        {
+          "name": "FEL USB admission and normal-boot recovery",
+          "status": "failed",
+          "scope": "Bound board before any firmware write",
+          "reason": "FEL reached but USB not enumerated; power command no fresh boot proof",
+          "evidence": "docs/validation/quality076-physical-acceptance-20261025.json"
+        },
+        {
+          "name": "New rc9 physical acceptance",
+          "status": "not_run",
+          "scope": "Installation UI touch voice radios HDMI upgrades rollback power/data",
+          "reason": "Blocked by actual USB/power path; no flash attempted",
+          "evidence": "docs/validation/quality076-physical-acceptance-20261025.json"
+        }
+      ]
+    }
+  ]
+}

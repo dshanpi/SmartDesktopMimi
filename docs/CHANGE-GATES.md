@@ -269,3 +269,6 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 - 2026-10-24 QUALITY076: SDIO capacity candidate promoted and SDK source synchronized; 52 fixed-path host checks and 4384-file overlay integrity passed. Hardware/full image and complete quality gates remain open; see REQ-MIMI-QUALITY-076 and batch quality076-sdio-capacity-promotion-20261024.
 
 - 2026-10-25 QUALITY076: signed local rc32/rc9 candidates and40file final readback passed; physical/outerOTA/source-closure gates remain open. See quality076-rc9-build-20261025 batch and REQ-MIMI-QUALITY-076.
+
+
+2026-10-25 QUALITY076 physical acceptance: rc8 readiness/HDMI-off/backups/layout checks passed, rc9 flash not started because confirmed FEL did not enumerate at bound USB location. One power recovery unconfirmed. New-candidate physical matrix blocked/not_run. See docs/validation/quality076-physical-acceptance-20261025.json; preserved failures and private evidence.
