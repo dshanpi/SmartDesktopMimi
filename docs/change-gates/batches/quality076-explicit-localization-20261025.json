@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Express existing WiFi and update bilingual selections explicitly",
+  "context": "Full system build audit could not recognize locale alias and separated arrays",
+  "next_steps": "Rebuild application and signed baseline before retrying full system build",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Existing bilingual expressions only",
+      "invariants": "Exact text and behavior retained; scanner unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+        "apps/lv_port_linux/src/ui/desktop_update.c",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/change-gates/batches/quality076-explicit-localization-20261025.json"
+      ],
+      "checks": [
+        {
+          "name": "Bilingual and localization checks",
+          "status": "passed",
+          "scope": "Shipping literal audit and existing localization suite",
+          "reason": "Explicit runtime language branches satisfy the unchanged audit",
+          "evidence": ".delivery/quality-review-20261023/candidate-refresh-20261025/i18n-review/audit.log"
+        },
+        {
+          "name": "Original full build",
+          "status": "failed",
+          "scope": "system rc9 r1",
+          "reason": "Bilingual scanner before compile; original log retained",
+          "evidence": ".delivery/a133-private-system-rc9-r1-20261025/logs/10-build-apps.log"
+        }
+      ]
+    }
+  ]
+}

@@ -459,22 +459,21 @@ static void wifi_control_render(void)
         else lv_obj_add_state(sw_wlan, LV_STATE_DISABLED);
     }
     const char *text = "";
-    bool zh = ui_i18n_is_zh();
     switch (wifi_control.view) {
-    case WIFI_CLIENT_CHECKING: text = zh ? "正在查询状态" : "Checking status"; break;
-    case WIFI_CLIENT_PENDING: text = zh ? "正在切换" : "Switching"; break;
-    case WIFI_CLIENT_UNCONFIRMED: text = zh ? "结果未确认，正在查询" : "Unconfirmed; checking"; break;
-    case WIFI_CLIENT_REJECTED: text = zh ? "请求未接受，请重试" : "Not accepted; retry"; break;
-    case WIFI_CLIENT_FAILED: text = zh ? "切换失败，请重试" : "Switch failed; retry"; break;
-    case WIFI_CLIENT_CHANGED: text = zh ? "状态已变化，请重新确认" : "State changed; check again"; break;
-    case WIFI_CLIENT_UNAVAILABLE: text = zh ? "暂时无法确认状态" : "Status unavailable"; break;
+    case WIFI_CLIENT_CHECKING: text = ui_i18n_is_zh() ? "正在查询状态" : "Checking status"; break;
+    case WIFI_CLIENT_PENDING: text = ui_i18n_is_zh() ? "正在切换" : "Switching"; break;
+    case WIFI_CLIENT_UNCONFIRMED: text = ui_i18n_is_zh() ? "结果未确认，正在查询" : "Unconfirmed; checking"; break;
+    case WIFI_CLIENT_REJECTED: text = ui_i18n_is_zh() ? "请求未接受，请重试" : "Not accepted; retry"; break;
+    case WIFI_CLIENT_FAILED: text = ui_i18n_is_zh() ? "切换失败，请重试" : "Switch failed; retry"; break;
+    case WIFI_CLIENT_CHANGED: text = ui_i18n_is_zh() ? "状态已变化，请重新确认" : "State changed; check again"; break;
+    case WIFI_CLIENT_UNAVAILABLE: text = ui_i18n_is_zh() ? "暂时无法确认状态" : "Status unavailable"; break;
     case WIFI_CLIENT_READY: break;
     }
     if (wifi_scan_unconfirmed && wifi_control.view == WIFI_CLIENT_READY)
-        text = zh ? "扫描未确认，请重试" : "Scan unconfirmed; retry";
+        text = ui_i18n_is_zh() ? "扫描未确认，请重试" : "Scan unconfirmed; retry";
     if (wifi_connect_phase)
-        text = wifi_connect_phase == 1 ? (zh ? "正在发送连接请求" : "Sending connection request") :
-               wifi_connect_phase == 2 ? (zh ? "请求已发送，等待连接" : "Request sent; awaiting connection") :
+        text = wifi_connect_phase == 1 ? (ui_i18n_is_zh() ? "正在发送连接请求" : "Sending connection request") :
+               wifi_connect_phase == 2 ? (ui_i18n_is_zh() ? "请求已发送，等待连接" : "Request sent; awaiting connection") :
                ui_tr(UI_STR_WIFI_CONNECT_UNCONFIRMED);
     if (wlan_pending_label) lv_label_set_text(wlan_pending_label, text);
 }

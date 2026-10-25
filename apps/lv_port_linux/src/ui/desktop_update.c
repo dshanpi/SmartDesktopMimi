@@ -336,8 +336,12 @@ void desktop_update_show(void)
     status_label = mimi_ui_text(status_area, ui_tr(UI_STR_LOADING), ui_font_body_md(), MIMI_TEXT);
     lv_obj_set_width(status_label, lv_pct(100));
     lv_label_set_long_mode(status_label, LV_LABEL_LONG_WRAP);
-    const char *zh[] = {"检查更新", "下载", "安装并重启", "取消下载"};
-    const char *en[] = {"Check", "Download", "Install & restart", "Cancel download"};
+    const char *labels[] = {
+        ui_i18n_is_zh() ? "检查更新" : "Check",
+        ui_i18n_is_zh() ? "下载" : "Download",
+        ui_i18n_is_zh() ? "安装并重启" : "Install & restart",
+        ui_i18n_is_zh() ? "取消下载" : "Cancel download",
+    };
     lv_obj_t *actions = lv_obj_create(panel);
     lv_obj_remove_style_all(actions);
     lv_obj_set_size(actions, lv_pct(100), 48);
@@ -348,7 +352,7 @@ void desktop_update_show(void)
         buttons[i] = lv_button_create(actions); mimi_ui_button_style(buttons[i], i == 2);
         lv_obj_set_size(buttons[i], 0, 48);
         lv_obj_set_flex_grow(buttons[i], 1);
-        lv_obj_t *label = mimi_ui_text(buttons[i], ui_i18n_is_zh() ? zh[i] : en[i], ui_font_body_md(), MIMI_TEXT); lv_obj_center(label);
+        lv_obj_t *label = mimi_ui_text(buttons[i], labels[i], ui_font_body_md(), MIMI_TEXT); lv_obj_center(label);
         lv_obj_add_event_cb(buttons[i], action, LV_EVENT_CLICKED, (void *)operations[i]);
         lv_obj_add_state(buttons[i], LV_STATE_DISABLED);
     }
