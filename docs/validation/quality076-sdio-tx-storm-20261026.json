@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "related": [
+    "REQ-MIMI-STABILITY-023",
+    "REQ-MIMI-STABILITY-031"
+  ],
+  "date": "2026-10-26",
+  "scope": "Live rc8 SDIO CMD52 response-timeout investigation and isolated TX error-backoff candidate; no module deployment",
+  "user_log": {
+    "sha256": "2324899c7ee9b8f1e7a0fd62d4c19600f08fe370f338664cd6074ffa40eb11f2",
+    "full_timestamped_lines": 151,
+    "span_seconds": 1.383849,
+    "reported_dropped_messages": 57586,
+    "limitation": "Dropped message contents unknown; final input truncated"
+  },
+  "live": {
+    "system": "1.0.0-rc.8",
+    "board": "A133 MainBoard V1.2",
+    "module_sha256": "13b264ed76929ec1ab78d7b4d916f173b7fe5b14fb5c664b0932a78589f57739",
+    "archived_rc8_match": true,
+    "uptime_final_seconds": 56259.55,
+    "ui_heartbeat": "advancing; activity_ready true; physical screen/touch not confirmed for incident",
+    "memory": "Available about1.85GB; no current exhaustion",
+    "mmc_irq_rate_per_second": 37522,
+    "tx_stack": "mmc wait -> sdio_readb -> driver; repeatedly observed",
+    "irq_thread": "sleeping in sampled stack; CPU ticks unchanged across two samples",
+    "ssh": "single known-endpoint connection timed out; not proof whole board dead",
+    "failure": "still active at final capture"
+  },
+  "analysis": {
+    "confirmed": "Host reports response timeout for CMD52; high-rate interrupts and live TX SDIO reads",
+    "source_issue": "TX credit read error immediately returns; queue loop can retry without sleeping/dequeuing",
+    "not_proven": [
+      "Initial module/firmware/power failure cause",
+      "Source-to-stripped-runtime function equivalence",
+      "Relationship to earlier slab incident",
+      "Physical panel or touch failure"
+    ]
+  },
+  "candidate": {
+    "path": ".delivery/quality-review-20261023/sdio-tx-backoff-20261026/aicwf_sdio.c",
+    "input_sha256": "c713b49f5828e6c6b654e62f51ab04ace32f8f95a08eb51bf1ef342e683f8f4e",
+    "sha256": "63cd713a64f434761a4f10ae4c43bd63802fb797c3dc06dd61a299aef3d8bf31",
+    "change": "Both TX credit helpers sleep20ms after read error, after host release, then return original error; normal credit paths unchanged",
+    "purpose": "Limit TX retry pressure; no radio reset/recovery",
+    "sdk_unchanged": true,
+    "overlay_promoted": false,
+    "full_module_build": "not_run",
+    "device": "not_run"
+  },
+  "checks": {
+    "host": "passed18 adapter cases,600 simulated failed reads, healthy next-call recovery, shortage/mask/clamp/shortcut",
+    "host_limit": "msleep stub counts calls; no physical timing or IRQ-rate proof",
+    "target_compile": "passed actual A133 kernel compiler and full changed C translation unit; readonly SDK binding",
+    "object_sha256": "e771586e505d673d216b857e0fb08d29b3c90db21202659fc51404720dace694",
+    "diagnostics": "empty",
+    "physical_fix": "not_run"
+  },
+  "failures_preserved": [
+    "Initial fixture enum extraction expected anonymous enum; corrected to named AICWF_IC",
+    "First isolated compile exit134: compiler temporary directory readonly; corrected writable TMPDIR; original outputs saved",
+    "One retry mistakenly sent Python text to shell; failed before candidate/SDK writes"
+  ],
+  "runtime_mutation": {
+    "original_printk": "8 7 1 7",
+    "current_printk": "3 7 1 7",
+    "reason": "Temporarily quiet console to regain shell; kernel retry fault still active",
+    "persistent_change": false,
+    "original_saved": "/tmp/mimi-sdio-20261026-printk",
+    "restore": "cat /tmp/mimi-sdio-20261026-printk >/proc/sys/kernel/printk",
+    "reboot_or_flash": false,
+    "serial": "serial-6 closed; confirmed"
+  },
+  "invariants": [
+    "No credential/identity reset",
+    "No signed-artifact change",
+    "No deployed module replacement",
+    "No automatic reboot or disconnect"
+  ],
+  "evidence": ".delivery/quality-review-20261023/sdio-tx-backoff-20261026",
+  "next": [
+    "Promote qualified candidate through private overlay and source lock; full module integration",
+    "Qualify recovery path before device replacement; preserve rc8 failure evidence",
+    "Measure actual TX/IRQ rate and WiFi recovery on new module",
+    "Capture first failure transition to determine initial cause",
+    "Physical screen/touch observation pending user response"
+  ]
+}

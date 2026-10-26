@@ -695,3 +695,9 @@ Flows: list request -> ready/empty/setup/auth/error -> manual refresh; select ->
 136 real host LVGL renders across17scenes/two resolutions/languages/themes passed, followed by8 affected retry-feedback renders after final small correction. Pointer tests cover offline disablement, refresh, list/detail return, confirmation/cancel, Integer/Enum and page reopen. Nine localization/registry/ABI/countdown tests and both changed A133 translation-unit compiles passed. Initial unresolved-width pointer failure and invalid LVGL API-name compile failure retained. Evidence and input/object hashes: `docs/validation/quality076-iot-pairing-polish-20261026.json`.
 
 No page changes installed or packaged; actual cloud/device/touch remain not_run. Signed rc32/rc9 unchanged. User then supplied an active CMD52 timeout flood; preserve that separate incident and diagnose before physical acceptance. Source UI changes cannot be claimed as the cause or fix of an unmodified running board.
+
+
+### 2026-10-26 rc8 活动 CMD52 超时现场与 TX 退避候选
+用户日志和现场读取确认持续超时；桌面心跳在更新，当前内存未耗尽。约 3.75 万次/秒 MMC 中断，TX 线程重复停在 SDIO 读取，不能据此确定无线模块首次失去响应原因。串口输出级别临时从 8 降至 3，保留原值；只是降低刷屏，故障仍活跃，serial-6 已关闭，无重启/刷机/模块替换。
+
+候选在两个 TX 信用读取失败分支等待 20 ms 后返回原错误；18 项模拟检查和实际 A133 完整 C 文件编译通过，原 SDK/overlay 未改。失败的夹具提取与只读临时目录编译保留。候选尚未集成完整模块或上机，不能声称 WiFi 恢复或根因闭环。详见 `docs/validation/quality076-sdio-tx-storm-20261026.json`；后续先集成并验证恢复通道，再做物理验证。
