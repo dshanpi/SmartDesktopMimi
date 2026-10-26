@@ -1,3 +1,5 @@
+2026-10-26 用户补充确认：SDIO刷屏当时“桌面卡住或黑屏”，本次真机表现记为 failed_user_confirmed；此前UI心跳不能替代可见桌面/触摸验收。当前COM17在线但被占用，已请求释放；已知SSH端点超时。未抢占串口、重启或刷机。后续先恢复诊断连接，再检查和恢复。详见 docs/validation/quality076-sdio-physical-report-20261026.json。
+
 2026-10-26：涂鸦智家和100ask.net配对页源码97e19cc已提交；136页面变体、8重试变体、9合同检查与两改动文件A133编译通过，未打包/安装。随后用户提交rc8活动SDIO超时：现场TX读取/高频MMC中断、UI心跳仍更新；隔离退避候选18项模拟和A133编译通过，未集成/上机。仅临时降低串口输出级别，原值保留，故障未恢复；串口已关闭。证据docs/validation/quality076-sdio-tx-storm-20261026.json。初始原因、真实屏幕/触摸、新模块与整体稳定性继续未验收。
 
 2026-10-26 IoT/pairing pages improved: device cards/totals and setup/error guidance, inline numeric controls, prominent pairing code and bound completion state, retryable refresh-send failure. 136+8 host renders,9contracts and both A133 changed-TU compiles passed. See docs/validation/quality076-iot-pairing-polish-20261026.json. No new package/device deployment. User now reports active CMD52 RTO log storm; separate live diagnostic evidence work/sdio-storm-20261026, preserve incident and avoid assuming UI changes are installed.

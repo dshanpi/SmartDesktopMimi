@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "previous": "docs/validation/quality076-sdio-tx-storm-20261026.json",
+  "source": "User reply to incident physical screen/touch question",
+  "user_report": "桌面卡住或黑屏",
+  "physical_status": "failed_user_confirmed",
+  "interpretation": "UI heartbeat did not prove visible desktop responsiveness. User did not distinguish freeze from black screen or assert display hardware failure. SDIO initial cause and causal link remain unresolved.",
+  "current_access": {
+    "serial": "COM17 online but open failed PORT_BUSY:COM17",
+    "ssh": "Known endpoint connect/read attempt timed out",
+    "action": "Asked user to close existing COM17 connection; no forced takeover or power action"
+  },
+  "invariants": [
+    "Historical evidence unchanged",
+    "No reboot, flash, module replacement, credential change or persistent setting change"
+  ],
+  "candidate": "Prior18 simulated cases and A133 TU compile only; no device acceptance",
+  "next": "After serial is released, inspect current boot/runtime/panel state and perform scoped recovery; verify physical display independently",
+  "evidence": ".delivery/quality-review-20261023/sdio-tx-backoff-20261026/user-confirmed"
+}

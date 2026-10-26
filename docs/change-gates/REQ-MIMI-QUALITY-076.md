@@ -701,3 +701,7 @@ No page changes installed or packaged; actual cloud/device/touch remain not_run.
 用户日志和现场读取确认持续超时；桌面心跳在更新，当前内存未耗尽。约 3.75 万次/秒 MMC 中断，TX 线程重复停在 SDIO 读取，不能据此确定无线模块首次失去响应原因。串口输出级别临时从 8 降至 3，保留原值；只是降低刷屏，故障仍活跃，serial-6 已关闭，无重启/刷机/模块替换。
 
 候选在两个 TX 信用读取失败分支等待 20 ms 后返回原错误；18 项模拟检查和实际 A133 完整 C 文件编译通过，原 SDK/overlay 未改。失败的夹具提取与只读临时目录编译保留。候选尚未集成完整模块或上机，不能声称 WiFi 恢复或根因闭环。详见 `docs/validation/quality076-sdio-tx-storm-20261026.json`；后续先集成并验证恢复通道，再做物理验证。
+
+
+2026-10-26 用户补充确认：SDIO刷屏当时“桌面卡住或黑屏”，本次真机表现记为 failed_user_confirmed；此前UI心跳不能替代可见桌面/触摸验收。当前COM17在线但被占用，已请求释放；已知SSH端点超时。未抢占串口、重启或刷机。后续先恢复诊断连接，再检查和恢复。详见 docs/validation/quality076-sdio-physical-report-20261026.json。
+

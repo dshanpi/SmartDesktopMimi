@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "summary": "Append user-confirmed frozen/black desktop during SDIO incident",
+  "context": "User answered pending physical observation question",
+  "next_steps": "Release busy serial connection, inspect current device and recover; candidate physical qualification remains open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Physical evidence update and current access check",
+      "invariants": "Heartbeat not physical acceptance; no forced serial takeover or unobserved power action",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/CHANGE-GATES.md",
+        "docs/validation/quality076-sdio-physical-report-20261026.json",
+        "docs/change-gates/batches/quality076-sdio-physical-report-20261026.json"
+      ],
+      "checks": [
+        {
+          "name": "Physical desktop",
+          "status": "failed",
+          "scope": "User observed frozen or black display during flood",
+          "reason": "Direct user report",
+          "evidence": "docs/validation/quality076-sdio-physical-report-20261026.json"
+        },
+        {
+          "name": "Current access",
+          "status": "blocked",
+          "scope": "COM17 serial and known SSH endpoint",
+          "reason": "Serial busy and SSH timeout; awaiting serial release",
+          "evidence": "docs/validation/quality076-sdio-physical-report-20261026.json"
+        },
+        {
+          "name": "Recovery",
+          "status": "not_run",
+          "scope": "Current incident",
+          "reason": "No usable diagnostic connection",
+          "evidence": "docs/validation/quality076-sdio-physical-report-20261026.json"
+        }
+      ]
+    }
+  ]
+}

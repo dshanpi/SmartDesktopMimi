@@ -277,3 +277,6 @@ UI075 rc28：`docs/validation/ui075-rc28-delivery.json`，最终展示修正已�
 2026-10-25 recovery follow-up after user reports black screen: fresh normal rc8 boot observed, boot ID 7caee1dc-709b-4b3b-8db8-cd9fb5227a02, uptime advanced30/50/125seconds, UI activity ready and heartbeat advancing, WiFi DHCP successful. LCD driver reports unblank1024x768/backlight51/fps29; physical screen has not been observed or user-confirmed. No new power/reboot/flash issued in this follow-up; do not invent causality for the new boot. HDMI again disabled with normal protocol, absent process confirmed. Exact stale task authorization symlink and temporary helper removed, serial verification passed. Prior failure remains historical; current normal runtime recovery supersedes earlier unknown boot state. rc9 installation and full physical acceptance still not_run. Evidence: physical-acceptance-20261025/user-recovery-result.json.
 
 2026-10-26 QUALITY076：涂鸦智家/配对页主机优化完成，rc8活动SDIO超时调查与退避候选见 docs/validation/quality076-sdio-tx-storm-20261026.json；上机和初始原因未闭环。
+
+2026-10-26 用户补充确认：SDIO刷屏当时“桌面卡住或黑屏”，本次真机表现记为 failed_user_confirmed；此前UI心跳不能替代可见桌面/触摸验收。当前COM17在线但被占用，已请求释放；已知SSH端点超时。未抢占串口、重启或刷机。后续先恢复诊断连接，再检查和恢复。详见 docs/validation/quality076-sdio-physical-report-20261026.json。
+
