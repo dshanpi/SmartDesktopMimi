@@ -110,3 +110,9 @@ UI_SCENE("user-page-missing")
 UI_SCENE("user-catalog-scroll")
 
 UI_SCENE("desktop-update-feedback")
+
+UI_SCENE("iot-list")
+UI_SCENE("iot-empty")
+UI_SCENE("iot-authorization")
+UI_SCENE("iot-network-error")
+UI_SCENE("pairing-refresh-failure")

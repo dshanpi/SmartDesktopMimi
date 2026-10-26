@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "started": "2026-10-25",
+  "completed_host": "2026-10-26",
+  "base": "434c30227fec1beb9c6037ce0ed93a7bdbb65bff",
+  "source_inputs": {
+    "apps/lv_port_linux/src/apps/iot/iot_app.c": "8bab7ed93083cc3aef6a91f4fe72e305dc8af561f079591bab76bdec222b2215",
+    "apps/lv_port_linux/src/apps/pairing/pairing_app.c": "aeca8919de9372ea82e82444d3e471c3fb826516606cfd4940d5bfa1600953b3",
+    "tests/architecture/fixtures/native_ui_review.c": "fa29fbaf0162bcec8a79ca72c453bbe3ce9bdd1d82b1fa6ac89d93f57efde5a4",
+    "tests/architecture/fixtures/native_ui_scenes.def": "db71aed72f895292cfd65236f35d78982d717bd024e81a989fbf055aed693187"
+  },
+  "scope": [
+    "IoT two-column device cards and online totals with fixed refresh toolbar",
+    "Setup/empty/authorization/network explanatory cards",
+    "Properties preserved on selected device detail; schema name preferred when provided",
+    "Inline integer adjustment; command confirmation and read-only/offline enforcement preserved",
+    "Pairing bounded two-panel layout, prominent code/expiry, bound checkmark and ownership guidance",
+    "Refresh send failure restores retry and clears old failure while retry pending; polling counter reset on close"
+  ],
+  "checks": {
+    "responsive_host": "passed:136 LVGL renders across17scenes x2resolutions x2languages x2themes",
+    "followup_host": "passed:8 final retry-feedback renders after clearing old failure on retry",
+    "pointer": "passed:offline selection/back, refresh retry, confirmation/cancel, integer steps, modal/reopen",
+    "contracts": "passed:9 scene registry/localization/frozen ABI/countdown tests",
+    "target_compile": "passed:both changed TUs with actual A133 production compiler/config; not full build",
+    "visual": "passed scoped manual review of final large IoT list/large bound pairing/small English pairing plus earlier setup and small list",
+    "physical": "not_run",
+    "cloud": "not_run; synthetic fixtures only",
+    "new_package": "not_run"
+  },
+  "history": [
+    {
+      "status": "passed",
+      "scope": "32 baseline renders",
+      "evidence": "before.log"
+    },
+    {
+      "status": "failed",
+      "scope": "first layout used unresolved body width; pairing pointer missed refresh",
+      "evidence": "after-r1/1024x768/pairing-zh-light.log"
+    },
+    {
+      "status": "passed",
+      "scope": "explicit display width and extended8scenes/64renders",
+      "evidence": "after-r2.log"
+    },
+    {
+      "status": "failed",
+      "scope": "wrong LVGL local style removal function name; corrected to existing API",
+      "evidence": "final/build.log"
+    },
+    {
+      "status": "passed",
+      "scope": "17scenes/136renders",
+      "evidence": "final-r2.log"
+    },
+    {
+      "status": "passed",
+      "scope": "final clear-old-error retry branch8renders",
+      "evidence": "retry-final.log"
+    }
+  ],
+  "objects": {
+    "iot_app.c": "de41742e9870c0ef9ec68c72cfcb275bdd4eda31ee33f331b675dec446d37de5",
+    "pairing_app.c": "9630fe847fb6682ec8fe52c6ca10aa5e80a430af9bde4f54d29ae14ac9374cf1"
+  },
+  "remaining": [
+    "New candidate build and physical touch/cloud/device qualification",
+    "Latest user SDIO storm incident is separate from these uninstalled source changes"
+  ],
+  "artifacts": "Signed rc32/rc9 unchanged; board was not operated for page development"
+}

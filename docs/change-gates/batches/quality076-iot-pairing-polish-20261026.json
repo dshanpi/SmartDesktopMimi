@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "summary": "Polish Tuya Smart Home and 100ask.net pairing pages",
+  "context": "Explicit user request for both pages",
+  "next_steps": "Diagnose current SDIO storm; new candidate and actual cloud/touch acceptance remain",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Responsive page UX and refresh failure recovery",
+      "invariants": "No false ownership/device state, no credential reset, no command without confirmation; old artifacts unchanged",
+      "paths": [
+        "apps/lv_port_linux/src/apps/iot/iot_app.c",
+        "apps/lv_port_linux/src/apps/pairing/pairing_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "CURRENT_PROGRESS.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-iot-pairing-polish-20261026.json",
+        "docs/change-gates/batches/quality076-iot-pairing-polish-20261026.json"
+      ],
+      "checks": [
+        {
+          "name": "Host pages and contracts",
+          "status": "passed",
+          "scope": "136 general renders plus8 affected final retry renders and9tests",
+          "reason": "Assertions and scoped visual review pass",
+          "evidence": "docs/validation/quality076-iot-pairing-polish-20261026.json"
+        },
+        {
+          "name": "A133 compile",
+          "status": "passed",
+          "scope": "Two changed translation units only",
+          "reason": "Production compiler exit0",
+          "evidence": "docs/validation/quality076-iot-pairing-polish-20261026.json"
+        },
+        {
+          "name": "Physical/cloud/deployment",
+          "status": "not_run",
+          "scope": "No new signed package, device or cloud test",
+          "reason": "Host page development; board storm separately diagnosed",
+          "evidence": "docs/validation/quality076-iot-pairing-polish-20261026.json"
+        }
+      ]
+    }
+  ]
+}

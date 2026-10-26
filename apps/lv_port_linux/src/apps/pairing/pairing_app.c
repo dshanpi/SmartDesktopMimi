@@ -11,7 +11,10 @@
 /* The desktop only handles the existing public status contract. Device
  * signatures, provisioning and long-lived secrets remain in the Provider. */
 static lv_obj_t *code_label, *state_label, *expiry_label, *refresh_button, *steps_label, *refresh_label;
+static lv_obj_t *title_label, *code_box, *linked_mark;
 static lv_timer_t *pair_timer;
+static unsigned polls;
+static bool refresh_send_failed;
 static cloud_status_t snapshot;
 static cloud_pairing_countdown_t countdown;
 static cloud_pairing_status_v1_t ownership;
@@ -35,21 +38,32 @@ static void render_status(void)
     uint32_t remaining = cloud_pairing_remaining(&countdown,lv_tick_get());
     bool unavailable = snapshot.state == CLOUD_STATE_UNAVAILABLE;
     bool bound = ownership_received && ownership.ownership==CLOUD_PAIRING_BOUND;
-    lv_obj_t *binding_controls[]={code_label,expiry_label,steps_label};
+    lv_obj_t *binding_controls[]={code_box,expiry_label};
     for (unsigned i=0;i<sizeof(binding_controls)/sizeof(binding_controls[0]);i++) {
         if (!binding_controls[i]) continue;
         if (bound && !unavailable) lv_obj_add_flag(binding_controls[i],LV_OBJ_FLAG_HIDDEN);
         else lv_obj_remove_flag(binding_controls[i],LV_OBJ_FLAG_HIDDEN);
     }
     bool usable = received && !unavailable && !bound && remaining && valid_code(countdown.code) && !snapshot.bind_token_refreshing;
+    if(bound && !unavailable) lv_obj_remove_flag(linked_mark,LV_OBJ_FLAG_HIDDEN);
+    else lv_obj_add_flag(linked_mark,LV_OBJ_FLAG_HIDDEN);
+    lv_label_set_text(title_label, bound && !unavailable ? tr("设备已绑定", "Device linked") : tr("绑定这台设备", "Link this device"));
+    lv_obj_set_style_text_color(title_label,mimi_ui_color(bound && !unavailable ? MIMI_TEAL : MIMI_TEXT),0);
+    if(!usable) lv_obj_add_flag(code_box,LV_OBJ_FLAG_HIDDEN);
+    else lv_obj_remove_flag(code_box,LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_text_font(code_label,usable ? &lv_font_montserrat_48 : ui_font_h1(),0);
+    lv_label_set_text(steps_label,bound && !unavailable
+        ? tr("这台设备已完成账号绑定。\n\n在 100ask.net 查看设备归属、管理设备或解除绑定。\n\n无需重复输入绑定码。", "This device is linked to an account.\n\nVisit 100ask.net to review ownership, manage the device, or unlink it.\n\nYou do not need another pairing code.")
+        : tr("1  登录 100ask.net\n    使用手机或电脑打开网站。\n\n2  打开设备管理\n    输入左侧六位绑定码。\n\n3  在网站确认绑定\n    绑定结果会自动更新。", "1  Sign in to 100ask.net\n    Use your phone or computer.\n\n2  Open device management\n    Enter the six-digit code.\n\n3  Confirm on the website\n    The status updates automatically."));
     lv_label_set_text(code_label, usable ? countdown.code : tr("— — — — — —", "- - - - - -"));
     if (usable) lv_label_set_text_fmt(expiry_label, ui_i18n_is_zh() ? "有效期 %02u:%02u" : "Expires in %02u:%02u", remaining/60, remaining%60);
     else lv_label_set_text(expiry_label, received && valid_code(countdown.code) && !remaining ? tr("绑定码已过期，请刷新", "Code expired. Refresh to continue.") : "");
     const char *state;
-    if (!received) state=tr("正在读取设备状态…", "Reading device status…");
+    if (refresh_send_failed) state=tr("请求未发出，请检查连接后重试", "Request was not sent. Check the connection and retry.");
+    else if (!received) state=tr("正在读取设备状态…", "Reading device status…");
     else if (unavailable) state=tr("当前系统未提供配对服务", "Pairing service is unavailable on this system.");
     else if (snapshot.bind_token_refreshing) state=tr("正在读取配对信息…", "Reading pairing information…");
-    else if (bound) state=tr("设备已绑定账号，无需绑定码。账号归属和解绑请在 100ask.net 查看。", "Device already linked. Check ownership or unlink at 100ask.net.");
+    else if (bound) state=tr("账号绑定已完成。", "Account linking is complete.");
     else if (snapshot.bind_token_error == 401 || snapshot.bind_token_error == 403)
         state=tr("设备身份认证失败，请检查出厂登记", "Device authentication failed. Check factory enrollment.");
     else if (snapshot.bind_token_error == -ENOKEY)
@@ -72,7 +86,7 @@ static void status_cb(const mw_msg_t *msg)
     if (!active || !msg || msg->topic!=TOPIC_CLOUD_STATUS || !msg->data || msg->data_len!=sizeof(cloud_status_t)) return;
     memcpy(&snapshot,msg->data,sizeof(snapshot));
     snapshot.bind_token[sizeof(snapshot.bind_token)-1]='\0';
-    received=true;
+    received=true;refresh_send_failed=false;
     if (!ownership_received) cloud_pairing_observe(&countdown,snapshot.bind_token,snapshot.bind_token_expires_in,lv_tick_get());
     render_status();
 }
@@ -90,7 +104,6 @@ static void timer_cb(lv_timer_t *timer)
 {
     (void)timer;render_status();
     /* Also recover from a dropped IPC reply without issuing fresh codes. */
-    static unsigned polls;
     if (++polls % 10 == 0) request_status();
 }
 static void refresh_cb(lv_event_t *e)
@@ -99,9 +112,14 @@ static void refresh_cb(lv_event_t *e)
     if (!received || snapshot.bind_token_refreshing || snapshot.state==CLOUD_STATE_UNAVAILABLE) return;
     memset(&countdown,0,sizeof(countdown));
     memset(snapshot.bind_token,0,sizeof(snapshot.bind_token));snapshot.bind_token_expires_in=0;
+    refresh_send_failed=false;
     snapshot.bind_token_refreshing=true;render_status();
     cloud_cmd_t cmd={.action=CLOUD_CMD_REFRESH_BIND_TOKEN};
-    mw_publish(TOPIC_CLOUD_COMMAND,&cmd,sizeof(cmd),MW_DIR_UI_TO_BACKEND);
+    if(mw_publish(TOPIC_CLOUD_COMMAND,&cmd,sizeof(cmd),MW_DIR_UI_TO_BACKEND) != 0) {
+        snapshot.bind_token_refreshing=false;
+        refresh_send_failed=true;
+        render_status();
+    }
 }
 static void back_cb(lv_event_t *e) { (void)e;app_manager_back_home(); }
 static void close_pairing(void)
@@ -112,6 +130,7 @@ static void close_pairing(void)
     memset(&snapshot,0,sizeof(snapshot));
     memset(&countdown,0,sizeof(countdown));memset(&ownership,0,sizeof(ownership));ownership_received=false;
     code_label=state_label=expiry_label=refresh_button=steps_label=refresh_label=NULL;
+    title_label=code_box=linked_mark=NULL;polls=0;refresh_send_failed=false;
 }
 static void init_pairing(void)
 {
@@ -119,23 +138,49 @@ static void init_pairing(void)
     lv_obj_t *screen=lv_obj_create(NULL);
     mimi_ui_header(screen,ui_tr(UI_STR_APP_PAIRING),back_cb);
     lv_obj_t *body=mimi_ui_body(screen);
-    lv_obj_add_flag(body,LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_flex_flow(body,LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(body,18,0);
-    lv_obj_t *card=lv_obj_create(body);mimi_ui_surface(card,18);
-    lv_obj_set_width(card,lv_pct(100));lv_obj_set_height(card,LV_SIZE_CONTENT);
-    lv_obj_set_style_pad_all(card,24,0);lv_obj_set_style_pad_row(card,16,0);
+    const bool compact=lv_display_get_vertical_resolution(NULL)<620;
+    const int available=lv_display_get_vertical_resolution(NULL)-MIMI_HEADER_H-48;
+    const int panel_height=LV_MIN(available,440);
+    lv_obj_set_size(body,lv_display_get_horizontal_resolution(NULL)-48,panel_height);
+    lv_obj_set_pos(body,24,MIMI_HEADER_H+24+(available-panel_height)/2);
+    lv_obj_set_flex_flow(body,LV_FLEX_FLOW_ROW);
+    lv_obj_set_style_pad_column(body,16,0);
+    lv_obj_t *card=lv_obj_create(body);mimi_ui_surface(card,22);
+    lv_obj_set_size(card,(lv_display_get_horizontal_resolution(NULL)-64)*56/100,lv_pct(100));
+    lv_obj_set_style_pad_all(card,compact?18:28,0);lv_obj_set_style_pad_row(card,12,0);
     lv_obj_set_flex_flow(card,LV_FLEX_FLOW_COLUMN);
-    state_label=mimi_ui_text(card,"",ui_font_body_lg(),MIMI_TEXT);
+    lv_obj_t *details=lv_obj_create(card);mimi_ui_clear(details);
+    lv_obj_set_size(details,lv_pct(100),0);lv_obj_set_flex_grow(details,1);
+    lv_obj_set_flex_flow(details,LV_FLEX_FLOW_COLUMN);lv_obj_set_style_pad_row(details,compact?8:16,0);
+    lv_obj_add_flag(details,LV_OBJ_FLAG_SCROLLABLE);lv_obj_set_scroll_dir(details,LV_DIR_VER);
+    linked_mark=lv_obj_create(details);mimi_ui_surface(linked_mark,32);
+    lv_obj_set_size(linked_mark,64,64);lv_obj_set_style_bg_color(linked_mark,mimi_ui_color(MIMI_SURFACE_ALT),0);
+    lv_obj_set_style_border_width(linked_mark,0,0);
+    lv_obj_t *check=mimi_ui_text(linked_mark,LV_SYMBOL_OK,&lv_font_montserrat_32,MIMI_TEAL);lv_obj_center(check);
+    title_label=mimi_ui_text(details,"",ui_font_h2(),MIMI_TEXT);
+    lv_obj_set_width(title_label,lv_pct(100));
+    state_label=mimi_ui_text(details,"",ui_font_body_md(),MIMI_MUTED);
     lv_obj_set_width(state_label,lv_pct(100));lv_label_set_long_mode(state_label,LV_LABEL_LONG_WRAP);
-    code_label=mimi_ui_text(card,"",ui_font_h1(),MIMI_TEXT);
-    expiry_label=mimi_ui_text(card,"",ui_font_body_md(),MIMI_MUTED);
+    code_box=lv_obj_create(details);mimi_ui_surface(code_box,16);
+    lv_obj_set_style_bg_color(code_box,mimi_ui_color(MIMI_SURFACE_ALT),0);
+    lv_obj_set_style_border_width(code_box,0,0);lv_obj_set_size(code_box,lv_pct(100),compact?80:112);
+    code_label=mimi_ui_text(code_box,"",&lv_font_montserrat_48,MIMI_TEXT);
+    lv_obj_set_style_text_letter_space(code_label,6,0);lv_obj_center(code_label);
+    expiry_label=mimi_ui_text(details,"",ui_font_body_md(),MIMI_TEAL);
+    lv_obj_set_width(expiry_label,lv_pct(100));lv_label_set_long_mode(expiry_label,LV_LABEL_LONG_WRAP);
     refresh_button=lv_button_create(card);mimi_ui_button_style(refresh_button,true);
-    lv_obj_set_size(refresh_button,240,56);
-    lv_obj_t *label=refresh_label=mimi_ui_text(refresh_button,tr("刷新绑定码","Refresh code"),ui_font_body_lg(),MIMI_TEXT);lv_obj_center(label);
+    lv_obj_set_size(refresh_button,lv_pct(100),52);lv_obj_set_style_radius(refresh_button,14,0);
+    refresh_label=mimi_ui_text(refresh_button,tr("刷新绑定码","Refresh code"),ui_font_body_lg(),MIMI_TEXT);
+    lv_obj_remove_local_style_prop(refresh_label,LV_STYLE_TEXT_COLOR,0);lv_obj_center(refresh_label);
     lv_obj_add_event_cb(refresh_button,refresh_cb,LV_EVENT_CLICKED,NULL);
-    lv_obj_t *steps=steps_label=mimi_ui_text(body,tr("1. 在手机或电脑登录 100ask.net\n2. 在设备管理中输入六位绑定码\n3. 在网站确认设备归属\n\n账号绑定结果与解绑请在网站查看。云连接正常不代表已绑定账号。", "1. Sign in to 100ask.net on your phone or computer.\n2. Enter the six-digit code in device management.\n3. Confirm device ownership on the website.\n\nCheck account binding or unlink on the website. A cloud connection does not establish account ownership."),ui_font_body_lg(),MIMI_MUTED);
-    lv_obj_set_width(steps,lv_pct(100));lv_label_set_long_mode(steps,LV_LABEL_LONG_WRAP);
+    lv_obj_t *guide=lv_obj_create(body);mimi_ui_surface(guide,22);
+    lv_obj_set_size(guide,0,lv_pct(100));lv_obj_set_flex_grow(guide,1);
+    lv_obj_set_style_pad_all(guide,compact?18:28,0);lv_obj_set_style_pad_row(guide,18,0);
+    lv_obj_set_flex_flow(guide,LV_FLEX_FLOW_COLUMN);
+    lv_obj_add_flag(guide,LV_OBJ_FLAG_SCROLLABLE);lv_obj_set_scroll_dir(guide,LV_DIR_VER);
+    mimi_ui_text(guide,"100ask.net",ui_font_h2(),MIMI_TEAL);
+    steps_label=mimi_ui_text(guide,"",ui_font_body_md(),MIMI_MUTED);
+    lv_obj_set_width(steps_label,lv_pct(100));lv_label_set_long_mode(steps_label,LV_LABEL_LONG_WRAP);
     mw_subscribe(TOPIC_CLOUD_STATUS,status_cb);
     mw_subscribe(TOPIC_CLOUD_PAIRING_STATUS,ownership_cb);
     pair_timer=lv_timer_create(timer_cb,1000,NULL);

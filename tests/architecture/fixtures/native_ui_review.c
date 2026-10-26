@@ -270,6 +270,7 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 }
 static int review_connect_error;
 static atomic_bool review_connect_slow;
+static bool review_pairing_send_failure;
 static int connect_count, ai_enter_count, ai_exit_count, ai_stop_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 static atomic_int wifi_toggles, review_wifi_scans, review_scan_error;
@@ -293,6 +294,7 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && (((const wifi_cmd_t*)d)->action==CMD_ENABLE || ((const wifi_cmd_t*)d)->action==CMD_DISABLE))wifi_toggles++;
  if(t==TOPIC_HDMI_COMMAND && n==sizeof(hdmi_cmd_t) && ((const hdmi_cmd_t*)d)->action!=HDMI_CMD_GET_STATUS)hdmi_mutations++;
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
+ if(review_pairing_send_failure && t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)return -EIO;
  if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_STOP_LISTEN)ai_stop_count++;
@@ -1691,6 +1693,12 @@ int main(int argc,char**argv) {
   puts("PASS voice: cached/duplicate text, assistant text, expired receipt before timer, long transcript, closed session rejected; confirmation single-use");
  }else if(strncmp(argv[1],"iot",3)==0){
   review_iot_connected=strcmp(argv[1],"iot")!=0;
+  bool overview_scene=!strcmp(argv[1],"iot-list") || !strcmp(argv[1],"iot-empty") || !strcmp(argv[1],"iot-authorization") || !strcmp(argv[1],"iot-network-error");
+  if(!strcmp(argv[1],"iot-list"))review_iot_devices_reply="{\"devices\":[{\"id\":\"lamp\",\"name\":\"Living room lamp\",\"online\":true},{\"id\":\"fan\",\"name\":\"Bedroom fan\",\"online\":true},{\"id\":\"offline\",\"name\":\"Desk light\",\"online\":false}]}";
+  if(!strcmp(argv[1],"iot-empty"))review_iot_devices_reply="{\"devices\":[]}";
+  if(!strcmp(argv[1],"iot-authorization")){review_iot_devices_reply="{\"error\":\"authorization_required\"}";review_iot_devices_rc=-1;}
+  if(!strcmp(argv[1],"iot-network-error")){review_iot_devices_reply="{\"error\":\"unavailable\"}";review_iot_devices_rc=-1;}
+
   review_iot_integer=!strcmp(argv[1],"iot-integer");
   review_iot_enum=!strcmp(argv[1],"iot-enum");
   if(review_iot_enum)review_iot_functions="{\"control_allowed\":true,\"functions\":[{\"code\":\"switch\",\"type\":\"Enum\",\"values\":\"{\\\"range\\\": [\\\"off\\\", \\\"on\\\"]}\"}]}";
@@ -1713,6 +1721,29 @@ int main(int argc,char**argv) {
    save(argv[4]);return 0;
   }
   app_iot.init();for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+  if(overview_scene) {
+   lv_obj_t *refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新设备":"Refresh devices");assert(refresh);
+   assert_pairing_visible(refresh);assert_pairing_visible(lv_obj_get_parent(refresh));
+   assert(lv_obj_get_height(lv_obj_get_parent(refresh))>=48);
+   if(!strcmp(argv[1],"iot-list")) {
+    assert(mimi_iot_summary_get().online==2 && mimi_iot_summary_get().total==3);
+    lv_obj_t *offline=find_label(lv_scr_act(),ui_i18n_is_zh()?"Desk light  ·  离线":"Desk light  ·  Offline");assert(offline);
+    tap_widget(lv_obj_get_parent(offline));
+    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+    lv_obj_t *control=find_label(lv_scr_act(),ui_i18n_is_zh()?"设置此项…":"Set value…");assert(control && lv_obj_has_state(lv_obj_get_parent(control),LV_STATE_DISABLED));
+    lv_obj_t *back=find_label(lv_scr_act(),ui_i18n_is_zh()?"返回设备列表":"Back to devices");assert(back);tap_widget(lv_obj_get_parent(back));
+    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+    assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"Desk light  ·  离线":"Desk light  ·  Offline"));
+   } else {
+    const char *expected=!strcmp(argv[1],"iot-empty")?(ui_i18n_is_zh()?"还没有已授权的设备":"No devices yet"):
+        !strcmp(argv[1],"iot-authorization")?(ui_i18n_is_zh()?"需要重新授权":"Reconnect your account"):(ui_i18n_is_zh()?"暂时无法连接":"Unable to connect");
+    assert(find_label(lv_scr_act(),expected));
+    unsigned before=atomic_load(&review_iot_requests);tap_widget(lv_obj_get_parent(refresh));
+    for(int i=0;i<10;i++){usleep(10000);lv_tick_inc(100);pump();}
+    assert(atomic_load(&review_iot_requests)==before+1 && find_label(lv_scr_act(),expected));
+   }
+   assert(review_iot_commands==0);save(argv[4]);puts("PASS IoT overview: reachable refresh, accurate totals, empty/error retry, offline controls disabled; no commands");return 0;
+  }
   if(review_iot_connected){
    char device_label[600];snprintf(device_label,sizeof(device_label),"%s  ·  %s",review_iot_name,ui_i18n_is_zh()?"在线":"Online");
    lv_obj_t*l=long_modal?find_label_prefix(lv_scr_act(),"TEST living room"):find_label(lv_scr_act(),device_label);assert(l);
@@ -1777,7 +1808,7 @@ int main(int argc,char**argv) {
   emit(TOPIC_CLOUD_PAIRING_STATUS,&pair,sizeof(pair));pump();
   lv_obj_t*refresh=find_label(lv_scr_act(),pair.ownership==CLOUD_PAIRING_BOUND ? (ui_i18n_is_zh()?"检查绑定状态":"Check binding status") : (ui_i18n_is_zh()?"刷新绑定码":"Refresh code"));assert(refresh);
   if(pair.ownership==CLOUD_PAIRING_BOUND){
-   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"设备已绑定账号，无需绑定码。账号归属和解绑请在 100ask.net 查看。":"Device already linked. Check ownership or unlink at 100ask.net."));
+   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"账号绑定已完成。":"Account linking is complete."));
    assert(!lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
    assert(!lv_obj_has_flag(lv_obj_get_parent(refresh),LV_OBJ_FLAG_HIDDEN));
    assert(!find_label(lv_scr_act(),"123456"));
@@ -1802,6 +1833,22 @@ int main(int argc,char**argv) {
   emit(TOPIC_CLOUD_PAIRING_STATUS,&pair,sizeof(pair));assert(!find_label(lv_scr_act(),"654321"));
   assert(pairing_refreshes==expected_refreshes);
   puts("PASS PAIR071 real UI: authoritative ownership, strict optional version, no automatic refresh");
+ }else if(!strcmp(argv[1],"pairing-refresh-failure")) {
+  app_pairing.init();cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};
+  strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+  lv_obj_t *refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新绑定码":"Refresh code");assert(refresh);
+  assert_pairing_visible(refresh);assert_pairing_visible(lv_obj_get_parent(refresh));
+  review_pairing_send_failure=true;tap_widget(lv_obj_get_parent(refresh));
+  assert(pairing_refreshes==1 && !lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"请求未发出，请检查连接后重试":"Request was not sent. Check the connection and retry."));
+  assert(!find_label(lv_scr_act(),"123456"));
+  review_pairing_send_failure=false;tap_widget(lv_obj_get_parent(refresh));assert(pairing_refreshes==2);
+  assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"请求未发出，请检查连接后重试":"Request was not sent. Check the connection and retry."));
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"正在读取配对信息…":"Reading pairing information…"));
+  assert(lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
+  emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
+  assert(find_label(lv_scr_act(),"123456") && !lv_obj_has_state(lv_obj_get_parent(refresh),LV_STATE_DISABLED));
+  puts("PASS pairing refresh: transport failure gives feedback and manual retry recovers; no automatic code request");
  }else if(strcmp(argv[1],"pairing")==0){
   app_pairing.init();assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"— — — — — —":"- - - - - -"));cloud_status_t status={.state=CLOUD_STATE_CONNECTED,.bind_token_expires_in=60};
   strcpy(status.bind_token,"123456");emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();

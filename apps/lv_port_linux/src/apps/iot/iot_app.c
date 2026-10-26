@@ -17,7 +17,7 @@ static bool busy, ready, active;
 static unsigned generation, job_generation;
 static int job_status;
 static char job_path[320], job_body[2048], job_result[131072];
-static lv_obj_t *body, *message, *content, *refresh, *modal;
+static lv_obj_t *body, *message, *content, *refresh, *modal, *overview;
 static lv_timer_t * timer;
 static json_object * devices;
 static char selected_id[129], selected_name[256];
@@ -123,6 +123,7 @@ static void fetch_devices(lv_event_t * event)
     }
     selected_id[0] = 0;
     lv_obj_clean(content);
+    lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
     launch("/v1/devices", NULL);
 }
 static void close_modal(lv_event_t * e)
@@ -140,6 +141,7 @@ static lv_obj_t * button(lv_obj_t * parent, const char * text, lv_event_cb_t cb,
     lv_obj_set_size(b, lv_pct(100), LV_SIZE_CONTENT);
     lv_obj_set_style_min_height(b, 56, 0);
     lv_obj_t * l = mimi_ui_text(b, text, ui_font_body_md(), MIMI_TEXT);
+    lv_obj_remove_local_style_prop(l,LV_STYLE_TEXT_COLOR,0);
     lv_obj_set_width(l, lv_pct(100));
     lv_obj_set_style_max_height(l, 2 * ui_font_body_md()->line_height, 0);
     lv_label_set_long_mode(l, LV_LABEL_LONG_DOT);
@@ -149,6 +151,17 @@ static lv_obj_t * button(lv_obj_t * parent, const char * text, lv_event_cb_t cb,
     lv_obj_center(l);
     lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, data);
     return b;
+}
+static void info_card(const char *title, const char *description)
+{
+    lv_obj_t *card=lv_obj_create(content);mimi_ui_surface(card,20);
+    lv_obj_set_width(card,lv_pct(100));lv_obj_set_height(card,LV_SIZE_CONTENT);
+    lv_obj_set_style_pad_all(card,24,0);lv_obj_set_style_pad_row(card,12,0);
+    lv_obj_set_flex_flow(card,LV_FLEX_FLOW_COLUMN);
+    lv_obj_t *heading=mimi_ui_text(card,title,ui_font_h2(),MIMI_TEAL);
+    lv_obj_set_width(heading,lv_pct(100));lv_label_set_long_mode(heading,LV_LABEL_LONG_WRAP);
+    lv_obj_t *text=mimi_ui_text(card,description,ui_font_body_md(),MIMI_MUTED);
+    lv_obj_set_width(text,lv_pct(100));lv_label_set_long_mode(text,LV_LABEL_LONG_WRAP);
 }
 struct control
 {
@@ -251,6 +264,7 @@ static void spin(lv_event_t * e)
 static void show_functions(json_object * root)
 {
     lv_obj_clean(content);
+    lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
     control_count       = 0;
     json_object * items = NULL;
     selected_controls   = boolean(root, "control_allowed");
@@ -261,6 +275,7 @@ static void show_functions(json_object * root)
     /* Keep controls reachable; the confirmation shows the complete name. */
     lv_obj_set_style_max_height(message, 3 * ui_font_body_lg()->line_height, 0);
     lv_label_set_long_mode(message, LV_LABEL_LONG_DOT);
+    lv_label_set_text(overview,tr("设备控制", "Device controls"));
     lv_label_set_text(message, selected_name);
     for(size_t i = 0; i < json_object_array_length(items) && control_count < 24; i++) {
         json_object * f  = json_object_array_get_idx(items, i);
@@ -279,7 +294,7 @@ static void show_functions(json_object * root)
         lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_style_pad_all(card, 16, 0);
         lv_obj_set_style_pad_row(card, 12, 0);
-        lv_obj_t * caption = mimi_ui_text(card, code, ui_font_body_lg(), MIMI_TEXT);
+        lv_obj_t * caption = mimi_ui_text(card, *field(f,"name")?field(f,"name"):code, ui_font_body_lg(), MIMI_TEXT);
         lv_obj_set_width(caption, lv_pct(100));
         lv_label_set_long_mode(caption, LV_LABEL_LONG_WRAP);
         if(!strcmp(type, "Boolean")) {
@@ -298,12 +313,15 @@ static void show_functions(json_object * root)
                 continue;
             }
             c->min = (int32_t)min; c->max = (int32_t)max; c->step = (int32_t)step;
-            c->input = lv_spinbox_create(card);
+            lv_obj_t *row=lv_obj_create(card);mimi_ui_clear(row);
+            lv_obj_set_size(row,lv_pct(100),56);lv_obj_set_flex_flow(row,LV_FLEX_FLOW_ROW);
+            lv_obj_set_style_pad_column(row,12,0);
+            lv_obj_t *minus=button(row,"-",spin,c);lv_obj_set_size(minus,56,56);
+            c->input = lv_spinbox_create(row);lv_obj_set_size(c->input,150,56);
             lv_spinbox_set_range(c->input, (int32_t)min, (int32_t)max);
             lv_spinbox_set_value(c->input, (int32_t)min);
             lv_spinbox_set_step(c->input, (uint32_t)step);
-            button(card, "-", spin, c);
-            button(card, "+", spin, c);
+            lv_obj_t *plus=button(row,"+",spin,c);lv_obj_set_size(plus,56,56);
         } else {
             json_object * range = NULL;
             char options[2048]  = {0};
@@ -348,6 +366,19 @@ static void show_functions(json_object * root)
     if(!selected_controls)
         mimi_ui_text(content, tr("当前授权为只读", "This device is read-only for your account"), ui_font_body_md(),
                      MIMI_MUTED);
+    if(devices) for(size_t i=0;i<json_object_array_length(devices);i++) {
+        json_object *device=json_object_array_get_idx(devices,i), *properties=NULL;
+        if(strcmp(field(device,"id"),selected_id) || !json_object_object_get_ex(device,"status",&properties) ||
+           json_object_get_type(properties)!=json_type_array) continue;
+        for(size_t j=0;j<json_object_array_length(properties) && j<4;j++) {
+            json_object *property=json_object_array_get_idx(properties,j), *value=NULL;
+            if(!json_object_object_get_ex(property,"value",&value)) continue;
+            char text[600];snprintf(text,sizeof(text),"%s: %.250s",field(property,"code"),json_object_to_json_string_ext(value,JSON_C_TO_STRING_PLAIN));
+            lv_obj_t *label=mimi_ui_text(content,text,ui_font_body_md(),MIMI_MUTED);
+            lv_obj_set_width(label,lv_pct(100));lv_label_set_long_mode(label,LV_LABEL_LONG_WRAP);
+        }
+        break;
+    }
     button(content, tr("返回设备列表", "Back to devices"), fetch_devices, NULL);
 }
 static void select_device(lv_event_t * e)
@@ -392,38 +423,45 @@ static void show_devices(json_object * root)
        json_object_array_length(items) > 2000 || !summarize_devices(items)) {
         summary.state = MIMI_IOT_SUMMARY_UNAVAILABLE;
         lv_obj_clean(content);
+        lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
         lv_label_set_text(message, tr("设备列表不可用", "Device list unavailable"));
+        lv_label_set_text(overview,tr("我的智能生活","My Smart Life"));
+        info_card(tr("设备列表暂不可用","Device list unavailable"),tr("请刷新重试，或联系管理员检查智家服务。","Refresh to retry, or ask your administrator to check the Smart Home service."));
         return;
     }
     if(devices) json_object_put(devices);
     devices = json_object_get(items);
     lv_obj_clean(content);
+    lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
     lv_label_set_text(message,
                       tr("设备状态已刷新；点击设备查看控制项", "Status refreshed. Select a device to view controls."));
     size_t total = json_object_array_length(devices);
-    if(!total)
-        mimi_ui_text(content,
-                     tr("没有已授权设备，请先在智能生活中添加设备并授权账号",
-                        "No authorized devices. Add devices in Smart Life and authorize the account."),
-                     ui_font_body_lg(), MIMI_MUTED);
+    lv_label_set_text_fmt(overview,ui_i18n_is_zh()?"我的设备  ·  %u 在线 / %u 台":"My devices  ·  %u online / %u total",summary.online,summary.total);
+    if(!total) {
+        info_card(tr("还没有已授权的设备", "No devices yet"),
+            tr("在智能生活 App 中添加设备，并完成账号授权。完成后点击“刷新设备”，它们就会出现在这里。", "Add devices in Smart Life and authorize your account. Then select Refresh devices to see them here."));
+        return;
+    }
+    lv_obj_set_flex_flow(content,LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_style_pad_column(content,12,0);
+    lv_obj_update_layout(content);
+    int card_width=(lv_obj_get_content_width(content)-12)/2;
     for(size_t i = 0; i < total && i < 100; i++) {
-        json_object * d = json_object_array_get_idx(devices, i);
+        json_object *d=json_object_array_get_idx(devices,i);
+        const bool online=boolean(d,"online");
+        lv_obj_t *card=lv_button_create(content);mimi_ui_button_style(card,false);
+        lv_obj_set_size(card,card_width,124);lv_obj_set_style_radius(card,18,0);
+        lv_obj_set_style_pad_all(card,18,0);lv_obj_set_flex_flow(card,LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_style_pad_row(card,12,0);
+        lv_obj_add_event_cb(card,select_device,LV_EVENT_CLICKED,(void *)(uintptr_t)i);
         char text[600];
-        snprintf(text, sizeof(text), "%s  ·  %s", field(d, "name"),
-                 boolean(d, "online") ? tr("在线", "Online") : tr("离线", "Offline"));
-        button(content, text, select_device, (void *)(uintptr_t)i);
-        json_object * status = NULL;
-        if(json_object_object_get_ex(d, "status", &status) && json_object_get_type(status) == json_type_array) {
-            for(size_t j = 0; j < json_object_array_length(status) && j < 4; j++) {
-                json_object *p = json_object_array_get_idx(status, j), *value = NULL;
-                if(!json_object_object_get_ex(p, "value", &value)) continue;
-                snprintf(text, sizeof(text), "%s: %.250s", field(p, "code"),
-                         json_object_to_json_string_ext(value, JSON_C_TO_STRING_PLAIN));
-                lv_obj_t * l = mimi_ui_text(content, text, ui_font_body_md(), MIMI_MUTED);
-                lv_obj_set_width(l, lv_pct(100));
-                lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
-            }
-        }
+        snprintf(text,sizeof(text),"%s  ·  %s",*field(d,"name")?field(d,"name"):tr("未命名设备","Unnamed device"),
+            online?tr("在线","Online"):tr("离线","Offline"));
+        lv_obj_t *name=mimi_ui_text(card,text,ui_font_body_lg(),MIMI_TEXT);
+        lv_obj_set_width(name,lv_pct(100));lv_obj_set_style_max_height(name,2*ui_font_body_lg()->line_height,0);
+        lv_label_set_long_mode(name,LV_LABEL_LONG_DOT);
+        lv_obj_t *hint=mimi_ui_text(card,online?tr("查看设备与控制  →","View device & controls  >"):tr("设备离线 · 查看详情","Offline · View details"),ui_font_body_md(),online?MIMI_TEAL:MIMI_MUTED);
+        lv_obj_set_width(hint,lv_pct(100));lv_label_set_long_mode(hint,LV_LABEL_LONG_DOT);
     }
     if(total > 100)
         mimi_ui_text(content, tr("仅显示前 100 个设备", "Showing the first 100 devices"), ui_font_body_md(),
@@ -461,7 +499,20 @@ static void tick(lv_timer_t * t)
         if(strstr(path, "/commands")) {
             /* An unknown outcome may already have changed the real device. */
             lv_obj_clean(content);
+            lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
             button(content, tr("刷新设备状态", "Refresh device status"), fetch_devices, NULL);
+        }
+        if(!strstr(path,"/commands")) {
+            lv_obj_clean(content);lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
+            lv_label_set_text(overview,tr("我的智能生活", "My Smart Life"));
+            if(!strcmp(error,"not_configured"))
+                info_card(tr("连接你的智能生活", "Connect Smart Life"),
+                    tr("1  在智能生活 App 中添加设备。\n\n2  请管理员完成智家账号授权。\n\n3  回到这里刷新，即可查看已授权设备。", "1  Add devices in the Smart Life app.\n\n2  Ask your administrator to authorize the account.\n\n3  Refresh here to see authorized devices."));
+            else if(!strcmp(error,"authorization_required"))
+                info_card(tr("需要重新授权", "Reconnect your account"),
+                    tr("请管理员更新智家账号授权，然后刷新设备。现有设备配置不会被清除。", "Ask your administrator to renew account access, then refresh devices. Existing device configuration is kept."));
+            else info_card(tr("暂时无法连接", "Unable to connect"),
+                    tr("请检查网络和智家服务是否可用，再点击刷新设备重试。", "Check your network and Smart Home service, then select Refresh devices to retry."));
         }
         lv_label_set_text(message,
                           !strcmp(error, "not_configured")
@@ -477,6 +528,7 @@ static void tick(lv_timer_t * t)
                                                "Connection failed or invalid device data. Refresh before retrying."));
     } else if(strstr(path, "/commands")) {
         lv_obj_clean(content);
+        lv_obj_set_flex_flow(content,LV_FLEX_FLOW_COLUMN);
         lv_label_set_text(message, tr("指令已受理，尚未确认设备状态。请刷新核对结果。",
                                       "Command accepted; device state is not confirmed. Refresh to check the result."));
         button(content, tr("刷新设备状态", "Refresh device status"), fetch_devices, NULL);
@@ -505,7 +557,7 @@ static void close_app(void)
         devices = NULL;
     }
     memset(pending, 0, sizeof(pending));
-    body = message = content = refresh = NULL;
+    body = message = content = refresh = overview = NULL;
 }
 static void init_app(void)
 {
@@ -515,17 +567,31 @@ static void init_app(void)
     lv_obj_t * screen = lv_obj_create(NULL);
     mimi_ui_header(screen, tr("涂鸦智家", "Tuya Smart Home"), back);
     body = mimi_ui_body(screen);
+    lv_obj_set_size(body,lv_display_get_horizontal_resolution(NULL)-48,
+        lv_display_get_vertical_resolution(NULL)-MIMI_HEADER_H-48);
+    lv_obj_set_pos(body,24,MIMI_HEADER_H+24);
     lv_obj_set_flex_flow(body, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(body, 16, 0);
-    message = mimi_ui_text(body, "", ui_font_body_lg(), MIMI_TEXT);
-    lv_obj_set_width(message, lv_pct(100));
-    lv_label_set_long_mode(message, LV_LABEL_LONG_WRAP);
-    refresh = button(body, tr("刷新设备", "Refresh devices"), fetch_devices, NULL);
-    content = lv_obj_create(body);
-    lv_obj_set_size(content, lv_pct(100), LV_SIZE_CONTENT);
+    lv_obj_t *toolbar=lv_obj_create(body);mimi_ui_clear(toolbar);
+    lv_obj_set_size(toolbar,lv_pct(100),LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(toolbar,LV_FLEX_FLOW_ROW);lv_obj_set_style_pad_column(toolbar,16,0);
+    lv_obj_set_flex_align(toolbar,LV_FLEX_ALIGN_START,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_START);
+    lv_obj_t *intro=lv_obj_create(toolbar);mimi_ui_clear(intro);
+    lv_obj_set_size(intro,0,LV_SIZE_CONTENT);lv_obj_set_flex_grow(intro,1);
+    lv_obj_set_flex_flow(intro,LV_FLEX_FLOW_COLUMN);lv_obj_set_style_pad_row(intro,8,0);
+    overview=mimi_ui_text(intro,tr("我的智能生活", "My Smart Life"),ui_font_h2(),MIMI_TEXT);
+    lv_obj_set_width(overview,lv_pct(100));lv_label_set_long_mode(overview,LV_LABEL_LONG_WRAP);
+    message = mimi_ui_text(intro, "", ui_font_body_md(), MIMI_MUTED);
+    lv_obj_set_width(message, lv_pct(100));lv_label_set_long_mode(message, LV_LABEL_LONG_WRAP);
+    refresh = button(toolbar, tr("刷新设备", "Refresh devices"), fetch_devices, NULL);
+    lv_obj_set_size(refresh,180,52);lv_obj_set_style_radius(refresh,14,0);
+
+    content = lv_obj_create(body);mimi_ui_clear(content);
+    lv_obj_set_size(content, lv_pct(100), 0);
     lv_obj_set_flex_grow(content, 1);
     lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(content, 12, 0);
+    lv_obj_add_flag(content,LV_OBJ_FLAG_SCROLLABLE);lv_obj_set_scroll_dir(content,LV_DIR_VER);
     timer = lv_timer_create(tick, 100, NULL);
     lv_scr_load(screen);
     fetch_devices(NULL);
