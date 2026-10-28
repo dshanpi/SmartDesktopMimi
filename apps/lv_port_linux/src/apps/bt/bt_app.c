@@ -84,6 +84,25 @@ static bool has_runtime = false;
 static bool ignore_switch_event = false;
 static bool ignore_slider_event = false;
 static bool switch_toggle_pending = false;
+static bool disconnect_pending;
+static lv_obj_t *disconnect_feedback;
+static lv_timer_t *disconnect_timer;
+
+static void disconnect_wait_clear(void)
+{
+    disconnect_pending = false;
+    if (disconnect_timer) { lv_timer_delete(disconnect_timer); disconnect_timer = NULL; }
+    if (btn_disconnect) lv_obj_clear_state(btn_disconnect, LV_STATE_DISABLED);
+}
+
+static void disconnect_timeout(lv_timer_t *timer)
+{
+    (void)timer;
+    disconnect_wait_clear();
+    if (disconnect_feedback) lv_label_set_text(disconnect_feedback, ui_i18n_is_zh() ?
+        "尚未确认断开，请检查连接状态后重试。" :
+        "Disconnection is unconfirmed. Check the connection before retrying.");
+}
 static bool switch_toggle_target_enabled = false;
 static bool bt_settings_dirty, bt_app_active;
 static lv_obj_t *bt_save_error_box;
@@ -103,6 +122,13 @@ static void bt_retry_save(lv_event_t *event)
     (void)event;
     bt_save_preference();
 }
+static void bt_dismiss_save_failure(lv_event_t *event)
+{
+    (void)event;
+    if (bt_save_error_box) { lv_obj_delete(bt_save_error_box); bt_save_error_box = NULL; }
+    /* Active changes and the dirty flag remain for the next save attempt. */
+}
+
 static void bt_show_save_failure(void)
 {
     if (bt_save_error_box) return;
@@ -120,6 +146,12 @@ static void bt_show_save_failure(void)
         ui_i18n_is_zh() ? "重试保存" : "Retry save");
     mimi_ui_button_style(retry, true);
     lv_obj_set_size(retry, 180, 48);
+    lv_obj_t *later = lv_msgbox_add_footer_button(bt_save_error_box,
+        ui_i18n_is_zh() ? "稍后处理" : "Later");
+    mimi_ui_button_style(later, false);
+    lv_obj_set_size(later, 180, 48);
+    lv_obj_set_style_text_font(later, ui_font_body_md(), 0);
+    lv_obj_add_event_cb(later, bt_dismiss_save_failure, LV_EVENT_CLICKED, NULL);
     lv_obj_set_height(lv_msgbox_get_footer(bt_save_error_box), 68);
     lv_obj_set_style_text_font(retry, ui_font_body_md(), 0);
     lv_obj_add_event_cb(retry, bt_retry_save, LV_EVENT_CLICKED, NULL);
@@ -790,6 +822,12 @@ static void update_ui_from_runtime(void) {
         }
     }
 
+    if (disconnect_pending && !cached_runtime.a2dp_connected) {
+        disconnect_wait_clear();
+        if (disconnect_feedback) lv_label_set_text(disconnect_feedback,
+            ui_i18n_is_zh() ? "设备已断开" : "Device disconnected");
+    }
+
     /* 适配器信息 */
     if (label_adapter_name) {
         lv_label_set_text(label_adapter_name,
@@ -974,6 +1012,14 @@ static void update_ui_from_avrcp(void) {
 
 static void on_bt_runtime(const mw_msg_t *msg) {
     if (msg->data_len != sizeof(bt_runtime_t)) return;
+    const bt_runtime_t *incoming = (const bt_runtime_t *)msg->data;
+    if (incoming->a2dp_connected && has_runtime &&
+        (!cached_runtime.a2dp_connected ||
+         memcmp(incoming->connected_device_addr, cached_runtime.connected_device_addr,
+                sizeof(cached_runtime.connected_device_addr)))) {
+        disconnect_wait_clear();
+        if (disconnect_feedback) lv_label_set_text(disconnect_feedback, "");
+    }
     memcpy(&cached_runtime, msg->data, sizeof(bt_runtime_t));
     has_runtime = true;
     update_ui_from_runtime();
@@ -1123,8 +1169,18 @@ static void on_disconnect_click(lv_event_t *e) {
     memset(&cmd, 0, sizeof(cmd));
     cmd.action = BT_CMD_DISCONNECT;
     memcpy(cmd.bd_addr, cached_runtime.connected_device_addr, sizeof(cmd.bd_addr));
-    mw_publish(TOPIC_BT_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
-    hide_device_details();
+    if (disconnect_pending || !cached_runtime.a2dp_connected) return;
+    if (mw_publish(TOPIC_BT_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND) != 0) {
+        lv_label_set_text(disconnect_feedback, ui_i18n_is_zh() ?
+            "无法发送断开请求，请重试。" : "Could not send the disconnect request. Please retry.");
+        return;
+    }
+    disconnect_pending = true;
+    lv_obj_add_state(btn_disconnect, LV_STATE_DISABLED);
+    lv_label_set_text(disconnect_feedback, ui_i18n_is_zh() ?
+        "正在等待设备断开…" : "Waiting for the device to disconnect...");
+    disconnect_timer = lv_timer_create(disconnect_timeout, 10000, NULL);
+    if (!disconnect_timer) disconnect_timeout(NULL);
 }
 
 static void on_transport_click(lv_event_t *e) {
@@ -1609,7 +1665,7 @@ void bt_app_init(void) {
     lv_obj_add_event_cb(device_details_overlay, on_device_overlay_click, LV_EVENT_CLICKED, NULL);
 
     device_details_sheet = lv_obj_create(device_details_overlay);
-    lv_obj_set_size(device_details_sheet, lv_pct(100), layout.compact ? 360 : 318);
+    lv_obj_set_size(device_details_sheet, lv_pct(100), 360);
     lv_obj_align(device_details_sheet, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_style_radius(device_details_sheet, 30, 0);
     lv_obj_set_style_bg_color(device_details_sheet, lv_color_hex(0x111827), 0);
@@ -1697,6 +1753,14 @@ void bt_app_init(void) {
     lv_obj_set_style_text_color(label_adapter_addr, lv_color_hex(0xF8FAFC), 0);
     prepare_single_line_label(label_adapter_addr);
 
+    disconnect_feedback = lv_label_create(device_details_sheet);
+    lv_label_set_text(disconnect_feedback, "");
+    lv_obj_set_pos(disconnect_feedback, 0, 184);
+    lv_obj_set_size(disconnect_feedback, lv_pct(100), 48);
+    lv_label_set_long_mode(disconnect_feedback, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_font(disconnect_feedback, ui_font_body_md(), 0);
+    lv_obj_set_style_text_color(disconnect_feedback, lv_color_hex(0xCBD5E1), 0);
+
     lv_obj_t *sheet_actions = lv_obj_create(device_details_sheet);
     clear_panel_style(sheet_actions);
     lv_obj_set_size(sheet_actions, lv_pct(100), 64);
@@ -1731,7 +1795,7 @@ void bt_app_init(void) {
     lv_obj_set_style_text_color(label_conn_device, lv_color_hex(0x94A3B8), 0);
 
     btn_disconnect = lv_button_create(sheet_actions);
-    lv_obj_set_size(btn_disconnect, 124, 44);
+    lv_obj_set_size(btn_disconnect, 124, 48);
     lv_obj_set_style_radius(btn_disconnect, 14, 0);
     lv_obj_set_style_bg_color(btn_disconnect, lv_color_hex(0x3A151A), 0);
     lv_obj_set_style_bg_color(btn_disconnect, lv_color_hex(0x571C22), LV_STATE_PRESSED);
@@ -1766,6 +1830,8 @@ void bt_app_init(void) {
 void bt_app_close(void) {
     printf("[BT App] Close\n");
     bt_app_active = false;
+    disconnect_wait_clear();
+    disconnect_feedback = NULL;
     if (bt_save_error_box) {
         lv_obj_delete(bt_save_error_box);
         bt_save_error_box = NULL;

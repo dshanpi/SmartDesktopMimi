@@ -5,6 +5,7 @@
 #include "../../ui/theme/theme.h"
 #include "../../ui/ui_components.h"
 #include "../../ui/ui_i18n.h"
+#include "../../ui/mimi_ui.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -44,6 +45,16 @@ static lv_obj_t *page_content;
 static lv_obj_t *status_label;
 static user_app_entry_t entries[USER_APP_MAX];
 static size_t entry_count;
+static bool refresh_pending;
+static char selected_app_id[97];
+static void refresh_apps_async(void *unused);
+static void refresh_apps_event(lv_event_t *event)
+{
+    (void)event;
+    if (!screen || refresh_pending) return;
+    refresh_pending = true;
+    lv_async_call(refresh_apps_async, NULL);
+}
 static uint32_t current_permissions;
 
 static int64_t app_now_ms(void)
@@ -513,6 +524,7 @@ static void render_node(lv_obj_t *parent, json_object *node, unsigned depth,
                      json_object_get_string(name));
         }
         lv_obj_t *button = lv_button_create(parent);
+        mimi_ui_button_style(button, true);
         lv_obj_set_size(button, lv_pct(100), 48);
         lv_obj_set_style_max_width(button, 520, 0);
         lv_obj_clear_flag(button, LV_OBJ_FLAG_OVERFLOW_VISIBLE |
@@ -526,7 +538,7 @@ static void render_node(lv_obj_t *parent, json_object *node, unsigned depth,
         /* User-provided labels may contain CJK text. The LVGL default button
          * font only covers a small Latin set on this image. */
         lv_obj_set_style_text_font(label, UI_TEXT_BODY_LG, 0);
-        lv_obj_set_style_text_color(label, UI_TEXT_INVERSE, 0);
+
         lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_center(label);
     } else if (!strcmp(type, "column")) {
@@ -558,6 +570,7 @@ static void open_entry(lv_event_t *event)
         if (i == index) lv_obj_add_state(row, LV_STATE_CHECKED);
         else lv_obj_clear_state(row, LV_STATE_CHECKED);
     }
+    snprintf(selected_app_id, sizeof(selected_app_id), "%s", entries[index].id);
     bool available = regular_file(entries[index].entry);
     json_object *page = available ? json_object_from_file(entries[index].entry) : NULL;
     clear_content();
@@ -611,14 +624,23 @@ void user_app_init(void)
     lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE |
                       LV_OBJ_FLAG_OVERFLOW_VISIBLE |
                       LV_OBJ_FLAG_SCROLL_CHAIN);
-    ui_create_app_header(screen, ui_tr(UI_STR_APP_USER), back_event, false, NULL);
+    lv_obj_t *header = mimi_ui_header(screen, ui_tr(UI_STR_APP_USER), back_event);
+    lv_obj_t *refresh = lv_button_create(header);
+    mimi_ui_button_style(refresh, false);
+    lv_obj_set_size(refresh, 116, 48);
+    lv_obj_align(refresh, LV_ALIGN_RIGHT_MID, -12, 0);
+    lv_obj_add_event_cb(refresh, refresh_apps_event, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *refresh_label = lv_label_create(refresh);
+    lv_label_set_text(refresh_label, ui_i18n_is_zh() ? "刷新列表" : "Refresh");
+    lv_obj_set_style_text_font(refresh_label, UI_TEXT_BODY_MD, 0);
+    lv_obj_center(refresh_label);
 
     lv_obj_t *body = lv_obj_create(screen);
     int32_t display_width = lv_display_get_horizontal_resolution(NULL);
     int32_t display_height = lv_display_get_vertical_resolution(NULL);
-    int32_t body_height = LV_MAX(1, display_height - UI_APP_HEADER_H);
+    int32_t body_height = LV_MAX(1, display_height - MIMI_HEADER_H);
     lv_obj_set_size(body, display_width, body_height);
-    lv_obj_set_pos(body, 0, UI_APP_HEADER_H);
+    lv_obj_set_pos(body, 0, MIMI_HEADER_H);
     set_plain_container(body);
     lv_obj_set_layout(body, LV_LAYOUT_NONE);
     lv_obj_clear_flag(body, LV_OBJ_FLAG_SCROLLABLE |
@@ -670,11 +692,14 @@ void user_app_init(void)
 
     for (size_t i = 0; i < entry_count; i++) {
         lv_obj_t *button = lv_button_create(app_list);
+        mimi_ui_button_style(button, false);
+        lv_obj_set_style_bg_color(button, mimi_ui_color(MIMI_CORAL), LV_STATE_CHECKED);
+        lv_obj_set_style_text_color(button, lv_color_white(), LV_STATE_CHECKED);
         lv_obj_set_size(button, lv_pct(100), 52);
         lv_obj_set_style_pad_ver(button, UI_SPACE_SM, 0);
         lv_obj_set_style_border_width(button, 2, 0);
         lv_obj_set_style_border_opa(button, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_color(button, UI_TEXT_PRIMARY, LV_STATE_CHECKED);
+        lv_obj_set_style_border_color(button, mimi_ui_color(MIMI_CORAL), LV_STATE_CHECKED);
         lv_obj_set_style_border_opa(button, LV_OPA_COVER, LV_STATE_CHECKED);
         lv_obj_clear_flag(button, LV_OBJ_FLAG_OVERFLOW_VISIBLE |
                           LV_OBJ_FLAG_SCROLL_CHAIN);
@@ -686,7 +711,7 @@ void user_app_init(void)
         lv_label_set_long_mode(label, LV_LABEL_LONG_DOT);
         lv_obj_set_width(label, lv_pct(100));
         lv_obj_set_style_text_font(label, UI_TEXT_BODY_LG, 0);
-        lv_obj_set_style_text_color(label, lv_color_white(), 0);
+
         lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_center(label);
     }
@@ -701,8 +726,8 @@ void user_app_init(void)
         lv_obj_set_style_text_color(label, UI_TEXT_PRIMARY, 0);
         lv_obj_t *hint = lv_label_create(page_content);
         lv_label_set_text(hint, ui_i18n_is_zh()
-                          ? "安装应用后，即可在这里选择并打开。"
-                          : "Installed apps will appear here, ready to open.");
+                          ? "安装应用后，点击右上角“刷新列表”即可查看。"
+                          : "After installing an app, choose Refresh to load it here.");
         lv_obj_set_width(hint, lv_pct(100));
         lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_style_text_font(hint, UI_TEXT_BODY_LG, 0);
@@ -713,8 +738,32 @@ void user_app_init(void)
     lv_scr_load(screen);
 }
 
+static void refresh_apps_async(void *unused)
+{
+    (void)unused;
+    refresh_pending = false;
+    if (!screen) return;
+    char previous[sizeof(selected_app_id)];
+    snprintf(previous, sizeof(previous), "%s", selected_app_id);
+    lv_obj_t *old = screen;
+    user_app_close();
+    user_app_init();
+    for (size_t i = 0; i < entry_count; ++i) {
+        if (!strcmp(entries[i].id, previous)) {
+            lv_obj_t *row = lv_obj_get_child(app_list, (int32_t)i);
+            lv_obj_send_event(row, LV_EVENT_CLICKED, NULL);
+            lv_obj_scroll_to_view(row, LV_ANIM_OFF);
+            break;
+        }
+    }
+    lv_obj_del_async(old);
+}
+
 void user_app_close(void)
 {
+    if (refresh_pending) lv_async_call_cancel(refresh_apps_async, NULL);
+    refresh_pending = false;
+    selected_app_id[0] = '\0';
     ++page_generation;
     screen = NULL;
     app_list = NULL;

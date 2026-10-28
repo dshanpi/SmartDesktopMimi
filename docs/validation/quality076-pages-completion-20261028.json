@@ -1,0 +1,74 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "source_base": "457e1ebdda3d5d3d8a27d2666b497bcf1be88860",
+  "source_binding": "This implementation commit; hashes below",
+  "prerecords": [
+    "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/prerecord.json",
+    "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/save-dismiss-prerecord.json"
+  ],
+  "changes": {
+    "settings": "Compact three categories; scrollable panels; preserve tab through language/theme rebuild; correct update hint; save error Later preserves dirty state",
+    "user_apps": "Refresh catalog preserving selection; cancel queued refresh on close; consistent header/buttons; empty-state instructions",
+    "bluetooth": "Disconnect send error, waiting,10s timeout and authoritative completion; duplicate suppression; clear on reconnect/close; dismiss save error preserving dirty state"
+  },
+  "source_sha256": {
+    "apps/lv_port_linux/src/apps/bt/bt_app.c": "1b79a2b4bcdf7dda183efd29008d009e4b271e5b65309360eeca8c2555c5a95b",
+    "apps/lv_port_linux/src/apps/setting/setting_app.c": "4d62324bff24df39d6e3b1e558b1636bb0948218cade688c19f1625cdcf96a8e",
+    "apps/lv_port_linux/src/apps/user/user_app.c": "b9bf70d7142a11e7571e56c3107d764b6a0d835b490c2565ab54cf17d09366c8",
+    "tests/architecture/fixtures/native_ui_review.c": "275f659e9c012650a8b7675b924309e57ba2e163d21f781b14ed340ca191210c",
+    "tests/architecture/fixtures/native_ui_scenes.def": "37f5912b016f574255e12067d20e678cb0bd06bf6d0b4cb22f160614903283c6"
+  },
+  "checks": [
+    {
+      "name": "Final affected-page matrix",
+      "status": "passed",
+      "renders": 160,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/final-pages.log",
+      "scope": "20 scenes,2 sizes,2 languages,2 themes; actual app-manager navigation included"
+    },
+    {
+      "name": "User app external scenarios",
+      "status": "passed",
+      "renders": 56,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/external-final-result.json",
+      "scope": "Frozen binary before later settings/BT modal changes; user source unchanged;7 scenarios x8"
+    },
+    {
+      "name": "Contracts and localization",
+      "status": "passed",
+      "tests": 9,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/contracts-final.log"
+    },
+    {
+      "name": "Clean A133 desktop and Web build",
+      "status": "not_run",
+      "reason": "Follows clean source commit; separate immutable receipt"
+    },
+    {
+      "name": "Physical and real cloud acceptance",
+      "status": "not_run",
+      "reason": "No device operations; existing stability and cloud qualification remain open"
+    }
+  ],
+  "host_combinations": 216,
+  "visual_review": "Actual 800x480 settings/save modal/device category, BT disconnect send-error drawer, empty user app; historical overview retained",
+  "failure_history": [
+    {
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/settings-r1.log",
+      "status": "failed",
+      "reason": "Test called nonexistent desktop_update_close; corrected to actual Close button"
+    },
+    {
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/settings-r2.log",
+      "status": "failed",
+      "reason": "48 renders passed, real manager test assumed old settings layout; corrected real category navigation"
+    }
+  ],
+  "limits": [
+    "216 is scoped final follow-ups, not a single full final-binary matrix",
+    "Host pointer/renders do not prove physical screen/touch/radio/cloud operation",
+    "Production optional voice remains disabled; removed features stay removed",
+    "No board installation, reboot, flash, upload or signed release; prior freeze causes not resolved by UI changes"
+  ]
+}

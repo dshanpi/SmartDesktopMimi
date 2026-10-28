@@ -118,3 +118,11 @@ UI_SCENE("iot-network-error")
 UI_SCENE("pairing-refresh-failure")
 
 UI_SCENE("ota-feedback")
+
+UI_SCENE("settings-appearance")
+UI_SCENE("settings-device")
+UI_SCENE("settings-navigation")
+UI_SCENE("user-refresh")
+UI_SCENE("bt-disconnect-feedback")
+UI_SCENE("bt-disconnect-lifecycle")
+UI_SCENE("settings-dismiss")

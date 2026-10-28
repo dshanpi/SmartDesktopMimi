@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "summary": "Complete settings navigation, user catalog refresh and Bluetooth disconnect/save recovery",
+  "context": "User asks to complete unfinished pages; previous all-page improvements retained",
+  "next_steps": "Clean full build and gallery; physical/cloud qualification remains open",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Native UI and host operation checks",
+      "invariants": "No device changes, credential changes or production voice enablement",
+      "paths": [
+        "apps/lv_port_linux/src/apps/bt/bt_app.c",
+        "apps/lv_port_linux/src/apps/setting/setting_app.c",
+        "apps/lv_port_linux/src/apps/user/user_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-pages-completion-20261028.json",
+        "docs/change-gates/batches/quality076-pages-completion-20261028.json"
+      ],
+      "checks": [
+        {
+          "name": "Final affected-page matrix",
+          "status": "passed",
+          "scope": "20 scenes,2 sizes,2 languages,2 themes; actual app-manager navigation included",
+          "reason": "Bound host evidence",
+          "evidence": "docs/validation/quality076-pages-completion-20261028.json"
+        },
+        {
+          "name": "User app external scenarios",
+          "status": "passed",
+          "scope": "Frozen binary before later settings/BT modal changes; user source unchanged;7 scenarios x8",
+          "reason": "Bound host evidence",
+          "evidence": "docs/validation/quality076-pages-completion-20261028.json"
+        },
+        {
+          "name": "Contracts and localization",
+          "status": "passed",
+          "scope": "See validation",
+          "reason": "Bound host evidence",
+          "evidence": "docs/validation/quality076-pages-completion-20261028.json"
+        },
+        {
+          "name": "Clean A133 desktop and Web build",
+          "status": "not_run",
+          "scope": "See validation",
+          "reason": "Follows clean source commit; separate immutable receipt",
+          "evidence": "docs/validation/quality076-pages-completion-20261028.json"
+        },
+        {
+          "name": "Physical and real cloud acceptance",
+          "status": "not_run",
+          "scope": "See validation",
+          "reason": "No device operations; existing stability and cloud qualification remain open",
+          "evidence": "docs/validation/quality076-pages-completion-20261028.json"
+        }
+      ]
+    }
+  ]
+}

@@ -271,6 +271,8 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 static int review_connect_error;
 static atomic_bool review_connect_slow;
 static bool review_pairing_send_failure;
+static bool review_bt_disconnect_failure;
+static int review_bt_disconnect_requests;
 static bool review_ota_send_failure;
 static int connect_count, ai_enter_count, ai_exit_count, ai_stop_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
@@ -290,6 +292,9 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
   wifi_wire_command command;if(!wifi_wire_decode(d,n,&command)){
    if(command.action==WIFI_WIRE_SET)wifi_toggles++;else review_wifi_queries++;
   }
+ }
+ if(t==TOPIC_BT_COMMAND && n==sizeof(bt_cmd_t) && ((const bt_cmd_t*)d)->action==BT_CMD_DISCONNECT) {
+  review_bt_disconnect_requests++;if(review_bt_disconnect_failure)return -EIO;
  }
  if(t==TOPIC_BT_COMMAND && n==sizeof(bt_cmd_t) && (((const bt_cmd_t*)d)->action==BT_CMD_ENABLE || ((const bt_cmd_t*)d)->action==BT_CMD_DISABLE))bt_toggles++;
  if(t==TOPIC_WIFI_COMMAND && n==sizeof(wifi_cmd_t) && (((const wifi_cmd_t*)d)->action==CMD_ENABLE || ((const wifi_cmd_t*)d)->action==CMD_DISABLE))wifi_toggles++;
@@ -1110,6 +1115,16 @@ static const char *const review_scenes[] = {
 #include "native_ui_scenes.def"
 #undef UI_SCENE
 };
+static void select_settings_category(unsigned index)
+{
+ if(review_height>=620)return;
+ const char *labels_zh[]={"显示与声音","外观与语言","设备与更新"};
+ const char *labels_en[]={"Display & sound","Appearance","Device & updates"};
+ lv_obj_t *label=find_label(lv_scr_act(),ui_i18n_is_zh()?labels_zh[index]:labels_en[index]);assert(label);
+ tap_widget(lv_obj_get_parent(label));pump();
+ assert(lv_obj_has_state(lv_obj_get_parent(label),LV_STATE_CHECKED));
+}
+
 int main(int argc,char**argv) {
  if (argc != 5 && argc != 7) {fprintf(stderr,"Invalid review arguments\n");return 2;}
  bool recognized=false;
@@ -1154,6 +1169,7 @@ int main(int argc,char**argv) {
 #ifdef REVIEW_REAL_APP_MANAGER
  int refresh_before=pairing_refreshes;
  app_manager_open(APP_ID_SETTING);pump();pump();
+ select_settings_category(2);
  lv_obj_t *pair_entry=find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_MANAGE));assert(pair_entry);
  lv_obj_scroll_to_view_recursive(lv_obj_get_parent(pair_entry),LV_ANIM_OFF);pump();
  tap_widget(lv_obj_get_parent(pair_entry));pump();pump();
@@ -1289,15 +1305,47 @@ int main(int argc,char**argv) {
    assert(!find_label(lv_scr_act(),"123456"));
    status.state=CLOUD_STATE_UNAVAILABLE;emit(TOPIC_CLOUD_STATUS,&status,sizeof(status));pump();
    lv_obj_t *entry=find_label(lv_scr_act(),ui_tr(UI_STR_SETTINGS_100ASK_MANAGE));assert(entry);
+   select_settings_category(2);
    int opened=app_open_count;tap_widget(lv_obj_get_parent(entry));
    assert(app_open_count==opened+1 && last_app_open==APP_ID_PAIRING && pairing_refreshes==before);
    if(round<2)app_setting.close();
   }
   puts("PASS Settings pairing: three entries, no automatic code request, no raw code/error projection, explicit navigation");
- } else if(strcmp(argv[1],"settings")==0){
+ } else if(strncmp(argv[1],"settings",8)==0){
   app_setting.init();
   ai_status_t ai={.tuya_schema_known=true,.tuya_schema_supported_dps=2,.tuya_schema_required_dps=12};emit(TOPIC_AI_STATUS,&ai,sizeof(ai));
   cloud_status_t cloud={.state=CLOUD_STATE_UNAVAILABLE};emit(TOPIC_CLOUD_STATUS,&cloud,sizeof(cloud));
+  pump();
+  if(!strcmp(argv[1],"settings-appearance"))select_settings_category(1);
+  if(!strcmp(argv[1],"settings-device"))select_settings_category(2);
+  if(!strcmp(argv[1],"settings-dismiss")) {
+   settings_save_error=-EIO;int slider_index=0;test_sliders(lv_scr_act(),&slider_index);pump();
+   const char *retry_text=ui_i18n_is_zh()?"重试保存":"Retry save";
+   lv_obj_t *later=find_label(lv_layer_top(),ui_i18n_is_zh()?"稍后处理":"Later");assert(later);
+   tap_widget(lv_obj_get_parent(later));assert(!find_label(lv_layer_top(),retry_text));
+   app_setting.close();app_setting.init();pump();
+   lv_obj_t *retry=find_label(lv_layer_top(),retry_text);assert(retry);
+   settings_save_error=0;tap_widget(lv_obj_get_parent(retry));pump();assert(!find_label(lv_layer_top(),retry_text));
+   puts("PASS settings persistent save failure can be dismissed; reopen reminds and retry succeeds");
+  }
+  if(!strcmp(argv[1],"settings-navigation")) {
+   int saved=saves;
+   for(unsigned i=0;i<3;i++)select_settings_category(i);
+   assert(saves==saved);
+   lv_obj_t *update=find_label(lv_scr_act(),ui_i18n_is_zh()?"桌面应用更新":"Desktop application update");assert(update);
+   tap_widget(lv_obj_get_parent(update));pump();
+   assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"检查更新":"Check"));
+   lv_obj_t *close=find_label(lv_layer_top(),ui_i18n_is_zh()?"关闭":"Close");assert(close);tap_widget(lv_obj_get_parent(close));
+   select_settings_category(1);
+   lv_obj_t *english=find_label(lv_scr_act(),"English");assert(english);
+   tap_widget(lv_obj_get_parent(english));pump();pump();
+   if(review_height<620) {
+    lv_obj_t *tab=find_label(lv_scr_act(),"Appearance");assert(tab && lv_obj_has_state(lv_obj_get_parent(tab),LV_STATE_CHECKED));
+    lv_area_t a;lv_obj_get_coords(find_label(lv_scr_act(),"English"),&a);assert(a.y2<review_height);
+   }
+   select_settings_category(0);
+   puts("PASS settings categories: pointer access, no save on navigation, update entry and category retained after locale rebuild");
+  }
  }else if(!strcmp(argv[1],"bt-save")){
   settings.bluetooth_enabled=false;app_bt.init();
   bt_runtime_t runtime={.enabled=false};emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();
@@ -1311,6 +1359,8 @@ int main(int argc,char**argv) {
   int toggles=bt_toggles,attempts=saves;
   lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();assert(saves==attempts+1 && bt_toggles==toggles && find_label(lv_layer_top(),retry_text));
   emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();assert(saves==attempts+1 && find_label(lv_layer_top(),retry_text));
+  lv_obj_t *later=find_label(lv_layer_top(),ui_i18n_is_zh()?"稍后处理":"Later");assert(later);
+  tap_widget(lv_obj_get_parent(later));assert(!find_label(lv_layer_top(),retry_text));
   app_bt.close();assert(!find_label(lv_layer_top(),retry_text));app_bt.init();pump();
   retry=find_label(lv_layer_top(),retry_text);assert(retry && lv_obj_get_height(lv_obj_get_parent(retry))>=48);
   settings_save_error=0;attempts=saves;lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);pump();
@@ -1340,12 +1390,37 @@ int main(int argc,char**argv) {
     assert(bounds.x1>=0 && bounds.x2<review_width && bounds.y1>=0 && bounds.y2<review_height);
    }
    puts("PASS Bluetooth playback controls and device entry visible without scrolling");
-   if(!strcmp(argv[1],"bt-details") || !strcmp(argv[1],"bt-rename")) {
+   if(!strcmp(argv[1],"bt-details") || !strcmp(argv[1],"bt-rename") || (!strcmp(argv[1],"bt-disconnect-feedback") || !strcmp(argv[1],"bt-disconnect-lifecycle"))) {
     lv_obj_t *details=find_label(lv_scr_act(),ui_tr(UI_STR_BT_DEVICE_MANAGEMENT));assert(details);
     tap_widget(lv_obj_get_parent(details));pump();
     if(!strcmp(argv[1],"bt-rename")) {
      lv_obj_t *name=find_label(lv_scr_act(),ui_tr(UI_STR_BT_NAME_TAP_EDIT));assert(name);
      lv_obj_send_event(lv_obj_get_parent(name),LV_EVENT_CLICKED,NULL);pump();
+    }
+   }
+   if((!strcmp(argv[1],"bt-disconnect-feedback") || !strcmp(argv[1],"bt-disconnect-lifecycle"))) {
+    lv_obj_t *label=find_label(lv_scr_act(),ui_tr(UI_STR_DISCONNECT));assert(label);
+    lv_obj_t *button=lv_obj_get_parent(label);review_bt_disconnect_failure=true;
+    tap_widget(button);assert(review_bt_disconnect_requests==1 && !lv_obj_has_state(button,LV_STATE_DISABLED));
+    assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"无法发送断开请求，请重试。":"Could not send the disconnect request. Please retry."));
+    char failure_image[1024];snprintf(failure_image,sizeof(failure_image),"%s.send-error.ppm",argv[4]);save(failure_image);
+    review_bt_disconnect_failure=false;tap_widget(button);assert(review_bt_disconnect_requests==2 && lv_obj_has_state(button,LV_STATE_DISABLED));
+    lv_obj_send_event(button,LV_EVENT_CLICKED,NULL);assert(review_bt_disconnect_requests==2);
+    lv_tick_inc(10001);pump();assert(!lv_obj_has_state(button,LV_STATE_DISABLED));
+    assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"尚未确认断开，请检查连接状态后重试。":"Disconnection is unconfirmed. Check the connection before retrying."));
+    tap_widget(button);assert(review_bt_disconnect_requests==3);
+    runtime.a2dp_connected=false;runtime.audio_streaming=false;emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();
+    assert(lv_obj_has_flag(button,LV_OBJ_FLAG_HIDDEN));
+    lv_obj_t *done=find_label(lv_scr_act(),ui_i18n_is_zh()?"设备已断开":"Device disconnected");assert(done);assert_pairing_visible(done);
+    puts("PASS Bluetooth disconnect: pointer failure/retry, no duplicate pending command, timeout, authoritative completion");
+    if(!strcmp(argv[1],"bt-disconnect-lifecycle")) {
+     runtime.a2dp_connected=true;emit(TOPIC_BT_RUNTIME,&runtime,sizeof(runtime));pump();
+     assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"设备已断开":"Device disconnected"));
+     tap_widget(button);assert(lv_obj_has_state(button,LV_STATE_DISABLED));
+     app_bt.close();lv_obj_t *old=lv_scr_act();app_bt.init();lv_obj_delete(old);
+     lv_tick_inc(11001);pump();
+     assert(!find_label(lv_scr_act(),ui_i18n_is_zh()?"尚未确认断开，请检查连接状态后重试。":"Disconnection is unconfirmed. Check the connection before retrying."));
+     puts("PASS Bluetooth reconnect clears old feedback; close/reopen cancels disconnect timer");
     }
    }
   }
@@ -1464,7 +1539,7 @@ int main(int argc,char**argv) {
    assert(find_label(lv_scr_act(),expected));
   }
   puts("PASS actual invoke/platform callbacks: strict boolean results across14 cases; private socket replies");
- } else if(!strcmp(argv[1],"user-catalog-scroll")) {
+ } else if((!strcmp(argv[1],"user-catalog-scroll") || !strcmp(argv[1],"user-refresh"))) {
   app_user.init();pump();lv_obj_t *list=find_catalog_list(lv_scr_act());assert(list);
   assert(lv_obj_get_scroll_bottom(list)>0);
   for(int i=0;i<16;i++) {
@@ -1482,6 +1557,17 @@ int main(int argc,char**argv) {
    for(int j=0;j<16;j++)assert(lv_obj_has_state(lv_obj_get_child(list,j),LV_STATE_CHECKED)==(j==i));
   }
   puts("PASS16 long-name rows retain page identity and scroll into viewport");
+  if(!strcmp(argv[1],"user-refresh")) {
+   lv_obj_t *refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新列表":"Refresh");assert(refresh);
+   tap_widget(lv_obj_get_parent(refresh));pump();pump();
+   assert(find_label(lv_scr_act(),"Page 15"));
+   list=find_catalog_list(lv_scr_act());assert(list && lv_obj_has_state(lv_obj_get_child(list,15),LV_STATE_CHECKED));
+   refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新列表":"Refresh");assert(refresh);
+   lv_obj_send_event(lv_obj_get_parent(refresh),LV_EVENT_CLICKED,NULL);
+   app_user.close();lv_obj_t *closed=lv_scr_act();pump();pump();assert(lv_scr_act()==closed);
+   app_user.init();pump();assert(find_label(lv_scr_act(),"Page 00"));
+   puts("PASS user app refresh: actual pointer, selected app retained, queued refresh cancelled on close");
+  }
  } else if(!strcmp(argv[1],"user-page-missing")) {
   const char *root=mimi_user_app_config_get()->user_apps_root;
   assert(strstr(root,"/user-page-missing/apps"));
@@ -1494,7 +1580,8 @@ int main(int argc,char**argv) {
   assert(rename(backup,path)==0);
   assert(!find_label(lv_scr_act(),"Invoke test"));
   assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"应用页面不可用，请重新安装应用。":"App page unavailable. Please reinstall the app."));
-  lv_obj_send_event(lv_obj_get_parent(entry),LV_EVENT_CLICKED,NULL);pump();
+  lv_obj_t *refresh=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新列表":"Refresh");assert(refresh);
+  tap_widget(lv_obj_get_parent(refresh));pump();pump();
   assert(find_label(lv_scr_act(),"Invoke test"));
   puts("PASS missing page clears stale actions and later reopen recovers");
  } else if(!strcmp(argv[1],"user-page-invalid")) {

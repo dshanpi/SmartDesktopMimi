@@ -21,6 +21,26 @@ static bool settings_dirty = false;
 static lv_obj_t *schema_label = NULL;
 static bool setting_active;
 static bool rebuild_pending;
+static lv_obj_t *category_panels[3], *category_buttons[3];
+static unsigned selected_category;
+
+static void category_select(unsigned selected)
+{
+    selected_category = selected;
+    for (unsigned i = 0; i < 3; ++i) {
+        if (!category_panels[i] || !category_buttons[i]) continue;
+        if (i == selected) lv_obj_clear_flag(category_panels[i], LV_OBJ_FLAG_HIDDEN);
+        else lv_obj_add_flag(category_panels[i], LV_OBJ_FLAG_HIDDEN);
+        mimi_ui_button_style(category_buttons[i], i == selected);
+        if (i == selected) lv_obj_add_state(category_buttons[i], LV_STATE_CHECKED);
+        else lv_obj_clear_state(category_buttons[i], LV_STATE_CHECKED);
+    }
+}
+
+static void category_event(lv_event_t *event)
+{
+    category_select((unsigned)(uintptr_t)lv_event_get_user_data(event));
+}
 static lv_obj_t *save_error_box;
 static void show_save_failure(void);
 static void save_feedback(int result)
@@ -38,6 +58,13 @@ static void retry_save_cb(lv_event_t *event)
     (void)event;
     save_feedback(sys_settings_save_checked());
 }
+static void setting_dismiss_save_failure(lv_event_t *event)
+{
+    (void)event;
+    if (save_error_box) { lv_obj_delete(save_error_box); save_error_box = NULL; }
+    /* Active changes and the dirty flag remain for the next save attempt. */
+}
+
 static void show_save_failure(void)
 {
     if (save_error_box) return;
@@ -55,6 +82,12 @@ static void show_save_failure(void)
         ui_i18n_is_zh() ? "重试保存" : "Retry save");
     mimi_ui_button_style(retry, true);
     lv_obj_set_size(retry, 180, 48);
+    lv_obj_t *later = lv_msgbox_add_footer_button(save_error_box,
+        ui_i18n_is_zh() ? "稍后处理" : "Later");
+    mimi_ui_button_style(later, false);
+    lv_obj_set_size(later, 180, 48);
+    lv_obj_set_style_text_font(later, ui_font_body_md(), 0);
+    lv_obj_add_event_cb(later, setting_dismiss_save_failure, LV_EVENT_CLICKED, NULL);
     lv_obj_set_height(lv_msgbox_get_footer(save_error_box), 68);
     lv_obj_set_style_text_font(retry, ui_font_body_md(), 0);
     lv_obj_add_event_cb(retry, retry_save_cb, LV_EVENT_CLICKED, NULL);
@@ -325,6 +358,9 @@ static lv_obj_t *create_section(lv_obj_t *parent, const char *title,
     lv_obj_set_style_pad_all(section, 22, 0);
     lv_obj_set_style_pad_row(section, 14, 0);
     lv_obj_set_flex_flow(section, LV_FLEX_FLOW_COLUMN);
+    lv_obj_add_flag(section, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(section, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(section, LV_SCROLLBAR_MODE_AUTO);
     mimi_ui_text(section, title, ui_font_h2(), MIMI_TEXT);
     return section;
 }
@@ -376,7 +412,10 @@ static lv_obj_t *create_info_row(lv_obj_t *parent, const char *key,
 
 static void setting_init(void)
 {
+    if (!setting_active) selected_category = 0;
     setting_active = true;
+    memset(category_panels, 0, sizeof(category_panels));
+    memset(category_buttons, 0, sizeof(category_buttons));
     if (save_error_box) { lv_obj_del(save_error_box); save_error_box = NULL; }
     /* Rebuilds replace the widgets, not their middleware subscriptions. */
     mw_unsubscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
@@ -386,11 +425,41 @@ static void setting_init(void)
     lv_obj_update_layout(body);
     int width = lv_obj_get_width(body);
     int height = lv_obj_get_height(body);
-    int left_width = (width - 18) / 2;
+    bool compact = lv_display_get_vertical_resolution(NULL) < 620;
+    int panel_y = compact ? 60 : 0;
+    int panel_height = height - panel_y;
+    int left_width = compact ? width : (width - 18) / 2;
+    if (compact) {
+        lv_obj_t *tabs = lv_obj_create(body);
+        mimi_ui_clear(tabs);
+        lv_obj_set_size(tabs, width, 48);
+        lv_obj_set_flex_flow(tabs, LV_FLEX_FLOW_ROW);
+        lv_obj_set_style_pad_column(tabs, 10, 0);
+        const char *labels[] = {
+            ui_i18n_is_zh() ? "显示与声音" : "Display & sound",
+            ui_i18n_is_zh() ? "外观与语言" : "Appearance",
+            ui_i18n_is_zh() ? "设备与更新" : "Device & updates"
+        };
+        for (unsigned i = 0; i < 3; ++i) {
+            lv_obj_t *button = lv_button_create(tabs);
+            mimi_ui_button_style(button, i == selected_category);
+            lv_obj_set_style_bg_color(button, mimi_ui_color(MIMI_CORAL), LV_STATE_CHECKED);
+            lv_obj_set_style_text_color(button, lv_color_white(), LV_STATE_CHECKED);
+            lv_obj_set_size(button, 1, 48);
+            lv_obj_set_flex_grow(button, 1);
+            lv_obj_add_event_cb(button, category_event, LV_EVENT_CLICKED, (void *)(uintptr_t)i);
+            lv_obj_t *label = lv_label_create(button);
+            lv_label_set_text(label, labels[i]);
+            lv_obj_set_style_text_font(label, UI_TEXT_BODY_MD, 0);
+            lv_obj_center(label);
+            category_buttons[i] = button;
+        }
+    }
     sys_settings_t *settings = sys_settings_get();
     lv_obj_t *appearance = create_section(body,
         ui_i18n_is_zh() ? "外观与语言" : "Appearance & language",
-        0, 0, left_width, 260);
+        0, panel_y, left_width, compact ? panel_height : 260);
+    category_panels[1] = appearance;
     const char *languages[] = {ui_tr(UI_STR_SETTINGS_LANGUAGE_AUTO),
         ui_tr(UI_STR_SETTINGS_LANGUAGE_ZH), ui_tr(UI_STR_SETTINGS_LANGUAGE_EN)};
     const char *modes[] = {ui_tr(UI_STR_SETTINGS_THEME_AUTO),
@@ -401,7 +470,8 @@ static void setting_init(void)
         (int)ui_theme_get_appearance(), appearance_mode_cb);
 
     lv_obj_t *sound = create_section(body, ui_tr(UI_STR_SETTINGS_DISPLAY_SOUND),
-        0, 278, left_width, height - 278);
+        0, compact ? panel_y : 278, left_width, compact ? panel_height : height - 278);
+    category_panels[0] = sound;
     lv_obj_set_style_pad_all(sound, 18, 0);
     lv_obj_set_style_pad_row(sound, 6, 0);
     create_horizontal_control(sound, ui_tr(UI_STR_SETTINGS_BRIGHTNESS),
@@ -443,7 +513,8 @@ static void setting_init(void)
     }
 
     lv_obj_t *device = create_section(body, ui_i18n_is_zh() ? "设备信息" : "Device info",
-        left_width + 18, 0, width - left_width - 18, height);
+        compact ? 0 : left_width + 18, panel_y, compact ? width : width - left_width - 18, panel_height);
+    category_panels[2] = device;
     char version[64];
     read_system_version(version, sizeof(version));
     create_info_row(device, ui_tr(UI_STR_SETTINGS_DEVICE_NAME), APP_DEVICE_NAME, NULL);
@@ -452,7 +523,7 @@ static void setting_init(void)
         ui_tr(UI_STR_SETTINGS_100ASK_MANAGE), NULL);
     lv_obj_add_flag(pairing_item, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(pairing_item, pairing_open_cb, LV_EVENT_CLICKED, NULL);
-    create_info_row(device, ui_i18n_is_zh() ? "涂鸦物联模型" : "Tuya IoT schema",
+    create_info_row(device, ui_i18n_is_zh() ? "助手可用功能" : "Assistant features",
         ui_i18n_is_zh() ? "等待云端状态" : "Waiting for cloud status", &schema_label);
     lv_obj_t *preview = lv_obj_create(device);
     mimi_ui_surface(preview, 10);
@@ -462,10 +533,13 @@ static void setting_init(void)
     mimi_ui_text(preview, ui_i18n_is_zh() ? "桌面应用更新" : "Desktop application update", ui_font_h3(), MIMI_TEXT);
     lv_obj_add_flag(preview, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(preview, desktop_update_event, LV_EVENT_CLICKED, NULL);
-    lv_obj_t *mode = mimi_ui_text(preview, ui_theme_is_dark() ?
-        (ui_i18n_is_zh() ? "当前使用暗色模式" : "Dark mode is active") :
-        (ui_i18n_is_zh() ? "当前使用亮色模式" : "Light mode is active"), ui_font_body_md(), MIMI_MUTED);
+    lv_obj_t *mode = mimi_ui_text(preview,
+        ui_i18n_is_zh() ? "查看桌面版本和可用更新" : "View desktop version and available updates",
+        ui_font_body_md(), MIMI_MUTED);
+    lv_obj_set_width(mode, lv_pct(100));
+    lv_label_set_long_mode(mode, LV_LABEL_LONG_WRAP);
     lv_obj_align(mode, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+    if (compact) category_select(selected_category);
     mw_subscribe(TOPIC_AI_STATUS, setting_ai_status_cb);
     ai_cmd_t cmd = {.action = AI_CMD_GET_STATUS};
     mw_publish(TOPIC_AI_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
@@ -476,6 +550,8 @@ static void setting_init(void)
 static void setting_close(void)
 {
     setting_active = false;
+    memset(category_panels, 0, sizeof(category_panels));
+    memset(category_buttons, 0, sizeof(category_buttons));
     if (save_error_box) { lv_obj_del(save_error_box); save_error_box = NULL; }
     if (rebuild_pending) lv_async_call_cancel(setting_rebuild_async, NULL);
     rebuild_pending = false;
