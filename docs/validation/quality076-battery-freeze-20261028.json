@@ -1,0 +1,155 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "scope": "Battery-present incident follow-up; read-only runtime diagnosis and normal HDMI-off command; source review only",
+  "user_confirmations": [
+    "Battery connected to board battery connector",
+    "Desktop and physical touch currently normal"
+  ],
+  "device": {
+    "board": "A133 MainBoardV1.2",
+    "boot_id": "302d0580-9668-451e-a313-8bb319f56974",
+    "sample_uptime_seconds": [
+      142.86,
+      159.55,
+      179.264,
+      273.039,
+      311.91,
+      683.48,
+      751.69
+    ],
+    "new_boot_vs_previous": true,
+    "transition_cause": "Unobserved; no restart/power/flash command by this task; do not assume this transition has same cause as earlier user-denied reboot",
+    "backend_sha256": "288a7a10e5a467cb7aba835bf21f7e36eb102d6b17a4767209aeb8b9870c18d9",
+    "driver_candidate_installed": false
+  },
+  "battery": {
+    "status": "passed",
+    "scope": "Driver-reported presence/charge telemetry only",
+    "present": 1,
+    "health": "Good",
+    "initial_status": "Charging",
+    "final_status": "Full",
+    "capacity_percent": [
+      99,
+      100
+    ],
+    "voltage_uv": [
+      4169000,
+      4181000,
+      4171000
+    ],
+    "usb_present": 1,
+    "usb_online": 1,
+    "usb_voltage_now": 0,
+    "limits": "Presence and slow software samples do not establish absence of transient supply dips, regulator issues or SDIO electrical faults. USB voltage0 alone not classified as a power failure."
+  },
+  "runtime": {
+    "status": "passed",
+    "scope": "Bounded current-boot observations, not long-term stability",
+    "activity_ready": true,
+    "final_ui_monotonic_ms": 751682,
+    "final_backend_reply_ms": 750748,
+    "physical": "passed_user_confirmed_current_desktop_and_touch",
+    "available_memory_kb": 1875908,
+    "sampled_backend_wait": "poll_schedule_timeout / select",
+    "initial_sdio_errors": "Two CMD52 RTO messages at27.990077 and27.996907 seconds; no current sustained storm established",
+    "kernel_ring_limit": "No later errors visible in final retained tail; earlier messages can be overwritten, so absence is not proof of no events"
+  },
+  "hdmi": {
+    "status": "passed",
+    "finding": "No valid input; capture retried about every5s from87s through262.807s",
+    "action": "Existing reviewed normal backend protocol helper sent OFF; no raw hardware/power transition",
+    "helper_sha256": "7b2aec82dee02d7f51f7dc726568da47e3e3906c327d1c56e2b0517ba4ce2d38",
+    "result": "hdmi_preview absent after command and at751s; final kernel tail still262.807s",
+    "temporary_helper": "removed and checked",
+    "temporary_http": "Single-request server exited after serving helper",
+    "limits": "Removing repeated capture is mitigation; not proven cause of previous freeze; persistent preference unchanged"
+  },
+  "source_review": {
+    "status": "passed",
+    "finding": "backend_runtime_tick -> service_cloud_update -> iot_connect -> mosquitto_connect -> mosquitto__reconnect(blocking=true) -> blocking TCP connect; explicit reconnect also uses same call",
+    "implication": "A slow TCP connection can stall this backend tick. This matches prior sampled kernel wait but does not prove all historical UI freezes or reset causes. DNS and lifecycle/callback ownership must also be addressed.",
+    "files": {
+      "cloud_service": {
+        "path": "/home/ubuntu/AI-DeskTopBox/.delivery/private-application/adapters/100ask/system/service_cloud.c",
+        "sha256": "3318ece6207758bf61f4dbb6e8f3b72a9a3721d17a473891d6d23ac02ba25c35"
+      },
+      "iot_sdk": {
+        "path": "/home/ubuntu/AI-DeskTopBox/third_party/100ask-iot-sdk/src/100ask_iot.c",
+        "sha256": "de10ea51198d99b1501e98f466b5ec3b830275107c1cd9fad4cf33364e114522"
+      },
+      "backend_tick": {
+        "path": "/home/ubuntu/AI-DeskTopBox/.delivery/hardware/overlay/openwrt/openwrt/package/allwinner/custom/smartdesktopmimi-a133-provider/private/code/apps/lv_port_linux/src/backend/backend_runtime.c",
+        "sha256": "a565cf9408cbf8c69db4fb18f7aec3adcf85a6d7a6abd48e6853d44eea57abce"
+      },
+      "mosquitto_connect": {
+        "path": "/home/ubuntu/AI-DeskTopBox/.delivery/sdk-restored/out/a133/b6/openwrt/build_dir/target/mosquitto-ssl/mosquitto-2.0.13/lib/connect.c",
+        "sha256": "c2aca1a3daff20df39734ecc558d90f614861c4b4f4d3e9eff8124dd13b3166c"
+      },
+      "mosquitto_socket": {
+        "path": "/home/ubuntu/AI-DeskTopBox/.delivery/sdk-restored/out/a133/b6/openwrt/build_dir/target/mosquitto-ssl/mosquitto-2.0.13/lib/net_mosq.c",
+        "sha256": "70fba97e8b2de718038c28dc41240453adabd7c5e1da94fb9ded9e96818b3765"
+      },
+      "rtc_reason": {
+        "path": "/home/ubuntu/AI-DeskTopBox/.delivery/sdk-restored/kernel/linux-4.9/drivers/rtc/rtc-sunxi.c",
+        "sha256": "9b94a65c234a8e8dda4146eded3bf735eff23db7c5bbd8cdfcb0c6e0e28dc8ad"
+      }
+    },
+    "reference": "https://mosquitto.org/api/",
+    "api_constraint": "mosquitto_connect_async requires threaded loop_start; do not merely swap API while retaining existing manual loop and unsynchronized callbacks",
+    "implementation": "not_run; source audit only in this batch"
+  },
+  "reset_reason": {
+    "path": "/sys/class/rtc/rtc0/device/bootreason",
+    "value": "0x2",
+    "scope": "RTC software hot-reboot enum, not a complete retained reset-cause trace; boot initialization and reboot notifier can modify it",
+    "rootcause": "unresolved; cannot distinguish watchdog,panic,power or caller from this value alone"
+  },
+  "changes": {
+    "serial": "serial-1 closed confirmed",
+    "logging": "No console log-level change in this batch; read8 7 1 7",
+    "system_update_reboot_power_credentials": "No changes",
+    "source": "Record only; all-page candidate remains uninstalled"
+  },
+  "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/battery-freeze-20261028",
+  "evidence_archive_sha256": "5b2d0bf8e6675daa59507e1db550061ddbb3838999348e48bd31cb273bd76ba4",
+  "checks": [
+    {
+      "name": "Battery recognized and charging/full",
+      "status": "passed",
+      "scope": "Telemetry only"
+    },
+    {
+      "name": "Current physical desktop/touch",
+      "status": "passed",
+      "scope": "User confirmation; current boot only"
+    },
+    {
+      "name": "HDMI normal disable and cleanup",
+      "status": "passed",
+      "scope": "Observed process stopped, helper removed"
+    },
+    {
+      "name": "Historical freeze and reset cause",
+      "status": "blocked",
+      "scope": "No complete pre-failure retained trace; current operation normal"
+    },
+    {
+      "name": "Async cloud connection implementation",
+      "status": "not_run",
+      "scope": "Identified code path, not changed"
+    },
+    {
+      "name": "New driver and candidate physical acceptance",
+      "status": "not_run",
+      "scope": "Not installed; prior SDIO failure retained"
+    }
+  ],
+  "next_steps": [
+    "Implement and test cloud SDK ownership/connection isolation without concurrent callbacks or unbounded shutdown waits",
+    "Integrate new SDIO module into a versioned system candidate, qualify installation/recovery and test it on this board",
+    "Capture pre-failure UART and relevant power/runtime samples; do not treat battery presence or10minute recovery as rootcause closure"
+  ],
+  "overall_stability": "unresolved"
+}
