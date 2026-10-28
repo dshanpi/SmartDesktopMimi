@@ -213,6 +213,7 @@ static lv_obj_t * button(lv_obj_t * p, const char * text, lv_event_cb_t cb)
     mimi_ui_button_style(b, true);
     lv_obj_set_size(b, lv_pct(100), 52);
     lv_obj_t * l = mimi_ui_text(b, text, ui_font_body_md(), MIMI_TEXT);
+    lv_obj_remove_local_style_prop(l, LV_STYLE_TEXT_COLOR, 0);
     lv_obj_set_width(l, lv_pct(100));
     lv_label_set_long_mode(l, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
@@ -276,22 +277,28 @@ static void init_app(void)
     body = mimi_ui_body(screen);
     lv_obj_update_layout(body);
     body_height = lv_obj_get_height(body);
-    lv_obj_set_flex_flow(body, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(body, 12, 0);
-    lv_obj_add_flag(body, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_t * note = mimi_ui_text(
-        body,
-        tr("语音为可选功能，默认关闭。启用后使用已绑定的涂鸦云识别；转写只用于本页导航预览，确认后执行。退出本页即关闭"
-           "。",
-           "Voice is optional and off by default. It uses your linked Tuya cloud speech service. Transcripts preview "
-           "navigation only; confirm to execute. Voice control turns off when you leave."),
+    lv_obj_set_flex_flow(body, LV_FLEX_FLOW_ROW);
+    lv_obj_set_style_pad_column(body, 16, 0);
+    lv_obj_clear_flag(body, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t *input = lv_obj_create(body);
+    mimi_ui_surface(input, 16);
+    lv_obj_set_size(input, (lv_obj_get_width(body) - 16) * 3 / 5, lv_pct(100));
+    lv_obj_set_style_pad_all(input, 16, 0);
+    lv_obj_set_style_pad_row(input, 12, 0);
+    lv_obj_set_flex_flow(input, LV_FLEX_FLOW_COLUMN);
+    lv_obj_add_flag(input, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(input, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(input, LV_SCROLLBAR_MODE_AUTO);
+    lv_obj_t *note = mimi_ui_text(input,
+        tr("输入文字，或开启本次语音识别。语音使用已绑定的涂鸦云服务，离开本页即关闭。",
+           "Type a command or enable speech for this session. Speech uses your linked Tuya service and turns off when you leave."),
         ui_font_body_md(), MIMI_MUTED);
     lv_obj_set_width(note, lv_pct(100));
     lv_label_set_long_mode(note, LV_LABEL_LONG_WRAP);
-    enable_button = button(body, tr("启用本次语音控制", "Enable voice for this session"), toggle);
-    listen_button = button(body, tr("开始识别", "Start recognition"), start_listen);
+    enable_button = button(input, tr("启用本次语音控制", "Enable voice for this session"), toggle);
+    listen_button = button(input, tr("开始识别", "Start recognition"), start_listen);
     lv_obj_add_state(listen_button, LV_STATE_DISABLED);
-    entry = lv_textarea_create(body);
+    entry = lv_textarea_create(input);
     lv_obj_set_size(entry, lv_pct(100), 72);
     lv_obj_set_style_text_font(entry, ui_font_body_lg(), 0);
     lv_textarea_set_max_length(entry, 127);
@@ -299,13 +306,26 @@ static void init_app(void)
     lv_obj_add_event_cb(entry, edited, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(entry, focus, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(entry, focus, LV_EVENT_CLICKED, NULL);
-    button(body, tr("预览文字指令", "Preview command"), prepare);
-    message = mimi_ui_text(body, tr("语音控制已关闭", "Voice control is off"), ui_font_body_md(), MIMI_TEXT);
+    button(input, tr("预览文字指令", "Preview command"), prepare);
+
+    lv_obj_t *preview = lv_obj_create(body);
+    mimi_ui_surface(preview, 16);
+    lv_obj_set_size(preview, 1, lv_pct(100));
+    lv_obj_set_flex_grow(preview, 1);
+    lv_obj_set_style_pad_all(preview, 16, 0);
+    lv_obj_set_style_pad_row(preview, 12, 0);
+    lv_obj_set_flex_flow(preview, LV_FLEX_FLOW_COLUMN);
+    lv_obj_add_flag(preview, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(preview, LV_DIR_VER);
+    mimi_ui_text(preview, tr("操作预览", "Action preview"), ui_font_h2(), MIMI_TEXT);
+    message = mimi_ui_text(preview, tr("语音控制已关闭", "Voice control is off"), ui_font_body_md(), MIMI_TEXT);
     lv_obj_set_width(message, lv_pct(100));
+    lv_obj_set_flex_grow(message, 1);
     lv_label_set_long_mode(message, LV_LABEL_LONG_WRAP);
-    confirm_button = button(body, tr("确认执行", "Confirm action"), execute);
+    confirm_button = button(preview, tr("确认执行", "Confirm action"), execute);
     lv_obj_add_state(confirm_button, LV_STATE_DISABLED);
-    button(body, tr("取消", "Cancel"), cancel);
+    lv_obj_t *cancel_button = button(preview, tr("取消", "Cancel"), cancel);
+    mimi_ui_button_style(cancel_button, false);
     keyboard = lv_keyboard_create(screen);
     mimi_ui_keyboard_style(keyboard);
     lv_obj_set_size(keyboard, lv_pct(100), LV_MIN(280, lv_display_get_vertical_resolution(NULL) / 2));

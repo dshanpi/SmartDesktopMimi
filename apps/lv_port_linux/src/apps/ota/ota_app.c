@@ -29,6 +29,31 @@ static lv_obj_t *btn_check = NULL;
 static lv_obj_t *btn_download = NULL;
 static lv_obj_t *btn_apply = NULL;
 static ota_state_t displayed_state = OTA_STATE_IDLE;
+static lv_timer_t *request_timer;
+static bool status_known, request_pending;
+static uint32_t request_started;
+
+static void status_unavailable(const char *message)
+{
+    request_pending = false;
+    status_known = false;
+    if (label_state) lv_label_set_text(label_state, ui_i18n_is_zh() ? "状态待确认" : "Status unavailable");
+    if (label_hint) lv_label_set_text(label_hint, message);
+    if (btn_check) {
+        lv_obj_clear_state(btn_check, LV_STATE_DISABLED);
+        lv_label_set_text(lv_obj_get_child(btn_check, 0), ui_i18n_is_zh() ? "刷新状态" : "Refresh status");
+    }
+    if (btn_download) lv_obj_add_state(btn_download, LV_STATE_DISABLED);
+    if (btn_apply) lv_obj_add_state(btn_apply, LV_STATE_DISABLED);
+}
+
+static void request_tick(lv_timer_t *timer)
+{
+    (void)timer;
+    if (request_pending && lv_tick_elaps(request_started) >= 10000)
+        status_unavailable(ui_i18n_is_zh() ? "暂未收到更新服务的回复，请刷新查询。" : "The update service has not replied. Refresh to check its status.");
+}
+
 
 static const char *ota_state_text(ota_state_t state)
 {
@@ -53,7 +78,19 @@ static void send_ota_cmd(int action)
     ota_cmd_t cmd;
     memset(&cmd, 0, sizeof(cmd));
     cmd.action = action;
-    mw_publish(TOPIC_OTA_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND);
+    if (request_pending) return;
+    if (mw_publish(TOPIC_OTA_COMMAND, &cmd, sizeof(cmd), MW_DIR_UI_TO_BACKEND) != 0) {
+        status_unavailable(ui_i18n_is_zh() ? "无法连接更新服务，请重试。" : "Could not reach the update service. Please retry.");
+        return;
+    }
+    request_pending = true;
+    request_started = lv_tick_get();
+    if (btn_check) lv_obj_add_state(btn_check, LV_STATE_DISABLED);
+    if (btn_download) lv_obj_add_state(btn_download, LV_STATE_DISABLED);
+    if (btn_apply) lv_obj_add_state(btn_apply, LV_STATE_DISABLED);
+    if (label_hint) lv_label_set_text(label_hint, ui_i18n_is_zh() ? "正在查询状态…" : "Waiting for status...");
+    if (!request_timer)
+        status_unavailable(ui_i18n_is_zh() ? "无法等待服务回复，请刷新查询。" : "Could not wait for the service. Refresh to check its status.");
 }
 
 static void update_buttons(const ota_status_t *status)
@@ -84,6 +121,8 @@ static void on_ota_status(const mw_msg_t *msg)
 {
     if (msg->topic != TOPIC_OTA_STATUS || msg->data_len < sizeof(ota_status_t)) return;
     const ota_status_t *status = (const ota_status_t *)msg->data;
+    request_pending = false;
+    status_known = true;
 
     if (label_state) {
         lv_label_set_text(label_state, ota_state_text(status->state));
@@ -148,7 +187,7 @@ static void back_event_handler(lv_event_t *e)
 static void check_event_handler(lv_event_t *e)
 {
     if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        send_ota_cmd(displayed_state == OTA_STATE_DOWNLOADING ? OTA_CMD_CANCEL : OTA_CMD_CHECK);
+        send_ota_cmd(!status_known ? OTA_CMD_GET_STATUS : displayed_state == OTA_STATE_DOWNLOADING ? OTA_CMD_CANCEL : OTA_CMD_CHECK);
     }
 }
 
@@ -227,6 +266,7 @@ void ota_app_init(void)
     lv_obj_t *actions;
 
     displayed_state = OTA_STATE_IDLE;
+    status_known = request_pending = false;
     mw_subscribe(TOPIC_OTA_STATUS, on_ota_status);
 
     int32_t screen_w = lv_display_get_horizontal_resolution(NULL);
@@ -246,12 +286,14 @@ void ota_app_init(void)
     /* 内容区 */
     content = lv_obj_create(scr);
     int32_t content_w = LV_MIN(912, screen_w - 48);
-    lv_obj_set_size(content, content_w, LV_MAX(1, screen_h - UI_APP_HEADER_H - 48));
-    lv_obj_set_pos(content, (screen_w - content_w) / 2, UI_APP_HEADER_H + 24);
+    int32_t margin_y = screen_h < 620 ? 16 : 24;
+    lv_obj_set_size(content, content_w, LV_MAX(1, screen_h - UI_APP_HEADER_H - 2 * margin_y));
+    lv_obj_set_pos(content, (screen_w - content_w) / 2, UI_APP_HEADER_H + margin_y);
     lv_obj_set_style_bg_opa(content, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(content, 0, 0);
     lv_obj_set_style_pad_all(content, 0, 0);
-    lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(content, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(content, LV_SCROLLBAR_MODE_AUTO);
 
     card = lv_obj_create(content);
     lv_obj_set_size(card, lv_pct(100), LV_SIZE_CONTENT);
@@ -261,8 +303,8 @@ void ota_app_init(void)
     lv_obj_set_style_border_color(card, UI_DESKTOP_BORDER, 0);
     lv_obj_set_style_border_opa(card, LV_OPA_40, 0);
     lv_obj_set_style_radius(card, UI_RADIUS_LG, 0);
-    lv_obj_set_style_pad_all(card, UI_SPACE_LG, 0);
-    lv_obj_set_style_pad_row(card, UI_SPACE_MD, 0);
+    lv_obj_set_style_pad_all(card, screen_h < 620 ? 16 : UI_SPACE_LG, 0);
+    lv_obj_set_style_pad_row(card, screen_h < 620 ? 10 : UI_SPACE_MD, 0);
     lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
@@ -372,11 +414,14 @@ void ota_app_init(void)
     lv_scr_load(scr);
 
     /* 拉取当前 OTA 状态（backend 会回传 TOPIC_OTA_STATUS）。 */
+    request_timer = lv_timer_create(request_tick, 250, NULL);
     send_ota_cmd(OTA_CMD_GET_STATUS);
 }
 
 void ota_app_close(void)
 {
+    if (request_timer) { lv_timer_delete(request_timer); request_timer = NULL; }
+    request_pending = status_known = false;
     mw_unsubscribe(TOPIC_OTA_STATUS, on_ota_status);
     label_state = NULL;
     label_hint = NULL;

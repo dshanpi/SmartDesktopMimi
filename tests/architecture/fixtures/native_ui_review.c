@@ -271,6 +271,7 @@ lv_timer_t *__wrap_lv_timer_create(lv_timer_cb_t cb, uint32_t period, void *data
 static int review_connect_error;
 static atomic_bool review_connect_slow;
 static bool review_pairing_send_failure;
+static bool review_ota_send_failure;
 static int connect_count, ai_enter_count, ai_exit_count, ai_stop_count, ota_commands, last_ota_command, pairing_refreshes;
 static wifi_cmd_t last_connect;
 static atomic_int wifi_toggles, review_wifi_scans, review_scan_error;
@@ -295,7 +296,7 @@ int mw_publish(mw_topic_t t,const void*d,uint32_t n,mw_direction_t dir) {
  if(t==TOPIC_HDMI_COMMAND && n==sizeof(hdmi_cmd_t) && ((const hdmi_cmd_t*)d)->action!=HDMI_CMD_GET_STATUS)hdmi_mutations++;
  if(t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)pairing_refreshes++;
  if(review_pairing_send_failure && t==TOPIC_CLOUD_COMMAND && n==sizeof(cloud_cmd_t) && ((const cloud_cmd_t*)d)->action==CLOUD_CMD_REFRESH_BIND_TOKEN)return -EIO;
- if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;}
+ if(t==TOPIC_OTA_COMMAND && n==sizeof(ota_cmd_t)){ota_commands++;last_ota_command=((const ota_cmd_t*)d)->action;if(review_ota_send_failure)return -EIO;}
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_EXIT_FREE_CHAT)ai_exit_count++;
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_STOP_LISTEN)ai_stop_count++;
  if(t==TOPIC_AI_COMMAND && n==sizeof(ai_cmd_t) && ((const ai_cmd_t*)d)->action==AI_CMD_ENTER_FREE_CHAT)ai_enter_count++;
@@ -630,6 +631,7 @@ static void test_voice_keyboard(void) {
  int original_height=lv_obj_get_height(body),before=app_open_count;
  tap_widget(entry);assert(!lv_obj_has_flag(kb,LV_OBJ_FLAG_HIDDEN));
  lv_area_t a,b,v;lv_obj_get_coords(entry,&a);lv_obj_get_coords(kb,&b);lv_obj_get_coords(body,&v);
+ fprintf(stderr,"voice bounds entry=%d..%d body=%d..%d keyboard=%d..%d\n",a.y1,a.y2,v.y1,v.y2,b.y1,b.y2);
  assert(a.y1>=v.y1 && a.y2<=v.y2 && v.y2<b.y1 && b.y2<review_height);
  lv_textarea_set_text(entry,"open settings");
  /* Find and press the actual on-screen ready key. */
@@ -1042,7 +1044,7 @@ static void test_environment_details(bool stale_view)
 static void test_notice(bool leave_error)
 {
  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
- tap_screen(pointer,review_width/2,32);
+ tap_screen(pointer,review_width/2,review_width<1000?84:32);
  int apps=app_open_count,updates=ota_commands,bindings=pairing_refreshes,capture=hdmi_mutations,stored=saves;
  ota_status_t status={.state=OTA_STATE_IDLE};emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
  lv_obj_t *l=find_label(lv_layer_top(),ui_i18n_is_zh()?"通知    暂无本地通知":"Notifications    No local notifications");assert(l);
@@ -1051,7 +1053,7 @@ static void test_notice(bool leave_error)
  l=find_label(lv_layer_top(),ui_i18n_is_zh()?"系统更新 · 下载中 42%":"System update · Downloading 42%");assert(l);
  ui075_tap(lv_obj_get_parent(l),pointer);assert(app_open_count==apps+1 && last_app_open==APP_ID_OTA);
  assert(ota_commands==updates && pairing_refreshes==bindings && hdmi_mutations==capture && saves==stored);
- tap_screen(pointer,review_width/2,32);
+ tap_screen(pointer,review_width/2,review_width<1000?84:32);
  status.state=OTA_STATE_UP_TO_DATE;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
  assert(find_label(lv_layer_top(),ui_i18n_is_zh()?"通知    暂无本地通知":"Notifications    No local notifications"));
  status.state=OTA_STATE_ERROR;status.error_code=-5;emit(TOPIC_OTA_STATUS,&status,sizeof(status));lv_tick_inc(1100);pump();
@@ -1328,9 +1330,19 @@ int main(int argc,char**argv) {
    snprintf(track.artist,sizeof(track.artist),"The Acoustic Ensemble and Friends");
    snprintf(track.album,sizeof(track.album),"Live Sessions from the Living Room");
    emit(TOPIC_BT_AVRCP_INFO,&track,sizeof(track));
+   pump();
+   lv_obj_t *entry=find_label(lv_scr_act(),ui_tr(UI_STR_BT_DEVICE_MANAGEMENT));assert(entry);
+   lv_obj_t *controls=lv_obj_get_parent(lv_obj_get_parent(entry));
+   for(uint32_t i=0;i<lv_obj_get_child_count(controls);i++) {
+    lv_obj_t *child=lv_obj_get_child(controls,i);
+    if(lv_obj_has_flag(child,LV_OBJ_FLAG_HIDDEN))continue;
+    lv_area_t bounds;lv_obj_get_coords(child,&bounds);
+    assert(bounds.x1>=0 && bounds.x2<review_width && bounds.y1>=0 && bounds.y2<review_height);
+   }
+   puts("PASS Bluetooth playback controls and device entry visible without scrolling");
    if(!strcmp(argv[1],"bt-details") || !strcmp(argv[1],"bt-rename")) {
     lv_obj_t *details=find_label(lv_scr_act(),ui_tr(UI_STR_BT_DEVICE_MANAGEMENT));assert(details);
-    lv_obj_send_event(lv_obj_get_parent(details),LV_EVENT_CLICKED,NULL);pump();
+    tap_widget(lv_obj_get_parent(details));pump();
     if(!strcmp(argv[1],"bt-rename")) {
      lv_obj_t *name=find_label(lv_scr_act(),ui_tr(UI_STR_BT_NAME_TAP_EDIT));assert(name);
      lv_obj_send_event(lv_obj_get_parent(name),LV_EVENT_CLICKED,NULL);pump();
@@ -1339,7 +1351,13 @@ int main(int argc,char**argv) {
   }
  }
  else if(strncmp(argv[1],"video",5)==0){
-  app_video.init();
+  app_video.init();pump();
+  lv_obj_t *main=lv_obj_get_child(lv_scr_act(),0);lv_obj_update_layout(main);
+  assert(lv_obj_get_width(main)==review_width && lv_obj_get_height(main)==review_height);
+  lv_obj_t *library_entry=find_label(lv_scr_act(),ui_tr(UI_STR_VIDEO_LIBRARY));assert(library_entry);
+  lv_area_t area;lv_obj_get_coords(lv_obj_get_parent(library_entry),&area);
+  assert(area.x1>=0 && area.x2<review_width && area.y1>=0 && area.y2<review_height);
+  puts("PASS video actual display bounds and visible empty-state library action");
   if(!strcmp(argv[1],"video-library") || !strcmp(argv[1],"video-empty")) {
    lv_obj_t *library=find_label(lv_scr_act(),ui_tr(UI_STR_VIDEO_LIBRARY));assert(library);
    lv_obj_update_layout(lv_scr_act());
@@ -1470,7 +1488,7 @@ int main(int argc,char**argv) {
   char path[512],backup[544];snprintf(path,sizeof(path),"%s/demo/ui/main.json",root);
   snprintf(backup,sizeof(backup),"%s.held",path);
   app_user.init();pump();assert(find_label(lv_scr_act(),"Invoke test"));
-  lv_obj_t *entry=find_label(lv_scr_act(),"Result demo");assert(entry);
+  lv_obj_t *entry=find_label_prefix(lv_scr_act(),"Result");assert(entry);
   assert(rename(path,backup)==0);
   lv_obj_send_event(lv_obj_get_parent(entry),LV_EVENT_CLICKED,NULL);pump();
   assert(rename(backup,path)==0);
@@ -1641,6 +1659,33 @@ int main(int argc,char**argv) {
    lv_obj_t *stop=find_label(lv_scr_act(),ui_tr(UI_STR_STOP));assert(stop);
    assert(lv_obj_has_state(lv_obj_get_parent(stop),LV_STATE_DISABLED));
   }
+ }
+ else if(!strcmp(argv[1],"ota-feedback")) {
+  app_ota.init();pump();
+  lv_tick_inc(10200);pump();
+  lv_obj_t *retry=find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新状态":"Refresh status");assert(retry);
+  lv_obj_t *download=find_label(lv_scr_act(),ui_tr(UI_STR_OTA_DOWNLOAD));assert(download);
+  lv_obj_t *install=find_label(lv_scr_act(),ui_tr(UI_STR_OTA_INSTALL));assert(install);
+  assert(!lv_obj_has_state(lv_obj_get_parent(retry),LV_STATE_DISABLED));
+  assert(lv_obj_has_state(lv_obj_get_parent(download),LV_STATE_DISABLED));
+  assert(lv_obj_has_state(lv_obj_get_parent(install),LV_STATE_DISABLED));
+  int before=ota_commands;review_ota_send_failure=true;
+  tap_widget(lv_obj_get_parent(retry));assert(ota_commands==before+1 && last_ota_command==OTA_CMD_GET_STATUS);
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"无法连接更新服务，请重试。":"Could not reach the update service. Please retry."));
+  review_ota_send_failure=false;tap_widget(lv_obj_get_parent(retry));before=ota_commands;
+  lv_obj_send_event(lv_obj_get_parent(retry),LV_EVENT_CLICKED,NULL);assert(ota_commands==before);
+  ota_status_t update={.state=OTA_STATE_UPDATE_AVAILABLE,.update_available=true};
+  strcpy(update.version_local,"1.4.2");strcpy(update.version_remote,"1.5.0");emit(TOPIC_OTA_STATUS,&update,sizeof(update));pump();
+  assert(!lv_obj_has_state(lv_obj_get_parent(download),LV_STATE_DISABLED));
+  tap_widget(lv_obj_get_parent(download));assert(last_ota_command==OTA_CMD_DOWNLOAD);
+  before=ota_commands;lv_obj_send_event(lv_obj_get_parent(download),LV_EVENT_CLICKED,NULL);assert(before==ota_commands);
+  update.state=OTA_STATE_DOWNLOAD_DONE;emit(TOPIC_OTA_STATUS,&update,sizeof(update));pump();
+  lv_indev_t *pointer=lv_indev_create();lv_indev_set_type(pointer,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(pointer,touch_read);
+  ui075_tap(lv_obj_get_parent(install),pointer);assert(last_ota_command==OTA_CMD_APPLY);lv_indev_delete(pointer);
+  lv_obj_t *old=lv_scr_act();app_ota.close();lv_tick_inc(11000);pump();assert(ota_commands==before+1);
+  app_ota.init();lv_obj_delete(old);pump();lv_tick_inc(10200);pump();lv_tick_inc(300);pump();
+  assert(find_label(lv_scr_act(),ui_i18n_is_zh()?"刷新状态":"Refresh status"));
+  puts("PASS OTA silence/send-failure/retry/read-only refresh/single pending command/visible install/close/reopen");
  }
  else if(strncmp(argv[1],"ota",3)==0){
   app_ota.init();ota_status_t status={.state=OTA_STATE_UPDATE_AVAILABLE};
@@ -2239,8 +2284,15 @@ int main(int argc,char**argv) {
   for(int i=0;i<200;i++){usleep(10000);lv_tick_inc(1501);pump();label=find_label_prefix(lv_layer_top(),unavailable);if(label&&strstr(lv_label_get_text(label),"END-DIAGNOSTIC"))break;}
   assert(label&&strstr(lv_label_get_text(label),"END-DIAGNOSTIC"));assert(atomic_load(&update_checks)==1);
   assert(lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));
-  lv_obj_t *area=lv_obj_get_parent(label);lv_obj_update_layout(lv_layer_top());assert(lv_obj_get_scroll_bottom(area)>0);
-  lv_obj_scroll_to_y(area,lv_obj_get_scroll_y(area)+lv_obj_get_scroll_bottom(area),LV_ANIM_OFF);lv_obj_update_layout(lv_layer_top());assert(lv_obj_get_scroll_bottom(area)==0);
+  lv_obj_t *area=lv_obj_get_parent(label);lv_obj_update_layout(lv_layer_top());
+  int32_t overflow=lv_obj_get_scroll_bottom(area);
+  if(overflow>0) {
+   lv_obj_scroll_to_y(area,lv_obj_get_scroll_y(area)+overflow,LV_ANIM_OFF);lv_obj_update_layout(lv_layer_top());
+   assert(lv_obj_get_scroll_bottom(area)<=0);
+  } else {
+   lv_area_t text_bounds,viewport;lv_obj_get_coords(label,&text_bounds);lv_obj_get_content_coords(area,&viewport);
+   assert(text_bounds.y1>=viewport.y1 && text_bounds.y2<=viewport.y2);
+  }
   atomic_store(&update_unavailable,false);
   for(int i=0;i<200;i++){usleep(10000);lv_tick_inc(1501);pump();if(!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED))break;}
   assert(!lv_obj_has_state(lv_obj_get_parent(check),LV_STATE_DISABLED));assert(atomic_load(&update_checks)==1);

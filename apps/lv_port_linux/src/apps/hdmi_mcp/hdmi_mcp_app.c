@@ -240,6 +240,18 @@ static uint32_t digest_text(const char *text)
     return value;
 }
 
+static void show_empty_history(void)
+{
+    lv_obj_t *label = lv_label_create(history_list);
+    lv_label_set_text(label, ui_i18n_is_zh()
+        ? "暂无对话记录。\n在浏览器中开始任务后，进度和操作会显示在这里。"
+        : "No activity yet.\nStart a task in the browser to see its progress and actions here.");
+    lv_obj_set_width(label, lv_pct(100));
+    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_font(label, UI_TEXT_BODY_MD, 0);
+    lv_obj_set_style_text_color(label, UI_TEXT_SECONDARY, 0);
+}
+
 static void rebuild_history(json_object *history)
 {
     if (!history_list || !history ||
@@ -298,6 +310,7 @@ static void rebuild_history(json_object *history)
         lv_obj_set_style_text_font(body, UI_TEXT_BODY_MD, 0);
         lv_obj_set_style_text_color(body, UI_TEXT_PRIMARY, 0);
     }
+    if (!lv_obj_get_child_count(history_list)) show_empty_history();
     lv_obj_scroll_to_y(history_list, LV_COORD_MAX, LV_ANIM_ON);
 }
 
@@ -600,6 +613,8 @@ void hdmi_mcp_app_init(void)
 
     lv_obj_t *title = lv_label_create(timeline);
     lv_label_set_text(title, ui_tr(UI_STR_MCP_HISTORY));
+    lv_obj_set_width(title, lv_pct(100));
+    lv_label_set_long_mode(title, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_font(title, UI_TEXT_H2, 0);
     lv_obj_set_style_text_color(title, UI_TEXT_PRIMARY, 0);
 
@@ -614,6 +629,7 @@ void hdmi_mcp_app_init(void)
     lv_obj_set_scroll_dir(history_list, LV_DIR_VER);
 
     history_digest = 0;
+    show_empty_history();
     lv_scr_load(screen);
     show_stop_failure();
     monitor_cb(NULL);

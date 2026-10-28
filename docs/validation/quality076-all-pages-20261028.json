@@ -1,0 +1,117 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "source_base": "a409e3df4600e50aea76f80011f2c14f829a0bcc",
+  "source_binding": "This commit; implementation hashes below; full clean build follows in a new record",
+  "prerecord": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/prerecord.json",
+  "scope": "Home and eleven registered app entry points plus overlays; optional voice enabled only in host UI and isolated A133 TU checks",
+  "pages": [
+    "home",
+    "settings",
+    "wifi",
+    "bluetooth",
+    "assistant",
+    "hdmi",
+    "100ask pairing",
+    "tuya smart home",
+    "video",
+    "user apps",
+    "voice",
+    "system update"
+  ],
+  "changes": {
+    "video": "Use actual display size for canvas, control bar, playlist and empty states",
+    "voice": "Input and preview cards, keyboard-safe scrolling, state-aware text colors",
+    "ota": "Scrollable small-screen content, publish failure and10s unanswered request feedback, explicit status refresh and duplicate suppression; unknown status cannot install/download",
+    "hdmi": "Explain empty conversation/task history",
+    "bluetooth": "Fit disc and direct controls side by side on800x480; keep all playback/device actions visible; actual pointer opens details"
+  },
+  "source_sha256": {
+    "apps/lv_port_linux/src/apps/bt/bt_app.c": "d38e2183d220762343f6c0c6adaef1f92d4dd2ee3cd4c943bdc9ed40b50dad06",
+    "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c": "68323fa63451210bd359c675bcc6183739c3ba7f6d42fe9f9c803da9bfa4d0a3",
+    "apps/lv_port_linux/src/apps/ota/ota_app.c": "cabc5b2b52407fea5df232b16c70fe799ad9f6a22a2c5a07aae2aea612aea526",
+    "apps/lv_port_linux/src/apps/video/video_app.c": "93ddcf6f11aa50503a1239ec41a400697eaf2f8ed57a5d4d5a63f03dd7beb072",
+    "apps/lv_port_linux/src/apps/voice/voice_app.c": "2a7e200268671e7d219a037d40954b5976c321b30130a4366a35480b5c067abe",
+    "tests/architecture/fixtures/native_ui_review.c": "ad86da92d6295d98ca1bc7aebcec155009709158d065d7ef447c9430ba077306",
+    "tests/architecture/fixtures/native_ui_scenes.def": "b9495adabd174ec73786a2cda72e82ce3c3c9a80218597786d6c78c2c3a2e6e9"
+  },
+  "checks": [
+    {
+      "name": "Comprehensive host matrix r2",
+      "status": "failed",
+      "passed": 792,
+      "total": 808,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/matrix-result-r2.json",
+      "reason": "8 invalid-page tests reused a valid historical fixture;8 action-result runs exceeded blanket30s timeout. Follow-up isolated fixture and bounded180s runs pending; no failures erased"
+    },
+    {
+      "name": "Final Bluetooth regression",
+      "status": "passed",
+      "renders": 40,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/bt-final.log",
+      "scope": "Both sizes/languages/themes, full control bounds and real pointer details, rename and save recovery; final BT source"
+    },
+    {
+      "name": "Changed page regression",
+      "status": "passed",
+      "renders": 96,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/changed-r2"
+    },
+    {
+      "name": "Final OTA/video/voice regression",
+      "status": "passed",
+      "renders": 32,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/final-build.log"
+    },
+    {
+      "name": "Desktop update fixture correction",
+      "status": "passed",
+      "renders": 8,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/fixture-final"
+    },
+    {
+      "name": "Contracts/localization",
+      "status": "passed",
+      "tests": 9,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/contracts-final.log"
+    },
+    {
+      "name": "Optional voice actual A133 TU",
+      "status": "passed",
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/voice-enabled.compile.log",
+      "scope": "Flag1 isolated compilation; production default0 retained"
+    },
+    {
+      "name": "Visual review",
+      "status": "passed",
+      "scope": "12 page overview at1024zhlight/800endark and enlarged BT final; host fixtures only"
+    },
+    {
+      "name": "Complete A133 desktop/Web build",
+      "status": "not_run",
+      "reason": "Will run from committed clean checkout; separate immutable follow-up receipt"
+    },
+    {
+      "name": "Physical and real cloud acceptance",
+      "status": "not_run",
+      "reason": "No device install in this batch; prior SDIO failure remains unresolved, Tuya real cloud/device prerequisites absent"
+    }
+  ],
+  "failure_history": [
+    "before-run.log",
+    "before-complete",
+    "small-audit",
+    "changed-r1",
+    "voice-diagnostic",
+    "matrix-result.json",
+    "fixture-followup",
+    "matrix-result-r2.json",
+    "bt-followup first title-height clipping corrected by bt-final"
+  ],
+  "limits": [
+    "Host screenshot/pointer evidence is not physical LCD/touch/radio/audio/cloud acceptance",
+    "96 standalone scenes plus6 external scenarios; widget drag scenarios restricted to intended display; lockscreen intentionally removed; separate user-catalog and user-signed-catalog packaging fixtures excluded",
+    "Legacy OTA status has no new correlation IDs; no claim of complete transport concurrency proof",
+    "Current board firmware and signed rc32/rc9 unchanged; no upload/flash/reboot/module load"
+  ]
+}

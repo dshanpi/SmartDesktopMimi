@@ -33,8 +33,8 @@ LV_FONT_DECLARE(font_inter_regular_20)
  *****************************************************************************/
 
 /* Layout dimensions */
-#define SCREEN_WIDTH        1024
-#define SCREEN_HEIGHT       768
+#define SCREEN_WIDTH        lv_display_get_horizontal_resolution(NULL)
+#define SCREEN_HEIGHT       lv_display_get_vertical_resolution(NULL)
 #define HEADER_HEIGHT       UI_APP_HEADER_H
 #define CONTROL_BAR_HEIGHT  120
 
@@ -149,11 +149,11 @@ static void toggle_playlist(void) {
             scroll_playlist_to_current();
         }
         
-        /* Slide in: 1024 -> 624 (panel width 400) */
+        /* Slide in relative to the actual display and panel width. */
         lv_anim_t a;
         lv_anim_init(&a);
         lv_anim_set_var(&a, playlist_panel);
-        lv_anim_set_values(&a, SCREEN_WIDTH, SCREEN_WIDTH - 400);
+        lv_anim_set_values(&a, SCREEN_WIDTH, SCREEN_WIDTH - lv_obj_get_width(playlist_panel));
         lv_anim_set_time(&a, 300);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_out);
         lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_x);
@@ -162,7 +162,7 @@ static void toggle_playlist(void) {
         lv_anim_t a;
         lv_anim_init(&a);
         lv_anim_set_var(&a, playlist_panel);
-        lv_anim_set_values(&a, SCREEN_WIDTH - 400, SCREEN_WIDTH);
+        lv_anim_set_values(&a, SCREEN_WIDTH - lv_obj_get_width(playlist_panel), SCREEN_WIDTH);
         lv_anim_set_time(&a, 300);
         lv_anim_set_path_cb(&a, lv_anim_path_ease_in);
         lv_anim_set_exec_cb(&a, (lv_anim_exec_xcb_t)lv_obj_set_x);
@@ -1064,7 +1064,7 @@ void video_app_init(void) {
 
     video_hint_card = lv_obj_create(overlay_layer);
     lv_obj_remove_style_all(video_hint_card);
-    lv_obj_set_size(video_hint_card, 460, LV_SIZE_CONTENT);
+    lv_obj_set_size(video_hint_card, LV_MIN(460, SCREEN_WIDTH - 64), LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(video_hint_card, lv_color_hex(0x111827), 0);
     lv_obj_set_style_bg_opa(video_hint_card, LV_OPA_80, 0);
     lv_obj_set_style_border_width(video_hint_card, 1, 0);
@@ -1111,7 +1111,7 @@ void video_app_init(void) {
     /* Center toast for unsupported / errors */
     toast_card = lv_obj_create(overlay_layer);
     lv_obj_remove_style_all(toast_card);
-    lv_obj_set_size(toast_card, 520, LV_SIZE_CONTENT);
+    lv_obj_set_size(toast_card, LV_MIN(520, SCREEN_WIDTH - 64), LV_SIZE_CONTENT);
     lv_obj_set_style_bg_color(toast_card, lv_color_hex(0x1A0F12), 0);
     lv_obj_set_style_bg_opa(toast_card, LV_OPA_90, 0);
     lv_obj_set_style_border_width(toast_card, 2, 0);
@@ -1136,7 +1136,7 @@ void video_app_init(void) {
 
     toast_body = lv_label_create(toast_card);
     lv_label_set_text(toast_body, "");
-    lv_obj_set_width(toast_body, 460);
+    lv_obj_set_width(toast_body, lv_pct(100));
     lv_label_set_long_mode(toast_body, LV_LABEL_LONG_WRAP);
     lv_obj_set_style_text_align(toast_body, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_font(toast_body, UI_TEXT_BODY_LG, 0);
@@ -1171,11 +1171,14 @@ void video_app_init(void) {
     lv_label_set_text(title, ui_tr(UI_STR_VIDEO_PLAYER));
     lv_obj_set_style_text_color(title, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(title, FONT_TITLE, 0);
+    lv_obj_set_width(title, SCREEN_WIDTH / 3);
+    lv_label_set_long_mode(title, LV_LABEL_LONG_DOT);
+    lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_center(title);
 
     current_title_label = lv_label_create(header_cont);
     lv_label_set_text(current_title_label, ui_tr(UI_STR_VIDEO_CHOOSE));
-    lv_obj_set_width(current_title_label, 320);
+    lv_obj_set_width(current_title_label, LV_MAX(120, SCREEN_WIDTH / 3 - 40));
     lv_label_set_long_mode(current_title_label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(current_title_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(current_title_label, COLOR_TEXT_PRIMARY, 0);
@@ -1184,7 +1187,7 @@ void video_app_init(void) {
 
     current_status_label = lv_label_create(header_cont);
     lv_label_set_text(current_status_label, ui_tr(UI_STR_READY));
-    lv_obj_set_width(current_status_label, 320);
+    lv_obj_set_width(current_status_label, LV_MAX(120, SCREEN_WIDTH / 3 - 40));
     lv_label_set_long_mode(current_status_label, LV_LABEL_LONG_DOT);
     lv_obj_set_style_text_font(current_status_label, UI_TEXT_BODY_MD, 0);
     lv_obj_set_style_text_color(current_status_label, COLOR_TEXT_MUTED, 0);
@@ -1227,7 +1230,7 @@ void video_app_init(void) {
     /* Slider — taller track + larger knob for touch / visibility */
     progress_bar = lv_slider_create(progress_row);
     lv_obj_set_height(progress_bar, 10);
-    lv_obj_set_width(progress_bar, 700);
+    lv_obj_set_width(progress_bar, LV_MAX(1, SCREEN_WIDTH - 208));
     lv_obj_center(progress_bar);
     lv_slider_set_range(progress_bar, 0, 1);
     lv_slider_set_value(progress_bar, 0, LV_ANIM_OFF);
@@ -1298,7 +1301,7 @@ void video_app_init(void) {
     /* 2. Panel */
     playlist_panel = lv_obj_create(main_cont);
     lv_obj_remove_style_all(playlist_panel);
-    lv_obj_set_size(playlist_panel, 400, SCREEN_HEIGHT);
+    lv_obj_set_size(playlist_panel, LV_MIN(400, SCREEN_WIDTH - 48), SCREEN_HEIGHT);
     lv_obj_add_flag(playlist_panel, LV_OBJ_FLAG_IGNORE_LAYOUT);
     lv_obj_set_pos(playlist_panel, SCREEN_WIDTH, 0);
     lv_obj_set_style_bg_color(playlist_panel, lv_color_hex(0x111827), 0);

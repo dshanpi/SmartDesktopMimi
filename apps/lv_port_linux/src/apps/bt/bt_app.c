@@ -1306,22 +1306,22 @@ void bt_app_init(void) {
     lv_obj_set_style_pad_right(content, layout.page_pad, 0);
     lv_obj_set_style_pad_top(content, layout.compact ? 12 : 14, 0);
     lv_obj_set_style_pad_bottom(content, layout.compact ? 16 : 24, 0);
-    lv_obj_set_flex_flow(content, layout.compact ? LV_FLEX_FLOW_COLUMN : LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_flow(content, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_gap(content, layout.compact ? 18 : 24, 0);
     lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
     const int32_t slider_track_h = 10;
-    const int32_t stage_w = layout.compact ? layout.screen_w - layout.page_pad * 2 : 402;
+    const int32_t stage_w = layout.compact ? (layout.screen_w - layout.page_pad * 2) * 40 / 100 : 402;
 
     /* --- 左侧：单一 Hi-Fi 舞台 --- */
     section_connected = lv_obj_create(content);
     lv_obj_set_size(section_connected, stage_w,
-                    layout.compact ? 500 : lv_pct(100));
+                    lv_pct(100));
     lv_obj_set_flex_flow(section_connected, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(section_connected, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_all(section_connected, layout.compact ? 18 : 26, 0);
-    lv_obj_set_style_pad_gap(section_connected, layout.compact ? 10 : 14, 0);
+    lv_obj_set_style_pad_all(section_connected, layout.compact ? 16 : 26, 0);
+    lv_obj_set_style_pad_gap(section_connected, layout.compact ? 6 : 14, 0);
     lv_obj_set_style_radius(section_connected, layout.compact ? 26 : 34, 0);
     lv_obj_set_style_bg_color(section_connected, lv_color_hex(0x111827), 0);
     lv_obj_set_style_bg_grad_color(section_connected, lv_color_hex(0x080B12), 0);
@@ -1346,7 +1346,7 @@ void bt_app_init(void) {
     lv_obj_set_width(label_cover_status, lv_pct(100));
     lv_obj_set_style_text_align(label_cover_status, LV_TEXT_ALIGN_CENTER, 0);
 
-    const int32_t disc_stage_size = layout.compact ? 276 : 338;
+    const int32_t disc_stage_size = layout.compact ? LV_MIN(220, stage_w - 40) : 338;
     lv_obj_t *disc_stage = lv_obj_create(section_connected);
     clear_panel_style(disc_stage);
     lv_obj_set_size(disc_stage, disc_stage_size, disc_stage_size);
@@ -1361,7 +1361,7 @@ void bt_app_init(void) {
                                     2);
     lv_obj_center(ambient_glow);
 
-    int32_t disc_size = layout.compact ? 236 : 320;
+    int32_t disc_size = layout.compact ? disc_stage_size - 20 : 320;
     create_cd_deck_art(disc_stage, disc_size);
 
     lv_obj_t *deck_footer = lv_obj_create(section_connected);
@@ -1386,15 +1386,14 @@ void bt_app_init(void) {
     /* --- 右侧：Now Playing 信息与直接控制 --- */
     lv_obj_t *right_col = lv_obj_create(content);
     clear_panel_style(right_col);
-    lv_obj_set_size(right_col, layout.compact ? lv_pct(100) : 1,
-                    layout.compact ? 520 : lv_pct(100));
-    if (!layout.compact) lv_obj_set_flex_grow(right_col, 1);
+    lv_obj_set_size(right_col, 1, lv_pct(100));
+    lv_obj_set_flex_grow(right_col, 1);
     lv_obj_set_flex_flow(right_col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(right_col, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_set_style_pad_top(right_col, layout.compact ? 10 : 18, 0);
+    lv_obj_set_style_pad_top(right_col, layout.compact ? 0 : 18, 0);
     lv_obj_set_style_pad_left(right_col, layout.compact ? 0 : 10, 0);
     lv_obj_set_style_pad_right(right_col, layout.compact ? 0 : 4, 0);
-    lv_obj_set_style_pad_gap(right_col, layout.compact ? 10 : 12, 0);
+    lv_obj_set_style_pad_gap(right_col, layout.compact ? 6 : 12, 0);
     section_playback_details = right_col;
 
     label_source = lv_label_create(right_col);
@@ -1411,9 +1410,9 @@ void bt_app_init(void) {
 
     label_track_title = lv_label_create(right_col);
     lv_label_set_text(label_track_title, ui_tr(UI_STR_BT_AUDIO));
-    lv_obj_set_size(label_track_title, lv_pct(100), layout.compact ? 58 : 86);
+    lv_obj_set_size(label_track_title, lv_pct(100), layout.compact ? 76 : 86);
     lv_label_set_long_mode(label_track_title, LV_LABEL_LONG_WRAP);
-    lv_obj_set_style_text_font(label_track_title, ui_font_clock_meta(), 0);
+    lv_obj_set_style_text_font(label_track_title, layout.compact ? ui_font_h2() : ui_font_clock_meta(), 0);
     lv_obj_set_style_text_color(label_track_title, lv_color_hex(0xF8FAFC), 0);
     lv_obj_set_style_text_line_space(label_track_title, 4, 0);
     /* 舞台不再重复显示曲名；避免暂停时占位文案覆盖右侧真实 AVRCP 标题。 */
@@ -1447,7 +1446,7 @@ void bt_app_init(void) {
 
     lv_obj_t *progress_area = lv_obj_create(right_col);
     clear_panel_style(progress_area);
-    lv_obj_set_size(progress_area, lv_pct(100), 58);
+    lv_obj_set_size(progress_area, lv_pct(100), layout.compact ? 36 : 58);
     lv_obj_set_flex_flow(progress_area, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(progress_area, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_style_pad_gap(progress_area, 8, 0);
@@ -1483,13 +1482,13 @@ void bt_app_init(void) {
 
     lv_obj_t *transport_buttons = lv_obj_create(right_col);
     clear_panel_style(transport_buttons);
-    lv_obj_set_size(transport_buttons, lv_pct(100), layout.compact ? 76 : 92);
+    lv_obj_set_size(transport_buttons, lv_pct(100), layout.compact ? 60 : 92);
     lv_obj_set_flex_flow(transport_buttons, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(transport_buttons, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_style_pad_column(transport_buttons, layout.compact ? 24 : 30, 0);
 
     int32_t small_transport = layout.compact ? 52 : 58;
-    int32_t main_transport = layout.compact ? 68 : 80;
+    int32_t main_transport = layout.compact ? 56 : 80;
     btn_prev = create_transport_button(transport_buttons,
                                        small_transport,
                                        &fast_rewind_40dp_FFFFFF,
@@ -1512,7 +1511,7 @@ void bt_app_init(void) {
     update_transport_icon();
 
     lv_obj_t *volume_panel = lv_obj_create(right_col);
-    lv_obj_set_size(volume_panel, lv_pct(100), layout.compact ? 104 : 116);
+    lv_obj_set_size(volume_panel, lv_pct(100), layout.compact ? 76 : 116);
     lv_obj_set_style_radius(volume_panel, 22, 0);
     lv_obj_set_style_bg_color(volume_panel, lv_color_hex(0x111827), 0);
     lv_obj_set_style_bg_opa(volume_panel, LV_OPA_80, 0);
@@ -1520,14 +1519,14 @@ void bt_app_init(void) {
     lv_obj_set_style_border_color(volume_panel, lv_color_hex(0x334155), 0);
     lv_obj_set_style_border_opa(volume_panel, LV_OPA_70, 0);
     lv_obj_set_style_shadow_width(volume_panel, 0, 0);
-    lv_obj_set_style_pad_all(volume_panel, 16, 0);
+    lv_obj_set_style_pad_all(volume_panel, layout.compact ? 12 : 16, 0);
     lv_obj_set_flex_flow(volume_panel, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_gap(volume_panel, 10, 0);
     lv_obj_clear_flag(volume_panel, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *vol_header = lv_obj_create(volume_panel);
     clear_panel_style(vol_header);
-    lv_obj_set_size(vol_header, lv_pct(100), 34);
+    lv_obj_set_size(vol_header, lv_pct(100), layout.compact ? 26 : 34);
     lv_obj_set_flex_flow(vol_header, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(vol_header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
@@ -1583,6 +1582,16 @@ void bt_app_init(void) {
     lv_obj_set_style_text_font(details_label, ui_font_body_lg(), 0);
     lv_obj_set_style_text_color(details_label, lv_color_hex(0xCBD5E1), 0);
     lv_obj_center(details_label);
+
+    if (layout.compact) {
+        /* Keep all playback controls visible on short landscape displays. */
+        lv_obj_add_flag(deck_footer, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_parent(label_source, section_connected);
+        lv_obj_set_parent(label_connection_hint, section_connected);
+        lv_obj_set_parent(label_track_album, section_connected);
+        lv_obj_set_height(label_connection_hint, 36);
+        lv_label_set_long_mode(label_connection_hint, LV_LABEL_LONG_WRAP);
+    }
 
     /* ===== 设备详情底部抽屉 ===== */
     /* Full-screen scrim: clear default theme radius so corners are square. */

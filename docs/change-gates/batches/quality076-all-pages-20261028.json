@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "summary": "Complete all-page responsive and status-feedback audit; correct demonstrated gaps",
+  "context": "User requested every unfinished page; prior IoT/pairing work retained",
+  "next_steps": "Resolve external fixture follow-up, clean A133 application build; physical/cloud/stability remain separate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Native pages, host review harness, traceability",
+      "invariants": "No device/cloud mutations; retain version/signing boundaries and removed features",
+      "paths": [
+        "apps/lv_port_linux/src/apps/bt/bt_app.c",
+        "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+        "apps/lv_port_linux/src/apps/ota/ota_app.c",
+        "apps/lv_port_linux/src/apps/video/video_app.c",
+        "apps/lv_port_linux/src/apps/voice/voice_app.c",
+        "tests/architecture/fixtures/native_ui_review.c",
+        "tests/architecture/fixtures/native_ui_scenes.def",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-all-pages-20261028.json",
+        "docs/change-gates/batches/quality076-all-pages-20261028.json"
+      ],
+      "checks": [
+        {
+          "name": "Comprehensive host matrix r2",
+          "status": "failed",
+          "scope": "Host only",
+          "reason": "8 invalid-page tests reused a valid historical fixture;8 action-result runs exceeded blanket30s timeout. Follow-up isolated fixture and bounded180s runs pending; no failures erased",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Final Bluetooth regression",
+          "status": "passed",
+          "scope": "Both sizes/languages/themes, full control bounds and real pointer details, rename and save recovery; final BT source",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Changed page regression",
+          "status": "passed",
+          "scope": "Host only",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Final OTA/video/voice regression",
+          "status": "passed",
+          "scope": "Host only",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Desktop update fixture correction",
+          "status": "passed",
+          "scope": "Host only",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Contracts/localization",
+          "status": "passed",
+          "scope": "Host only",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Optional voice actual A133 TU",
+          "status": "passed",
+          "scope": "Flag1 isolated compilation; production default0 retained",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Visual review",
+          "status": "passed",
+          "scope": "12 page overview at1024zhlight/800endark and enlarged BT final; host fixtures only",
+          "reason": "See detailed bound evidence",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Complete A133 desktop/Web build",
+          "status": "not_run",
+          "scope": "Host only",
+          "reason": "Will run from committed clean checkout; separate immutable follow-up receipt",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        },
+        {
+          "name": "Physical and real cloud acceptance",
+          "status": "not_run",
+          "scope": "Host only",
+          "reason": "No device install in this batch; prior SDIO failure remains unresolved, Tuya real cloud/device prerequisites absent",
+          "evidence": "docs/validation/quality076-all-pages-20261028.json"
+        }
+      ]
+    }
+  ]
+}

@@ -116,3 +116,5 @@ UI_SCENE("iot-empty")
 UI_SCENE("iot-authorization")
 UI_SCENE("iot-network-error")
 UI_SCENE("pairing-refresh-failure")
+
+UI_SCENE("ota-feedback")
