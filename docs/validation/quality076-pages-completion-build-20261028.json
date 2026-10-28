@@ -1,0 +1,92 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "source_commit": "6269f148b1ad04a74443e9970a3527c77b49a1b9",
+  "full_build": {
+    "status": "passed",
+    "output": "/home/ubuntu/AI-DeskTopBox/.delivery/a133-pages-completion-build-20261028",
+    "seconds": 83.97,
+    "candidate_receipt_sha256": "7c2e0961b02a9b850f99d085951f49e1dc3737276869f0402029696c87fb8a7c",
+    "desktop": {
+      "architecture": "aarch64",
+      "build": {
+        "application_only": true,
+        "cloud_provider": false,
+        "compile_commands_sha256": "0c5a8766e51b2b8b39cd41899f7834eeeced6e1f303b2bd439f225f3ae4b9e55",
+        "compiled_source_count": 676,
+        "display_profiles": [
+          "1024x768"
+        ],
+        "source_ownership_sha256": "1634b0fa699f930373cf6aa9ed059d2cda229f91d786e6e340cd96e2aa6b7764",
+        "target": "lvglsim",
+        "voice_control": false
+      },
+      "desktop_sha256": "ac4a25a0ceadb3cb7b30fd27c9b4ec3baf740c65defa9ae6fc3481b360c1f2a8",
+      "interface": {
+        "id": "mimi-ipc-v1.2",
+        "sha256": "1148226d31499f5c643cc429deb70777f2ae408dce0f66e01c6965a6f5bccfad"
+      },
+      "kind": "application-build",
+      "platform_id": "a133",
+      "schema_version": 1,
+      "sdk_lock_sha256": "bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261",
+      "source": {
+        "commit": "6269f148b1ad04a74443e9970a3527c77b49a1b9",
+        "dirty": false
+      },
+      "system_baseline": "a133-b6-development-unvalidated",
+      "target_os": "tina"
+    },
+    "changed_sources": {
+      "apps/lv_port_linux/src/apps/bt/bt_app.c": {
+        "source_sha256": "1b79a2b4bcdf7dda183efd29008d009e4b271e5b65309360eeca8c2555c5a95b",
+        "command_sha256": "05c370c69ebff73d906857a1883aa24160db40cd0043a44bdf27ffdd19bb1f70"
+      },
+      "apps/lv_port_linux/src/apps/setting/setting_app.c": {
+        "source_sha256": "4d62324bff24df39d6e3b1e558b1636bb0948218cade688c19f1625cdcf96a8e",
+        "command_sha256": "0bc0bea5cc6ab596850aa06be2a9377e67b53187e093689c251ef3c3eb69c0ab"
+      },
+      "apps/lv_port_linux/src/apps/user/user_app.c": {
+        "source_sha256": "b9bf70d7142a11e7571e56c3107d764b6a0d835b490c2565ab54cf17d09366c8",
+        "command_sha256": "663be29b07c3a9d09cb5e7c5c466529497ce368f531c0d3471a1765138e824f2"
+      }
+    },
+    "unique_sources": 676,
+    "compile_command_entries": 723,
+    "tree_files_verified": 28,
+    "signed": false,
+    "uploaded": false,
+    "installed": false
+  },
+  "host_review": {
+    "status": "passed",
+    "final_affected_combinations": 216,
+    "scope": "160 final settings/BT/related renders plus56 frozen external user-app scenarios; not one full final-binary matrix",
+    "external_binary_sha256": "87deac6050606204fd881ce63f2d2fd62f12e7b781daf3195bb834fa49aa227f",
+    "contracts": 9,
+    "evidence": [
+      "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/final-pages.log",
+      "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/external-final-result.json",
+      "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/contracts-final.log"
+    ],
+    "prior_failures": "settings-r1 invalid test symbol and settings-r2 outdated manager route retained; corrected click-based tests pass"
+  },
+  "gallery": {
+    "screens": 440,
+    "states": 55,
+    "groups": 12,
+    "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-completion-20261028/preview",
+    "manifest_sha256": "1a6b96b92c7451a0a3c3d3b8c578423c126fd85ce339239adcd45696aca51be1",
+    "scope": "Current affected screenshots plus previous unchanged pages; per-image provenance; enlarged changed pages and12-page contact sheets inspected, not manual inspection of every image"
+  },
+  "physical": {
+    "status": "not_run",
+    "reason": "No device install or operation this batch. Current user-confirmed desktop/touch responsiveness does not qualify new source or resolve earlier freezes."
+  },
+  "overall_release_qualified": false,
+  "next_steps": [
+    "Actual A133 display/touch/audio acceptance bound to deployed artifact",
+    "Real Tuya account/device and100ask binding lifecycle acceptance",
+    "Resolve SDIO/backend blocking stability issues and complete update/rollback/data-preservation gates"
+  ]
+}
