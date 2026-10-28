@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "previous": "docs/validation/quality076-sdio-tx-integration-20261028.json",
+  "user_statement": "没有操作板子",
+  "reboot_classification": "Observed boot-ID transition; user denies manual operation and assistant sent no restart/power command. Uncommanded restart, cause unconfirmed.",
+  "current_failure": {
+    "boot_id": "a1fd58ab-d8ce-46a8-924f-89927d2ff221",
+    "uptime_first": 6105.34,
+    "uptime_final": 6259.31,
+    "sdio": "CMD52 flood has recurred on same boot; TX stack again waits in sdio_readb",
+    "ui": "activity_ready false; heartbeat6171401ms, last backend_reply385331ms. Heartbeat alone not desktop health.",
+    "backend": "PID2436 stack in __inet_stream_connect",
+    "memory_available_kb": 1860192,
+    "slab_kb": 67688,
+    "interpretation": "Temporary network success after reboot did not establish sustained recovery; sampled connection wait does not prove one call lasted entire stale interval"
+  },
+  "reboot_evidence": {
+    "pstore": "No /sys/fs/pstore on device; SDK configuration disables PSTORE",
+    "watchdog": "procd PID1 holds fd3 -> /watchdog; watchdog0 exists; bootstatus/status sysfs absent",
+    "panic": "Runtime kernel.panic=3; indicates reboot policy after panic, not evidence that a panic occurred",
+    "source": "Sunxi watchdog source inspected; no prior-reset report established",
+    "logread": "No response before Ctrl+C; aborted and shell responsiveness verified",
+    "cause": "Not established: watchdog,panic,power or software restart remain unproven"
+  },
+  "runtime_changes": {
+    "console": "Temporary dmesg -n3 to regain shell, original8 7 1 7 from previous capture; final3 7 1 7; no persistent change",
+    "serial": "serial-2 closed confirmed",
+    "reboot_flash_module_credentials": "No change"
+  },
+  "checks": {
+    "user_confirmation": "received",
+    "runtime_failure": "failed",
+    "rootcause": "unresolved",
+    "candidate_runtime": "not_run; module remains uninstalled"
+  },
+  "evidence": ".delivery/quality-review-20261023/sdio-reboot-followup-20261028",
+  "next": [
+    "Investigate and bound backend connection waits in integrated candidate",
+    "Qualify safe update/recovery path and install new versioned candidate",
+    "Capture full pre-reset transition externally; no claim of causal proof from current watchdog settings"
+  ]
+}
