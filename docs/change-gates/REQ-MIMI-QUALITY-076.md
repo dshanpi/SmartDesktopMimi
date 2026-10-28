@@ -705,3 +705,8 @@ No page changes installed or packaged; actual cloud/device/touch remain not_run.
 
 2026-10-26 用户补充确认：SDIO刷屏当时“桌面卡住或黑屏”，本次真机表现记为 failed_user_confirmed；此前UI心跳不能替代可见桌面/触摸验收。当前COM17在线但被占用，已请求释放；已知SSH端点超时。未抢占串口、重启或刷机。后续先恢复诊断连接，再检查和恢复。详见 docs/validation/quality076-sdio-physical-report-20261026.json。
 
+
+
+2026-10-28：SDIO发送信用读取失败退避已提交私有硬件源码80cab21并同步SDK。18项主机模拟、35对象完整A133模块及4384文件overlay完整性通过；新模块未上机，SDK缓存尚未重编，不把源码同步视为产品更新。现场先看到旧启动的超时，随后出现新启动（未由助手发出重启，原因待确认）；后续心跳推进、单次网络连通、HDMI协议关闭及临时工具清理通过。原rc8模块保持，物理屏幕/触摸和长期稳定性未验证。详见docs/validation/quality076-sdio-tx-integration-20261028.json。
+
+发送退避在readb释放SDIO host之后执行；正常信用读取及队列所有权不变。原失败与未验收记录保持。

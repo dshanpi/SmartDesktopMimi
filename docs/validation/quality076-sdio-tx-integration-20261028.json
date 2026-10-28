@@ -1,0 +1,306 @@
+{
+  "schema": 1,
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "previous": "docs/validation/quality076-sdio-physical-report-20261026.json",
+  "scope": "Complete isolated module, promote and synchronize TX backoff source; inspect live board and disable HDMI through existing protocol",
+  "prerecord": ".delivery/quality-review-20261023/sdio-tx-integration-20261028/prerecord.json",
+  "promotion": {
+    "requirement": "REQ-MIMI-QUALITY-076",
+    "date": "2026-10-28",
+    "status": "source_promoted_not_device_accepted",
+    "input_sha256": "c713b49f5828e6c6b654e62f51ab04ace32f8f95a08eb51bf1ef342e683f8f4e",
+    "source_sha256": "63cd713a64f434761a4f10ae4c43bd63802fb797c3dc06dd61a299aef3d8bf31",
+    "module_sha256": "20584740f9b5b0a9d3cb6132b23628594f054540ae577ab2102585d3a3126ad3",
+    "objects": 35,
+    "evidence": ".delivery/quality-review-20261023/sdio-tx-integration-20261028",
+    "tests": "diagnostics/hdmi074/sdio-tx-backoff/run_host_tests.py",
+    "not_run": [
+      "physical timing and stability",
+      "full image rebuild and install",
+      "initial failure rootcause"
+    ],
+    "hardware_commit": "80cab216c1a9d6150264ba1cbafaf77952455b8d",
+    "sdk_source_synced": true,
+    "sdk_cached_module": "stale; not rebuilt in SDK output; isolated module only",
+    "other_driver_files_unchanged": 186,
+    "paths": [
+      "overlay/kernel/linux-4.9/drivers/net/wireless/aic8800/aic8800_fdrv/aicwf_sdio.c",
+      "meta/overlay-manifest.json",
+      "meta/sdio-tx-backoff-quality-076.json",
+      "diagnostics/hdmi074/sdio-tx-backoff/run_host_tests.py",
+      "diagnostics/hdmi074/sdio-tx-backoff/README.md"
+    ]
+  },
+  "module": {
+    "status": "complete_module_built_not_accepted",
+    "translation_units": 35,
+    "steps": [
+      {
+        "step": "rwnx_msg_tx.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_msg_rx.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_utils.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_cmds.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_irqs.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_cfgfile.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_strs.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_rx.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_tx.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_txq.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_main.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_mod_params.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_mesh.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_platform.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_pci.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_dini.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_v7.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "ipc_host.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_tdls.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aic_vendor.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "md5.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aicwf_compat_8800dc.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aicwf_compat_8800d80.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_wakelock.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "regdb.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aic_priv_cmd.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aicwf_rx_prealloc.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_radar.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_debugfs.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_fw_trace.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "rwnx_testmode.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "sdio_host.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aicwf_txrxif.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aicwf_sdio.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aicwf_tcp_ack.o",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "aggregate",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "modpost",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "metadata",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "module",
+        "exit": 0,
+        "log_bytes": 0
+      },
+      {
+        "step": "elf",
+        "exit": 0,
+        "log_bytes": 934
+      },
+      {
+        "step": "modinfo",
+        "exit": 0,
+        "log_bytes": 4441
+      }
+    ],
+    "module_sha256": "20584740f9b5b0a9d3cb6132b23628594f054540ae577ab2102585d3a3126ad3",
+    "sdk_unchanged": true,
+    "not_run": [
+      "Board load/runtime",
+      "Full SDK provenance closure",
+      "MMC DMA/rootcause closure"
+    ]
+  },
+  "verification": {
+    "host": "passed18 cases from actual promoted overlay, with600 simulated failed reads; no real timing assertion",
+    "full_module": "passed35 A133 objects plus aggregate,modpost,metadata and module link; empty compiler/linker diagnostics",
+    "overlay": "passed4384 files; byte/inventory integrity only,97component baseline not rerun",
+    "sdk_sync": "passed exact source and unchanged other driver files; cached SDK object/module stale",
+    "physical_new_candidate": "not_run",
+    "full_system_package": "not_run"
+  },
+  "live": {
+    "initial_boot_id": "6117b451-65c9-4cb0-bb49-cb76e7aa5165",
+    "initial_uptime": 8348.63,
+    "initial": "SDIO CMD52 flood and HDMI no-signal retries; heartbeat alive",
+    "later_boot_id": "a1fd58ab-d8ce-46a8-924f-89927d2ff221",
+    "later_uptime_samples": [
+      53.87,
+      157.25,
+      259.4,
+      299.91
+    ],
+    "reboot": "Observed new boot; no reboot/power command sent by assistant; cause unconfirmed, user question pending",
+    "panel": "Driver reports unblank1024x768/backlight107/fps28.3; not physical observation",
+    "heartbeat": "Advancing after new boot; not proof of touch/display response",
+    "network": "One ping to development host succeeded; no sustained traffic qualification",
+    "mmc_interrupts": {
+      "count_at_157_25": 5724,
+      "count_at_259_40": 7498,
+      "average_per_second": 17.366617719040626,
+      "limitation": "Brief old-module sample after new boot, not attributable to candidate"
+    },
+    "installed_module_sha256": "13b264ed76929ec1ab78d7b4d916f173b7fe5b14fb5c664b0932a78589f57739",
+    "new_candidate_loaded": false,
+    "physical_screen_touch": "not_run; previous user-confirmed freeze remains historical failure"
+  },
+  "runtime_changes": {
+    "console": "Temporarily dmesg -n3 on initial boot; subsequent new boot readback8 7 1 7, no persistent change",
+    "hdmi": "Off via previously validated SHA-pinned helper and existing backend protocol; process absence verified",
+    "temporary_helper": "Removed and absence verified",
+    "serial": "serial-1 closed and confirmed",
+    "host_helper_server": "60second bounded process; no credential access or new authentication",
+    "firmware_or_flash": false
+  },
+  "limitations": [
+    "Initial SDIO failure cause not resolved",
+    "Observed new boot cause not known",
+    "Kernel/generated/compiler provenance inherited; full SDK baseline closure still open",
+    "No full product image, update, rollback or physical timing validation",
+    "Two optimized pages remain source-only, no new device acceptance"
+  ],
+  "next": [
+    "Build a new versioned product candidate using updated source pins; retain rc32/rc9 unchanged",
+    "Qualify scoped recovery and device update path before installation",
+    "Measure retry pressure, WiFi recovery, screen/touch and sustained stability on new candidate"
+  ]
+}
