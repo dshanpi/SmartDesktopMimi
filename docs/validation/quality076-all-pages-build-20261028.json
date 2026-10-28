@@ -1,0 +1,154 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "source_commit": "0f69ea0027d8619ce2128d968eb5faf0a8dd5bbe",
+  "kind": "Unsigned application build and bounded host UI acceptance",
+  "full_build": {
+    "status": "passed",
+    "output": "/home/ubuntu/AI-DeskTopBox/.delivery/a133-all-pages-build-20261028",
+    "seconds": 131.72,
+    "candidate_receipt_sha256": "f84f8e62cee049eb56579281fbfd46dc2dedbb24b90906cdc0ef3e419376f3eb",
+    "desktop": {
+      "architecture": "aarch64",
+      "build": {
+        "application_only": true,
+        "cloud_provider": false,
+        "compile_commands_sha256": "7d1f3fc3c1736027bf3a37c4cc4542de2d39b853f529e056a059c30d31b80b04",
+        "compiled_source_count": 676,
+        "display_profiles": [
+          "1024x768"
+        ],
+        "source_ownership_sha256": "1634b0fa699f930373cf6aa9ed059d2cda229f91d786e6e340cd96e2aa6b7764",
+        "target": "lvglsim",
+        "voice_control": false
+      },
+      "desktop_sha256": "b722c0ad87fbd90428a50de42ce1532dfab8925f3aada99a8947bc45d1de8859",
+      "interface": {
+        "id": "mimi-ipc-v1.2",
+        "sha256": "1148226d31499f5c643cc429deb70777f2ae408dce0f66e01c6965a6f5bccfad"
+      },
+      "kind": "application-build",
+      "platform_id": "a133",
+      "schema_version": 1,
+      "sdk_lock_sha256": "bb78f59b8a4b2128123d5601fc782bc5360c9be567ecd4ad3979f1b000482261",
+      "source": {
+        "commit": "0f69ea0027d8619ce2128d968eb5faf0a8dd5bbe",
+        "dirty": false
+      },
+      "system_baseline": "a133-b6-development-unvalidated",
+      "target_os": "tina"
+    },
+    "changed_sources": {
+      "apps/lv_port_linux/src/apps/bt/bt_app.c": {
+        "source_sha256": "d38e2183d220762343f6c0c6adaef1f92d4dd2ee3cd4c943bdc9ed40b50dad06",
+        "command_sha256": "63a58419016bf20b618df73c4b3000e4d0b7469bb51b2f41e9f14a6ac18351d7"
+      },
+      "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c": {
+        "source_sha256": "68323fa63451210bd359c675bcc6183739c3ba7f6d42fe9f9c803da9bfa4d0a3",
+        "command_sha256": "5ec5a8f736f8932de0ba4b35e17707f04edf881d2df0417a021acc89b9125335"
+      },
+      "apps/lv_port_linux/src/apps/ota/ota_app.c": {
+        "source_sha256": "cabc5b2b52407fea5df232b16c70fe799ad9f6a22a2c5a07aae2aea612aea526",
+        "command_sha256": "46c6bc0419cee52206d9701defe32d6597a3a6d5660e34fe9f58d9ecd4917c90"
+      },
+      "apps/lv_port_linux/src/apps/video/video_app.c": {
+        "source_sha256": "93ddcf6f11aa50503a1239ec41a400697eaf2f8ed57a5d4d5a63f03dd7beb072",
+        "command_sha256": "430197a682f5a46e677477247196ea2e68e0c62f872c9088f37f908f2a9beb8b"
+      },
+      "apps/lv_port_linux/src/apps/voice/voice_app.c": {
+        "source_sha256": "2a7e200268671e7d219a037d40954b5976c321b30130a4366a35480b5c067abe",
+        "command_sha256": "bd90295109759f1be6470f5d832429bd6e149bf3a9a67761f8de3c99b9f0c68d"
+      }
+    },
+    "web": "5784 modules; type check, localization compilation and device bundle passed",
+    "tree_files_verified": 28,
+    "signed": false,
+    "uploaded": false,
+    "warnings": [
+      "Existing linker zero-size fini_array warning",
+      "Browserslist dataset freshness warning; build succeeded"
+    ]
+  },
+  "host_matrix": {
+    "status": "passed",
+    "scope": "808 applicable scene/size/language/theme combinations covered across source r2 plus final affected-scope follow-ups; not one single final binary matrix",
+    "standalone_scenes": 96,
+    "external_scenes": [
+      "user-catalog-scroll",
+      "user-page-missing",
+      "user-action-result",
+      "user-action-async",
+      "user-action-start-failure",
+      "user-page-invalid"
+    ],
+    "applicable_combinations": 808,
+    "base_run_passed": 792,
+    "external_corrected_passed": 16,
+    "final_bt_replacement_renders": 40,
+    "evidence": [
+      "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/matrix-result-r2.json",
+      "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/external-final-result.json",
+      "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/bt-final.log"
+    ],
+    "external_binary_sha256": "ceb2ecada73cb148f34dd84b7195cd0dff7dbb6ac480b6f50ca5a2ed2a27842a",
+    "external_seconds": [
+      0.061,
+      0.055,
+      0.078,
+      0.092,
+      0.055,
+      0.101,
+      0.073,
+      0.076,
+      39.029,
+      37.916,
+      37.733,
+      38.048,
+      32.898,
+      33.22,
+      32.925,
+      32.68
+    ],
+    "historical_failures": "All prior runs remain; original invalid-page fixture was valid, original30s timeout expired. Corrected isolated unsupported-widget sample and180s bounded final frozen binary pass. Initial external-followup had concurrent BT rebuild; only frozen external-final used for exact binary evidence."
+  },
+  "additional_checks": {
+    "contracts_localization": {
+      "status": "passed",
+      "count": 9,
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/contracts-final.log"
+    },
+    "optional_voice_a133": {
+      "status": "passed",
+      "scope": "Isolated flag1 TU; production voice remains disabled",
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/voice-enabled.compile.log"
+    },
+    "gallery": {
+      "status": "passed",
+      "screens": 376,
+      "sizes": [
+        "1024x768",
+        "800x480"
+      ],
+      "languages": [
+        "zh",
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "evidence": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/all-pages-20261028/preview",
+      "visual_scope": "12 page contact sheets and enlarged changed-page images inspected; not manual review of every screenshot"
+    }
+  },
+  "physical": {
+    "status": "not_run",
+    "reason": "Candidate not installed; no board action in this batch. SDIO hangs/black screen and uncommanded reset remain unresolved; physical touch, cloud, audio, real updates remain open"
+  },
+  "overall_release_qualified": false,
+  "next_steps": [
+    "Validate candidate on actual A133 after stability/access work",
+    "Real Tuya/account/device and100ask binding lifecycle checks",
+    "Complete hardware update/rollback/power/data-preservation gates before stable release"
+  ]
+}
