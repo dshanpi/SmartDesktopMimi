@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "summary": "Deliver signed page-complete app and system candidate with final driver/image readback",
+  "context": "User requests implementation; board SDIO fault recurred before transfer",
+  "next_steps": "Reliable maintenance path, fresh backups and actual system/app acceptance",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Signed rc33/rc10 candidate, scoped live readiness and image evidence",
+      "invariants": "No direct binary replacement, compatibility widening or physical pass claim; historical artifacts retained",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-pages-deployment-20261028.json",
+        "docs/change-gates/batches/quality076-pages-deployment-20261028.json"
+      ],
+      "checks": [
+        {
+          "name": "Existing A133 readiness",
+          "status": "passed",
+          "scope": "Initial rc8 runtime and storage only; does not qualify new candidate",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "SDIO continued stability",
+          "status": "failed",
+          "scope": "2979 retained CMD52 RTO messages at3274.128–3305.550s, before any candidate transfer; last sampled UI/backend still responding, physical freeze not observed this turn",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "Temporary access cleanup",
+          "status": "passed",
+          "scope": "Long serial key setup truncated and did not execute; incomplete input canceled, board temp auth absent, local private key deleted, serial closed",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "Application pack/signature",
+          "status": "passed",
+          "scope": "Existing dedicated key,28 staged files; exact rc10-only target",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "Reject current old system",
+          "status": "passed",
+          "scope": "Expected rc8 compatibility rejection; no target widening",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "Kernel and full private system build",
+          "status": "passed",
+          "scope": "Standard incremental SDK kernel and full application/rootfs/pack/signed SWU; not clean SDK reconstruction",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "Final image readback",
+          "status": "passed",
+          "scope": "All sealed baseline files, empty enrollment, exact packaged SDIO module and source pins; compressed/raw image and build checksums",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "New candidate physical installation",
+          "status": "not_run",
+          "scope": "Board unchanged on rc8/rc31; active SDIO fault and incompatible old provider prevent application-only acceptance",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        },
+        {
+          "name": "Real touch/cloud/update rollback/power acceptance",
+          "status": "not_run",
+          "scope": "No qualification inherited from host tests or previous versions",
+          "reason": "See bound evidence and limitations",
+          "evidence": "docs/validation/quality076-pages-deployment-20261028.json"
+        }
+      ]
+    }
+  ]
+}

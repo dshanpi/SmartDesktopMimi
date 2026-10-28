@@ -1,0 +1,185 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-28",
+  "request": "Put completed pages into operation",
+  "application_source": "6269f148b1ad04a74443e9970a3527c77b49a1b9",
+  "system_recipe_source": "f04a624ee863b8111fa9b7bdf554dcdda7856f25",
+  "source_difference": "Only prior evidence documentation differs between factory compiled source and system recipe; product source paths compared equal before build",
+  "hardware_source": "80cab216c1a9d6150264ba1cbafaf77952455b8d",
+  "versions": {
+    "application": "1.0.8-rc.33",
+    "system": "1.0.0-rc.10"
+  },
+  "checks": [
+    {
+      "name": "Existing A133 readiness",
+      "status": "passed",
+      "scope": "Initial rc8 runtime and storage only; does not qualify new candidate",
+      "evidence": "device-result.json"
+    },
+    {
+      "name": "SDIO continued stability",
+      "status": "failed",
+      "scope": "2979 retained CMD52 RTO messages at3274.128–3305.550s, before any candidate transfer; last sampled UI/backend still responding, physical freeze not observed this turn",
+      "evidence": "device-evidence.zip"
+    },
+    {
+      "name": "Temporary access cleanup",
+      "status": "passed",
+      "scope": "Long serial key setup truncated and did not execute; incomplete input canceled, board temp auth absent, local private key deleted, serial closed",
+      "evidence": "device-result.json"
+    },
+    {
+      "name": "Application pack/signature",
+      "status": "passed",
+      "scope": "Existing dedicated key,28 staged files; exact rc10-only target",
+      "evidence": "baseline-result.json"
+    },
+    {
+      "name": "Reject current old system",
+      "status": "passed",
+      "scope": "Expected rc8 compatibility rejection; no target widening",
+      "evidence": "rc8-rejection.json"
+    },
+    {
+      "name": "Kernel and full private system build",
+      "status": "passed",
+      "scope": "Standard incremental SDK kernel and full application/rootfs/pack/signed SWU; not clean SDK reconstruction",
+      "evidence": "pipeline-state.json"
+    },
+    {
+      "name": "Final image readback",
+      "status": "passed",
+      "scope": "All sealed baseline files, empty enrollment, exact packaged SDIO module and source pins; compressed/raw image and build checksums",
+      "evidence": "readback-result.json"
+    },
+    {
+      "name": "New candidate physical installation",
+      "status": "not_run",
+      "scope": "Board unchanged on rc8/rc31; active SDIO fault and incompatible old provider prevent application-only acceptance",
+      "evidence": "device-result.json"
+    },
+    {
+      "name": "Real touch/cloud/update rollback/power acceptance",
+      "status": "not_run",
+      "scope": "No qualification inherited from host tests or previous versions",
+      "evidence": "device-result.json"
+    }
+  ],
+  "signed_application": {
+    "status": "passed_host_signing_and_generic_baseline",
+    "source": "6269f148b1ad04a74443e9970a3527c77b49a1b9",
+    "application_version": "1.0.8-rc.33",
+    "system_version": "1.0.0-rc.10",
+    "package_sha256": "4aecc002ca5291c55d66d87d4f0fff5d701d08e7530ba8d5533802496fb670b3",
+    "baseline_lock_sha256": "528bdf06267fd01a8a1f46c78a34c12687eb445c87d8b1b7d4ea8c7600ac9301",
+    "staged_files_verified": 28,
+    "admission": "Host-only inherited hardware/geometry template, not new physical identity readback",
+    "generic_enrollment": "empty",
+    "trust": "same dedicated keys",
+    "physical": "not_run",
+    "uploaded": false
+  },
+  "system_build_seconds": 376.7,
+  "pipeline_seconds": 526.56,
+  "final_image": {
+    "rootfs_sha256": "59fcfea33401dc1b498bcaf3a4475a8aa355ce752f8e35c53ac7d3d1cfee1635",
+    "sealed_files": 40,
+    "driver": {
+      "raw_sha256": "1673a54a98d0e2e8c232e8f72e9070883400095f25a1293f4bd98992d1deeeb6",
+      "image_sha256": "aae1e2f676645e6bf1d5ce5bf9c7d473bbea71fffd8d50e1333fed6d5f180b39",
+      "matches_exact_sdk_packaging": true,
+      "source_hashes": {
+        "aicwf_rx_prealloc.h": "644bfc163ecb6c20ff5056893cac80fb68cf556dc9b6a57d0a709f40d3175bfb",
+        "aicwf_sdio.c": "63cd713a64f434761a4f10ae4c43bd63802fb797c3dc06dd61a299aef3d8bf31",
+        "aicwf_rx_prealloc.c": "55cba069689ec738551db0bba777fdd85b2bf1d32fe38d018cf13c76d58fdf8f"
+      }
+    },
+    "image_archive": {
+      "archive_bytes": 95960648,
+      "archive_sha256": "a13020012c00e0bf29319a7a0bc8ca6917b1b27d900bfe54ebe4f0f77223043b",
+      "filename": "SmartDesktopMimi-SystemImage-v1.0.0-rc.10.img.gz",
+      "kind": "system-image-archive",
+      "physical_acceptance": "not_run",
+      "raw_bytes": 556318720,
+      "raw_sha256": "a52d1411985dd203af638af0a1a7bb43c5685b89a82ac3e127f778ccb6e0fb2a",
+      "schema_version": 1,
+      "system_version": "1.0.0-rc.10"
+    }
+  },
+  "artifacts": {
+    "application": {
+      "path": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-deployment-20261028/SmartDesktopMimi-Application-v1.0.8-rc.33.tar",
+      "sha256": "af5a4482992190696e65e851e76ebe0bec493ba0dfb3874c4773810231c2d9c0"
+    },
+    "system_image": {
+      "path": "/home/ubuntu/AI-DeskTopBox/.delivery/a133-private-system-rc10-20261028/firmware/SmartDesktopMimi-SystemImage-v1.0.0-rc.10.img.gz",
+      "sha256": "a13020012c00e0bf29319a7a0bc8ca6917b1b27d900bfe54ebe4f0f77223043b"
+    },
+    "system_ota": {
+      "path": "/home/ubuntu/AI-DeskTopBox/.delivery/a133-private-system-rc10-20261028/ota/system.swu",
+      "sha256": "98e27cc146c5920594b0cc204d3b38ab81c6090d91bb007d7e658acdc2e77279"
+    }
+  },
+  "device_observation": {
+    "requirement": "REQ-MIMI-QUALITY-076",
+    "status": "deployment_not_started",
+    "device": {
+      "board": "A133 MainBoardV1.2",
+      "system": "1.0.0-rc.8",
+      "desktop": "1.0.8-rc.31",
+      "boot_id": "302d0580-9668-451e-a313-8bb319f56974",
+      "initial_uptime": 3099.17,
+      "last_observed_uptime": 3350.14,
+      "health_last": {
+        "activity_ready": true,
+        "ui_monotonic_ms": 3349358,
+        "backend_reply_ms": 3348477
+      },
+      "storage_initial": "root and overlay ext4 errors0",
+      "physical_screen_and_touch": "not_observed_this_turn"
+    },
+    "incident": {
+      "sdio_cmd52_rto_records": 2979,
+      "observed_seconds": [
+        3274.128319,
+        3305.550174
+      ],
+      "preceding_i2c_error": "3271.349168 i2c1 dev0x1e transfer timeout, not established rootcause",
+      "cause": "unresolved; new candidate not transferred/installed",
+      "historical_failure_retained": true
+    },
+    "temporary_access": {
+      "attempt": "Serial command too long, truncated into continuation prompt; no setup completion",
+      "recovery": "Ctrl-C incomplete shell input, then short dmesg -n3 command confirmed",
+      "key_and_symlink_absent_on_board": true,
+      "local_private_key_deleted": true,
+      "serial_closed": true
+    },
+    "device_changes": [
+      "Console printk level temporarily3; original console level8 from previous read; reboot resets this runtime value"
+    ],
+    "not_done": [
+      "No package transfer or install",
+      "No reboot,power,flash,module load",
+      "No credential or identity reset",
+      "No stability or physical acceptance"
+    ],
+    "next": "Build rc10 system including committed SDIO backoff and signedrc33; preserve all earlier artifacts"
+  },
+  "evidence_root": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/pages-deployment-20261028",
+  "overall_release_qualified": false,
+  "limitations": [
+    "No board install, reboot, power, flash or module change",
+    "SDIO backoff mitigates error retry flooding; initial SDIO cause and prior reset cause remain unresolved",
+    "Blocking cloud reconnect path remains unmodified",
+    "Host UI evidence is bound to application6269f14; physical screen/touch/cloud not accepted",
+    "No public push or release"
+  ],
+  "next_steps": [
+    "Establish reliable bound maintenance/transfer path and fresh off-device backups",
+    "Verify new system admission and recoverability before actual rc10 installation",
+    "After install verify exact versions/hashes, physical pages/touch, WiFi/audio/cloud and sustained stability",
+    "Complete update/rollback/power/data-preservation matrix before release"
+  ]
+}
