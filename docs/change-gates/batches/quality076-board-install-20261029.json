@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "summary": "Record failed rc10 installation and verified old-system recovery",
+  "context": "User authorized same-board implementation; single keep_data attempt revealed FES target/storage ambiguity",
+  "next_steps": "Resolve flasher target binding and enforce actual storage rejection before any subsequent write; Re-evaluate reliable install path without widening signed compatibility; Complete actual new-version touch/cloud/stability and upgrade/rollback/data matrix",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Board installation evidence, recovery readback and unsafe-tool stop",
+      "invariants": "Preserve failures, identity, private data and prior artifacts; no acceptance reassignment or further unsafe writes",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-board-install-20261029.json",
+        "docs/change-gates/batches/quality076-board-install-20261029.json"
+      ],
+      "checks": [
+        {
+          "name": "Initial live backup consistency",
+          "status": "failed",
+          "scope": "First two archives differed in live Tuya DB; retained, not used as stable pair",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "First two archives differed in live Tuya DB; retained, not used as stable pair"
+        },
+        {
+          "name": "First UART backup encoder",
+          "status": "failed",
+          "scope": "Board base64 executable unavailable; corrected transfer uses openssl and strict digest verification",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Board base64 executable unavailable; corrected transfer uses openssl and strict digest verification"
+        },
+        {
+          "name": "Fresh off-device recovery backup",
+          "status": "passed",
+          "scope": "Consistent c/d pair, 25 regular files, full 524288-byte private partition; contents remain outside public repository",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Consistent c/d pair, 25 regular files, full 524288-byte private partition; contents remain outside public repository"
+        },
+        {
+          "name": "Bound runtime identity and image layout",
+          "status": "passed",
+          "scope": "Exact saved USB position, live enrollment, candidate hash and eight boot/layout components equal retained rc8; does not validate later FES selection",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Exact saved USB position, live enrollment, candidate hash and eight boot/layout components equal retained rc8; does not validate later FES selection"
+        },
+        {
+          "name": "Dedicated FEL transition initial wait",
+          "status": "failed",
+          "scope": "Tool timed out; retained. Later exact-location read-only scan found target without repeating transition",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Tool timed out; retained. Later exact-location read-only scan found target without repeating transition"
+        },
+        {
+          "name": "Late exact-location FEL observation",
+          "status": "passed",
+          "scope": "Saved target enumerated at USB10/1 before single flash attempt",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Saved target enumerated at USB10/1 before single flash attempt"
+        },
+        {
+          "name": "Candidate rc10 installation",
+          "status": "failed",
+          "scope": "One keep_data attempt exited1: reconnect fell back to libusb:0:10, reported 16MB SPI NOR inconsistent with bound A133 eMMC; erase flag acknowledged, four MBR attempts failed, no completed partition verification",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "One keep_data attempt exited1: reconnect fell back to libusb:0:10, reported 16MB SPI NOR inconsistent with bound A133 eMMC; erase flag acknowledged, four MBR attempts failed, no completed partition verification"
+        },
+        {
+          "name": "Wrong-target or persistent side effects",
+          "status": "blocked",
+          "scope": "Another FEL device was present; responding FES identity and other-device impact are unresolved. Cannot claim zero writes; no write-based reproduction or further operation of other devices",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Another FEL device was present; responding FES identity and other-device impact are unresolved. Cannot claim zero writes; no write-based reproduction or further operation of other devices"
+        },
+        {
+          "name": "Old-version recovery",
+          "status": "passed",
+          "scope": "Bound UART exited USB mode to observed U-Boot prompt, normal reset restored rc8/rc31; user confirmed screen and touch normal",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Bound UART exited USB mode to observed U-Boot prompt, normal reset restored rc8/rc31; user confirmed screen and touch normal"
+        },
+        {
+          "name": "Post-recovery static data and private partition",
+          "status": "passed",
+          "scope": "25 files present, 24 byte-identical; no files added/removed; complete 512KiB private partition identical; enrollment check0 and both ext4 error counters0",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "25 files present, 24 byte-identical; no files added/removed; complete 512KiB private partition identical; enrollment check0 and both ext4 error counters0"
+        },
+        {
+          "name": "Tuya database functional preservation",
+          "status": "not_run",
+          "scope": "Runtime database changed; neither functional preservation nor corruption established",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Runtime database changed; neither functional preservation nor corruption established"
+        },
+        {
+          "name": "HDMI and temporary session cleanup",
+          "status": "passed",
+          "scope": "Normal protocol disabled HDMI; temporary helper and backup copies removed; transient LYNX disconnect/busy retained, reconnected and serial closure confirmed",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Normal protocol disabled HDMI; temporary helper and backup copies removed; transient LYNX disconnect/busy retained, reconnected and serial closure confirmed"
+        },
+        {
+          "name": "Further unsafe flasher writes",
+          "status": "blocked",
+          "scope": "Local flash.py checks retained unsafe-flasher-block.json and refuses another attempt; require independently validated strict target and storage admission before future writes",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "Local flash.py checks retained unsafe-flasher-block.json and refuses another attempt; require independently validated strict target and storage admission before future writes"
+        },
+        {
+          "name": "New pages physical and sustained stability qualification",
+          "status": "not_run",
+          "scope": "New rc33/rc10 not installed; SDIO initial fault, prior reset and blocking cloud reconnect remain unresolved; no public release",
+          "evidence": "docs/validation/quality076-board-install-20261029.json",
+          "reason": "New rc33/rc10 not installed; SDIO initial fault, prior reset and blocking cloud reconnect remain unresolved; no public release"
+        }
+      ]
+    }
+  ]
+}

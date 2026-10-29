@@ -1,0 +1,151 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-29",
+  "base_commit": "d4717e3d2d6c231e27df7ed63a7e6f7392b9b565",
+  "application_source": "6269f148b1ad04a74443e9970a3527c77b49a1b9",
+  "system_recipe_source": "f04a624ee863b8111fa9b7bdf554dcdda7856f25",
+  "hardware_source": "80cab216c1a9d6150264ba1cbafaf77952455b8d",
+  "candidate": {
+    "application": "1.0.8-rc.33",
+    "system": "1.0.0-rc.10",
+    "raw_image_sha256": "a52d1411985dd203af638af0a1a7bb43c5685b89a82ac3e127f778ccb6e0fb2a",
+    "installed": false
+  },
+  "flasher_sha256": "d8cf091cadee604372ec9714d1b5bc404817b11f681e620878f83cc72b02cf46",
+  "device": {
+    "board": "A133 MainBoard V1.2",
+    "scope": "LYNX project4/device4/COM17, saved USB10/1",
+    "pre_boot_id": "302d0580-9668-451e-a313-8bb319f56974",
+    "recovered_boot_id": "bb671c35-2f2d-4c87-b9af-3f11765f16be",
+    "recovered_application": "1.0.8-rc.31",
+    "recovered_system": "1.0.0-rc.8",
+    "last_uptime_seconds": 714.42,
+    "ui_ms": 713684,
+    "backend_ms": 712717,
+    "activity_ready": true,
+    "physical": "user confirmed screen and touch normal"
+  },
+  "backup": {
+    "stable_archive_sha256": "6a24621a7c5275ab5a1129e9bd8bff9b558e7ff93bb227ddb0fe21964c356702",
+    "private_partition_archive_sha256": "a484aacc8eb1d497b725c046a769db5343ed86b50acd6a42a574bbdd23036497",
+    "after_archive_sha256": "528cbaf8077a823a6af489e97211bf937063465a438df5555959537d14efeefe",
+    "contents_private": true
+  },
+  "checks": [
+    {
+      "name": "Initial live backup consistency",
+      "status": "failed",
+      "scope": "First two archives differed in live Tuya DB; retained, not used as stable pair",
+      "evidence": "backup-first-result.json",
+      "reason": "First two archives differed in live Tuya DB; retained, not used as stable pair"
+    },
+    {
+      "name": "First UART backup encoder",
+      "status": "failed",
+      "scope": "Board base64 executable unavailable; corrected transfer uses openssl and strict digest verification",
+      "evidence": "encoders.json",
+      "reason": "Board base64 executable unavailable; corrected transfer uses openssl and strict digest verification"
+    },
+    {
+      "name": "Fresh off-device recovery backup",
+      "status": "passed",
+      "scope": "Consistent c/d pair, 25 regular files, full 524288-byte private partition; contents remain outside public repository",
+      "evidence": "backup-result.json",
+      "reason": "Consistent c/d pair, 25 regular files, full 524288-byte private partition; contents remain outside public repository"
+    },
+    {
+      "name": "Bound runtime identity and image layout",
+      "status": "passed",
+      "scope": "Exact saved USB position, live enrollment, candidate hash and eight boot/layout components equal retained rc8; does not validate later FES selection",
+      "evidence": "bootchain-layout-comparison.json",
+      "reason": "Exact saved USB position, live enrollment, candidate hash and eight boot/layout components equal retained rc8; does not validate later FES selection"
+    },
+    {
+      "name": "Dedicated FEL transition initial wait",
+      "status": "failed",
+      "scope": "Tool timed out; retained. Later exact-location read-only scan found target without repeating transition",
+      "evidence": "fel-transition.json",
+      "reason": "Tool timed out; retained. Later exact-location read-only scan found target without repeating transition"
+    },
+    {
+      "name": "Late exact-location FEL observation",
+      "status": "passed",
+      "scope": "Saved target enumerated at USB10/1 before single flash attempt",
+      "evidence": "fel-late-scan.json",
+      "reason": "Saved target enumerated at USB10/1 before single flash attempt"
+    },
+    {
+      "name": "Candidate rc10 installation",
+      "status": "failed",
+      "scope": "One keep_data attempt exited1: reconnect fell back to libusb:0:10, reported 16MB SPI NOR inconsistent with bound A133 eMMC; erase flag acknowledged, four MBR attempts failed, no completed partition verification",
+      "evidence": "flash-incident.json",
+      "reason": "One keep_data attempt exited1: reconnect fell back to libusb:0:10, reported 16MB SPI NOR inconsistent with bound A133 eMMC; erase flag acknowledged, four MBR attempts failed, no completed partition verification"
+    },
+    {
+      "name": "Wrong-target or persistent side effects",
+      "status": "blocked",
+      "scope": "Another FEL device was present; responding FES identity and other-device impact are unresolved. Cannot claim zero writes; no write-based reproduction or further operation of other devices",
+      "evidence": "flash-keep-data.log",
+      "reason": "Another FEL device was present; responding FES identity and other-device impact are unresolved. Cannot claim zero writes; no write-based reproduction or further operation of other devices"
+    },
+    {
+      "name": "Old-version recovery",
+      "status": "passed",
+      "scope": "Bound UART exited USB mode to observed U-Boot prompt, normal reset restored rc8/rc31; user confirmed screen and touch normal",
+      "evidence": "physical-recovery-confirmation.json",
+      "reason": "Bound UART exited USB mode to observed U-Boot prompt, normal reset restored rc8/rc31; user confirmed screen and touch normal"
+    },
+    {
+      "name": "Post-recovery static data and private partition",
+      "status": "passed",
+      "scope": "25 files present, 24 byte-identical; no files added/removed; complete 512KiB private partition identical; enrollment check0 and both ext4 error counters0",
+      "evidence": "recovery-check/recovery-result.json",
+      "reason": "25 files present, 24 byte-identical; no files added/removed; complete 512KiB private partition identical; enrollment check0 and both ext4 error counters0"
+    },
+    {
+      "name": "Tuya database functional preservation",
+      "status": "not_run",
+      "scope": "Runtime database changed; neither functional preservation nor corruption established",
+      "evidence": "recovery-check/data-comparison.json",
+      "reason": "Runtime database changed; neither functional preservation nor corruption established"
+    },
+    {
+      "name": "HDMI and temporary session cleanup",
+      "status": "passed",
+      "scope": "Normal protocol disabled HDMI; temporary helper and backup copies removed; transient LYNX disconnect/busy retained, reconnected and serial closure confirmed",
+      "evidence": "recovery-check/recovery-result.json",
+      "reason": "Normal protocol disabled HDMI; temporary helper and backup copies removed; transient LYNX disconnect/busy retained, reconnected and serial closure confirmed"
+    },
+    {
+      "name": "Further unsafe flasher writes",
+      "status": "blocked",
+      "scope": "Local flash.py checks retained unsafe-flasher-block.json and refuses another attempt; require independently validated strict target and storage admission before future writes",
+      "evidence": "unsafe-flasher-block.json",
+      "reason": "Local flash.py checks retained unsafe-flasher-block.json and refuses another attempt; require independently validated strict target and storage admission before future writes"
+    },
+    {
+      "name": "New pages physical and sustained stability qualification",
+      "status": "not_run",
+      "scope": "New rc33/rc10 not installed; SDIO initial fault, prior reset and blocking cloud reconnect remain unresolved; no public release",
+      "evidence": "recovery-check/recovery-result.json",
+      "reason": "New rc33/rc10 not installed; SDIO initial fault, prior reset and blocking cloud reconnect remain unresolved; no public release"
+    }
+  ],
+  "evidence_root": "/home/ubuntu/AI-DeskTopBox/.delivery/quality-review-20261023/board-install-20261029",
+  "evidence_archives": {
+    "private-evidence.zip": "783aac692abe80209e53f609516bf96643d76b294d90badf7bd7ba4a061c26a5",
+    "recovery-evidence.zip": "a294590e0edc0502bae708f6bdc7658aaa90073adc7220e0342cf3ad0b13201e"
+  },
+  "limitations": [
+    "No zero-write or other-device safety claim",
+    "Post-recovery output split across two overlapping read collectors; raw evidence retained in storage.json and cleanup.json; serial-close.json confirms close",
+    "Static byte comparisons are not cloud/functional acceptance",
+    "No public push/release; no additional flash attempt"
+  ],
+  "overall_release_qualified": false,
+  "next_steps": [
+    "Resolve flasher target binding and enforce actual storage rejection before any subsequent write",
+    "Re-evaluate reliable install path without widening signed compatibility",
+    "Complete actual new-version touch/cloud/stability and upgrade/rollback/data matrix"
+  ]
+}
