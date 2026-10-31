@@ -1,0 +1,1511 @@
+{
+  "base": "39eadb991ac6729fdefb0cf736adef044655a6d4",
+  "head": "75f4039095420cd024bb39581a2a4a0e916de41f",
+  "files": [
+    {
+      "path": "CURRENT_PROGRESS.md",
+      "head_blob": "0d55e1bfa47b3d84a0e6753067d98dca8019fc7d"
+    },
+    {
+      "path": "VERSION",
+      "head_blob": "9e1acda5c4b0b2b4869184152e288cbf57d1d589"
+    },
+    {
+      "path": "apps/ipkvm/upstream/hid_disconnect_test.go",
+      "head_blob": "9329f5fdb61004e268523454a643c4e81fe48bef"
+    },
+    {
+      "path": "apps/ipkvm/upstream/hid_queue_lifecycle_test.go",
+      "head_blob": "2546d5f114984fe76ad974b9f9af7f7116d221cf"
+    },
+    {
+      "path": "apps/ipkvm/upstream/hidrpc.go",
+      "head_blob": "b5b4e82522db7802cad4fa0ad1b7ecce331f4cd1"
+    },
+    {
+      "path": "apps/ipkvm/upstream/hidrpc_payload_test.go",
+      "head_blob": "ef06fd739bc1853fa3a33232166f9cdd3f705612"
+    },
+    {
+      "path": "apps/ipkvm/upstream/internal/hidrpc/message.go",
+      "head_blob": "d922d8ab7c84972634c95cae8a432195645de792"
+    },
+    {
+      "path": "apps/ipkvm/upstream/internal/hidrpc/message_test.go",
+      "head_blob": "17258ef943f8e20b3a2db2e012b6e73d1b6fbfca"
+    },
+    {
+      "path": "apps/ipkvm/upstream/keyboard_macro.go",
+      "head_blob": "dcf2fb91f928370619807437963ddb7619f20e22"
+    },
+    {
+      "path": "apps/ipkvm/upstream/keyboard_macro_test.go",
+      "head_blob": "f5009faa65c68d4c9495d01c191840f069ad995c"
+    },
+    {
+      "path": "apps/ipkvm/upstream/offer_failure_test.go",
+      "head_blob": "dbe022413a0bb7817ec16c949c124acdcadca898"
+    },
+    {
+      "path": "apps/ipkvm/upstream/session_input.go",
+      "head_blob": "fb6213ac96c68d1267eff6427960ff7bdc8ccede"
+    },
+    {
+      "path": "apps/ipkvm/upstream/session_input_fault_test.go",
+      "head_blob": "a6239637bd6971976c6743725dcc9300fbdf3d16"
+    },
+    {
+      "path": "apps/ipkvm/upstream/session_input_test.go",
+      "head_blob": "fd4365f7e5ae46baa3660ace66a21f82586f9e76"
+    },
+    {
+      "path": "apps/ipkvm/upstream/session_state.go",
+      "head_blob": "327f1fac9c96f6a7629f06380fbace0041984115"
+    },
+    {
+      "path": "apps/ipkvm/upstream/webrtc.go",
+      "head_blob": "ba5406e79eda511cfa573c925322892249241296"
+    },
+    {
+      "path": "apps/lv_port_linux/CMakeLists.txt",
+      "head_blob": "8c2844919473057ad08d3fae1bd4299927f7c612"
+    },
+    {
+      "path": "apps/lv_port_linux/build_openwrt.sh",
+      "head_blob": "22aa1a6149d918c8b315601107ac1643c4c4fa9f"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/ai/ai_app.c",
+      "head_blob": "9d1877570269011d665c46fe4a9aebc63ddfa34d"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/ai/ai_free_chat_view.c",
+      "head_blob": "1a288ba53ecef74837d499256c4694a1a4cc08ba"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/bt/bt_app.c",
+      "head_blob": "8099a16208e3862cb7745298987c6a1623cdd2d7"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/hdmi_mcp/hdmi_mcp_app.c",
+      "head_blob": "df2764cdf51a74094e7ba966d77003bacfd179cc"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/iot/iot_app.c",
+      "head_blob": "6606f4ad919149d559a82bd41d31c52b79ebfce6"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/ota/ota_app.c",
+      "head_blob": "0ef7f7a7844b32aec9eb6c967f3b9f73d0e31969"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/pairing/pairing_app.c",
+      "head_blob": "c3425470ee00395af22c5960e4e0bed70f7c17a4"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/setting/setting_app.c",
+      "head_blob": "6978d1f488a725e4c92a242744dbb7f21b1e26c0"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/user/user_app.c",
+      "head_blob": "7aedc25f66f67ada336577d8d176b0f49a5ee73a"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/video/video_app.c",
+      "head_blob": "98b268d2dcc9dfc4e7bb6552c6ff0cec0542a991"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/voice/voice_app.c",
+      "head_blob": "abc66e220a281066ddf5128407ea3bd2567942b4"
+    },
+    {
+      "path": "apps/lv_port_linux/src/apps/wifi/wifi_app.c",
+      "head_blob": "389a7da60ced7e6edcad7c5267f70b4180996a40"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ipc/connection.c",
+      "head_blob": "d0cabf8fa69576b3795d7e4a3aecf121967c3d27"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ipc/connection.h",
+      "head_blob": "1218e8ad9259ca7394c16700ece7c35de59fc637"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ipc/ipc_socket.c",
+      "head_blob": "c14fe219809154709390e0a00963e9254be2e0f7"
+    },
+    {
+      "path": "apps/lv_port_linux/src/main.c",
+      "head_blob": "dde80e1a574efe77f9b422bc40d9ff0b2ac1ad2a"
+    },
+    {
+      "path": "apps/lv_port_linux/src/middleware/middleware.c",
+      "head_blob": "0dbbbbab1482eb67e4ea9f5e67ab766990f0a677"
+    },
+    {
+      "path": "apps/lv_port_linux/src/middleware/middleware.h",
+      "head_blob": "3547ad870edb66b5fcbf85dbd53379d4ef11a330"
+    },
+    {
+      "path": "apps/lv_port_linux/src/system/app_manager.c",
+      "head_blob": "dd8f90d066400fa08d2cd4b03553fed1643f5c2d"
+    },
+    {
+      "path": "apps/lv_port_linux/src/system/settings.c",
+      "head_blob": "ced99e8b4d96f5ff7fe3cb82cf08418f26b37926"
+    },
+    {
+      "path": "apps/lv_port_linux/src/system/settings.h",
+      "head_blob": "bbc8f213496d1cdb125da4b9a32b7c0ac5417255"
+    },
+    {
+      "path": "apps/lv_port_linux/src/system/wifi_control_client.h",
+      "head_blob": "18e9040cb1e890de236a8dd1d8c818eff7dfc511"
+    },
+    {
+      "path": "apps/lv_port_linux/src/system/wifi_control_protocol.h",
+      "head_blob": "7b8b8931666ea6612dd39bb06d27032d3f053847"
+    },
+    {
+      "path": "apps/lv_port_linux/src/system/wifi_status_decode.h",
+      "head_blob": "8e804446a5c777fd13faa77a9b4997b324ba7e27"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ui/desktop_status_bar.c",
+      "head_blob": "99956daa2078796c98fa0a6fa09d2cb537f3d9ca"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ui/desktop_update.c",
+      "head_blob": "a4e303bd10b259654c655bf97fd6ea1f7615f3c0"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ui/ui_i18n.c",
+      "head_blob": "776263d01a63d077642a7d66c5bf0206bdfb729d"
+    },
+    {
+      "path": "apps/lv_port_linux/src/ui/ui_i18n.h",
+      "head_blob": "b0a3d67c48d488117096d55970a795ad03187578"
+    },
+    {
+      "path": "docs/CHANGE-GATES.md",
+      "head_blob": "b039b2cef9c8fbd1b2ff95ffca0ed8252dfc8c06"
+    },
+    {
+      "path": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "head_blob": "810538b03f56014ce9a501eba691ac9eb333da50"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-agent-stop-release-20261024.json",
+      "head_blob": "9b6ac9e606231b8ee8d42f3cf5ce5efb4f8cd151"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-all-pages-20261028.json",
+      "head_blob": "9eb50de8a7df9ae7f3c4d20a42ac80d724762ce2"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-all-pages-build-20261028.json",
+      "head_blob": "ca77d7cd0ac4fa9ffbd95b39774e07f61af99f20"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-app-data-root-20261024.json",
+      "head_blob": "0cad02086c0fdb2cd8762d800e95e203f22dc28f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-app-lock-candidate-20261024.json",
+      "head_blob": "615b412fc6b86e57c9a57592b4ef5df140cf0e45"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-app-lock-faults-20261024.json",
+      "head_blob": "88beafb90239375bf96723d409c99ddf4b835d3b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-app-lock-integration-20261024.json",
+      "head_blob": "170512ee0289a4686fa93b768691f33f50850268"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-app-storage-race-20261024.json",
+      "head_blob": "f3cd16fb0bba869f5f950fd236fb05d5663e7785"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-allocation-20261023.json",
+      "head_blob": "3ead3c52bd80171fe62e7e7d1b25ae622d7419bb"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-close-20261023.json",
+      "head_blob": "8d8e83363843effce96579f7a589ac33e5fd5c8d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-interaction-20261023.json",
+      "head_blob": "6a4646af9f4fdfd7038a4864dab4ecb4e7211a29"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-layout-20261023.json",
+      "head_blob": "cac860f7e2dcbc8dd2c1eaecd8797b5d85284575"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-pairing-qr-cache-20261025.json",
+      "head_blob": "d2b5f883622fece04e46042e91c76b6040f083c0"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-pairing-responsive-20261025.json",
+      "head_blob": "d3d5bd1431e478fd6613d7b718ca2600526eb7ce"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-assistant-start-error-20261023.json",
+      "head_blob": "84f166a1f3179b1e8f6d428119ba17dc70e33102"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-backend-save-candidate-20261023.json",
+      "head_blob": "b370e5ac47d0fb2b9a16364742bf7d19fca4b1dd"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-base-files-copy-origin-20261024.json",
+      "head_blob": "674f0536f9cf8ca230dacf708e6d6f8bc5aab6c8"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-baseline-20261023.json",
+      "head_blob": "4abe358192533703c73ad2c026fb1e5d325e51cf"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-battery-freeze-20261028.json",
+      "head_blob": "8308ec2abe6127586cf15e3f184ca033af4832c0"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-board-install-20261029.json",
+      "head_blob": "28f06a0f8656c6ace5d1cb082659f80db4be6268"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-boot-handoff-20261024.json",
+      "head_blob": "bef2b4fc744641586fdb617c082c772ba69a4dc1"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-boot-selection-20261024.json",
+      "head_blob": "4a8928f326931e920458e4b493b3e0c25f1dfc7f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-bt-save-20261023.json",
+      "head_blob": "16f4086f115dd8df638f4016b42c4f0b2dee1f4e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-candidate-refresh-plan-20261025.json",
+      "head_blob": "fdb53907ae2351121a3a63edbc65b69cd64925a9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-capture-priority-20261023.json",
+      "head_blob": "8ee81ab49ccc3d5320839f293ef14ca3b440760b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-catalog-a133-integration-20261024.json",
+      "head_blob": "bb3319bc8b2c38b1f5f8d76e2928bc102d490db7"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-contract-review-20261025.json",
+      "head_blob": "b43470db98eb5d9a550c9b6402bccb63107ec1b8"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-bounded-io-20261024.json",
+      "head_blob": "a814a9935e6876b2f7f8634d229b05213372fc36"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-candidate-a133-20261024.json",
+      "head_blob": "494eaac3029606350182e0ba636856435aaf18e1"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-client-framing-20261024.json",
+      "head_blob": "39f08883d160ba0720ad6c7bb8643768bfded993"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-errors-20261023.json",
+      "head_blob": "34db8fb724a6350e248dfd58ad920861d670441f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-hid-release-20261024.json",
+      "head_blob": "d384f5515ae0d24118071144bfed3f058699acce"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-hid-timeout-20261024.json",
+      "head_blob": "1b41ff820b1244bb19088756c214522f4061f25b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-owner-init-20261024.json",
+      "head_blob": "16a96aa7b6d50036bb61ee27eac557fb21f246ad"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-owner-integration-20261024.json",
+      "head_blob": "0a02968c10ad13899d910e42fbc9b40eef0fa060"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-package-integration-20261024.json",
+      "head_blob": "53c3843b655297aa47d4328caedfc29f207b47d9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-release-integration-20261024.json",
+      "head_blob": "2d757aef0cb7956cbc818184ad421a8943a4b43d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-sdk-integration-20261024.json",
+      "head_blob": "2ae1658aec8dabfafb9db1baed82d222400600a8"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-socket-ownership-20261024.json",
+      "head_blob": "1813909672f8e4cf68ae5c967d8853296be6d57e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-status-async-20261024.json",
+      "head_blob": "5478181536a474123120608de75c5a55690050f3"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-status-responsive-20261024.json",
+      "head_blob": "c3658be924b5f24fa4b4a86b62829c886519e917"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-status-stale-20261024.json",
+      "head_blob": "a064fc4f6be166f64fb70f0c2796b4267a4dd630"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-status-stop-overlap-20261024.json",
+      "head_blob": "883909584564603eb6784a0f40b727087af45f08"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-stop-async-20261024.json",
+      "head_blob": "3adbf24c984d5add08afe3d4e0323780c2dac3de"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-stop-client-20261024.json",
+      "head_blob": "a7f90033bbb8a7dc9bc850b53b53a3d886ff4c7b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-stop-dismissal-20261024.json",
+      "head_blob": "d294e89863ba85e487d7ea4a82e5f985cd2d0604"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-stop-lifecycle-20261024.json",
+      "head_blob": "a72a07c29081f4ae1d2842f6fd37e74390144bc6"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-stop-timeout-20261024.json",
+      "head_blob": "fa9ab86e9abdf571e77b7284ed0a965f95470767"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-stop-ui-20261024.json",
+      "head_blob": "6d0216314bfb1056b2a1f9b961f27ca081fe7548"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-control-ui-a133-check-20261024.json",
+      "head_blob": "eaba268eab1aa7c874e8ea60d1be708342de8a72"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-display-recovery-confirmed-20261025.json",
+      "head_blob": "c45efeeab40b7de1187bb2f489bc58f812b215fd"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-edition9-desktop-20261024.json",
+      "head_blob": "32f1cdb9ef759f3205db4443763f002477be9930"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-edition9-services-install-20261024.json",
+      "head_blob": "5de3e6f25375965030a088e554c16d7844560c65"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-exit-ui-20261023.json",
+      "head_blob": "033db41ccbfe8eda2f7848c8eae14d6679fb9d46"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-explicit-localization-20261025.json",
+      "head_blob": "1d3237dbb3deea7b121e483f87ac387685ffa018"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-final-startup-script-gate-20261024.json",
+      "head_blob": "270da3f3364c771d36cb7e575f7c163083a9749a"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-held-input-audit-20261024.json",
+      "head_blob": "86ce1a59dac2274f71d061495d70818a1fc9137c"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-hid-payload-20261024.json",
+      "head_blob": "5c29541266ea263d720495e1c23317de0ab1b17f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-home-preview-20261023.json",
+      "head_blob": "6f6ac8154b8e4c6772b92f620e7830317ec941ef"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-iot-integer-step-20261024.json",
+      "head_blob": "cd013e946d50a7ab72108e583406871f1dd000eb"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-iot-pairing-polish-20261026.json",
+      "head_blob": "b840677186fa277919899d66527e172c55b24c11"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-iot-readable-20261024.json",
+      "head_blob": "1e86f8c2f1b309e078fbbd62694fb5e0b4e53b08"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-iot-schema-step-20261024.json",
+      "head_blob": "8e10da0f29f41bafa2050e93bee207409e0eb11d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-iot-schema-validation-20261024.json",
+      "head_blob": "c1dad733bd5e2be3485197e1b0a526f1e38d11e2"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-iot-ui-review-20261024.json",
+      "head_blob": "53cf2038f23b565c391fa328bb39318f6eb0c34b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-a133-desktop-20261024.json",
+      "head_blob": "bb4be3b0db16563f9249f1329f106b92e082dfaa"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-backend-owner-integration-20261024.json",
+      "head_blob": "f4abcdf22e1c1616384927e5aa8cba4805083909"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-concurrent-send-20261024.json",
+      "head_blob": "5c39df8466839af3d8a93561e94506bd9ded5831"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-connect-accept-20261024.json",
+      "head_blob": "1f20e320680b7615d085b8927154c9ce27f156bf"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-connect-deadline-20261024.json",
+      "head_blob": "f2fa8d9b0f3323f1d4bbb4541fb45ec085da53a8"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-connection-owner-20261024.json",
+      "head_blob": "5694404c848f002165ad49df8f4dd427d9db9759"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-endpoint-owner-20261024.json",
+      "head_blob": "18d57fe49538060d3eadd84ba88a38ff02258f63"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-heartbeat-owner-20261024.json",
+      "head_blob": "caa6dbaacda072d43d947a36c76e418c36956832"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-incremental-receive-20261024.json",
+      "head_blob": "84e1ba723f89ec0bc1ef7284665b074fb0803801"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-poll-bounds-20261024.json",
+      "head_blob": "54a8cd2bd5904d8a4e956cc1eceec04f875f73b6"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-public-integration-20261024.json",
+      "head_blob": "7993137357223326842e8e66171b3c32e8d10969"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-ui-owner-integration-20261024.json",
+      "head_blob": "6ea4f87d83b49515de6d7dfb4eacfd14379d7caa"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ipc-unsent-timeout-20261024.json",
+      "head_blob": "456e88ec1767ef9d948e0cc8d11167c27adc49d8"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-kvm-candidate-20261024.json",
+      "head_blob": "9a6c6e6eb5356fa0575a931769ff55e39a41ff79"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-kvm-input-audit-20261024.json",
+      "head_blob": "aa2cd248ed535707ebf6c8248458922ddc4ad25d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-kvm-input-owner-20261024.json",
+      "head_blob": "f6b70be5a1d3ce4688eb13810223c2aec30cfe44"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-kvm-macro-20261024.json",
+      "head_blob": "43007d41179027e2d6b44fa1b9f325f1fdb87aab"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-kvm-offer-failure-20261024.json",
+      "head_blob": "decdf37855f4690f165c0ecffef527bb55592152"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-kvm-queues-20261024.json",
+      "head_blob": "492db498e66f333db92700fd6022e839d549754e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-manual-macro-20261024.json",
+      "head_blob": "fecebeccd21be106ec422978490a57c70b5d2dba"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-navigation-refresh-20261023.json",
+      "head_blob": "5f2c596643ff494635d49059b795bca23aac55d0"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-pages-completion-20261028.json",
+      "head_blob": "fe669d7eeebf7411921f08771be75901de8603d2"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-pages-completion-build-20261028.json",
+      "head_blob": "57c7c272503f5a362971d34340b8c21d2d9c34d9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-pages-deployment-20261028.json",
+      "head_blob": "3c3bf166afd1dfb104e9150981da6de725dea0e9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-physical-acceptance-20261025.json",
+      "head_blob": "fe7ce8b1805fcd02eb413508aa8f3b5d555594bc"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-physical-readiness-20261024.json",
+      "head_blob": "9b950e2877ce967aa390c8accaf65b5d17df4bdb"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-platform-init-failures-20261024.json",
+      "head_blob": "e3879b616c23576569264284a7dc246e12a69313"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-platform-package-gate-20261024.json",
+      "head_blob": "1e4026ed18ec74dd0b6928a66bd39e9aee34f058"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-procd-order-audit-20261024.json",
+      "head_blob": "7e39af478fe889165e960676d3414908debcfd4b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-provider-integration-20261023.json",
+      "head_blob": "2c95911326701eb4ee0842feada35ca81fc4e7d6"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-provider-v5-20261023.json",
+      "head_blob": "4472c59bc722c73af0a741ce84fa174c87c3d0b7"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-provider-v6-20261023.json",
+      "head_blob": "831d74b81f22ec695d6577b50a7e2da00323611e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-provider-v7-20261023.json",
+      "head_blob": "b336f3473d242c3a132c1e6fc3fa83cb67d1a878"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-provider-v8-20261024.json",
+      "head_blob": "17c667416c01dfbb0c0db5bdd07b5d7de016ca1e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-rc-common-compatibility-20261024.json",
+      "head_blob": "2af26463417267e46ac5592644c8b87ffa7b9982"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-rc-common-integration-20261024.json",
+      "head_blob": "30f2ac7983b014229754b3fbe570dc43327166c8"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-rc-common-start-candidate-20261024.json",
+      "head_blob": "ad052281c580904988a9c2fed510264d299f3e68"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-rc9-build-20261025.json",
+      "head_blob": "2f62e00a2b092e8b8bd7c142c7307297699c334c"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-reference-guard-20261023.json",
+      "head_blob": "885c0ea20ffd92ab5197d19d541822fb57c51111"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-release-faults-20261024.json",
+      "head_blob": "4b3c4ce3543659994c44909165a68257469465f3"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-runtime-receipt-20261023.json",
+      "head_blob": "7ecc9ff4fe34540a05c0bead6b9595925709465f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-runtime-recovery-20261025.json",
+      "head_blob": "9bc083b4294789eff9c7f93f176a282a73b3587e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-byte-length-20261024.json",
+      "head_blob": "c243cee21718d333f30b2a9b87b297251b3de1c6"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-capacity-candidate-20261024.json",
+      "head_blob": "f5c9b2cad2e064b5a0c1a74710aa8ebad99cfc9f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-capacity-joined-20261024.json",
+      "head_blob": "6a08a609c1b11fd861fed83f2d7e12225a0ed5ee"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-capacity-module-20261024.json",
+      "head_blob": "83e0565b2c7f0b3e9c0440f2d72d92e3054678ac"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-capacity-promotion-20261024.json",
+      "head_blob": "ae3e6de8880c7ce827405ad176f544eaa62a7d56"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-d80-irq-exit-20261024.json",
+      "head_blob": "fb151f8ca764e3e347c361592d4731557f7b274b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-driver-input-audit-20261024.json",
+      "head_blob": "6269156b0a49d52e3d8abd27ff5fd35626d6686a"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-irq-io-failures-20261024.json",
+      "head_blob": "c44443f4efb30dc726523328ee7d41de32c8ae62"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-joined-irq-20261024.json",
+      "head_blob": "2c963b087e618aba43a5d25000207e6398aa4f1b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-overlay-reference-20261024.json",
+      "head_blob": "66558b4c30186d08777f753d32ae269f473bc000"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-physical-report-20261026.json",
+      "head_blob": "5d85dcedeab5b578356a572b8666a8d658e23fe1"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-reboot-followup-20261028.json",
+      "head_blob": "58898f73a2bbf3b544cbf2725ae4c1af6451b660"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-rx-capacity-20261024.json",
+      "head_blob": "dad8774c0408d2b83b09102c27fccfe20d140751"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-sdk-sync-20261024.json",
+      "head_blob": "ebc19464288d9b132d0b69a9f1631af856c35a8f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-timeout-source-20261024.json",
+      "head_blob": "5c08343fd22599ae88a8f49b2c18c7dffa9e9930"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-tx-integration-20261028.json",
+      "head_blob": "267317481f8591b754aad16cc03e8cc9a37f67ab"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-sdio-tx-storm-20261026.json",
+      "head_blob": "ffb8092def841a8a66598b1c6b00bf4a7f0fdac7"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-selected-tests-20261023.json",
+      "head_blob": "8fa399df33d621e1792b0b9e1d9a4650bcff9e54"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-service-package-gate-20261024.json",
+      "head_blob": "cce409dfdfed8983ac1c3f3b65e9cdd827478d57"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-settings-atomic-20261023.json",
+      "head_blob": "6e52fc6e8baec17b523a62a9aa946d18c02ce520"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-settings-feedback-20261023.json",
+      "head_blob": "49d752b6a711544fff9729e8447ba5d680dbbd14"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-settings-loader-20261024.json",
+      "head_blob": "fc615c25d7a8cd22d72a49e9a8ca8b15d39723b7"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-settings-ownership-20261023.json",
+      "head_blob": "6294372487a4631ce66d7c3766f8fa774f2136aa"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-system-commit-baseline-20261024.json",
+      "head_blob": "0d254c85209f4cffa69c517896a7a688c6dbd9f3"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-system-journal-required-20261024.json",
+      "head_blob": "03198e9080146f54c61cc71433e6049e0288103f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-system-recovery-matrix-20261024.json",
+      "head_blob": "c72bb49eb5d24aacd9e7ab041405b30c26ecdba3"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-control-candidate-20261024.json",
+      "head_blob": "0421b669a7a3315e52c16e369f0e51e39fa5eb2c"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-control-package-20261024.json",
+      "head_blob": "e6ebc1ad1979b92be6857b447bbfe6e33336d6f9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-current-20261024.json",
+      "head_blob": "b856328bd930d2a099cfba5ba88cd0b6146527ee"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-iot-candidate-20261024.json",
+      "head_blob": "dc9b1c3c571fdcbfb65cbcc0940b52c84a6037f9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-iot-package-20261024.json",
+      "head_blob": "0f418c76ef2c1bc83e37673e8dce6f0f9fb807b2"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-review-scene-validation-20261024.json",
+      "head_blob": "bb86c5c4a89a52e20c375ae1e8d4d4d2c3d49960"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-v7-integration-20261023.json",
+      "head_blob": "edd0f1db1255d393721a800be1cb24bca90b83d6"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-v8-20261024.json",
+      "head_blob": "5e0eff2872f8cad64d27a481dffbe73f7f0116bd"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-ui-writer-receipt-20261023.json",
+      "head_blob": "87e354d65fd21a8a9619741f18cb79b30219eaf7"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-collection-boundaries-20261024.json",
+      "head_blob": "efae8d8b75a625e93ea2d187d71ad326fa7c69bd"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-feedback-a133-integration-20261024.json",
+      "head_blob": "6e48c9ac00319d260b0e3df55ede9313af18a911"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-feedback-runtime-20261024.json",
+      "head_blob": "5eab9e9bc99997ca53fda227fb73b277939b7ecd"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-framing-20261024.json",
+      "head_blob": "c519d79a7540565fbe9bfa59a975d56feca447ee"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-journal-required-20261024.json",
+      "head_blob": "941a6b5c346b3ecefae968a8fcb74ceef83ca755"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-layout-20261024.json",
+      "head_blob": "f564102efa1b3242b95f00f73c6bc48366f75584"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-lifecycle-20261024.json",
+      "head_blob": "a8738dcb6f504d926b0bb2d78b8aec59ef4dde39"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-state-20261023.json",
+      "head_blob": "6d2ab89056d0eb60551a53e90bd445e6b3115b6f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-status-20261024.json",
+      "head_blob": "523754cf6a176bef204bf1a7435f8b160567257f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-transport-20261023.json",
+      "head_blob": "a20f871f59ba0700ef2cf98f57c513df2cb4f86b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-unavailable-feedback-20261024.json",
+      "head_blob": "bbe6f68a385617ed2edd832684c526d030ff5980"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-update-worker-20261024.json",
+      "head_blob": "b9bd215354f89f6dcc51fb50f3472780dbfbc203"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-updater-a133-integration-20261024.json",
+      "head_blob": "2954958653e15e0174fe627a5210a72e720fb158"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-updater-baseline-integration-20261024.json",
+      "head_blob": "4d428a56cd1b470e46b043b8684a40e3c51d036a"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-action-async-20261024.json",
+      "head_blob": "c6c6a515e16589c7c89f610014db82d66dd75cb5"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-action-result-20261024.json",
+      "head_blob": "24a56e490af37e75968ac71d9a5179f13ff29daa"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-action-start-failure-20261024.json",
+      "head_blob": "0d07c7c42f3738fbd30243be3fc6295db52e7b1e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-app-a133-integration-20261024.json",
+      "head_blob": "3a836398c2a615295e4b24a139ebea90b8a1e8df"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-catalog-name-20261024.json",
+      "head_blob": "4cca3935d1539fd6bfdf5b4fcbe03ec6d33dcd2c"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-catalog-nul-20261024.json",
+      "head_blob": "c908bf0042e4ce4c6590bb23320bae6d80c9f1ff"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-catalog-scroll-20261024.json",
+      "head_blob": "0f02fa8eb86b1a9ba37cd9889029361291560d59"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-catalog-selection-20261024.json",
+      "head_blob": "d1ccfff33fa6d6c938e285a29449582ce8eb0136"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-page-missing-20261024.json",
+      "head_blob": "9ef4165daaba2bb59d9004a068d8ebb80b5f6501"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-page-schema-20261024.json",
+      "head_blob": "da6f33b6286ecb6e0dc2c9821c7eb031d95a0475"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-reply-framing-20261024.json",
+      "head_blob": "174aa04ec53dce3868b5babdf6ba9df9bbdf081d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-reply-members-20261024.json",
+      "head_blob": "5c6ef322d851e62cf128318c44e625e14fc85aa2"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-user-request-deadline-20261024.json",
+      "head_blob": "6848791ef501cc5fff6c0235c6cd59e85ed73651"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-voice-stop-20261023.json",
+      "head_blob": "422c0702324c3d6c6d15f5aec73a7492751a4f4b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-admission-boundaries-20261024.json",
+      "head_blob": "ba0a166cb3791f4439adc5e5513b62f3a60dbb76"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-ap-lifetime-20261024.json",
+      "head_blob": "159cc630a9fc3fc5783dda94fdaa3157e7b8b087"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-authoritative-snapshot-20261024.json",
+      "head_blob": "feee902b02bb5b945644c9f5390c272c55e0015d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-client-service-runtime-20261024.json",
+      "head_blob": "66ca41406a5acca954f7ed40e73ce76dc44a79a5"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-connect-async-20261024.json",
+      "head_blob": "d1461874fa064823bff42cbcb3599344dd1f74eb"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-connect-send-failure-20261024.json",
+      "head_blob": "df9bc99949da54befaedf45b483a5b8c47391b0a"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-edition9-overlay-20261024.json",
+      "head_blob": "fc7894224e25c1f33ee94d9e235e9761de403051"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-edition9-selector-20261024.json",
+      "head_blob": "1d42f56e5eca8122c2e3a1232a7b738801f02101"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-empty-recovery-20261024.json",
+      "head_blob": "2fd9c34451bf7e587a2d272157bb33f798d2179a"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-failure-hint-20261024.json",
+      "head_blob": "32cf3eb2e58ffbb6e2165d1b89f026f3feba0709"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-listener-session-20261024.json",
+      "head_blob": "e6f3ddab7dffd9c52e0b39b80aa62571b69324b0"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-message-bounds-20261024.json",
+      "head_blob": "ba3c8b2c6713fe169d8e12dee696bbd41d16e69d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-middleware-integration-20261024.json",
+      "head_blob": "64700612275dd53a7817692ed0b9020afa57eafa"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-owned-runtime-20261024.json",
+      "head_blob": "5ea660f4e3b775ddc7c9278f04408db02b4f53af"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-password-20261023.json",
+      "head_blob": "62f98aa209abc18cb462932a26e181b5aa3c6c43"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-password-bytes-20261024.json",
+      "head_blob": "2fb9c085e7d2d45955f368f841ae4f7cdded7c87"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-private-provider-20261024.json",
+      "head_blob": "b0df6c29fd7a43991cc67bea8afd40deea042fc3"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-provider-composition-20261024.json",
+      "head_blob": "59034d249071756a853ec11cbc97def91548b30a"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-public-contract-20261024.json",
+      "head_blob": "7877808678165c45b52a25d676a1db8afc63ab78"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-replay-lifecycle-20261024.json",
+      "head_blob": "f69e75b9f29fafb46a90d436163878837e1d0453"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-request-replay-20261024.json",
+      "head_blob": "ba252e30daeafed5a61320508d45e15cd0b05d1f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-row-a133-20261024.json",
+      "head_blob": "45d5683b51a4dd7fa0dbc324d1dbb254de74c0fb"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-row-allocation-20261024.json",
+      "head_blob": "4f821d24ee5d5872b662f160d945a6d7baa958ef"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-row-security-20261024.json",
+      "head_blob": "fcc211b59d39eb50f502803c8de762a9e3a19ce9"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-save-20261023.json",
+      "head_blob": "54c73036df24e4115168608a2debb1307c73e8de"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-scan-ui-20261024.json",
+      "head_blob": "b324a9f6ab89e25e94472803c522d05da32fb66f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-service-replay-20261024.json",
+      "head_blob": "5c408c53794875c3227ceb1ec43935a0f8d817dd"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-toggle-backend-repro-20261024.json",
+      "head_blob": "aee0af24bbcd34ac9ed741d600f41f303df9e475"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-toggle-overlap-20261024.json",
+      "head_blob": "faf613dd4774ffdab795d156a5305c7b84d1a833"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-toggle-phase-candidate-20261024.json",
+      "head_blob": "435b817da213f62007f3b8c75a404700cdf6e76e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-toggle-protocol-audit-20261024.json",
+      "head_blob": "fdab1455f339af5604f0223785a9410f1f737ef6"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-toggle-queue-failure-20261024.json",
+      "head_blob": "b3d5122afc1e3a9c5a44b95992591833379a9ea0"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-toggle-silence-20261024.json",
+      "head_blob": "a937ece2529a7fe17a68eadfeef0ff64f56d926d"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-ui-integration-20261024.json",
+      "head_blob": "a68d80cc25f857f8aaf79b461fc6e54ae4510042"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-ui-state-20261024.json",
+      "head_blob": "7f60468f4489d11a266dbb68c82e917d20364df1"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-widget-reconnect-20261024.json",
+      "head_blob": "c53c341be9c42fbeeba78fe67edc235087ed827b"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-widget-service-20261024.json",
+      "head_blob": "418bd674f41e634e0d41c9d3567fe6cdd6d64896"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-widget-transport-20261024.json",
+      "head_blob": "0608d14ee710f60ea45ed67c7ba1188ad449ce7f"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-wire-codec-20261024.json",
+      "head_blob": "82d924945b5222e0c085a8e047d3c4e5d011162e"
+    },
+    {
+      "path": "docs/change-gates/batches/quality076-wifi-wire-service-20261024.json",
+      "head_blob": "acf64f0607a7edd35ec9a353804da258f025a740"
+    },
+    {
+      "path": "docs/update/platform-contract-lock.json",
+      "head_blob": "d83d162b542e76f8bbb30cd4547bf0fbb70fbde7"
+    },
+    {
+      "path": "docs/update/services-program-reference.json",
+      "head_blob": "53b7b93ef55cf621910f3f2339f28c51b2f9cab9"
+    },
+    {
+      "path": "docs/update/source-ownership.json",
+      "head_blob": "fb117fb4c3f9bf8292a26fbcc793e71b97f6052d"
+    },
+    {
+      "path": "docs/validation/quality076-all-pages-20261028.json",
+      "head_blob": "28b5a63054d6b631cf5e95cd5e1fda73486754a8"
+    },
+    {
+      "path": "docs/validation/quality076-all-pages-build-20261028.json",
+      "head_blob": "05b229933ead1f3c0131e79fe5fb91132f5685f6"
+    },
+    {
+      "path": "docs/validation/quality076-assistant-pairing-qr-cache-20261025.json",
+      "head_blob": "47dd6e34b264723d0f1712721669610ad22ff6b4"
+    },
+    {
+      "path": "docs/validation/quality076-assistant-pairing-responsive-20261025.json",
+      "head_blob": "d13de07e54762eb447e6bccecde8d1fca3cfffa7"
+    },
+    {
+      "path": "docs/validation/quality076-battery-freeze-20261028.json",
+      "head_blob": "f0b5b23d20a68b94edd36f0b80e8bcba8e12c4d7"
+    },
+    {
+      "path": "docs/validation/quality076-board-install-20261029.json",
+      "head_blob": "9101f8f6e168aed95fd4cac3ac4d43d4549ba5cc"
+    },
+    {
+      "path": "docs/validation/quality076-iot-pairing-polish-20261026.json",
+      "head_blob": "5ce0424e1169efca762298ad5f37020747aa08c1"
+    },
+    {
+      "path": "docs/validation/quality076-pages-completion-20261028.json",
+      "head_blob": "450e840f4ae21f79b5076c19348d8158cab89eed"
+    },
+    {
+      "path": "docs/validation/quality076-pages-completion-build-20261028.json",
+      "head_blob": "c560d3860cfd017f9cfe1fc4398ffe1d7facbdbd"
+    },
+    {
+      "path": "docs/validation/quality076-pages-deployment-20261028.json",
+      "head_blob": "4ca14c778ef38aff85a34e473fcf7d97f5225eab"
+    },
+    {
+      "path": "docs/validation/quality076-physical-acceptance-20261025.json",
+      "head_blob": "6b505bb831ec7bd5c8257eb02553c4178739e389"
+    },
+    {
+      "path": "docs/validation/quality076-platform-contract-review-20261025.json",
+      "head_blob": "11dfe26ec5591bffd1eea4e64f05ed9cdd892fe1"
+    },
+    {
+      "path": "docs/validation/quality076-rc9-build-20261025.json",
+      "head_blob": "792e902cd654b6550ac602289c6d79aebb78478c"
+    },
+    {
+      "path": "docs/validation/quality076-sdio-capacity-promotion-20261024.json",
+      "head_blob": "78f0cea8fa27bdb5231b8b2ebc283cc2a68008a4"
+    },
+    {
+      "path": "docs/validation/quality076-sdio-physical-report-20261026.json",
+      "head_blob": "97306cf26861f9185f740b8a1612f65854e0169e"
+    },
+    {
+      "path": "docs/validation/quality076-sdio-reboot-followup-20261028.json",
+      "head_blob": "13f12e76c2f07ba69ea922ac708f2433722dc507"
+    },
+    {
+      "path": "docs/validation/quality076-sdio-tx-integration-20261028.json",
+      "head_blob": "50e5053b23c149f9c98a4bed8ddfc49f7e1af468"
+    },
+    {
+      "path": "docs/validation/quality076-sdio-tx-storm-20261026.json",
+      "head_blob": "4d65c71a2643598a384db9bcb4dc74c147e8a470"
+    },
+    {
+      "path": "integrations/tuyaopen/protocol/ai_command_reply.h",
+      "head_blob": "858c9c5b36e82ed68d60ebf41187d36390c4fa14"
+    },
+    {
+      "path": "integrations/tuyaopen/protocol/ai_command_transaction.h",
+      "head_blob": "98e110440acb8ad68aa98056ff52ea97b7f2a5a2"
+    },
+    {
+      "path": "packaging/aitvbox-platform/Makefile",
+      "head_blob": "9fc843390c018d8706c00a661db4bc49798bcbb8"
+    },
+    {
+      "path": "packaging/aitvbox-platform/files/aitvbox-apps.init",
+      "head_blob": "ddf6486c1a5bb7dc894a491b5a1d00b62a394c3c"
+    },
+    {
+      "path": "packaging/aitvbox-platform/files/aitvbox-control.init",
+      "head_blob": "630ea703883c5f64a73453b38a215fa2a7b1dd1c"
+    },
+    {
+      "path": "packaging/aitvbox-suite/Makefile",
+      "head_blob": "178397a9eadf7704e31bc7d589a333a8709a54ee"
+    },
+    {
+      "path": "packaging/aitvbox-suite/files/start-ui.sh",
+      "head_blob": "ffeb733ad81073ad17005af6aabad853175a46f4"
+    },
+    {
+      "path": "platform/runtime/aitvbox-agentctl",
+      "head_blob": "70eb7ef5e655040985c83c79c1848a4870e06a3c"
+    },
+    {
+      "path": "platform/runtime/aitvbox-appctl",
+      "head_blob": "88482d8b77a67cdc41e811142838a75ba642ca5c"
+    },
+    {
+      "path": "scripts/build_a133_capture.py",
+      "head_blob": "235f01cd2cb4221cdef815007b44b739019ac83e"
+    },
+    {
+      "path": "scripts/build_a133_provider.py",
+      "head_blob": "a0925993c61c061a04ceda9dacce4c9a4583746a"
+    },
+    {
+      "path": "scripts/build_a133_services.py",
+      "head_blob": "4a76c7a78e8919018ff76870b56f5e56eb27237c"
+    },
+    {
+      "path": "scripts/build_apps.sh",
+      "head_blob": "b9ecf14041a932a652cd732bf13e64fa35eaad9c"
+    },
+    {
+      "path": "scripts/build_firmware.sh",
+      "head_blob": "162bf30e7e0f10324986223e85b99aae2b57bc92"
+    },
+    {
+      "path": "scripts/check_product_edition.py",
+      "head_blob": "a4297a280a87ba3a282265db75bd1ce8ef754c00"
+    },
+    {
+      "path": "scripts/check_service_programs.py",
+      "head_blob": "5e81d3f3225049e2c0210ceff2646369a9f8fc21"
+    },
+    {
+      "path": "scripts/check_startup_scripts.py",
+      "head_blob": "c0428e05dc161a5c5d8487ec22b75bee2c0c56e3"
+    },
+    {
+      "path": "scripts/render_ui_review.py",
+      "head_blob": "d2d9c7859316b42e2b3d17ec4301a3ccf06588c3"
+    },
+    {
+      "path": "scripts/tuya_pairing_sources.py",
+      "head_blob": "74fca96638f9ea9e93ac83afff5876eb413dd295"
+    },
+    {
+      "path": "scripts/ui_settings_receipt.py",
+      "head_blob": "6c9d68ec2e37a29911e1bbc88c7a7e728e59b564"
+    },
+    {
+      "path": "services/mimi-update/update/collection_boundaries_test.go",
+      "head_blob": "8ae25cf3554f131ca5ee10ba217420c69abc7503"
+    },
+    {
+      "path": "services/mimi-update/update/engine.go",
+      "head_blob": "bc3547148ad04091ad72d0967157dd4b7b25b182"
+    },
+    {
+      "path": "services/mimi-update/update/journal_required_test.go",
+      "head_blob": "f0d7cb69c134d91178f4b72ce6e2c06447ce9b7e"
+    },
+    {
+      "path": "services/mimi-update/update/system_commit_baseline_test.go",
+      "head_blob": "bf2fb16976e68da6099179c9c68e5aca4351b9e6"
+    },
+    {
+      "path": "services/mimi-update/update/system_install.go",
+      "head_blob": "42fdfeca1999c2fa41e7adeefab3943d15626d64"
+    },
+    {
+      "path": "services/mimi-update/update/system_journal_required_test.go",
+      "head_blob": "c93850ba5ae20c11b86ab9d6ff340cb7bd59230d"
+    },
+    {
+      "path": "services/mimi-update/update/system_ota_test.go",
+      "head_blob": "ca38f979d5cd29013b05ed0d30e5ed950174eca7"
+    },
+    {
+      "path": "services/mimi-update/update/system_recovery_matrix_test.go",
+      "head_blob": "65312fc0a435ae78163b8c4d24fc5c490a7ef98c"
+    },
+    {
+      "path": "tests/architecture/fixtures/ai_command_transaction.c",
+      "head_blob": "2cbc26a78167821ab4889f211cdbd18818608d9b"
+    },
+    {
+      "path": "tests/architecture/fixtures/backend_settings_head.c",
+      "head_blob": "3f7deeafef5ccaadc561587def0598651407eafa"
+    },
+    {
+      "path": "tests/architecture/fixtures/backend_settings_tail.c",
+      "head_blob": "8e38e071660f0ed631f092a2d7621e9bbdf389f1"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_connect_accept.c",
+      "head_blob": "46d05c6100ffff2d852c5b495149d39ae990c61e"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_connect_deadline.c",
+      "head_blob": "b5b4566622e08af5443f26916501c1847cb56657"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_connection_receive.c",
+      "head_blob": "f84600d1be3e16e701e4c007d02b2596542d0fe4"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_endpoint_owner.c",
+      "head_blob": "b40f6fab9c62e1d8933d76980dfe98a69e0bf8fa"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_middleware_backend.c",
+      "head_blob": "54bef8c5455caa10ece484fa98fd7dc43821a6c6"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_middleware_ui.c",
+      "head_blob": "4fd2297bfdf600e2d2839557a744b0fe4af70205"
+    },
+    {
+      "path": "tests/architecture/fixtures/ipc_poll_bounds.c",
+      "head_blob": "bde56d0a458c9d32ef349244f3df97ad6265c0a2"
+    },
+    {
+      "path": "tests/architecture/fixtures/native_ui_review.c",
+      "head_blob": "f431deffc0b74cffeda05b7c8c092be32555c26c"
+    },
+    {
+      "path": "tests/architecture/fixtures/native_ui_scenes.def",
+      "head_blob": "8a08b30f1e535de8b17708a7ac013668a2a8c574"
+    },
+    {
+      "path": "tests/architecture/fixtures/settings_load_fault.c",
+      "head_blob": "b22876fc84ab7994a93d8f8f9257be3f04487196"
+    },
+    {
+      "path": "tests/architecture/fixtures/settings_load_migration.c",
+      "head_blob": "200540da149500b68c0e751f56c566c704152250"
+    },
+    {
+      "path": "tests/architecture/fixtures/settings_load_original_faults.c",
+      "head_blob": "eb293b26d77fd3aad99da94f451f8e9b5e58998f"
+    },
+    {
+      "path": "tests/architecture/fixtures/settings_load_path.c",
+      "head_blob": "8aed47a7089dc624d365191d37b80344dde4cce1"
+    },
+    {
+      "path": "tests/architecture/fixtures/test_settings_atomic.c",
+      "head_blob": "009272e9cb3f4642cc4aff1f2af6086b501f7c37"
+    },
+    {
+      "path": "tests/architecture/fixtures/test_settings_ui075.c",
+      "head_blob": "c93f1d963a9f25ae1650c5f3304ea9a8568bfe2c"
+    },
+    {
+      "path": "tests/architecture/fixtures/tuya_command_template.c",
+      "head_blob": "ac3136eff3ad86ffc87220c3b942aa273421c419"
+    },
+    {
+      "path": "tests/architecture/fixtures/tuya_stop_audio.py",
+      "head_blob": "554137b21132481a71ba610fc8fd677ac8665aec"
+    },
+    {
+      "path": "tests/architecture/fixtures/tuya_stop_command.py",
+      "head_blob": "46f3d406848378f657e706325349b214dd6ff7c5"
+    },
+    {
+      "path": "tests/architecture/fixtures/tuya_stop_exit.py",
+      "head_blob": "f41bff3ef96d760347633cc35df2ee7011fd2aff"
+    },
+    {
+      "path": "tests/architecture/fixtures/tuya_stop_input.py",
+      "head_blob": "ae57f5f8e90132492d3f15ea3c4495d3049e303b"
+    },
+    {
+      "path": "tests/architecture/fixtures/tuya_stop_worker.py",
+      "head_blob": "814f56b4c1b8eee546b4a159bec96740d3a80add"
+    },
+    {
+      "path": "tests/architecture/fixtures/wifi_control_client.c",
+      "head_blob": "c9405839e4ec0fc2fe346502663486ecff6642f7"
+    },
+    {
+      "path": "tests/architecture/fixtures/wifi_control_protocol.c",
+      "head_blob": "b61e960cf694f248e0af258b7ba62f040f04eef5"
+    },
+    {
+      "path": "tests/architecture/fixtures/wifi_control_transport.c",
+      "head_blob": "3b12cf1c1b817ba436c0853f5e507f81f2327ca7"
+    },
+    {
+      "path": "tests/architecture/fixtures/wifi_status_decode.c",
+      "head_blob": "91264590ee832a809b4ab23714ee5c4fd0a96a7c"
+    },
+    {
+      "path": "tests/architecture/test_ai_command_reply.py",
+      "head_blob": "8135201eb88cba42b150fda11e4bcd455f3f8dff"
+    },
+    {
+      "path": "tests/architecture/test_ai_command_transaction.py",
+      "head_blob": "f11226b88d9e4b930331f4aae32b929c4979bff7"
+    },
+    {
+      "path": "tests/architecture/test_backend_settings_recovery.py",
+      "head_blob": "16b4c630b4e97b0592aac620e6be4164e6ed2e3a"
+    },
+    {
+      "path": "tests/architecture/test_ipc_connection.py",
+      "head_blob": "26db84d81da98c9775a1c175402becf392681967"
+    },
+    {
+      "path": "tests/architecture/test_settings_atomic.py",
+      "head_blob": "77fd2f6f61a3c1316d63a168f4daba1e62a87517"
+    },
+    {
+      "path": "tests/architecture/test_settings_load.py",
+      "head_blob": "462c5eaab134bda25b2eff77011cb4d494c56bcd"
+    },
+    {
+      "path": "tests/architecture/test_tuya_stop.py",
+      "head_blob": "da5444ce2adb2c803193c506da23d5999a9ca276"
+    },
+    {
+      "path": "tests/architecture/test_ui_review_scenes.py",
+      "head_blob": "42297627324f323ee322d69dff137dde400e6aa4"
+    },
+    {
+      "path": "tests/architecture/test_update_state_fields.py",
+      "head_blob": "1e2b00d3e97034773c19a6d2e7756ae3b009163b"
+    },
+    {
+      "path": "tests/architecture/test_update_status.py",
+      "head_blob": "09ef8d70e6ef3c9a58b09c60f2d5c28674571df2"
+    },
+    {
+      "path": "tests/architecture/test_update_transport.py",
+      "head_blob": "7dcb9abe5a317d040d560fda3174396f11ca898c"
+    },
+    {
+      "path": "tests/architecture/test_update_worker.py",
+      "head_blob": "17f235c5b9d0be031d16e8428706cecddd59d9c0"
+    },
+    {
+      "path": "tests/architecture/test_user_app_transport.py",
+      "head_blob": "0db0a1646b6606adf8cda3178a24c1bde4266624"
+    },
+    {
+      "path": "tests/architecture/test_user_catalog_names.py",
+      "head_blob": "bdef05a75303acd2368045ebc80fb380872b651b"
+    },
+    {
+      "path": "tests/architecture/test_wifi_control_protocol.py",
+      "head_blob": "d5b8c15c57f35f8b25962a2c665f984e19685158"
+    },
+    {
+      "path": "tests/architecture/test_wifi_status_decode.py",
+      "head_blob": "643df9d92c256704dc10edccf2df2d57e5e29feb"
+    },
+    {
+      "path": "tests/platform/app_locked_writer.c",
+      "head_blob": "d8ba3d9e0c75f4bb040ea1f5b0c5fac0c015ab65"
+    },
+    {
+      "path": "tests/platform/fixtures/capture_dispatch.cpp",
+      "head_blob": "6dad33737cc6fcf53ddbd5a32ae05df5223934cf"
+    },
+    {
+      "path": "tests/platform/test_agentctl_stop.py",
+      "head_blob": "534a591e66c538fee2cf0b29e3e54404e372b19b"
+    },
+    {
+      "path": "tests/platform/test_app_lifecycle_lock.py",
+      "head_blob": "45eb000782de88da7abc80e26df94eb87c765bf4"
+    },
+    {
+      "path": "tests/platform/test_capture_dispatch.py",
+      "head_blob": "0681fd38993085e986ca38b34269bd7be76f83ab"
+    },
+    {
+      "path": "tests/platform/test_control_client.py",
+      "head_blob": "2630da268aca6399535119ece4d98866a64bd3ba"
+    },
+    {
+      "path": "tests/platform/test_control_ownership.py",
+      "head_blob": "9e4b0fbb22b5d39541c9106cee2da4ef793e6d9e"
+    },
+    {
+      "path": "tests/platform/test_control_release.py",
+      "head_blob": "1d7407e076d105dd8f2c3ec6a4080097fdbe838f"
+    },
+    {
+      "path": "tests/platform/test_control_socket.py",
+      "head_blob": "8d96f9b53f0c1be6d102cc15eb500891b16a0c3b"
+    },
+    {
+      "path": "tests/platform/test_host_integration.py",
+      "head_blob": "b2c645c08e2006808969c0e9358d5e94be8c79fe"
+    },
+    {
+      "path": "tests/platform/test_platform_init.py",
+      "head_blob": "9d2c27e8b6808548ccf91877a65c7c2713888d53"
+    },
+    {
+      "path": "tests/platform/test_ui_boot_selection.py",
+      "head_blob": "a8873ff919972a5f51920d2d623030ae20bfa442"
+    },
+    {
+      "path": "tests/sdk_source.py",
+      "head_blob": "3061620907057659ba00e81bb79b94633f9745e7"
+    },
+    {
+      "path": "tests/update/test_platform_package.py",
+      "head_blob": "0b7e9b7962db8ef8a0c5c884b4047b7c7faccdf0"
+    },
+    {
+      "path": "tests/update/test_product_edition.py",
+      "head_blob": "f3930c5691a4d141a203065c60b39ba7e58acbcf"
+    },
+    {
+      "path": "tests/update/test_product_provider.py",
+      "head_blob": "82988e28af4f140b1dcc6e48f9f9cd6b91b5ea8e"
+    },
+    {
+      "path": "tests/update/test_sdk_source.py",
+      "head_blob": "d376d50978d929475260ce7b3ee59b66f168abcb"
+    },
+    {
+      "path": "tests/update/test_service_programs.py",
+      "head_blob": "b1de08cb2b64ddf64879c53d41c4900fe77af7fc"
+    },
+    {
+      "path": "tests/update/test_startup_scripts.py",
+      "head_blob": "ff0b32072aabfd88ea995907139bdf46ed61aabd"
+    },
+    {
+      "path": "tests/update/test_tuya_pairing_sources.py",
+      "head_blob": "0dc46d3abcef0b35b1cbbcadd8680b04bf1db5a4"
+    },
+    {
+      "path": "tests/update/test_ui_settings_receipt.py",
+      "head_blob": "77080004441900f9ce41f8e61a590c63dadfe227"
+    },
+    {
+      "path": "third_party/TuyaOpen/apps/tuya.ai/your_chat_bot/src/app_chat_bot.c",
+      "head_blob": "e59f3fa9df41903107e2418cc91550206ee51fc7"
+    },
+    {
+      "path": "third_party/TuyaOpen/src/ai_components/ai_audio/src/ai_audio_player.c",
+      "head_blob": "fb01fcd17c0ad7113652a95c3ec98d76a32f22f6"
+    },
+    {
+      "path": "third_party/TuyaOpen/src/tuya_ai_service/svc_ai_agent/include/tuya_ai_input.h",
+      "head_blob": "fc96809a507a5a43ab1c0466e8031f26ad838e43"
+    },
+    {
+      "path": "third_party/TuyaOpen/src/tuya_ai_service/svc_ai_agent/src/tuya_ai_input.c",
+      "head_blob": "27630f21743eb4fab2a68badfec78fbe1b8b35c4"
+    }
+  ],
+  "scope": "Retrospective outgoing source inventory, not test results"
+}

@@ -1,0 +1,57 @@
+{
+  "requirement": "REQ-MIMI-QUALITY-076",
+  "date": "2026-10-31",
+  "repository": "dshanpi/SmartDesktopMimi",
+  "private": false,
+  "base_commit": "39eadb991ac6729fdefb0cf736adef044655a6d4",
+  "source_head_before_documentation": "75f4039095420cd024bb39581a2a4a0e916de41f",
+  "existing_outgoing_commits": 212,
+  "outgoing_blob_count": 844,
+  "request": "User explicitly requests code organization and upload; source-upload authorization supersedes earlier hold",
+  "scope": "全页布局与状态反馈、设置分类、应用刷新、蓝牙恢复、涂鸦智家/配对展示、更新与控制协议边界；产品源码保持6269f14，历史构建与失败记录保留。",
+  "checks": [
+    {
+      "name": "Outgoing history content review",
+      "status": "passed",
+      "scope": "844 new blobs reviewed; no forbidden paths or credential pattern findings; hardware key marker is explicit negative-test fixture",
+      "evidence": "docs/validation/quality076-source-upload-20261031.json"
+    },
+    {
+      "name": "Known production identity comparison",
+      "status": "passed",
+      "scope": "9 sensitive byte/value samples from private local recovery backup absent from all outgoing blobs; samples never exported",
+      "evidence": "docs/validation/quality076-source-upload-20261031.json"
+    },
+    {
+      "name": "Source and repository boundary",
+      "status": "passed",
+      "scope": "公共源码已通过上传区间追溯；本轮仅整理文档，不重新标注历史功能测试。 Repository API visibility independently checked: public",
+      "evidence": "docs/validation/quality076-source-upload-20261031.json"
+    },
+    {
+      "name": "New candidate physical qualification",
+      "status": "not_run",
+      "scope": "rc33/rc10 failed installation; bound board recovered to old rc31/rc8; no hardware activity this batch",
+      "reason": "Target/storage ambiguity, SDIO/reboot cause and cloud reconnect remain unresolved",
+      "evidence": "docs/validation/quality076-source-upload-20261031.json"
+    },
+    {
+      "name": "Remote upload confirmation",
+      "status": "not_run",
+      "scope": "Prepared source snapshot, remote readback appended in follow-up evidence",
+      "reason": "This immutable record precedes push",
+      "evidence": "docs/validation/quality076-source-upload-20261031.json"
+    }
+  ],
+  "archived_local_only": null,
+  "evidence_root": "/home/ubuntu/AI-DeskTopBox/.delivery/source-upload-20261031",
+  "sensitive_payloads_included": false,
+  "product_source_changed_this_batch": false,
+  "release_qualified": false,
+  "limitations": [
+    "No new build or physical validation; historical evidence stays bound to its original source and artifacts",
+    "No firmware upload, release, tag change, main/master merge, force push or history rewrite",
+    "Regex and known-secret comparison do not prove absence of unknown secrets"
+  ],
+  "next": "Push exact development branch and independently verify its GitHub commit/tree; separately resolve runtime and installation failures"
+}
