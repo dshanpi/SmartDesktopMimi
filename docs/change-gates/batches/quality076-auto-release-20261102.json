@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "summary": "Execute controlled automatic release workflow and retain concrete blocked results",
+  "context": "User requests a run of the existing release mechanism; incomplete hardware qualification and missing publication infrastructure remain",
+  "next_steps": "Correct system build version provenance through normal source/build flow, preserve existing rc10 bytes and records; Complete missing exact-artifact host acceptance and actual rc33/rc10 installation, stability, data and rollback/power matrix; Deploy scoped publication runner and release environments once candidate qualification is ready; execute draft upload and independent remote readback before promotion",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-QUALITY-076",
+      "record": "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+      "scope": "Local candidate assembly, actual publication gate execution and infrastructure/system-provenance inspection",
+      "invariants": "No acceptance bypass, altered signed bytes, publication or board operation",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-QUALITY-076.md",
+        "docs/validation/quality076-auto-release-20261102.json",
+        "docs/change-gates/batches/quality076-auto-release-20261102.json"
+      ],
+      "checks": [
+        {
+          "name": "Publication workflow readiness",
+          "status": "blocked",
+          "scope": "GitHub workflow385014211 active, but repository runner count0; only github-pages environment exists; default candidate/trust deployment paths absent",
+          "reason": "No configured self-hosted mimi-release runner or release environment; remote workflow not dispatched into an unserviceable queue",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "Application candidate preparation",
+          "status": "passed",
+          "scope": "Exact original rc33 package, existing dedicated trust, SDK/build/interface/source ownership and signed payload checked through prepare_release.py; host-only descriptor explicitly labelled; final local candidate immutable",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "First workflow environment",
+          "status": "failed",
+          "scope": "Initial invocation omitted release credential and constructor rejected before upload gate; original log retained",
+          "reason": "Corrected second invocation used existing authorized credential only in process environment",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "Final application automatic draft workflow",
+          "status": "blocked",
+          "scope": "Actual release_workflow.py draft execution with valid credential stops in require_upload_acceptance before tag/API mutations;3 host cases bound,5 complete host acceptance cases not_run,14 physical cases blocked",
+          "reason": "ValueError: upload requires completed acceptance for device-a133-rc10-host-only.json: application_upgrade, bluetooth_audio, cold_boot, compatibility, data_preservation, hdmi_hid, identity, media, navigation_touch, power_loss, rollback, soak, source_audit, system_application_pairing, transaction_recovery, ui_navigation, voice, web_tests, wifi",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "System signed payload identity",
+          "status": "passed",
+          "scope": "rc10 gzip/SWU hashes and decompressed raw hash unchanged from sealed candidate; not a complete system release or physical acceptance",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "System build and factory version consistency",
+          "status": "failed",
+          "scope": "BUILD-MANIFEST APPLICATION_VERSION and AITVBOX_VERSION=1.0.8-rc.32; factory manifest=1.0.8-rc.33; original files not edited",
+          "reason": "build_release.sh writes VERSION into build manifest while baseline independently supplied rc33. System release preparation stopped pending a consistent new build record; no completion inferred from valid payload hashes",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "System release preparation",
+          "status": "blocked",
+          "scope": "system-build.json, signed system-manifest and release-lock not yet assembled; SWU vendor signature alone is not complete release admission",
+          "reason": "Resolve build provenance inconsistency before final system record/signing; known installation failure and required acceptance also remain",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        },
+        {
+          "name": "GitHub tag and release creation",
+          "status": "not_run",
+          "scope": "v1.0.8-rc.33 and system-a133-v1.0.0-rc.10 absent at initial API read; local execution stopped before mutation",
+          "reason": "Upload gate blocked; no new tag, asset, release, board operation or public promotion",
+          "evidence": "docs/validation/quality076-auto-release-20261102.json"
+        }
+      ]
+    }
+  ]
+}
