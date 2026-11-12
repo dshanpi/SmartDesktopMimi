@@ -1,3 +1,5 @@
+2026-11-12 教程站已发布并完成公网验证：23 章中文教程、5 张流程图、5 张已有实机图；首个部署源码 d778421bcf5ba206ba1827991573876233eab164。4 项 GitHub 工作流全部 success，公网 65 个页面/资源 HTTP 200，确定性正文与资源和 Ubuntu 构建字节一致；独立构建的搜索索引 ID 不同，版本/语言/页数及实际搜索已验证。中文搜索/章节跳转/HTTPS 代码复制/图表和手机布局通过。站点 https://dshanpi.github.io/SmartDesktopMimi/ 。参考开发快照 75500c7，原 SDK 虚拟机和板端未操作，产品发布阻断保持。详见 docs/validation/docs077-deployment-20261112.json。
+
 # 2026-11-12 文档站独立工作
 
 用户授权在替代 Ubuntu 主机编写并发布教程。新增 23 章中文学习路径，参考固定开发提交 75500c76e389971bfb3bd0a45ac4bed74e1f8cfa；main 产品代码保持原状，未合并开发分支。站点构建与发布的实际结果见 docs/change-gates/REQ-MIMI-DOCS-077.md 及 docs/validation/docs077-site-20261112.json。原 SDK 主机和板端未操作，rc33/rc10 的产品验收阻断仍保留。

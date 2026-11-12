@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "summary": "Record successful tutorial deployment and independent public verification",
+  "context": "Follow-up evidence for user-requested Pages publication",
+  "next_steps": "Maintain tutorial through docs workflow; product qualification remains separate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DOCS-077",
+      "record": "docs/change-gates/REQ-MIMI-DOCS-077.md",
+      "scope": "Deployment evidence and progress only",
+      "invariants": "No rendered tutorial/assets/product source changes; preserve original failures",
+      "paths": [
+        "docs/validation/docs077-deployment-20261112.json",
+        "docs/change-gates/REQ-MIMI-DOCS-077.md",
+        "docs/change-gates/batches/20261112-docs077-deployment.json",
+        "CURRENT_PROGRESS.md"
+      ],
+      "checks": [
+        {
+          "name": "First production documentation deployment and complete CI",
+          "status": "passed",
+          "scope": "Exact d778421 source; four workflows successful including documentation build/deploy, traceability, update gates and public source validation",
+          "evidence": "docs/validation/docs077-deployment-20261112.json"
+        },
+        {
+          "name": "Public HTTP and browser verification",
+          "status": "passed",
+          "scope": "65 assets/pages HTTP 200; deterministic bytes match; search metadata, navigation/code copy/diagrams and preview mobile/theme checks",
+          "evidence": "docs/validation/docs077-deployment-20261112.json"
+        },
+        {
+          "name": "Product physical acceptance",
+          "status": "not_run",
+          "scope": "Documentation-only follow-up",
+          "reason": "Original SDK unavailable and no device operation authorized for this documentation task",
+          "evidence": "docs/validation/docs077-deployment-20261112.json"
+        }
+      ]
+    }
+  ]
+}

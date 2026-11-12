@@ -1,0 +1,566 @@
+{
+  "requirement": "REQ-MIMI-DOCS-077",
+  "date": "2026-11-12",
+  "kind": "Post-deployment verification of the first published documentation commit",
+  "source_commit": "d778421bcf5ba206ba1827991573876233eab164",
+  "site": "https://dshanpi.github.io/SmartDesktopMimi/",
+  "pages_source": "GitHub Actions; previous gh-pages branch retained",
+  "workflow_runs": [
+    {
+      "id": 43210823634,
+      "name": "Application update gates",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43210823634"
+    },
+    {
+      "id": 43210823808,
+      "name": "Change traceability coverage",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43210823808"
+    },
+    {
+      "id": 43210823648,
+      "name": "SmartDesktopMimi documentation",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43210823648"
+    },
+    {
+      "id": 43210823677,
+      "name": "Public source validation",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43210823677"
+    }
+  ],
+  "http": {
+    "date": "2026-11-12T11:45:38.503892+00:00",
+    "source_commit": "d778421bcf5ba206ba1827991573876233eab164",
+    "url": "https://dshanpi.github.io/SmartDesktopMimi/",
+    "workflow": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43210823648",
+    "checked": 65,
+    "all_status_200": true,
+    "all_deterministic_bytes_match": true,
+    "search_index_validation": "Version, languages and page count match; browser search verified. Generated Pagefind index IDs differ between independent builds.",
+    "initial_check": "First comparison incorrectly required identical Pagefind generated index IDs; status was 200, no serving failure; preserved here and corrected to semantic index validation.",
+    "results": [
+      {
+        "path": "./",
+        "status": 200,
+        "bytes": 36895,
+        "sha256": "794962c6e3131c655ce5b727f128f2ba8bc619c90807f31ef850457f743d23b7",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js",
+        "status": 200,
+        "bytes": 622,
+        "sha256": "bc57dccfe8dec8aaf9d9eeb8a1cfdf255d0cdf784cd79f606ed5a63eb4f08414",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/Search.astro_astro_type_script_index_0_lang.B-Tb2Ric.js",
+        "status": 200,
+        "bytes": 3312,
+        "sha256": "72234a31b223d6e219aceaf71df2753285ba20eaa51325476b829f9f08f160db",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js",
+        "status": 200,
+        "bytes": 36,
+        "sha256": "b80a41c167d0d90fc2f38a27bb4772ec220613dbd07093bfe6b9c3d44f628b77",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/common.xp7cLIHU.css",
+        "status": 200,
+        "bytes": 64551,
+        "sha256": "26813f9bfc9b3a1fb6a94e3f3a69a80ef6b034fbb6a47e8e5db1ecf1a18bef6d",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/ec.0vx5m.js",
+        "status": 200,
+        "bytes": 2523,
+        "sha256": "182e98b9acfcfd358ea486967bd17dcaddd5930b8d092bc0653fd26ddbb11e37",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/ec.w36nc.css",
+        "status": 200,
+        "bytes": 18292,
+        "sha256": "1db272cd2e2bc5dfbc63c332f5d5f04bb4ba104065e894f951405e7bdddf5dcb",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/page.cNngjUgL.js",
+        "status": 200,
+        "bytes": 2474,
+        "sha256": "04c3f1b2cba171b387e6485f6b6dc6cf94cd91ae1278d6b9ed1fac7d8f14546f",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "_astro/print.ehPL0gv-.css",
+        "status": 200,
+        "bytes": 3318,
+        "sha256": "4d7d25c3d697e6d36e64afb9edef136e6d2e4c50f70a48000ca90f9b059e3622",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "ai-iot/",
+        "status": 200,
+        "bytes": 37454,
+        "sha256": "c5671e3938758ed86903b05d6bfaa4d41bfb15b294897d75b865d26714ea8645",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "ai-iot/index.html",
+        "status": 200,
+        "bytes": 37454,
+        "sha256": "c5671e3938758ed86903b05d6bfaa4d41bfb15b294897d75b865d26714ea8645",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "architecture/",
+        "status": 200,
+        "bytes": 37715,
+        "sha256": "1d756fc9caefd27186479a022256f54395d4bf8e3035bd1473ab794f2a7324d5",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "architecture/index.html",
+        "status": 200,
+        "bytes": 37715,
+        "sha256": "1d756fc9caefd27186479a022256f54395d4bf8e3035bd1473ab794f2a7324d5",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "build-app/",
+        "status": 200,
+        "bytes": 45405,
+        "sha256": "105c8c835193399ecfc0f62eec523223f6aeecc31d47140ed2caa79f55db8c56",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "build-app/index.html",
+        "status": 200,
+        "bytes": 45405,
+        "sha256": "105c8c835193399ecfc0f62eec523223f6aeecc31d47140ed2caa79f55db8c56",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "build-system/",
+        "status": 200,
+        "bytes": 46613,
+        "sha256": "ab7d6b4f5c23da85ce03a53e0e03b1c96b314d4e13d06683ecd44ce76a48e9b9",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "build-system/index.html",
+        "status": 200,
+        "bytes": 46613,
+        "sha256": "ab7d6b4f5c23da85ce03a53e0e03b1c96b314d4e13d06683ecd44ce76a48e9b9",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "desktop/",
+        "status": 200,
+        "bytes": 37024,
+        "sha256": "a7020c6975f73ce5570d53f426cd9cb44d9f7f4fb8fc05115c3eade5a734d66a",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "desktop/index.html",
+        "status": 200,
+        "bytes": 37024,
+        "sha256": "a7020c6975f73ce5570d53f426cd9cb44d9f7f4fb8fc05115c3eade5a734d66a",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "enhance.js",
+        "status": 200,
+        "bytes": 575,
+        "sha256": "fcf481dc43197c2fc717d2e312fe0cdc8ae9014a4d52ae0d17fe134caebf7803",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "environment/",
+        "status": 200,
+        "bytes": 49814,
+        "sha256": "215a948650d0623ed156e0d4d41bb070c554ccb3d607c40cd6a651cf9d96472e",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "environment/index.html",
+        "status": 200,
+        "bytes": 49814,
+        "sha256": "215a948650d0623ed156e0d4d41bb070c554ccb3d607c40cd6a651cf9d96472e",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "favicon.svg",
+        "status": 200,
+        "bytes": 462,
+        "sha256": "11a887376a952f53f015eda9fef2fdb0da28270dba3d33a78e17c23815ef4107",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "gallery/",
+        "status": 200,
+        "bytes": 39625,
+        "sha256": "6c0f5cbd2cef0976fc2207b5d4a899ce9ecc8c3c2fdf3ff661c56c0794a4be34",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "gallery/index.html",
+        "status": 200,
+        "bytes": 39625,
+        "sha256": "6c0f5cbd2cef0976fc2207b5d4a899ce9ecc8c3c2fdf3ff661c56c0794a4be34",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "hardware/",
+        "status": 200,
+        "bytes": 38782,
+        "sha256": "839b819716acc34907d987447d691eaa154ef7cc4c10a4c3bd530c776bcbb4e0",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "hardware/index.html",
+        "status": 200,
+        "bytes": 38782,
+        "sha256": "839b819716acc34907d987447d691eaa154ef7cc4c10a4c3bd530c776bcbb4e0",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "index.html",
+        "status": 200,
+        "bytes": 36895,
+        "sha256": "794962c6e3131c655ce5b727f128f2ba8bc619c90807f31ef850457f743d23b7",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "install/",
+        "status": 200,
+        "bytes": 39894,
+        "sha256": "37c20cc77ccb91617ae05840a8c02ec2b680f1ab681b7f4cc8ce3f4995937779",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "install/index.html",
+        "status": 200,
+        "bytes": 39894,
+        "sha256": "37c20cc77ccb91617ae05840a8c02ec2b680f1ab681b7f4cc8ce3f4995937779",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "ipkvm/",
+        "status": 200,
+        "bytes": 46239,
+        "sha256": "a3bd8b0ba24d66a44979362b3338c4325da733e99f8f433d9b626da9ffa6dd01",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "ipkvm/index.html",
+        "status": 200,
+        "bytes": 46239,
+        "sha256": "a3bd8b0ba24d66a44979362b3338c4325da733e99f8f433d9b626da9ffa6dd01",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "mcp/",
+        "status": 200,
+        "bytes": 44241,
+        "sha256": "3b841e7c17214a6afadf94717d8baecda827b0c6927b8d0841a8a1a6b67ed6b4",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "mcp/index.html",
+        "status": 200,
+        "bytes": 44241,
+        "sha256": "3b841e7c17214a6afadf94717d8baecda827b0c6927b8d0841a8a1a6b67ed6b4",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "network/",
+        "status": 200,
+        "bytes": 40546,
+        "sha256": "e2471f4bd70c29fc1870696b5dfa3eb97f85aefeb25eaad943062fe1d198ce5a",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "network/index.html",
+        "status": 200,
+        "bytes": 40546,
+        "sha256": "e2471f4bd70c29fc1870696b5dfa3eb97f85aefeb25eaad943062fe1d198ce5a",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "ota/",
+        "status": 200,
+        "bytes": 38328,
+        "sha256": "2e22bf1e61ddb3205b7f564e0679e8630fdecfbc760824ad8042014fdb05c9b8",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "ota/index.html",
+        "status": 200,
+        "bytes": 38328,
+        "sha256": "2e22bf1e61ddb3205b7f564e0679e8630fdecfbc760824ad8042014fdb05c9b8",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "pagefind/pagefind-entry.json",
+        "status": 200,
+        "bytes": 181,
+        "sha256": "8e198a66b6a64606293f4dfcd70477e1ff222dd567ad2587a13181a39433c798",
+        "matches_ubuntu_build": false,
+        "search_index_metadata": {
+          "actual": {
+            "version": "1.5.2",
+            "languages": {
+              "zh-cn": {
+                "hash": "zh-cn_f624432e20c17",
+                "wasm": null,
+                "page_count": 23
+              }
+            },
+            "include_characters": [
+              "_",
+              "‿",
+              "⁀",
+              "⁔",
+              "︳",
+              "︴",
+              "﹍",
+              "﹎",
+              "﹏",
+              "＿"
+            ]
+          },
+          "local": {
+            "version": "1.5.2",
+            "languages": {
+              "zh-cn": {
+                "hash": "zh-cn_162f3d2e7a855",
+                "wasm": null,
+                "page_count": 23
+              }
+            },
+            "include_characters": [
+              "_",
+              "‿",
+              "⁀",
+              "⁔",
+              "︳",
+              "︴",
+              "﹍",
+              "﹎",
+              "﹏",
+              "＿"
+            ]
+          }
+        }
+      },
+      {
+        "path": "pagefind/pagefind.js",
+        "status": 200,
+        "bytes": 45555,
+        "sha256": "252d272bd34d483d19a752060f6a065114d15ab12c42d8f905ca565e2768a009",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "quickstart/",
+        "status": 200,
+        "bytes": 38568,
+        "sha256": "0c1c1f4b14b6007f7259b1ec5a4a794c7e22779a24519d8e090dfb8698abd142",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "quickstart/index.html",
+        "status": 200,
+        "bytes": 38568,
+        "sha256": "0c1c1f4b14b6007f7259b1ec5a4a794c7e22779a24519d8e090dfb8698abd142",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "release/",
+        "status": 200,
+        "bytes": 40619,
+        "sha256": "9363c20d11fbc4502355891c9e0f8ceb393dfdee49f38e43fadb72f6b695b0f5",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "release/index.html",
+        "status": 200,
+        "bytes": 40619,
+        "sha256": "9363c20d11fbc4502355891c9e0f8ceb393dfdee49f38e43fadb72f6b695b0f5",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "screenshots/ai-chat.png",
+        "status": 200,
+        "bytes": 66236,
+        "sha256": "e73822c1f12e0c27992185e1dedf004e020b40bc9ba525c4c16a86344d8bb419",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "screenshots/all-apps.png",
+        "status": 200,
+        "bytes": 73149,
+        "sha256": "0d9858524158eb6d2e2a10a572f1bdd5986102ac166f6245c1f3859d084ef786",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "screenshots/bluetooth.png",
+        "status": 200,
+        "bytes": 144761,
+        "sha256": "6d152e9b8e84c58c6073499a6d4acc75b0c2d650b5f5adfd6fa2dd10e7014a0f",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "screenshots/desktop.png",
+        "status": 200,
+        "bytes": 104578,
+        "sha256": "2efc5b0b81ff0f2e9f703b0a16f5b4f30123f493e627a6d68075d4a3292258f1",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "screenshots/system-update.png",
+        "status": 200,
+        "bytes": 27433,
+        "sha256": "605e5f2de2ee3de40bd693cb8fc2274fe3c35b4fa5e4877da66ed996f56de06e",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "settings-data/",
+        "status": 200,
+        "bytes": 37829,
+        "sha256": "58b7a18602f6a87f73b8a6a86b23b7aef5992540e928b627f4011ea83a0015db",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "settings-data/index.html",
+        "status": 200,
+        "bytes": 37829,
+        "sha256": "58b7a18602f6a87f73b8a6a86b23b7aef5992540e928b627f4011ea83a0015db",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "site/",
+        "status": 200,
+        "bytes": 41273,
+        "sha256": "80f395717567955a36b39b08ab791c32099ab4ce0ac5f3b9fbeaaa58452c8ef6",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "site/index.html",
+        "status": 200,
+        "bytes": 41273,
+        "sha256": "80f395717567955a36b39b08ab791c32099ab4ce0ac5f3b9fbeaaa58452c8ef6",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "sitemap-index.xml",
+        "status": 200,
+        "bytes": 205,
+        "sha256": "be702ec74ba00c04b83758db569b2ae7f606608d51c57590176156de537d51ee",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "source-map/",
+        "status": 200,
+        "bytes": 37202,
+        "sha256": "c08a0f2ae5febdaf0632622903dcfdeae26278f4aaa193cf918644f3ac4f5209",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "source-map/index.html",
+        "status": 200,
+        "bytes": 37202,
+        "sha256": "c08a0f2ae5febdaf0632622903dcfdeae26278f4aaa193cf918644f3ac4f5209",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "troubleshooting/",
+        "status": 200,
+        "bytes": 45953,
+        "sha256": "28b24cb8c91aa4f850f8b94492a2a4c815b8a57937ba5a0600c51b464e33bd52",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "troubleshooting/index.html",
+        "status": 200,
+        "bytes": 45953,
+        "sha256": "28b24cb8c91aa4f850f8b94492a2a4c815b8a57937ba5a0600c51b464e33bd52",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "user-app/",
+        "status": 200,
+        "bytes": 62910,
+        "sha256": "5e3e69f64fdd9128b116808fa58ee4f072a18c3cd430e182c9201fd0db200de5",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "user-app/index.html",
+        "status": 200,
+        "bytes": 62910,
+        "sha256": "5e3e69f64fdd9128b116808fa58ee4f072a18c3cd430e182c9201fd0db200de5",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "validation/",
+        "status": 200,
+        "bytes": 41737,
+        "sha256": "1c24b9aa05ff643d484e4ff3bed0ad95e76f8c8b7bb1c3c6f0ef3d5e56821038",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "validation/index.html",
+        "status": 200,
+        "bytes": 41737,
+        "sha256": "1c24b9aa05ff643d484e4ff3bed0ad95e76f8c8b7bb1c3c6f0ef3d5e56821038",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "vendor/mermaid.min.js",
+        "status": 200,
+        "bytes": 5575485,
+        "sha256": "28fca7ae6ebc7ed7bb63bde63136a74bfef14f296a57e403657eeb8b32836073",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "version-status/",
+        "status": 200,
+        "bytes": 37075,
+        "sha256": "29e8dadc63db6a495fb5d0ccf859d51c29e74af32940aca9b288f15d1018cba9",
+        "matches_ubuntu_build": true
+      },
+      {
+        "path": "version-status/index.html",
+        "status": 200,
+        "bytes": 37075,
+        "sha256": "29e8dadc63db6a495fb5d0ccf859d51c29e74af32940aca9b288f15d1018cba9",
+        "matches_ubuntu_build": true
+      }
+    ]
+  },
+  "browser": {
+    "public_home": "passed",
+    "chinese_search_and_section_navigation": "passed",
+    "https_copy_build_command": "passed",
+    "public_mermaid": "passed",
+    "all_five_mermaid_diagrams_on_ubuntu_preview": "passed",
+    "light_dark_theme": "passed",
+    "mobile_390x844_menu_and_width": "passed",
+    "screenshot": "Saved to operator local delivery folder; public homepage only"
+  },
+  "product": {
+    "source_changed": false,
+    "sdk_vm_used": false,
+    "device_operation": "not_run",
+    "new_firmware_or_release": "not_run",
+    "existing_rc33_rc10_blockers": "unchanged"
+  },
+  "note": "Follow-up verification metadata does not change tutorial content or site assets; later CI runs belong to that follow-up commit."
+}
