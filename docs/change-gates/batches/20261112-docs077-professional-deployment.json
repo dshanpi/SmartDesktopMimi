@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "summary": "Record verified professional guide deployment",
+  "context": "Follow-up evidence for user-authorized rewrite and republication",
+  "next_steps": "Documentation work complete; future product work follows existing independent gates",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DOCS-077",
+      "record": "docs/change-gates/REQ-MIMI-DOCS-077.md",
+      "scope": "Deployment evidence and progress only",
+      "invariants": "No rendered tutorial, product, private input or device changes",
+      "paths": [
+        "docs/change-gates/REQ-MIMI-DOCS-077.md",
+        "docs/validation/docs077-professional-deployment-20261112.json",
+        "docs/change-gates/batches/20261112-docs077-professional-deployment.json",
+        "CURRENT_PROGRESS.md",
+        "docs/CHANGE-GATES.md"
+      ],
+      "checks": [
+        {
+          "name": "Professional documentation deployment",
+          "status": "passed",
+          "scope": "28 routes, public resource byte comparison, four workflows, Chinese search and code copy",
+          "evidence": "docs/validation/docs077-professional-deployment-20261112.json"
+        },
+        {
+          "name": "Product validation",
+          "status": "not_run",
+          "scope": "Original product state unchanged",
+          "reason": "Documentation-only task, no product/device operations",
+          "evidence": "docs/validation/docs077-professional-deployment-20261112.json"
+        }
+      ]
+    }
+  ]
+}

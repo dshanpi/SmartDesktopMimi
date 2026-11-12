@@ -1,0 +1,416 @@
+{
+  "date": "2026-11-12T14:35:22.482550+00:00",
+  "source_commit": "1f339f248229cec501ecea386d44e3340b12947e",
+  "url": "https://dshanpi.github.io/SmartDesktopMimi/",
+  "runs": [
+    {
+      "id": 43237002961,
+      "name": "SmartDesktopMimi documentation",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43237002961"
+    },
+    {
+      "id": 43237003011,
+      "name": "Application update gates",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43237003011"
+    },
+    {
+      "id": 43237003173,
+      "name": "Public source validation",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43237003173"
+    },
+    {
+      "id": 43237003107,
+      "name": "Change traceability coverage",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/dshanpi/SmartDesktopMimi/actions/runs/43237003107"
+    }
+  ],
+  "http": {
+    "checked": 50,
+    "status": "passed",
+    "comparison": "Deterministic HTML/assets byte match; Pagefind metadata version/language/page count match",
+    "results": [
+      {
+        "path": "",
+        "status": 200,
+        "sha256": "98c13c34b5aea66deaec2f19b8d10515958b0c8fc5a8ba2c5ab8a1c1f147987d",
+        "bytes": 38735,
+        "matches_build": true
+      },
+      {
+        "path": "hardware/",
+        "status": 200,
+        "sha256": "85b8cba6ac2606fd0c6ec7e24e06df93d3981a6ef71946dd5ea379e257a32735",
+        "bytes": 42878,
+        "matches_build": true
+      },
+      {
+        "path": "install/",
+        "status": 200,
+        "sha256": "b060ded22067a6584bbe3b436aab4601b2ada10a326088d7f0021a18a3835bbf",
+        "bytes": 45966,
+        "matches_build": true
+      },
+      {
+        "path": "quickstart/",
+        "status": 200,
+        "sha256": "241f7a27dee5c0b3c5ba5675eea05753f1f6b0c22d2057f7ca4966aa7ae8742b",
+        "bytes": 43802,
+        "matches_build": true
+      },
+      {
+        "path": "desktop/",
+        "status": 200,
+        "sha256": "dfcc459701af57eb0591def34edf81832004f43221725fe52707c422905a3e74",
+        "bytes": 42363,
+        "matches_build": true
+      },
+      {
+        "path": "network/",
+        "status": 200,
+        "sha256": "161287c8069f01417bbd3eb7741573cfa8f45c16339f2186f2b48f25c64cad45",
+        "bytes": 46016,
+        "matches_build": true
+      },
+      {
+        "path": "bluetooth/",
+        "status": 200,
+        "sha256": "e3ddc2ef44347d39e9ff3238dcf9ebc3b6fac01d98367e91aa58102c69c74b1f",
+        "bytes": 44037,
+        "matches_build": true
+      },
+      {
+        "path": "settings-data/",
+        "status": 200,
+        "sha256": "4d5e30b5531d3370b00550ad5447e288bdf26d364ed5f82e080c8aef02a91f9c",
+        "bytes": 46157,
+        "matches_build": true
+      },
+      {
+        "path": "ai-iot/",
+        "status": 200,
+        "sha256": "b41920c3d938725d9da83291655f4f86b30505b679747ea86f1a0f990bc6e0a0",
+        "bytes": 40632,
+        "matches_build": true
+      },
+      {
+        "path": "pairing/",
+        "status": 200,
+        "sha256": "6f8beccf3125db108c927c0388ef50c0b12809f51573a02016c26b26a20690a9",
+        "bytes": 39480,
+        "matches_build": true
+      },
+      {
+        "path": "iot/",
+        "status": 200,
+        "sha256": "c8e5dcc028862bf9c8d2eb92a5adc31f5ebb132ca7ef6ba5d3ad3a884287934d",
+        "bytes": 45760,
+        "matches_build": true
+      },
+      {
+        "path": "ipkvm/",
+        "status": 200,
+        "sha256": "da5f81c2c581126f6bc6f8da8dacba16bf2669160435e018c8270c3f255cc821",
+        "bytes": 55002,
+        "matches_build": true
+      },
+      {
+        "path": "mcp/",
+        "status": 200,
+        "sha256": "a5c5311f8ccdfc4a70ba0a31f0e74fccdb79dba05d420c2c86cc256ed0287788",
+        "bytes": 51348,
+        "matches_build": true
+      },
+      {
+        "path": "environment/",
+        "status": 200,
+        "sha256": "750ca7bc74b4abb4b96b8bd05f7180ba3cb35fca9c6228f9724a228e7da9ac07",
+        "bytes": 52546,
+        "matches_build": true
+      },
+      {
+        "path": "architecture/",
+        "status": 200,
+        "sha256": "d38f44c89b94ac1264f2eeac4e01dedc2225f71b751012176b2711702c3a774f",
+        "bytes": 43209,
+        "matches_build": true
+      },
+      {
+        "path": "source-map/",
+        "status": 200,
+        "sha256": "3b82fb97a1b58d2bca28ea1816cdf3bb7f29d1df79ad98255e00bbd9303c5468",
+        "bytes": 41650,
+        "matches_build": true
+      },
+      {
+        "path": "user-app/",
+        "status": 200,
+        "sha256": "c71be7e0cf0b799a1b5dcb39dbe522c49fa48238b65eae664603f3140a199a71",
+        "bytes": 68603,
+        "matches_build": true
+      },
+      {
+        "path": "native-app/",
+        "status": 200,
+        "sha256": "d6c015ae2237a0ed1f1310e27ea983caeba1c995ec7e777d4d927e03c36b6035",
+        "bytes": 67971,
+        "matches_build": true
+      },
+      {
+        "path": "build-app/",
+        "status": 200,
+        "sha256": "7f7ef2d6e0c5f7a3564e360d955a2d6662beb9e9fe7366af6a0b0a29b5673de6",
+        "bytes": 52969,
+        "matches_build": true
+      },
+      {
+        "path": "build-system/",
+        "status": 200,
+        "sha256": "9fd54b9f47a8f1af73d9d3966c70205cf25dc0c009a591249588c65862b9b5f1",
+        "bytes": 50511,
+        "matches_build": true
+      },
+      {
+        "path": "ota/",
+        "status": 200,
+        "sha256": "f413d6ba5d315952c45d93beab0498b9d0053c93010024edfcac6f727555427f",
+        "bytes": 44197,
+        "matches_build": true
+      },
+      {
+        "path": "release/",
+        "status": 200,
+        "sha256": "52fd124c21946d748ff1d8c0c5d4a97041c485a06e1d7d2d1734e3b4af230241",
+        "bytes": 46424,
+        "matches_build": true
+      },
+      {
+        "path": "troubleshooting/",
+        "status": 200,
+        "sha256": "1b4028303b8fee9511b2bd06bb9ef28616cf77852e18d0212fc44effa5ade794",
+        "bytes": 52124,
+        "matches_build": true
+      },
+      {
+        "path": "validation/",
+        "status": 200,
+        "sha256": "1934f1650058e46116d8ed2edddcb318a5b94b75a48289bbebc478a2c74a4e21",
+        "bytes": 45750,
+        "matches_build": true
+      },
+      {
+        "path": "version-status/",
+        "status": 200,
+        "sha256": "d687ee3a5f0416bc58fb806be661902ba62ad3815f1f90df976dd0c85137c6e6",
+        "bytes": 39084,
+        "matches_build": true
+      },
+      {
+        "path": "gallery/",
+        "status": 200,
+        "sha256": "9bb6c799e676c747c59509bd9edeb52fef4f5713046762c756abbaa399264e5f",
+        "bytes": 37847,
+        "matches_build": true
+      },
+      {
+        "path": "glossary/",
+        "status": 200,
+        "sha256": "8a71b087a84d5e25a335a2608350b92d9143f560cfcb5236007c597a191c5d73",
+        "bytes": 39996,
+        "matches_build": true
+      },
+      {
+        "path": "site/",
+        "status": 200,
+        "sha256": "6adcc7f7fa77297efe18dab45c6a9fac42219cfedd5ceb2a78b603043037e17b",
+        "bytes": 47609,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/TableOfContents.astro_astro_type_script_index_0_lang.BpJaGz7G.js",
+        "status": 200,
+        "sha256": "b80a41c167d0d90fc2f38a27bb4772ec220613dbd07093bfe6b9c3d44f628b77",
+        "bytes": 36,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/ui-core.BlPui5Ve.js",
+        "status": 200,
+        "sha256": "c7f5d576c6780bf68f4eee51907391ed8fd434aefba0f657006b3e50020e4992",
+        "bytes": 93823,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/common.xp7cLIHU.css",
+        "status": 200,
+        "sha256": "26813f9bfc9b3a1fb6a94e3f3a69a80ef6b034fbb6a47e8e5db1ecf1a18bef6d",
+        "bytes": 64551,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/page.cNngjUgL.js",
+        "status": 200,
+        "sha256": "04c3f1b2cba171b387e6485f6b6dc6cf94cd91ae1278d6b9ed1fac7d8f14546f",
+        "bytes": 2474,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/print.ehPL0gv-.css",
+        "status": 200,
+        "sha256": "4d7d25c3d697e6d36e64afb9edef136e6d2e4c50f70a48000ca90f9b059e3622",
+        "bytes": 3318,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/ec.0vx5m.js",
+        "status": 200,
+        "sha256": "182e98b9acfcfd358ea486967bd17dcaddd5930b8d092bc0653fd26ddbb11e37",
+        "bytes": 2523,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/ec.w36nc.css",
+        "status": 200,
+        "sha256": "1db272cd2e2bc5dfbc63c332f5d5f04bb4ba104065e894f951405e7bdddf5dcb",
+        "bytes": 18292,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/MobileTableOfContents.astro_astro_type_script_index_0_lang.C3fM4Kra.js",
+        "status": 200,
+        "sha256": "bc57dccfe8dec8aaf9d9eeb8a1cfdf255d0cdf784cd79f606ed5a63eb4f08414",
+        "bytes": 622,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/starlight-toc.D4UDIxQL.js",
+        "status": 200,
+        "sha256": "5d6d8e252d7fd83f14914b8164580f615e7e2a33a39ec87e31582dc12659f0db",
+        "bytes": 1942,
+        "matches_build": true
+      },
+      {
+        "path": "_astro/Search.astro_astro_type_script_index_0_lang.B-Tb2Ric.js",
+        "status": 200,
+        "sha256": "72234a31b223d6e219aceaf71df2753285ba20eaa51325476b829f9f08f160db",
+        "bytes": 3312,
+        "matches_build": true
+      },
+      {
+        "path": "screenshots/ai-chat.png",
+        "status": 200,
+        "sha256": "e73822c1f12e0c27992185e1dedf004e020b40bc9ba525c4c16a86344d8bb419",
+        "bytes": 66236,
+        "matches_build": true
+      },
+      {
+        "path": "screenshots/system-update.png",
+        "status": 200,
+        "sha256": "605e5f2de2ee3de40bd693cb8fc2274fe3c35b4fa5e4877da66ed996f56de06e",
+        "bytes": 27433,
+        "matches_build": true
+      },
+      {
+        "path": "screenshots/all-apps.png",
+        "status": 200,
+        "sha256": "0d9858524158eb6d2e2a10a572f1bdd5986102ac166f6245c1f3859d084ef786",
+        "bytes": 73149,
+        "matches_build": true
+      },
+      {
+        "path": "screenshots/bluetooth.png",
+        "status": 200,
+        "sha256": "6d152e9b8e84c58c6073499a6d4acc75b0c2d650b5f5adfd6fa2dd10e7014a0f",
+        "bytes": 144761,
+        "matches_build": true
+      },
+      {
+        "path": "screenshots/desktop.png",
+        "status": 200,
+        "sha256": "2efc5b0b81ff0f2e9f703b0a16f5b4f30123f493e627a6d68075d4a3292258f1",
+        "bytes": 104578,
+        "matches_build": true
+      },
+      {
+        "path": "vendor/mermaid.min.js",
+        "status": 200,
+        "sha256": "28fca7ae6ebc7ed7bb63bde63136a74bfef14f296a57e403657eeb8b32836073",
+        "bytes": 5575485,
+        "matches_build": true
+      },
+      {
+        "path": "enhance.js",
+        "status": 200,
+        "sha256": "fcf481dc43197c2fc717d2e312fe0cdc8ae9014a4d52ae0d17fe134caebf7803",
+        "bytes": 575,
+        "matches_build": true
+      },
+      {
+        "path": "favicon.svg",
+        "status": 200,
+        "sha256": "11a887376a952f53f015eda9fef2fdb0da28270dba3d33a78e17c23815ef4107",
+        "bytes": 462,
+        "matches_build": true
+      },
+      {
+        "path": "sitemap-index.xml",
+        "status": 200,
+        "sha256": "be702ec74ba00c04b83758db569b2ae7f606608d51c57590176156de537d51ee",
+        "bytes": 205,
+        "matches_build": true
+      },
+      {
+        "path": "sitemap-0.xml",
+        "status": 200,
+        "sha256": "92abda6d9e9538ae0c1e771cb899ffbd259f92000a819cffd1c4863256e0d8a0",
+        "bytes": 2406,
+        "matches_build": true
+      },
+      {
+        "path": "pagefind/pagefind.js",
+        "status": 200,
+        "sha256": "252d272bd34d483d19a752060f6a065114d15ab12c42d8f905ca565e2768a009",
+        "bytes": 45555,
+        "matches_build": true
+      },
+      {
+        "path": "pagefind/pagefind-entry.json",
+        "status": 200,
+        "metadata_match": true,
+        "pages": {
+          "zh-cn": {
+            "hash": "zh-cn_99e44ebce66ac",
+            "wasm": null,
+            "page_count": 28
+          }
+        }
+      }
+    ]
+  },
+  "browser_public": {
+    "homepage_and_rewritten_network": "passed",
+    "new_iot_chapter_and_anchor": "passed",
+    "search": {
+      "query": "刷新设备",
+      "results": 10,
+      "status": "passed"
+    },
+    "https_copy": {
+      "command": "ip addr\nip route\ncat /etc/resolv.conf\ndate",
+      "exact_match": true,
+      "clipboard_restored": true
+    },
+    "raw_emphasis_absent": "passed",
+    "screenshot": "Public homepage saved to local delivery folder",
+    "preview_mobile_and_diagrams": "See docs077-professional-rewrite-20261112.json"
+  },
+  "scope": "Documentation only. Original SDK VM and devices untouched; product blockers unchanged.",
+  "recorded_at": "2026-11-12T14:36:37.581666+00:00"
+}

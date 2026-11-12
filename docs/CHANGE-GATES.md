@@ -194,3 +194,5 @@ PAIR071/RELEASE072最新候选：共享rc26、公开系统rc5、私有系统rc6�
 - [REQ-MIMI-DOCS-077](change-gates/REQ-MIMI-DOCS-077.md)：中文教程与 GitHub Pages，单独记录文档构建和部署，保持产品验收状态。
 
 2026-11-12 DOCS077 专业操作指南重写：28 章、六组任务路径，本地构建和浏览器已验证，新版发布待复核。见 [详细记录](change-gates/REQ-MIMI-DOCS-077.md) 与 [本地验收](validation/docs077-professional-rewrite-20261112.json)。
+
+2026-11-12 DOCS077 专业版发布 completed：28 章、CI 与公网检查通过。见 [发布证据](validation/docs077-professional-deployment-20261112.json)。产品验收状态保持。
