@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "summary": "Publish detailed Chinese SmartDesktopMimi tutorial with Astro/Starlight",
+  "context": "User explicitly requests replacement Ubuntu authoring and GitHub Pages publication; docs only",
+  "next_steps": "Verify remote deployment and public browser behavior; product release qualification remains separate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DOCS-077",
+      "record": "docs/change-gates/REQ-MIMI-DOCS-077.md",
+      "scope": "23 tutorial chapters, docs build/link tooling and Pages workflow",
+      "invariants": "Public documentation only; no product code/firmware/tag/private input/device changes",
+      "paths": [
+        ".github/workflows/docs.yml",
+        "CURRENT_PROGRESS.md",
+        "README.md",
+        "docs/.gitignore",
+        "docs/CHANGE-GATES.md",
+        "docs/astro.config.mjs",
+        "docs/change-gates/REQ-MIMI-DOCS-077.md",
+        "docs/change-gates/batches/20261112-docs077-site.json",
+        "docs/package-lock.json",
+        "docs/package.json",
+        "docs/public/enhance.js",
+        "docs/public/favicon.svg",
+        "docs/routes.mjs",
+        "docs/scripts/check-site.mjs",
+        "docs/scripts/links.test.mjs",
+        "docs/scripts/prepare-docs.mjs",
+        "docs/source-links.mjs",
+        "docs/src/content.config.ts",
+        "docs/src/plugins/remark-docs.mjs",
+        "docs/src/styles/custom.css",
+        "docs/tsconfig.json",
+        "docs/tutorial/ai-iot.md",
+        "docs/tutorial/architecture.md",
+        "docs/tutorial/build-app.md",
+        "docs/tutorial/build-system.md",
+        "docs/tutorial/desktop.md",
+        "docs/tutorial/environment.md",
+        "docs/tutorial/gallery.md",
+        "docs/tutorial/hardware.md",
+        "docs/tutorial/index.md",
+        "docs/tutorial/install.md",
+        "docs/tutorial/ipkvm.md",
+        "docs/tutorial/mcp.md",
+        "docs/tutorial/network.md",
+        "docs/tutorial/ota.md",
+        "docs/tutorial/quickstart.md",
+        "docs/tutorial/release.md",
+        "docs/tutorial/settings-data.md",
+        "docs/tutorial/site.md",
+        "docs/tutorial/source-map.md",
+        "docs/tutorial/troubleshooting.md",
+        "docs/tutorial/user-app.md",
+        "docs/tutorial/validation.md",
+        "docs/tutorial/version-status.md",
+        "docs/validation/docs077-site-20261112.json"
+      ],
+      "checks": [
+        {
+          "name": "Documentation build and static checks",
+          "status": "passed",
+          "scope": "23 tutorial routes, 24 HTML files including 404; six link/content tests; all internal links, anchors and assets",
+          "evidence": "docs/validation/docs077-site-20261112.json"
+        },
+        {
+          "name": "Pinned source citations",
+          "status": "passed",
+          "scope": "45 links checked against fixed development tree 75500c7",
+          "evidence": "docs/validation/docs077-site-20261112.json"
+        },
+        {
+          "name": "Declarative APP example",
+          "status": "passed",
+          "scope": "Actual pinned aitapp.py init/build/verify with tutorial JSON and temporary RSA-3072 demo publisher; no device installation",
+          "evidence": "docs/validation/docs077-site-20261112.json"
+        },
+        {
+          "name": "Browser QA on replacement Ubuntu preview",
+          "status": "passed",
+          "scope": "Chinese search (15 results for 签名), section navigation, five Mermaid SVGs, light/dark themes, mobile 390x844 menu, no page horizontal overflow",
+          "evidence": "docs/validation/docs077-site-20261112.json"
+        },
+        {
+          "name": "Initial static build",
+          "status": "failed",
+          "scope": "Missing favicon detected by built-site checker; fixed and complete build rerun passed",
+          "evidence": "docs/validation/docs077-site-20261112.json",
+          "reason": "Missing favicon detected by built-site checker; fixed and complete build rerun passed"
+        },
+        {
+          "name": "GitHub Pages production deployment",
+          "status": "not_run",
+          "scope": "Prepared for push; later remote results appended separately",
+          "evidence": "docs/validation/docs077-site-20261112.json",
+          "reason": "Prepared for push; later remote results appended separately"
+        },
+        {
+          "name": "Product build and physical qualification",
+          "status": "not_run",
+          "scope": "Documentation-only scope; original SDK host unavailable; no board actions, product signing or Release changes",
+          "evidence": "docs/validation/docs077-site-20261112.json",
+          "reason": "Documentation-only scope; original SDK host unavailable; no board actions, product signing or Release changes"
+        }
+      ]
+    }
+  ]
+}

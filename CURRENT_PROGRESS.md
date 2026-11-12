@@ -1,3 +1,9 @@
+# 2026-11-12 文档站独立工作
+
+用户授权在替代 Ubuntu 主机编写并发布教程。新增 23 章中文学习路径，参考固定开发提交 75500c76e389971bfb3bd0a45ac4bed74e1f8cfa；main 产品代码保持原状，未合并开发分支。站点构建与发布的实际结果见 docs/change-gates/REQ-MIMI-DOCS-077.md 及 docs/validation/docs077-site-20261112.json。原 SDK 主机和板端未操作，rc33/rc10 的产品验收阻断仍保留。
+
+以下是此前 main 的历史进度：
+
 # PAIR071 签名候选及远端草稿
 
 记录时间：2026-10-15T14:14:51.573980+00:00。关联REQ-MIMI-PAIR-071、SYSTEM-070、RELEASE-072及用户DELIVERY058授权。

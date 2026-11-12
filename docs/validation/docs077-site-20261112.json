@@ -1,0 +1,115 @@
+{
+  "requirement": "REQ-MIMI-DOCS-077",
+  "date": "2026-11-12",
+  "scope": "Chinese tutorial and Pages website",
+  "documentation_base_commit": "38e3b502dd17213a67431bf5fa4c6c096637010e",
+  "product_reference_commit": "75500c76e389971bfb3bd0a45ac4bed74e1f8cfa",
+  "platform": "replacement Ubuntu 24.04 host, Node 22.23.3; hosted CI uses Node 24",
+  "chapters": 23,
+  "diagrams": 5,
+  "public_screenshots": 5,
+  "source_citations": 45,
+  "app_example": {
+    "steps": [
+      {
+        "step": "genpkey",
+        "exit": 0
+      },
+      {
+        "step": "pkey",
+        "exit": 0
+      },
+      {
+        "step": "init",
+        "exit": 0
+      },
+      {
+        "step": "build",
+        "exit": 0
+      },
+      {
+        "step": "verify",
+        "exit": 0
+      }
+    ],
+    "package_sha256": "c4d1af498eba3b802cff0aa3d2ed6f7e614f5a65117ed3f1ae405a1d198fa9cc",
+    "device_install": "not_run",
+    "temporary_key_deleted": true
+  },
+  "checks": [
+    {
+      "name": "Documentation build and static checks",
+      "status": "passed",
+      "scope": "23 tutorial routes, 24 HTML files including 404; six link/content tests; all internal links, anchors and assets",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    },
+    {
+      "name": "Pinned source citations",
+      "status": "passed",
+      "scope": "45 links checked against fixed development tree 75500c7",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    },
+    {
+      "name": "Declarative APP example",
+      "status": "passed",
+      "scope": "Actual pinned aitapp.py init/build/verify with tutorial JSON and temporary RSA-3072 demo publisher; no device installation",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    },
+    {
+      "name": "Browser QA on replacement Ubuntu preview",
+      "status": "passed",
+      "scope": "Chinese search (15 results for 签名), section navigation, five Mermaid SVGs, light/dark themes, mobile 390x844 menu, no page horizontal overflow",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    },
+    {
+      "name": "Initial static build",
+      "status": "failed",
+      "scope": "Missing favicon detected by built-site checker; fixed and complete build rerun passed",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    },
+    {
+      "name": "GitHub Pages production deployment",
+      "status": "not_run",
+      "scope": "Prepared for push; later remote results appended separately",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    },
+    {
+      "name": "Product build and physical qualification",
+      "status": "not_run",
+      "scope": "Documentation-only scope; original SDK host unavailable; no board actions, product signing or Release changes",
+      "evidence": "docs/validation/docs077-site-20261112.json"
+    }
+  ],
+  "build_log_sha256": "bf657b833bbbb9884470c6f68958de6711faba425f4f0ea326e00ce243a7450b",
+  "content_sha256": {
+    "docs/tutorial/ai-iot.md": "65fbfe7252124b36d9b9cb046b343870e7cdb810702ea87f88ee8b8fd7ff2b61",
+    "docs/tutorial/architecture.md": "281c91426fe79ec2bc2e8d9c43710906235a2b428984622d097b16faa808e85a",
+    "docs/tutorial/build-app.md": "71b8be4626e41b9dba423517c92bf8911426fbfbfb02a2cd581bd7d525988280",
+    "docs/tutorial/build-system.md": "a2ddc69497a4ca79d82f9eff657e22023f153327af69919a82fd9e1162f8ea09",
+    "docs/tutorial/desktop.md": "39f2afe0086d3403a378b1416ea16c62a946979f50ba10f945bfd128cf5df2a9",
+    "docs/tutorial/environment.md": "84785adbf06179c544845c2b9a2a146fad86615902440350cace999706e6cf24",
+    "docs/tutorial/gallery.md": "0232ecc902f2c7070975896cdc6ee76a61f0223d2128e82fea383eb4784994be",
+    "docs/tutorial/hardware.md": "5c4b2ae48cf0e1f761ad76e9e665dfbfc2469f4f4e853805bc2dbc31fec44425",
+    "docs/tutorial/index.md": "0f4e349d8b43d0947912a392c99545a9e18a81fc5564bc12eaae58fcfcb1d253",
+    "docs/tutorial/install.md": "44e3afd848cd7a9d7d3d1c5879f4295e5043ddcb51aacc34b34c3f3d40a82141",
+    "docs/tutorial/ipkvm.md": "62690614842d8514fb0e0beb73c5e7336e74f87cf0647796163dc4047e51e934",
+    "docs/tutorial/mcp.md": "ae6d2b7e508f0f62eed0ad0da7b5416378797cc0a4fb1e9e7b3bed519238f35b",
+    "docs/tutorial/network.md": "ac405b37fdfdfee70a0850f779996a6180bd7f084b49862659a1dfd7d0c037a3",
+    "docs/tutorial/ota.md": "d8431b6655a7987b8f4f72d98526e549a4e47445f98d54cf4dec0732502be5a4",
+    "docs/tutorial/quickstart.md": "2a39adc519108ee58533aa9859353c11247f2ba00fc41bb2bf8ebeec1b148774",
+    "docs/tutorial/release.md": "78d6703f1b0d0003b5eeb728694eecd9d2c2b671d4cd22c8f14587bf4bd9a525",
+    "docs/tutorial/settings-data.md": "f76f33609312a9aaf9ba25df1f05844782055df549f876b8dc2243639f47aad3",
+    "docs/tutorial/site.md": "942567dc924368c46b86a38ea1fc03ed5ef2ac30c770b7af7d5fc7ea68b3784f",
+    "docs/tutorial/source-map.md": "a6958b4d6b1fa5386736dc8a2bc92019d0435589cb96d9c7ae3c8e42ec6e17ca",
+    "docs/tutorial/troubleshooting.md": "035a7761d1f95c254d33c8c27aab0a6e4b6fe9aec3ace2b63f92a11fce5c91de",
+    "docs/tutorial/user-app.md": "e2abb2c4447fdbf66c9fcdf2711112a33da6e8dec8b231c9de72149a99c166e7",
+    "docs/tutorial/validation.md": "a535eec03c9500b07a22d28f40d36f4f2b2f8ae231b7c58dc869a002bdb80e1c",
+    "docs/tutorial/version-status.md": "539483c223813fac8189a4e3413f1547009810035b11604fb4137750f447d36f"
+  },
+  "limitations": [
+    "Board installation, cross compilation and firmware acceptance not performed",
+    "LAN HTTP preview clipboard requires final HTTPS verification",
+    "Existing rc33/rc10 release blockers unchanged"
+  ],
+  "next": "Push exact documentation source, observe Pages deployment, verify public HTTPS and code copy."
+}

@@ -1,0 +1,25 @@
+{
+  "name": "smartdesktopmimi-docs",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "prepare": "node scripts/prepare-docs.mjs",
+    "predev": "npm run prepare",
+    "dev": "astro dev",
+    "prebuild": "npm run prepare && npm run test",
+    "build": "astro build && node scripts/check-site.mjs",
+    "test": "node --test scripts/links.test.mjs",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "7.3.1",
+    "@astrojs/starlight": "0.42.3",
+    "astro": "7.3.4",
+    "mermaid": "12.0.0",
+    "unist-util-visit": "5.1.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

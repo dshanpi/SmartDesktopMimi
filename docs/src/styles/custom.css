@@ -1,0 +1,9 @@
+:root { --sl-content-width: 58rem; --sl-color-accent-low: #152c38; --sl-color-accent: #38b6ba; --sl-color-accent-high: #b5edf0; }
+:root[data-theme='light'] { --sl-color-accent-low: #e1f3f4; --sl-color-accent: #087d83; --sl-color-accent-high: #104b53; }
+.sl-markdown-content { line-height: 1.85; }
+.sl-markdown-content table { width: 100%; font-size: .95rem; }
+.sl-markdown-content img { max-width: 100%; height: auto; border-radius: .65rem; border: 1px solid var(--sl-color-hairline-light); }
+pre.mermaid { background: none; border: none; overflow-x: auto; text-align: center; margin-block: 1.5rem; }
+pre.mermaid svg { max-width: 100%; height: auto; }
+.sl-markdown-content pre:not(.mermaid) { line-height: 1.6; }
+@media (min-width: 50rem) { .header > div:nth-child(2) { justify-content: flex-end; } }

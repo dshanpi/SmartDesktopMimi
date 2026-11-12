@@ -1,0 +1,7 @@
+node_modules/
+.astro/
+dist/
+src/content/docs/
+public/screenshots/
+public/vendor/
+.tutorial-routes-*.json

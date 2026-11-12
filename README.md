@@ -1,3 +1,6 @@
+> **[中文教程站：从首次使用到应用开发](https://dshanpi.github.io/SmartDesktopMimi/)** · [教程源码](docs/tutorial/index.md) · [当前版本与已知限制](docs/tutorial/version-status.md)
+> 教程基于固定开发快照整理；下方 2026-10-15 交付信息为历史记录，新的开发状态请先阅读教程版本说明。
+
 > **2026-10-15：三份受控草稿已同步并完成 56 个附件的远端下载复验。**
 > [共享应用 v1.0.8-rc.24](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8e1aa2d1b816adbd5fca)（16附件） · [公开系统 rc.3](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-8d087a4b10568e890cf2)（20附件） · [私有功能系统二进制 rc.4](https://github.com/dshanpi/SmartDesktopMimi/releases/tag/untagged-193629348e38d1c7a4c1)（20附件）。
 > 草稿需有对应仓库权限的 GitHub 账号登录查看；尚未发布为稳定版，不参与自动更新。完整获取、应用/系统配对、固定源码和未验收项见[交付说明](docs/delivery/CONTROLLED-SNAPSHOTS-20261015.md)。
