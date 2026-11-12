@@ -1,48 +1,60 @@
-# 源码归属与平台移植
+# 选择源码仓库并开展平台适配
 
-选择正确仓库是修改功能的第一步。公共桌面、私有产品接入与板级 SDK 各有职责，不能把整个开发目录直接镜像到公开仓库。
+本章用于确定公共功能、私有接入和板级修改的归属，避免构建时混入不属于本次产物的输入。
 
-## 三个来源
+## 选择对应源码来源
 
-| 仓库 | 维护内容 | 不包含/不替代 |
+| 来源 | 维护内容 | 使用条件 |
 | --- | --- | --- |
-| `dshanpi/SmartDesktopMimi` | 共享桌面、普通应用、通用 IoT、更新工具和公开资料 | 完整 Tina SDK、私有工厂数据 |
-| `dshanpi/SmartDesktopMimi-Private` | 涂鸦/100ask 一机一码适配、生产工具与组合来源锁 | 第二份公共桌面 |
-| `100askTeam/A133-AIDesktop-Tina5` | 标准 `overlay/`、`meta/`、应用脚本与板级差异 | 独立的公共应用 Release 入口 |
+| `dshanpi/SmartDesktopMimi` | 共享桌面、普通应用、通用 IoT、更新和公开资料 | 公共产品源码 |
+| `dshanpi/SmartDesktopMimi-Private` | 涂鸦/100ask 私有接入、生产工具与来源锁 | 获得相应访问和分发授权 |
+| `100askTeam/A133-AIDesktop-Tina5` | 板级 `overlay/`、`meta/` 和应用脚本 | 获得 SDK 与底层来源授权 |
 
-后两项需要相应授权。文档提到它们的职责，不代表读者自动具有访问和再分发权限。
+私有接入复用公共桌面。逐台凭据、签名私钥与工厂数据库不属于任何公共源码或通用镜像。
 
-## 按改动选择位置
+## 根据修改选择实现位置
 
-- 改布局、交互、文案：优先公共桌面，检查 UI 与后端协议边界。
-- 增加普通用户应用：使用 APP SDK 与权限模型。
-- 改 HDMI/音频/无线驱动：板级系统与 Provider，单独系统构建。
-- 改私有云身份或涂鸦授权：私有适配，保持公共禁用行为。
-- 改升级兼容或签名：同时核对构建、发布、设备安装三处一致性。
+1. 修改界面文案、布局或业务交互：在公共桌面中查找页面和客户端调用。
+2. 新增普通用户 APP：使用 APP SDK，按权限模型访问平台能力。
+3. 修改无线、音频、HDMI 驱动或底层服务：在对应平台与 SDK 来源中实现，按系统发布。
+4. 修改私有云身份或授权适配：在私有来源中实现，同时检查公共版禁用行为。
+5. 修改升级与签名：同时检查打包、发布与设备激活三个入口。
 
-`tools/update/source_ownership.py` 和冻结来源清单防止应用包带入底层服务。移动文件夹不能自动证明架构拆分已经完成。
+在 **Ubuntu 主机、产品源码根目录**运行当前归属检查：
 
-## 公共与私有版本如何组合
+```sh
+python3 tools/update/source_ownership.py
+python3 tools/update/check_contracts.py
+```
 
-公共编译使用 `MIMI_PRODUCT_EDITION=public`，禁用 100ask 私有接入。私有编译显式选择 private，并提供固定 `MIMI_PRIVATE_PRODUCT_ROOT` 与 `AITVBOX_100ASK_SDK_ROOT`。受限 Tuya 库与离线工具通过授权外部输入提供。
+检查失败时先核对实际改动与锁定清单，再修改相关实现。移动文件目录本身不能证明平台与上层已经解耦。
 
-两种通用镜像均不包含单机 License、设备 secret、工厂数据库或签名私钥。私有系统装入的是获准分发的程序，逐台身份仍在制造/运行时受控写入。
+## 固定公共或私有构建输入
 
-## 新平台移植顺序
+公共系统显式选择 `MIMI_PRODUCT_EDITION=public` 并关闭 100ask 私有接入。私有系统显式选择 private，提供审核后的 `MIMI_PRIVATE_PRODUCT_ROOT` 和 `AITVBOX_100ASK_SDK_ROOT`。
 
-1. 登记实际 SoC、PCB 修订、存储和显示变体。
-2. 准备平台 SDK、工具链、sysroot、运行库和加载器。
-3. 实现 Provider，冻结接口与能力查询语义。
-4. 构建系统基线、更新器信任和真实设备身份。
-5. 为该目标构建应用，核对完整兼容条目。
-6. 执行该平台的启动、输入、功能、更新、回退、断电和数据验收。
+准备输入时逐项记录：仓库提交、组件版本、文件摘要、许可与分发范围。受限 Tuya 库等从授权外部来源取得，不从未知 SDK 副本回退选取。
 
-T527、RK3576 不能继承 A133 的通过结果；已有 A527 骨架不等于 T527 已适配。两个平台同为 aarch64 也不能共用未经验证的二进制包。
+逐台 License 和身份在制造或运行时注入。构建输入中只包含允许分发的程序和配置结构。
 
-Ubuntu x86_64 用于原生开发/验收时，有自己的运行依赖和 deb/Native APP 规则；A133 继续使用 Tina 系统集成。开发主机的构建选择不进入用户桌面。
+## 按顺序接入新平台
 
-## 公开源码审计
+1. 登记 SoC、PCB 修订、存储、显示和触摸变体。
+2. 固定工具链、sysroot、动态加载器和运行库。
+3. 实现 Provider 与能力查询，确认 Ports/IPC 契约。
+4. 建立平台系统基线、更新器信任和真实设备身份。
+5. 构建目标应用并生成同一完整条目的兼容清单。
+6. 在目标设备验证启动、显示、真实输入及声明提供的硬件功能。
+7. 执行应用/系统升级、回退、断电与数据保留路径。
 
-再分发前核对许可与逐文件资源清单，排除 vendor 库、工具缓存、产物、私有归档和设备数据。SBOM 与 SHA-256 描述“包含什么”，不能替代合法来源和许可确认。
+**完成判据：** 每个宣称支持的目标具有自己的输入与验收记录。现有 A527 骨架不代表 T527 已支持，RK3576 也不能继承 A133 验收。Ubuntu x86_64 有独立运行依赖与 deb/Native 规则。
 
-查阅：[产品版本](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/PRODUCT-EDITIONS.md) · [源码归属](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/SOURCE-OWNERSHIP.md) · [公开导出规则](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/public-release.json) · [移植说明](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/zh-CN/porting.md)。
+## 公开提交前检查
+
+核对变更列表、源码许可、第三方资源、归属清单和敏感输入边界。SBOM 记录组成，摘要记录文件一致性；再分发权限需结合来源许可判断。
+
+完成归属判断后，分别进入[桌面构建](build-app.md)或[系统构建](build-system.md)。
+
+## 查阅依据
+
+[源码归属](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/SOURCE-OWNERSHIP.md) · [产品组成规则](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/PRODUCT-EDITIONS.md) · [公开源码范围](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/public-release.json) · [平台移植](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/zh-CN/porting.md)

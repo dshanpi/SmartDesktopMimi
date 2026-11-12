@@ -1,44 +1,41 @@
-# 界面截图与证据来源
+# 对照界面示例与截图来源
 
-下面使用仓库已有图片，保留原始比例，不用新设计图冒充设备运行结果。图片用于理解界面，不能作为当前候选已安装的证明。
+本章汇总已公开的界面图片，用于识别功能区域。图片来自 2026-09-06 A133 实机 framebuffer 记录，分辨率 1024×768，均为旧版界面；当前设备入口与布局以实际固件为准。
 
-## 旧版 A133 实机界面
-
-来源目录 `docs/debug-evidence/a133-en-us-20260906/`，仓库注明为 A133 framebuffer 取证；画面为 1024×768。它们反映 2026-09-06 的旧界面，并不对应 rc33/rc10。
-
-### 桌面首页
+## 识别桌面与应用入口
 
 ![2026-09-06 A133 旧版桌面](../debug-evidence/a133-en-us-20260906/final/desktop-r3.png)
 
-### 应用列表
+图中展示旧版桌面状态区域和应用入口。固定开发快照已改为首页内横向分页应用区，操作顺序见[桌面教程](desktop.md)。
 
-![2026-09-06 A133 应用列表](../debug-evidence/a133-en-us-20260906/final/all-apps.png)
+![2026-09-06 A133 旧版应用列表](../debug-evidence/a133-en-us-20260906/final/all-apps.png)
 
-### AI 对话
+图中展示旧版应用列表；当前“用户应用”专门显示已安装 `.aitapp`，安装流程见[APP 教程](user-app.md)。
 
-![2026-09-06 A133 AI 对话](../debug-evidence/a133-en-us-20260906/final/ai-chat.png)
+## 查看语音与音频状态示例
 
-### 蓝牙音频
+![2026-09-06 A133 旧版 AI 对话](../debug-evidence/a133-en-us-20260906/final/ai-chat.png)
 
-![2026-09-06 A133 蓝牙音频](../debug-evidence/a133-en-us-20260906/bluetooth.png)
+语音对话应结合聆听、回复和退出结果检查，步骤见[涂鸦助手](ai-iot.md)。此图不代表当前候选的对话验收。
 
-### 系统更新
+![2026-09-06 A133 旧版蓝牙音频](../debug-evidence/a133-en-us-20260906/bluetooth.png)
 
-![2026-09-06 A133 系统更新](../debug-evidence/a133-en-us-20260906/system-update.png)
+蓝牙页面信息应与手机媒体输出和实际声音对应，步骤见[蓝牙音频](bluetooth.md)。
 
-## 新版页面证据去哪里看
+## 查看更新页面示例
 
-开发分支保存了组件布局、1024/800 等尺寸、双语/主题、状态与输入回放的记录。10 月 28 日第二批记录提到 55 种状态、440 张截图，并区分新旧证据来源；该记录仍明确新产物没有完成实机安装。
+![2026-09-06 A133 旧版系统更新](../debug-evidence/a133-en-us-20260906/system-update.png)
 
-- [页面补全主机验证](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/validation/quality076-pages-completion-20261028.json)
-- [完整构建与图库范围](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/validation/quality076-pages-completion-build-20261028.json)
-- [早期实机图片说明](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/debug-evidence/README.md)
-- [原始架构图集](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/architecture-diagrams/README.md)
+更新时按[更新教程](ota.md)核对类型、候选条件和安装结果；单张页面图不证明升级或回退完成。
 
-没有把开发机私有路径中的图片自动复制到网站；只有仓库已经公开、来源明确的图片参与本次站点构建。
+## 查询新版页面记录
 
-## 新增截图时的记录要求
+2026-10-28 的主机记录覆盖组件布局、多尺寸、语言、主题及状态回放，并保留 55 种状态、440 张截图的范围说明。这些材料与新产物实机安装分开记录。
 
-填写截图时间、源码/固件版本、设备或模拟环境、分辨率、语言、主题、操作步骤和原始文件 SHA-256。说明它证明哪一个界面状态，哪些真实输入/升级行为没有测。设计图明确标“设计”，主机图明确标“主机渲染”，实体画面明确标“实机”。
+新增截图时，附时间、版本/提交、主机或设备环境、分辨率、语言、主题、触发步骤和文件摘要。示意图标注为示意，主机渲染与实机截图分别标明。
 
-站点构建复制上述公开图片到自身静态资源目录，并记录来源哈希；无需访问私有 SDK 或原开发虚拟机。
+本站只使用已有公开且来源明确的图片，原图保留相对路径，便于源码归档后阅读。
+
+## 查阅依据
+
+[原始截图说明](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/debug-evidence/README.md) · [新版页面主机检查](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/validation/quality076-pages-completion-20261028.json) · [构建与图库范围](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/validation/quality076-pages-completion-build-20261028.json)

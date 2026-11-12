@@ -1,0 +1,194 @@
+{
+  "date": "2026-11-12T14:25:09.902949+00:00",
+  "base_commit": "36ff2d4361d530b282f0536a837054ed1955f106",
+  "product_reference": "75500c76e389971bfb3bd0a45ac4bed74e1f8cfa",
+  "checks": [
+    {
+      "name": "Pinned source references",
+      "status": "passed",
+      "detail": {
+        "count": 37,
+        "reference": "75500c76e389971bfb3bd0a45ac4bed74e1f8cfa"
+      }
+    },
+    {
+      "name": "Shell and JSON syntax",
+      "status": "passed",
+      "detail": {
+        "shell_blocks": 48,
+        "complete_json_blocks": 4,
+        "mermaid_blocks": 5
+      }
+    },
+    {
+      "name": "Existing URLs preserved",
+      "status": "passed",
+      "detail": {
+        "existing": 23,
+        "total": 28,
+        "added": [
+          "bluetooth",
+          "glossary",
+          "iot",
+          "native-app",
+          "pairing"
+        ]
+      }
+    },
+    {
+      "name": "Full chapter rewrite",
+      "status": "passed",
+      "detail": {
+        "rewritten_existing": 23,
+        "new": 5
+      }
+    },
+    {
+      "name": "Exact published declarative APP example",
+      "status": "passed",
+      "detail": {
+        "steps": [
+          {
+            "action": "mkdir -p \"$HOME/.local/share/mimi-demo-signing\"",
+            "exit_code": 0
+          },
+          {
+            "action": "python3 tools/aitapp/aitapp.py init \"$HOME/mimi-lab/hello\" \\",
+            "exit_code": 0
+          },
+          {
+            "action": "python3 -m json.tool \"$HOME/mimi-lab/hello/manifest.json\" > /dev/null",
+            "exit_code": 0
+          },
+          {
+            "action": "python3 tools/aitapp/aitapp.py build \"$HOME/mimi-lab/hello\" \\",
+            "exit_code": 0
+          }
+        ],
+        "package_sha256": "78acbf8e51e4606c677f2ee5d510b6cd0d96ee1435a9d22a9e66643ade43ce6e",
+        "temporary_key_deleted_on_exit": true,
+        "device_installation": "not_run"
+      }
+    },
+    {
+      "name": "Editorial review",
+      "status": "passed",
+      "detail": {
+        "basis": "User-provided write-professional-guides SKILL.md",
+        "reviewed": [
+          "Task-based chapter order",
+          "Audience and prerequisites",
+          "Command host and working directory",
+          "Placeholder explanation",
+          "Observable success criteria",
+          "Nearby failure handling",
+          "Source and historical status boundaries",
+          "Portable image references"
+        ],
+        "not_automated": "Writing quality and factual meaning were reviewed manually; syntax and links have separate automated checks."
+      }
+    }
+  ],
+  "chapters": 28,
+  "characters": 65649,
+  "code_blocks": 67,
+  "files": {
+    "docs/tutorial/ai-iot.md": "972d4f0ada4b2151138c28c479f0d45e72fc2119b7dda36fb0e7ebdb3daebe07",
+    "docs/tutorial/architecture.md": "9e028fc6f74eb50c82a5e6db993cdd33ee77ad0c22e2f085bba9dcbaf593a013",
+    "docs/tutorial/bluetooth.md": "4af24b6349830a86f9eb77bb64f1e52ee481e80eff178604da858c9b7c46d868",
+    "docs/tutorial/build-app.md": "a8bef0c8ea666898e5a323cb0c37b42155de2b5556ac48364314a31d1aa17ee8",
+    "docs/tutorial/build-system.md": "a5ba71c887e910300bb9a4eebb7a8a1930ce2fdedad76004c3f209ced34ffd4f",
+    "docs/tutorial/desktop.md": "645a38453baecd666f4c5e65533e8e78ddcdca22448f5b34dda4f741fb1817bf",
+    "docs/tutorial/environment.md": "9bf65420f2c18f3d1226410988df01df3708afd3f807a6737665aabb117c267a",
+    "docs/tutorial/gallery.md": "7dd3a3c657c8ac9303ac503433a451dff4cd7bbd88e1069fb2f98f66f63668ac",
+    "docs/tutorial/glossary.md": "572453603a878f535f49e1b6f5fc07475dd19cf9cefb4bdf205b4bac6124fa5a",
+    "docs/tutorial/hardware.md": "6c5203acb07d862deb6e62e307ae44f1267caca1139f6df3f8bece2c50e57faf",
+    "docs/tutorial/index.md": "8088c64a3109ca4f40eb9f0a8ab9cc6418e395474c0b90c31269b4cd34002612",
+    "docs/tutorial/install.md": "361859170c77cf11003e836618dc6e76e5e1a432952f2d484a60390077758c22",
+    "docs/tutorial/iot.md": "e34cdf91bab12afb4387cb87bf04a671a306ffe4dab081770fbf6a2cbecc8576",
+    "docs/tutorial/ipkvm.md": "c25daae6259e1ba21fba02693484d9e7a3071769c60744eef4a7bc3b132348d8",
+    "docs/tutorial/mcp.md": "3823c366a4670dcc3052221611c41f0cdb0f7526ae5283c1891b7cb22142cc6f",
+    "docs/tutorial/native-app.md": "d339033522a8dd82aaa0c329330e0f8321ae6ceabd2327d91117d81c7f5a2cf8",
+    "docs/tutorial/network.md": "a1138b28b3fdcb587bef3130515c86e80b90f7037752229c755c05778d25bd29",
+    "docs/tutorial/ota.md": "c820e97c2aaed46614806250672c4245b15f63726481314fcb43ab4da8121d9f",
+    "docs/tutorial/pairing.md": "d3bbe2e3437566d3cebf94470c22014fa3da36980cc0b86b3c0a89ba15cd7c3b",
+    "docs/tutorial/quickstart.md": "e916139ca955966298059d2053437bafa2dadf59c5ad1cebbafb5902955ad05d",
+    "docs/tutorial/release.md": "42bfeb380e8ffe15b4212f04d719acda296faa67038c1aa4b959059efaae66f7",
+    "docs/tutorial/settings-data.md": "1e003a2efd3dd59cde25d6d082555bc7e61dedb32ed9080f3b3e102d9b81cf05",
+    "docs/tutorial/site.md": "bee27ce3ff0581a40fc7deffe15f1a4acc3fd371680e4e81240ea601d7b92529",
+    "docs/tutorial/source-map.md": "1325b82e61b1b20a0cb6a5cf584169797d56e2bd87c57f6dc234ee144fede9fb",
+    "docs/tutorial/troubleshooting.md": "9eac8f35fe46c5aa5d37709eddd7f1ae39637c2d6972692eb93a20f80dbf2909",
+    "docs/tutorial/user-app.md": "d3cedeb118ddcac23f18f3bfec15276abd1b67d065c43940d155f3a965f14400",
+    "docs/tutorial/validation.md": "1135b3c37c38f85f1e006a0f80d1157ac6d075687565a26df9e6e07b7c5b120a",
+    "docs/tutorial/version-status.md": "f3ba7331f6610800a129a65834ced197f95f3f8bc4baa1a4d1d65f869a624a71"
+  },
+  "build": {
+    "status": "passed",
+    "link_tests": 6,
+    "routes": 28,
+    "html_files": 29,
+    "internal_links_anchors_assets": "passed",
+    "node": "22.23.3",
+    "host": "replacement Ubuntu host"
+  },
+  "browser": {
+    "status": "passed",
+    "preview": "Ubuntu Astro built-site preview",
+    "search": {
+      "query": "刷新设备",
+      "results": 10,
+      "section_navigation": "passed"
+    },
+    "mobile": {
+      "viewport": "390x844",
+      "menu_and_new_native_app_navigation": "passed",
+      "page_overflow": false
+    },
+    "mermaid": {
+      "pages": [
+        "architecture",
+        "hardware",
+        "mcp",
+        "build-system",
+        "ota"
+      ],
+      "all_five_svg": "passed"
+    },
+    "themes": "light and dark inspected",
+    "emphasis_defect": {
+      "finding": "Browser displayed CJK bold labels literally when closing emphasis touched Chinese text",
+      "fix": "Insert a space after bold colon labels",
+      "files": [
+        "docs/tutorial/ipkvm.md",
+        "docs/tutorial/environment.md",
+        "docs/tutorial/build-app.md",
+        "docs/tutorial/pairing.md",
+        "docs/tutorial/ai-iot.md",
+        "docs/tutorial/user-app.md",
+        "docs/tutorial/install.md",
+        "docs/tutorial/iot.md",
+        "docs/tutorial/site.md",
+        "docs/tutorial/release.md",
+        "docs/tutorial/quickstart.md",
+        "docs/tutorial/settings-data.md",
+        "docs/tutorial/native-app.md",
+        "docs/tutorial/source-map.md",
+        "docs/tutorial/build-system.md",
+        "docs/tutorial/ota.md",
+        "docs/tutorial/mcp.md",
+        "docs/tutorial/hardware.md",
+        "docs/tutorial/bluetooth.md"
+      ]
+    },
+    "emphasis_recheck": "passed after full rebuild and browser reload",
+    "https_copy": "not_run; recheck on public deployment"
+  },
+  "deployment": {
+    "status": "not_run",
+    "reason": "Prepared for authorized push; production results recorded separately after deployment"
+  },
+  "product": {
+    "status": "not_run",
+    "reason": "Documentation-only; original SDK VM unavailable; no device, firmware, signing trust or Release changes"
+  }
+}

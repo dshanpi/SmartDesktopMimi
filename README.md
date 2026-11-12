@@ -1,4 +1,4 @@
-> **[中文教程站：从首次使用到应用开发](https://dshanpi.github.io/SmartDesktopMimi/)** · [教程源码](docs/tutorial/index.md) · [当前版本与已知限制](docs/tutorial/version-status.md)
+> **[中文使用与开发指南：28 篇操作教程](https://dshanpi.github.io/SmartDesktopMimi/)** · [教程源码](docs/tutorial/index.md) · [当前版本与已知限制](docs/tutorial/version-status.md)
 > 教程基于固定开发快照整理；下方 2026-10-15 交付信息为历史记录，新的开发状态请先阅读教程版本说明。
 
 > **2026-10-15：三份受控草稿已同步并完成 56 个附件的远端下载复验。**

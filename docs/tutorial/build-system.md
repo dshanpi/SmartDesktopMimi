@@ -1,16 +1,24 @@
-# 构建 A133 系统镜像
+# 构建并核验 A133 系统镜像
 
-完整镜像构建需要合法 Tina SDK、已固定的板级 overlay、工具链、启动链输入、平台组件和授权依赖。公开产品仓库不能单独重建完整系统。
+本章面向具备合法 Tina SDK 的系统维护者，说明输入固定、预检、完整构建和产物读回。公开仓库只提供产品源码及集成入口，完整系统还需要板级与授权依赖。
 
-## 1. 准备 SDK 与目标
+## 准备完整构建输入
 
-将 SDK 放在产品源码之外，按该 SDK 的手册准备工具链、staging 和明确的构建目标。项目参考配置使用 A133 / B6 / UART0 / OpenWrt / arm64；B6 仍不是 PCB 身份。
+| 输入 | 检查内容 |
+| --- | --- |
+| 产品源码 | 本次完整提交、公共/私有版本选择 |
+| Tina SDK | 受控来源、工具链、staging、有效 `.config` |
+| 板级 overlay | 固定提交与实际补丁内容 |
+| 目标配置 | SoC、构建目标、启动方式、存储与分区 |
+| 系统版本 | 本次已确定的合法 SemVer |
+| 可选应用更新基线 | 签名出厂应用、公钥、设备与兼容描述 |
+| 可选系统 OTA | A/B 条件、现有签名体系、固定时间基准 |
 
-已有受控恢复 SDK 应先核对组件、有效配置、输出路径和黄金启动输入。不要为了“重新生成”而随意全量重编 Boot0/U-Boot，也不要只运行 `pack` 复用未知 rootfs。
+参考 SDK 目标为 A133 / B6 / UART0 / OpenWrt / arm64。实物 PCB 身份仍单独登记。复用受控恢复 SDK 时，先核对黄金启动输入和配置，再决定是否重建 Boot0/U-Boot。
 
-## 2. 选择公共产品版本
+## 设置公共产品环境
 
-普通公开构建显式使用 public，并提供本次系统版本与固定 overlay 仓库。替换所有示例路径和 `REPLACE_WITH_REVIEWED_SYSTEM_VERSION`；版本必须是已确定的合法 SemVer：
+以下在 **Ubuntu 构建主机、产品源码根目录**执行。所有占位值需替换为已审核输入：
 
 ```sh
 export MIMI_SYSTEM_VERSION=REPLACE_WITH_REVIEWED_SYSTEM_VERSION
@@ -23,45 +31,50 @@ unset MIMI_PRIVATE_PRODUCT_ROOT AITVBOX_100ASK_SDK_ROOT
   --sdk-root /absolute/path/to/TinaSDK
 ```
 
-私有功能由授权的固定组件显式组合，见[产品来源边界](source-map.md)。不因为本机存在一个私有目录就自动启用，不从历史 SDK 副本兜底。
+**检查结果：** 预检成功退出，并确认使用预期 SDK、目标和来源。缺少库、工具、配置或空间时，补齐对应输入后重新预检。
 
-## 3. 理解标准流水线
+系统构建至少预留 15 GiB，建议 30 GiB 以上；完整 SDK 空间另计。私有构建按授权来源锁显式配置，参见[源码边界](source-map.md)。
 
-```mermaid
-flowchart LR
-  Check[源码与 SDK 预检] --> Apps[干净应用构建]
-  Apps --> SDK[临时启用产品薄包]
-  SDK --> Build[SDK 内核与 rootfs 构建]
-  Build --> Readback[文件系统和最终内容读回]
-  Readback --> Pack[Pack 与压缩归档]
-  Pack --> Restore[恢复 SDK 纯模式]
-  Restore --> Record[哈希与构建记录]
-```
+## 执行普通完整构建
 
-产品包含平台、桌面、IPKVM、USB HID、更新器等薄包。构建前包索引检查可提前发现缺项/重名；构建后必须核对实际 rootfs 的内容、权限和信任，而不是只看 Make 退出码。
-
-## 4. 执行构建
-
-完成上面的环境设置后，无 OTA 的普通入口：
+保持上述环境设置，执行：
 
 ```sh
 ./scripts/auto_build_package.sh --sdk-root /absolute/path/to/TinaSDK
 ```
 
-`auto_build_package.sh` 从环境继承 `MIMI_SYSTEM_VERSION`，不接受 `--system-version` 参数；直接调用 `build_release.sh` 才使用该参数。应用更新基线及 OTA 还需要额外输入。先查看当前源码帮助：
+包装脚本从环境继承 `MIMI_SYSTEM_VERSION`。它不接受 `--system-version`；直接调用 `build_release.sh` 时才使用该参数。
+
+```mermaid
+flowchart LR
+  Preflight[预检固定输入] --> Apps[构建应用]
+  Apps --> Integrate[启用产品集成包]
+  Integrate --> System[构建内核和 rootfs]
+  System --> Readback[读回最终内容]
+  Readback --> Package[打包镜像并归档]
+  Package --> Restore[恢复 SDK 纯模式]
+  Restore --> Record[核对摘要与回执]
+```
+
+流程需要实际重建并核对系统内容。仅运行 `pack` 会复用现有输出，不能替代完整构建和输入确认。
+
+## 准备应用更新或系统 OTA 基线
+
+先查看当前脚本帮助：
 
 ```sh
 ./scripts/build_release.sh --help
 ./scripts/auto_build_package.sh --help
 ```
 
-需要独立更新基线时按[发布执行手册](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/RELEASE-RUNBOOK.md)准备签名出厂应用、可信公钥与兼容描述，再使用 `--application-updates`。需要签名 A/B OTA 时准备受控 `MIMI_SWU_SIGNING_KEY`、`MIMI_SWU_PUBLIC_KEY`、`MIMI_SYSTEM_VERSION`、固定 `SOURCE_DATE_EPOCH`，然后选择 `--with-ota` 路径。
+- 需要独立应用更新时，先按发布手册准备签名出厂应用、可信公钥、设备描述和兼容记录，再使用 `--application-updates` 路径。
+- 需要系统 OTA 时，先确认 A/B 分区、启动与回退条件，准备受控 `MIMI_SWU_SIGNING_KEY`、`MIMI_SWU_PUBLIC_KEY`、系统版本和固定 `SOURCE_DATE_EPOCH`，再使用 `--with-ota` 路径。
 
-签名私钥和口令文件位于源码、SDK 和产物树之外，沿用现有产品密钥。早期手册中将私钥放入 `secrets/` 并临时注入 SDK 的说明已被新版外部签名规则取代。
+生产签名沿用现有产品密钥，私钥与口令文件位于源码、SDK 和产物树之外。缺少输入时先补齐，不能将普通镜像标记为已具备对应升级能力。
 
-## 5. 检查最终输出
+## 核对归档产物
 
-一般输出位于 `build/releases/<版本-提交-时间>/`：
+标准归档通常位于 `build/releases/<版本-提交-时间>/`：
 
 ```text
 BUILD-COMPLETE
@@ -72,9 +85,7 @@ logs/
 metadata/
 ```
 
-启用 OTA 时还应有该次归档的签名 SWU。早期版本使用 `a133_linux_b6_uart0.img` 内部原始名，不能据此重命名或覆盖已发布历史附件。
-
-进入本次输出目录后：
+进入本次实际输出目录后执行：
 
 ```sh
 test -f BUILD-COMPLETE
@@ -82,12 +93,22 @@ test ! -e BUILD-INCOMPLETE
 sha256sum -c SHA256SUMS
 ```
 
-核对系统版本、预装应用版本/源码/包哈希、SDK 来源、内核与模块、启动链、压缩和原始镜像摘要。外部封存记录与最终 rootfs 读回应一致。
+随后核对：
 
-## 6. 常见失败与恢复
+1. 系统版本与本次配置一致。
+2. 预装应用版本、来源提交及签名包摘要一致。
+3. SDK、overlay、工具链、内核和模块来源可追溯。
+4. 启动链、分区、rootfs 最终内容与声明相符。
+5. 压缩镜像和原始镜像摘要已记录；启用 OTA 时有对应签名 SWU。
 
-空间不足、SDK 路径迁移、工具链位数、旧包缓存、启动输入不符、rootfs 文件系统错误都应在对应步骤停止。保留 `BUILD-INCOMPLETE` 和日志；修复输入后产生新候选，不能删掉失败标记假装完成。
+## 处理失败并进入设备验收
 
-构建结束会恢复 SDK 纯模式，因此后续 `out/` 不一定仍是产品交付镜像。只从该次已验证发布目录取最终产物。构建成功后继续[实机验收](validation.md)，再谈产品发布。
+保留 `BUILD-INCOMPLETE`、错误日志和输入状态。空间不足、旧缓存、SDK 路径、启动输入或 rootfs 校验失败，应修复原因后生成新候选。
 
-本次文档工作没有可用的原 SDK 主机，因此此章按源码与既有记录核对命令和流程，没有重新编译或烧录系统。
+构建完成会恢复 SDK 纯模式，因此后续 SDK `out/` 不能默认视为本次交付镜像。始终从已验证归档目录取产物。
+
+通过主机构建后，按[安装检查](install.md)和[验收矩阵](validation.md)完成实机操作，再进入[产品发布](release.md)。本轮教程修订未重新构建或烧录产品系统。
+
+## 查阅依据
+
+[自动构建入口](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/scripts/auto_build_package.sh) · [发布构建脚本](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/scripts/build_release.sh) · [受控发布输入](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/RELEASE-RUNBOOK.md)

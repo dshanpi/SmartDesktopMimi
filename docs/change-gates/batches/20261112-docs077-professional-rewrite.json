@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "summary": "Rewrite Chinese tutorials as professional task-oriented operating procedures",
+  "context": "User supplied writing skill and explicitly requested complete rewrite and republication",
+  "next_steps": "Publish and verify the new Pages deployment; product qualification remains separate",
+  "requirements": [
+    {
+      "id": "REQ-MIMI-DOCS-077",
+      "record": "docs/change-gates/REQ-MIMI-DOCS-077.md",
+      "scope": "28 chapters, route organization, README and evidence",
+      "invariants": "Preserve existing URLs, pinned product facts, historic failures, private boundaries; no firmware/device/Release operations",
+      "paths": [
+        "CURRENT_PROGRESS.md",
+        "README.md",
+        "docs/CHANGE-GATES.md",
+        "docs/change-gates/REQ-MIMI-DOCS-077.md",
+        "docs/change-gates/batches/20261112-docs077-professional-rewrite.json",
+        "docs/routes.mjs",
+        "docs/tutorial/ai-iot.md",
+        "docs/tutorial/architecture.md",
+        "docs/tutorial/bluetooth.md",
+        "docs/tutorial/build-app.md",
+        "docs/tutorial/build-system.md",
+        "docs/tutorial/desktop.md",
+        "docs/tutorial/environment.md",
+        "docs/tutorial/gallery.md",
+        "docs/tutorial/glossary.md",
+        "docs/tutorial/hardware.md",
+        "docs/tutorial/index.md",
+        "docs/tutorial/install.md",
+        "docs/tutorial/iot.md",
+        "docs/tutorial/ipkvm.md",
+        "docs/tutorial/mcp.md",
+        "docs/tutorial/native-app.md",
+        "docs/tutorial/network.md",
+        "docs/tutorial/ota.md",
+        "docs/tutorial/pairing.md",
+        "docs/tutorial/quickstart.md",
+        "docs/tutorial/release.md",
+        "docs/tutorial/settings-data.md",
+        "docs/tutorial/site.md",
+        "docs/tutorial/source-map.md",
+        "docs/tutorial/troubleshooting.md",
+        "docs/tutorial/user-app.md",
+        "docs/tutorial/validation.md",
+        "docs/tutorial/version-status.md",
+        "docs/validation/docs077-professional-rewrite-20261112.json"
+      ],
+      "checks": [
+        {
+          "name": "Documentation build, content and links",
+          "status": "passed",
+          "scope": "28 chapters; 6 existing link tests; all internal links, anchors, assets; 37 fixed citations; 48 shell syntax blocks",
+          "evidence": "docs/validation/docs077-professional-rewrite-20261112.json"
+        },
+        {
+          "name": "Declarative APP tutorial executed",
+          "status": "passed",
+          "scope": "Pinned tool, exact init/edit/sign/verify example, temporary demo key deleted; no device upload",
+          "evidence": "docs/validation/docs077-professional-rewrite-20261112.json"
+        },
+        {
+          "name": "Browser and editorial review",
+          "status": "passed",
+          "scope": "Task sequence, prerequisites/results, Chinese search and anchor, mobile navigation, five SVG diagrams, themes",
+          "evidence": "docs/validation/docs077-professional-rewrite-20261112.json"
+        },
+        {
+          "name": "Initial emphasis rendering",
+          "status": "failed",
+          "scope": "CJK bold colon labels rendered as Markdown in browser; repaired and rebuilt",
+          "reason": "Closing emphasis delimiter touched Chinese text; fixed spacing and browser recheck passed",
+          "evidence": "docs/validation/docs077-professional-rewrite-20261112.json"
+        },
+        {
+          "name": "Production deployment",
+          "status": "not_run",
+          "scope": "Awaiting authorized push and Pages workflow",
+          "reason": "Production verification follows this content commit",
+          "evidence": "docs/validation/docs077-professional-rewrite-20261112.json"
+        },
+        {
+          "name": "Product and physical validation",
+          "status": "not_run",
+          "scope": "No product changes or device activity",
+          "reason": "Documentation task on replacement Ubuntu; original SDK host unavailable",
+          "evidence": "docs/validation/docs077-professional-rewrite-20261112.json"
+        }
+      ]
+    }
+  ]
+}

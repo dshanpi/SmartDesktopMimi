@@ -1,58 +1,78 @@
-# 理解架构与启动链路
+# 理解系统分层与启动顺序
 
-“SDK 是 SDK，产品代码是产品代码”是项目的分层原则。上层桌面通过版本化接口请求能力，平台 Provider 再连接板级服务和驱动。
+本章帮助开发者确定修改位置，并根据启动阶段定位问题。先了解桌面、平台服务、硬件适配和更新器的职责，再进入具体源码。
+
+## 按调用关系识别组件
 
 ```mermaid
 flowchart TD
-  Entry[LVGL 桌面 / Web / CLI] --> UseCase[上层业务与应用编排]
-  UseCase --> Ports[版本化 Ports / IPC / 能力查询]
-  Ports --> Provider[A133 Provider 与平台服务]
-  Provider --> Linux[内核 / 驱动 / Bootloader]
-  Apps[签名用户 APP] --> Policy[权限与资源策略]
-  Policy --> Ports
-  Update[独立更新器] --> Entry
-  Update --> Trust[签名 / 兼容清单 / 事务恢复]
+  UI[LVGL 桌面 / Web / CLI] --> Business[应用业务与状态处理]
+  Business --> Contract[版本化 Ports / IPC / 能力查询]
+  Contract --> Provider[平台 Provider 与硬件服务]
+  Provider --> OS[内核 / 驱动 / Bootloader]
+  APP[用户 APP] --> Policy[权限和资源代理]
+  Policy --> Contract
+  Updater[独立更新器] --> UI
+  Updater --> Gate[签名 / 兼容性 / 事务 / 健康检查]
 ```
 
-## 阅读源码的入口
+上层以接口查询能力并发出业务请求，Provider 将请求转换为目标平台操作。桌面统一源码不意味着不同平台可以共用未经验证的二进制包。
 
-| 目录 | 主要职责 |
-| --- | --- |
-| `apps/lv_port_linux/` | LVGL 桌面、页面、共享客户端和资源 |
-| `apps/ipkvm/` | WebRTC/IPKVM、设备 Web 界面和相关服务 |
-| `apps/hdmi_preview/` | HDMI 预览集成 |
-| `platform/app-sdk/` | 用户 APP 接口与示例 |
-| `services/mimi-update/` | 独立更新器与通用校验 |
-| `tools/update/` | SDK 固定、构建、签名候选与发布资料工具 |
-| `packaging/` | 系统集成薄包与安装规则 |
-| `platforms/` | 平台描述与接入边界 |
+## 按任务阅读源码
 
-`lv_backend` 由平台系统提供，不能因为名字含 lv 就随桌面包一起替换。部分过渡客户端/共享实现固定了哈希，具体迁移边界由源码归属清单控制。
+| 需要修改或排查 | 先阅读 | 核对边界 |
+| --- | --- | --- |
+| 首页、设置、应用页面 | `apps/lv_port_linux/` | UI 状态与后端权威结果是否一致 |
+| 浏览器视频和设备管理 | `apps/ipkvm/` | 登录、媒体与输入控制分别处理 |
+| HDMI 预览 | `apps/hdmi_preview/` | 与已有采集资源统一管理 |
+| 用户扩展应用 | `platform/app-sdk/` | 权限、目标 ABI 和短动作协议 |
+| 桌面更新事务 | `services/mimi-update/` | 签名、匹配、锁、回退与数据 |
+| 构建和发布工具 | `tools/update/` | 固定来源和最终产物一致 |
+| 系统集成 | `packaging/`、`platforms/` | 平台服务、板级身份和包归属 |
 
-## 普通 Tina 启动链
+平台系统提供的 `lv_backend` 不能仅按名称认定为桌面的一部分。冻结接口及过渡客户端的归属由源码清单限定，修改前完成[归属检查](source-map.md)。
 
-1. `S25play` 显示早期启动画面。
-2. `S95aitvbox-data` 准备 `/overlay` 和数据绑定。
-3. `S96bluetooth_init` 初始化蓝牙控制器。
+## 检查普通 Tina 启动链
+
+历史基线的关键顺序为：
+
+1. `S25play` 显示启动画面。
+2. `S95aitvbox-data` 准备持久目录和绑定挂载。
+3. `S96bluetooth_init` 准备蓝牙控制器。
 4. `S99aitvbox` 启动平台后端及对应桌面入口。
-5. 旧 `aitvbox-start-ui` 等待 `/tmp/lv_port_linux_backend.sock`，完成启动画面到 LVGL 的交接。
+5. 旧 `aitvbox-start-ui` 等待 `/tmp/lv_port_linux_backend.sock`，再完成 UI 交接。
 
-## 启用独立更新器的系统
+启动图持续不退出时，先检查后端启动与 socket；桌面出现后无响应时，再区分 UI 主循环、后端请求与显示/输入。具体采集命令见[故障排查](troubleshooting.md)。
 
-新的系统基线包含更新器、信任、公钥、设备描述和签名出厂应用。启动顺序中有 `S98mimi-update`、`S99aitvbox`、`S99mimi-desktop`。OpenWrt 按文件名字符串排序，不能简单改成 `S100...` 期待最后启动。
+## 检查独立更新基线的启动
 
-桌面选择、验签和启动在同一更新事务约束内进行。健康检查不仅判断 PID 存在，还需要桌面就绪、主循环响应、后端握手和关键状态可读。系统健康确认等待桌面时不能一直占住桌面启动也需要的锁。
+启用独立更新器的系统还包含可信公钥、设备描述、签名出厂应用及独立桌面启动入口。相关 init 项包括 `S98mimi-update`、`S99aitvbox`、`S99mimi-desktop`。
 
-## 三类资源所有权
+维护启动脚本时：
 
-- **HDMI**：统一采集与按需取帧，不让多个程序同时抢视频设备。
-- **HID**：当前控制者独占；退出、错误和急停释放按键。
-- **WS2812**：`service_led` 管理设备，其他服务请求/释放状态，不各自直写节点。
+1. 核对实际 init 文件名及执行顺序。OpenWrt 按文件名字符串排序，`S100` 不代表一定在 `S99` 后面。
+2. 核对更新器选择和验签的应用是否为本次预期版本。
+3. 核对桌面启动与系统健康检查的事务锁依赖。
+4. 检查桌面就绪、主循环推进、后端握手与状态查询。
 
-这些规则影响后端、Web、用户 APP 和 AI 任务，不能只修一个 UI 按钮而忽略资源释放。
+PID 存在只是一个检查点。健康提交还需要证明进程能够处理请求。
 
-## 接口版本不是应用版本
+## 保持共享资源的单一管理入口
 
-应用 v1.x、系统 v1.x、IPC 1.x 和 Provider 版本各有语义。新的包必须满足同一个完整目标条目，不能把“aarch64”“A133”或版本号相近当作兼容依据。新增能力通过查询与错误状态表达，不能在 UI 里硬编码 SoC 分支。
+| 资源 | 修改时检查 |
+| --- | --- |
+| HDMI | 使用现有采集与按需取帧接口，检查会话退出后释放 |
+| HID 键鼠 | 核对当前控制者，错误、退出和急停均释放按键 |
+| WS2812 状态灯 | 由 `service_led` 管理，其他服务请求和释放状态 |
 
-原始图集：[9 张源码与调用架构图](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/architecture-diagrams/README.md)。规范：[分层与更新](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/application-update-policy.md)、[源码归属](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/SOURCE-OWNERSHIP.md)。
+修改 UI 开关后，需检查实际服务是否完成对应动作；多个程序直接操作同一硬件会使状态和所有权难以确认。
+
+## 核对接口与版本兼容
+
+应用版本、系统版本、IPC 契约和 Provider 版本分别记录。包的完整目标条目应同时匹配产品、板型/修订、ABI、接口与运行依赖。
+
+新增能力时优先通过能力查询与明确错误反馈接入；破坏性接口变更需更新契约和兼容验证。完成架构判断后，进入[源码与平台适配](source-map.md)。
+
+## 查阅依据
+
+[分层和接口约束](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/application-update-policy.md) · [源码归属清单](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/SOURCE-OWNERSHIP.md) · [详细架构图集](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/architecture-diagrams/README.md)

@@ -1,15 +1,22 @@
 # 构建独立桌面应用
 
-本章面向修改 LVGL 桌面和设备 Web 的开发者。它不会重建 Tina 内核，也不会生成一个可以绕过平台兼容检查的万能包。
+本章用于修改并构建 LVGL 桌面、Web 界面和共享资源，输出未签名的应用候选。需要固定源码、已审核应用 SDK 和构建依赖；最终设备更新还需签名、兼容检查与验收。
 
-## 前提
+## 准备输入清单
 
-- 干净的固定源码，含实体化 LVGL 和公开依赖。
-- 已审核的应用 SDK，包含工具链、sysroot、平台接口与 `sdk-lock.json`。
-- 由受控交付记录给出的 SDK 预期 SHA-256。
-- Python、CMake、Node/npm 等依赖齐备，输出目录不存在。
+| 输入 | 必须确认 |
+| --- | --- |
+| 产品源码 | 完整提交、干净工作区、公开依赖齐备 |
+| 应用 SDK | SDK ID、工具链/sysroot、平台契约和 `sdk-lock.json` |
+| 外部 SDK 摘要 | 来自审核或受控交付记录的预期 SHA-256 |
+| 主机工具 | Python、CMake、Node/npm 等与源码要求一致 |
+| 输出目录 | 源码树外，尚不存在，有足够空间 |
 
-## 1. 核对源状态
+应用 SDK 是专门导出的输入集合。完整 Tina SDK 目录不能直接作为应用 SDK 父目录使用。
+
+## 检查源码和接口
+
+在 **Ubuntu 开发主机、产品源码根目录**执行：
 
 ```sh
 git rev-parse HEAD
@@ -19,11 +26,11 @@ python3 tools/update/check_contracts.py
 python3 tools/update/source_ownership.py
 ```
 
-修改过桌面后，先提交可追溯的源码，再构建正式候选。构建器拒绝脏源码；不能用手工改构建记录的方法隐藏变更。
+**检查结果：** 源码状态干净，契约与归属检查成功。修改过的源码先形成可追溯提交再构建正式候选；冻结接口或归属不符时，按错误修正输入。
 
-## 2. 调用独立应用构建器
+## 设置 SDK 与输出参数
 
-下面的 SDK ID、目录和哈希必须替换为实际受控输入。`--sdk-root` 是 SDK **父目录**，工具实际打开 `<sdk-root>/<sdk-id>`。
+以下全部替换为本次实际输入。`--sdk-root` 指向 SDK **父目录**，实际打开的路径为 `<sdk-root>/<sdk-id>`。
 
 ```sh
 MIMI_SDK_ROOT=/absolute/path/to/app-sdks
@@ -31,6 +38,16 @@ MIMI_SDK_ID=application-sdk-a133
 MIMI_SDK_SHA256=REPLACE_WITH_REVIEWED_SDK_SHA256
 MIMI_BUILD_OUTPUT=/absolute/path/to/mimi-builds/new-candidate
 
+test -d "$MIMI_SDK_ROOT/$MIMI_SDK_ID"
+test ! -e "$MIMI_BUILD_OUTPUT"
+df -h "$MIMI_SDK_ROOT"
+```
+
+前两项应成功退出。预期摘要必须从已审核记录取得；不要将任意现有 SDK 的当前摘要直接当作审核依据。
+
+## 执行独立构建
+
+```sh
 python3 tools/update/build_application.py \
   --sdk-root "$MIMI_SDK_ROOT" \
   --sdk-id "$MIMI_SDK_ID" \
@@ -38,42 +55,46 @@ python3 tools/update/build_application.py \
   --output "$MIMI_BUILD_OUTPUT"
 ```
 
-不要把整个 Tina SDK 路径当作已经导出的应用 SDK；也不要把刚计算出的任意摘要当作审核来源。示例占位值会被拒绝，这是预期行为。
+构建器会依次校验源码/SDK、审计公开来源与接口、编译 LVGL、构建设备 Web、暂存应用树并生成构建记录。结束前会再次核对输入未变化。
 
-## 3. 构建器依次做什么
+构建失败时保留当前输出和日志。修复后使用新的输出目录，避免将两次构建的文件混合。
 
-1. 核对源码干净、输出是源码外的新目录。
-2. 校验 SDK 与外部固定摘要。
-3. 执行公开源码审计、接口锁和源码归属检查。
-4. 编译 LVGL 桌面。
-5. 在设备 Web 工程运行 `npm ci`、`npm run build:device`。
-6. 暂存应用树、生成 SBOM 和依赖记录。
-7. 再次检查源码/SDK 没变化，写入 `BUILD-COMPLETE`。
+## 检查生成文件
 
-## 4. 产物怎么读
+```sh
+test -f "$MIMI_BUILD_OUTPUT/BUILD-COMPLETE"
+test -d "$MIMI_BUILD_OUTPUT/application-tree"
+python3 -m json.tool "$MIMI_BUILD_OUTPUT/candidate-build.json"
+```
 
-| 输出 | 含义 |
+| 文件 | 核对内容 |
 | --- | --- |
-| `application-tree/` | 待签名的桌面/Web/资源树 |
-| `desktop/application-build.json` | 桌面实际构建回执 |
-| `candidate-build.json` | 本批源码、SDK、依赖和文件哈希 |
-| `sdk-lock.json`、`dependency-lock.json` | 固定依赖来源 |
-| `platform-contract-lock.json`、`source-ownership.json` | 契约与源码边界 |
-| `BUILD-COMPLETE` | 未签名的应用构建完成 |
-| `*.log` | 每个步骤的构建或检查输出 |
+| `application-tree/` | 待签名桌面、Web 和资源 |
+| `desktop/application-build.json` | 实际桌面构建回执 |
+| `candidate-build.json` | 当前源码、SDK、依赖和文件哈希 |
+| `sdk-lock.json`、`dependency-lock.json` | 输入来源及锁定关系 |
+| `platform-contract-lock.json`、`source-ownership.json` | 接口和代码边界 |
+| `BUILD-COMPLETE` | 本次未签名构建已完成 |
 
-本步骤返回的结果明确是 `signed=false`、`uploaded=false`，物理验收为 `not_run`。不要把它直接提供给设备自动更新。
+正常构建结果仍为 `signed=false`、`uploaded=false`，物理验收为 `not_run`。进入下一阶段前确认记录确实指向本次源码和 SDK。
 
-## 5. 失败分支
+## 按报错修复输入
 
-- SDK missing / outside root：核对父目录、SDK ID 和符号链接边界。
-- SDK 摘要不符：检查受控输入是否变化，不能改预期值强行匹配。
-- source ownership 失败：确认没有把平台服务放入应用包，或改动了冻结客户端。
-- Web 构建失败：使用该源码的 lockfile 与 Node 版本，不拿别处 static 目录替代。
-- 输出目录已存在：保留失败日志，为修复后的候选选择新目录。
+| 失败位置 | 检查与处理 |
+| --- | --- |
+| SDK 缺失或越界 | 父目录、SDK ID、符号链接及实际目录 |
+| SDK 摘要不符 | 对照交付记录核查输入变化，重新审核正确输入 |
+| 源码不干净 | 保留改动并形成可追溯提交，再用新输出构建 |
+| 契约/源码归属错误 | 核对冻结客户端和平台服务边界 |
+| Web 构建失败 | 使用本提交的 lockfile、Node 与依赖，查看对应日志 |
+| 输出目录已存在 | 保留旧结果，选择新目录 |
 
-## 6. 构建之后
+## 进入验收和发布准备
 
-先按[验证矩阵](validation.md)验证本次真实产物，再由受控签名/发布流程形成清单和签名包。系统需要新的 ABI 或平台服务时，先满足系统前置要求；不能在应用包内偷偷替换底层。
+按[验证清单](validation.md)检查本次产物，再进入[发布资料准备](release.md)。应用需要新平台接口或基础库时，先建立相应系统前置条件。
 
-脚本依据：[build_application.py](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/tools/update/build_application.py) · [发布执行手册](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/RELEASE-RUNBOOK.md)。本轮教程验证没有执行产品交叉构建。
+本教程的产品构建命令依据固定源码核对；本轮文档主机未执行产品交叉构建，不能将本站构建结果计为桌面构建结果。
+
+## 查阅依据
+
+[构建器及输出规则](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/tools/update/build_application.py) · [产品发布流程](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/update/RELEASE-RUNBOOK.md)

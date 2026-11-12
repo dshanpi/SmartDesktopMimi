@@ -1,3 +1,9 @@
+# 2026-11-12 教程专业版重写
+
+2026-11-12 根据用户提供的 write-professional-guides 重写教程：23 篇旧章全部改写，新增蓝牙、账号配对、智家、Native APP、术语速查，共 28 章、6 组导航、67 个代码块。操作步骤明确环境/输入/结果/失败处理，原 URL 保留。Ubuntu 构建、6 项链接测试、28 路由资源、37 个固定来源、48 个 Shell 语法块与声明式 APP 实际签名验签通过；搜索/章节跳转/手机菜单/5 图/主题检查通过。浏览器发现中文强调符号紧邻正文的问题，已修正 19 章并重建复验。新部署待提交后复核；产品与实机状态不变。
+
+详细记录见 docs/change-gates/REQ-MIMI-DOCS-077.md 和 docs/validation/docs077-professional-rewrite-20261112.json。
+
 2026-11-12 教程站已发布并完成公网验证：23 章中文教程、5 张流程图、5 张已有实机图；首个部署源码 d778421bcf5ba206ba1827991573876233eab164。4 项 GitHub 工作流全部 success，公网 65 个页面/资源 HTTP 200，确定性正文与资源和 Ubuntu 构建字节一致；独立构建的搜索索引 ID 不同，版本/语言/页数及实际搜索已验证。中文搜索/章节跳转/HTTPS 代码复制/图表和手机布局通过。站点 https://dshanpi.github.io/SmartDesktopMimi/ 。参考开发快照 75500c7，原 SDK 虚拟机和板端未操作，产品发布阻断保持。详见 docs/validation/docs077-deployment-20261112.json。
 
 # 2026-11-12 文档站独立工作

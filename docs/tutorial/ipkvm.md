@@ -1,31 +1,35 @@
-# 浏览器 IPKVM 完整上手
+# 通过浏览器查看并控制电脑
 
-IPKVM 把外部电脑 HDMI 画面送到浏览器，再把浏览器键鼠操作转成 USB HID。被控 Windows/Linux 无需安装专门的客户端。
+IPKVM 通过 HDMI 接收电脑画面，经 WebRTC 发送到管理浏览器，再将键鼠动作通过 USB HID 交给被控电脑。本章依次完成局域网登录、视频与输入验证、HTTPS，以及可选外网转发。
 
-## 1. 接线与网络
+## 准备接线和测试窗口
 
-按[硬件连接图](hardware.md)：电脑 HDMI OUT 接板端 HDMI IN，板端 USB Device 接同一台被控电脑；管理浏览器能访问板端 IP。示例 `192.168.1.50` 只是占位，替换成设备真实地址。
+按[硬件连接](hardware.md)连接电脑 HDMI OUT、小咪 HDMI IN，以及小咪 USB Device 与被控电脑。管理浏览器应能访问板端 IP，被控电脑已识别标准 HID 键盘和鼠标。
 
-## 2. 首次登录
+在被控电脑打开空白文本编辑器作为输入测试目标。以下 `192.168.1.50` 是示例板端地址，需替换为实际值。
 
-1. 浏览器打开 `http://192.168.1.50/`。
-2. 首次设置 8–128 位设备登录密码；平台模式不提供免密入口。
-3. 登录进入 KVM 工作区，等待实时画面建立。
-4. 在被控电脑打开空白文本编辑器，短测指针和一个普通按键，再测试常用组合键。
-5. 关闭网页后确认会话与输入控制释放。
+## 登录局域网工作区
 
-不要在密码输入框或有破坏性操作的窗口中做首次键鼠试验。该检查的目标是确认连接、映射和释放，不需要操作真实业务数据。
+1. 在管理浏览器打开 `http://192.168.1.50/`；已启用 TLS 时使用设备对应的 HTTPS 地址。
+2. 首次使用时按页面设置 8–128 位登录密码，已有密码时直接登录。
+3. 进入 KVM 工作区，等待视频连接建立。
+4. 对照被控电脑显示内容，确认浏览器显示的是目标 HDMI 画面。
 
-## 3. 理解端口与两条通道
+**检查结果：** 浏览器画面持续更新。页面能登录但没有视频时，先处理下面的视频检查，不继续测试键鼠。
 
-| 通道 | 典型端口 | 内容 |
-| --- | --- | --- |
-| HTTP / HTTPS | TCP 80 / 443 | 登录、配置、信令 |
-| WebRTC | UDP 40000 | 视频与键鼠 DataChannel |
+## 分别验证视频和输入
 
-能打开网页但无画面，经常意味着媒体通道、HDMI 信号或网络候选有问题。TCP 网页通不等于 UDP 视频也通。
+1. 在被控电脑移动窗口或改变编辑器内容，确认浏览器画面同步变化。
+2. 在浏览器移动鼠标，核对被控电脑指针响应。
+3. 点击测试编辑器，输入一个普通字符，检查字符只出现一次。
+4. 测试一个常用组合键，随后松开，确认没有持续按键状态。
+5. 结束测试时关闭会话，确认输入控制释放。
 
-管理员在板端执行：
+本地 AI 任务占用控制权时，浏览器键鼠可能被拒绝；先停止任务，再测试手动输入。控制权与资源关系见[AI 与 MCP](mcp.md)。
+
+## 在板端检查服务和通道
+
+在**板端 shell**执行：
 
 ```sh
 aitvbox-ipkvmctl status
@@ -34,11 +38,17 @@ ls -l /dev/hidg0
 ss -lntup | grep -E ':(80|443|40000)[[:space:]]'
 ```
 
-预期：IPKVM 服务运行，所选 Web 端口监听；使用 HID 时节点存在；视频会话能建立。系统没有 `ss` 时使用该固件提供的网络诊断工具，不要因此认定服务不存在。
+| 通道 | 典型端口 | 需要检查的结果 |
+| --- | --- | --- |
+| HTTP / HTTPS | TCP 80 / 443 | 对应 Web 端口监听，浏览器能登录 |
+| WebRTC | UDP 40000 | 媒体会话能建立，视频持续更新 |
+| USB HID | `/dev/hidg0` 与 USB 枚举 | 节点存在，被控电脑识别且输入有效 |
 
-## 4. HTTPS 配置
+系统没有 `ss` 时，使用该固件随附的诊断工具。监听状态用于定位服务；最终仍以实际网页、视频和输入检查为准。
 
-生产或跨网络使用配置与访问域名匹配的可信证书。服务在 `tls.crt` 和 `tls.key` 同时存在时切换到 443；缺一项会拒绝启动。以下在已授权的管理主机执行，显式指定设备：
+## 配置 HTTPS
+
+准备与设备管理域名匹配的可信证书及私钥，并确认 ADB 已授权。以下在**管理主机**执行；替换 `DEVICE_SERIAL`、证书文件名和域名。服务重启会断开当前会话。
 
 ```sh
 adb -s DEVICE_SERIAL push kvm.example.com.crt /overlay/aitvbox/ipkvm/tls.crt
@@ -47,17 +57,31 @@ adb -s DEVICE_SERIAL shell chmod 600 /overlay/aitvbox/ipkvm/tls.crt /overlay/ait
 adb -s DEVICE_SERIAL shell /etc/init.d/aitvbox-ipkvm restart
 ```
 
-证书私钥只交给指定设备，不提交 Git。重启服务会中断当前会话；完成后使用新 HTTPS 地址登录。
+1. 使用对应的 `https://kvm.example.com/` 重新登录。
+2. 检查证书域名、有效期与信任状态。
+3. 再测试视频和一个普通按键。
 
-## 5. 可选：FRP 远程访问
+证书与私钥必须成对存在；缺少其中一项时服务会拒绝启动。出错时先补齐正确文件与权限，再检查服务日志。私钥仅保存到受控主机与目标设备。
 
-先完成局域网测试与 HTTPS，再配置外网。Tina 基线中的 FRPC 为 `0.34.3`，使用 INI，不能直接照搬新版 TOML 示例。
+## 配置外网 FRP 转发
+
+先完成局域网和 HTTPS 验证，再配置外网。准备 FRPS 服务器、公网数字 IP、访问域名与令牌。Tina 基线自带 FRPC `0.34.3`，配置格式为 **INI**。
+
+1. 在管理主机将真实公网数字 IP 写入设备。`203.0.113.10` 为文档示例，必须替换：
+
+```sh
+printf '%s\n' '203.0.113.10' |
+  adb -s DEVICE_SERIAL shell 'umask 077; cat > /overlay/aitvbox/ipkvm/webrtc-public-ip'
+adb -s DEVICE_SERIAL shell /etc/init.d/aitvbox-ipkvm restart
+```
+
+2. 登录网页设置中的 FRP 页面，按服务器实际参数填写 INI：
 
 ```ini
 [common]
 server_addr = 203.0.113.10
 server_port = 7000
-token = replace-with-your-own-token
+token = replace-with-your-server-token
 
 [mimi-web]
 type = tcp
@@ -72,10 +96,24 @@ local_port = 40000
 remote_port = 40000
 ```
 
-`203.0.113.10` 和 `kvm.example.com` 是文档保留地址，需要替换。服务器防火墙和 FRPS 要匹配上述 TCP/UDP 端口；板端 `/overlay/aitvbox/ipkvm/webrtc-public-ip` 保存真实公网数字 IP。网页端口可访问但 UDP 没转发时仍会黑屏。配置与公网候选的完整命令见[原始 IPKVM 手册](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/ipkvm-user-guide.md)。
+3. 确认 FRPS 配置与防火墙允许对应的 `7000/tcp`、`18443/tcp`、`40000/udp`。
+4. 在页面启动本设备的 FRPC，检查日志没有认证或端口冲突错误。
+5. 从外部网络访问 `https://kvm.example.com:18443/`，复测登录、视频及键鼠。
 
-## 6. 会话与 AI 的关系
+网页通过 TCP，视频和输入 DataChannel 通过 WebRTC。只转发网页端口时，仍可能没有视频。外网访问使用 HTTPS 或已有受控 VPN，不直接暴露明文登录。
 
-键鼠控制存在独占：本地 AI 任务运行时，外部输入可能被拒绝；停止 AI 后再恢复手动操作。当前开发分支的 AI 路径从同一采集服务按需取帧，目标是保持 WebRTC 直播；早期手册中的“启动 AI 时关闭直播”描述属于旧实现。详见[AI/MCP 章节](mcp.md)。
+## 排除常见故障
 
-用完关闭会话，按正常控制入口关闭 HDMI，确认采集/编码释放。不要手动再起一个 `hdmi_preview --service` 与已有采集进程争用硬件。
+| 症状 | 检查及处理 |
+| --- | --- |
+| 页面打不开 | 核对板端 IP、80/443 服务、网络与防火墙 |
+| 页面能开、无视频 | 核对 HDMI 信号，再查 UDP 40000、公网候选及 FRP 转发 |
+| 有画面、不能操作 | 检查 USB Device 接线、HID 枚举和 AI 控制权 |
+| HTTPS 启动失败 | 核对成对证书、文件权限与服务日志 |
+| FRPC 无法启动 | 核对 INI 格式、服务端令牌、端口占用和日志 |
+
+结束时停止 AI 任务、关闭浏览器会话，并关闭无需使用的 HDMI 采集。不要额外启动第二个 `hdmi_preview --service` 争用现有采集资源。
+
+## 查阅依据
+
+[IPKVM 服务与 FRP 配置](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/docs/ipkvm-user-guide.md) · [当前控制实现与状态](https://github.com/dshanpi/SmartDesktopMimi/blob/75500c76e389971bfb3bd0a45ac4bed74e1f8cfa/CURRENT_PROGRESS.md)
